@@ -924,7 +924,7 @@ export const ComprehensiveStatisticsView: React.FC = () => {
     <div className="space-y-6">
       {/* 1. 30-DAY BACKUP WARNING BANNER (User Request: Sau 30 ngày hiển thị cảnh báo sao lưu JSON) */}
       {showBackupAlert && (
-        <div className="bg-gradient-to-r from-amber-500 via-rose-500 to-amber-600 text-white rounded-3xl p-4 md:p-5 shadow-lg border border-amber-300 flex flex-col md:flex-row md:items-center justify-between gap-4 animate-in fade-in duration-200">
+        <div className="bg-gradient-to-r from-orange-600 via-rose-600 to-orange-600 text-white rounded-3xl p-4 md:p-5 shadow-lg border border-amber-300 flex flex-col md:flex-row md:items-center justify-between gap-4 animate-in fade-in duration-200">
           <div className="flex items-center gap-3.5">
             <div className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-md text-white flex items-center justify-center font-black shrink-0 shadow-inner">
               <ShieldAlert className="w-7 h-7 text-amber-100" />
@@ -934,14 +934,14 @@ export const ComprehensiveStatisticsView: React.FC = () => {
                 <span className="px-2.5 py-0.5 rounded-full bg-white text-rose-800 text-[10px] font-black uppercase tracking-wider">
                   CẢNH BÁO QUAN TRỌNG
                 </span>
-                <span className="text-xs font-bold text-amber-100">
+                <span className="text-xs font-bold text-white">
                   Đã {daysSinceBackup >= 30 ? `hơn ${daysSinceBackup}` : daysSinceBackup} ngày chưa sao lưu
                 </span>
               </div>
               <h3 className="text-sm md:text-base font-black uppercase tracking-wide mt-0.5">
                 HÃY SAO LƯU DỮ LIỆU ĐỊNH DẠNG .JSON ĐỂ BẢO VỆ DỮ LIỆU LỚP HỌC
               </h3>
-              <p className="text-xs text-amber-100/90 font-medium">
+              <p className="text-xs text-white font-medium">
                 Hệ thống đề xuất bạn nên tải về file .JSON định kỳ để phòng ngừa sự cố máy tính và bảo vệ toàn bộ điểm số, chuyên cần.
               </p>
             </div>
@@ -957,7 +957,7 @@ export const ComprehensiveStatisticsView: React.FC = () => {
             </button>
             <button
               onClick={handleDismissBackupAlert}
-              className="px-3 py-2.5 bg-white/20 hover:bg-white/30 text-white rounded-xl text-xs font-bold transition-colors cursor-pointer"
+              className="px-3 py-2.5 bg-white/20 hover:bg-white/30 border border-white/70 text-white rounded-xl text-xs font-bold transition-colors cursor-pointer"
               title="Tạm ẩn cảnh báo hôm nay"
             >
               Bỏ qua
@@ -998,10 +998,10 @@ export const ComprehensiveStatisticsView: React.FC = () => {
         <div className="flex items-center gap-2 shrink-0">
           <button
             onClick={handleBackupJsonClick}
-            className="px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-black flex items-center gap-2 shadow-sm transition-all hover-zoom-btn uppercase cursor-pointer"
+            className="px-4 py-2.5 bg-white hover:bg-slate-200 text-slate-800 rounded-xl text-xs font-black flex items-center gap-2 shadow-sm transition-all hover-zoom-btn uppercase cursor-pointer"
             title="Lưu file .JSON dự phòng an toàn bất cứ lúc nào"
           >
-            <Database className="w-4 h-4 text-emerald-400" />
+            <Database className="w-4 h-4 text-emerald-600" />
             <span>LƯU FILE .JSON BẤT CỨ LÚC NÀO</span>
           </button>
         </div>
@@ -2374,7 +2374,7 @@ export const ComprehensiveStatisticsView: React.FC = () => {
 
       {/* MODAL: CHÍNH SÁCH BẢO VỆ DỮ LIỆU KHI CHUYỂN SANG THÁNG MỚI */}
       {showSafeTransitionModal && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-sky-900/20 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl p-6 max-w-lg w-full border border-slate-200 shadow-2xl space-y-4 animate-in fade-in duration-150">
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center font-black">
@@ -2411,7 +2411,7 @@ export const ComprehensiveStatisticsView: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setShowSafeTransitionModal(false)}
-                className="px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-black cursor-pointer uppercase shadow-xs"
+                className="px-5 py-2.5 bg-white hover:bg-slate-200 text-slate-800 rounded-xl text-xs font-black cursor-pointer uppercase shadow-xs"
               >
                 Đã hiểu & Tiếp tục
               </button>

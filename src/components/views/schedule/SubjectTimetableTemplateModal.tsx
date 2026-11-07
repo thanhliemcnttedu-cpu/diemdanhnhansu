@@ -341,7 +341,7 @@ export const SubjectTimetableTemplateModal: React.FC<SubjectTimetableTemplateMod
   ];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-sky-900/20 backdrop-blur-xs animate-in fade-in duration-200">
       <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-4xl max-h-[92vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
         
         {/* Header */}
@@ -358,7 +358,7 @@ export const SubjectTimetableTemplateModal: React.FC<SubjectTimetableTemplateMod
               <h2 className="text-xl sm:text-2xl font-black tracking-tight uppercase">
                 TẠO THỜI KHÓA BIỂU THEO MẪU
               </h2>
-              <p className="text-xs text-blue-100 font-medium mt-0.5">
+              <p className="text-xs text-white font-medium mt-0.5">
                 Tự động phân bổ lịch giảng dạy khoa học cho các lớp bộ môn theo mẫu chuẩn
               </p>
             </div>
@@ -428,7 +428,7 @@ export const SubjectTimetableTemplateModal: React.FC<SubjectTimetableTemplateMod
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex items-center gap-3">
-                      <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white flex items-center justify-center font-black text-lg shadow-md shrink-0">
+                      <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-emerald-600 to-teal-600 text-white flex items-center justify-center font-black text-lg shadow-md shrink-0">
                         <Star className="w-6 h-6 text-amber-300 fill-amber-300" />
                       </div>
                       <div>
@@ -803,7 +803,7 @@ export const SubjectTimetableTemplateModal: React.FC<SubjectTimetableTemplateMod
                                     </span>
                                   </div>
                                 ) : (
-                                  <span className="text-slate-300 font-bold text-xs">-</span>
+                                  <span className="text-slate-500 font-bold text-xs">-</span>
                                 )}
                               </td>
                             );
@@ -831,7 +831,7 @@ export const SubjectTimetableTemplateModal: React.FC<SubjectTimetableTemplateMod
                                     </span>
                                   </div>
                                 ) : (
-                                  <span className="text-slate-300 font-bold text-xs">-</span>
+                                  <span className="text-slate-500 font-bold text-xs">-</span>
                                 )}
                               </td>
                             );

@@ -16,6 +16,7 @@ import {
 } from '../../../utils/audio';
 import confetti from 'canvas-confetti';
 
+import { handleAvatarImgError } from '../../../utils/avatarConfig';
 // Duck color palettes with cute 3D glossy gradients
 const DUCK_THEMES = [
   { id: 'yellow', name: 'Vàng Hoàng Kim', bodyGrad: ['#fef08a', '#facc15', '#ca8a04'], beak: '#ea580c', cap: '#3b82f6', glow: 'rgba(250, 204, 21, 0.7)' },
@@ -800,7 +801,7 @@ export const DuckRaceGame: React.FC = () => {
           <button
             onClick={handleStartCountdown}
             disabled={isRacing || countdown !== null || duckStudents.length === 0}
-            className="px-5 py-2.5 bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 hover:from-amber-600 hover:to-orange-600 text-white rounded-2xl text-xs font-black flex items-center gap-2 shadow-md shadow-orange-500/25 transition-all hover-zoom-btn disabled:opacity-50 uppercase cursor-pointer"
+            className="px-5 py-2.5 bg-gradient-to-r from-amber-600 via-orange-600 to-amber-600 hover:from-amber-700 hover:to-orange-700 text-white rounded-2xl text-xs font-black flex items-center gap-2 shadow-md shadow-orange-500/25 transition-all hover-zoom-btn disabled:opacity-50 uppercase cursor-pointer"
           >
             <Play className="w-4 h-4 fill-white" />
             <span>
@@ -823,7 +824,7 @@ export const DuckRaceGame: React.FC = () => {
               <span className="px-2 py-0.5 rounded-full bg-amber-400 text-amber-950 text-[10px] font-black uppercase tracking-wider">
                 ĐƯỜNG ĐUA 3D OLYMPIC
               </span>
-              <span className="text-xs text-sky-200 font-semibold">
+              <span className="text-xs text-white font-semibold">
                 {duckStudents.length} Chú Vịt Nhỏ Tranh Tài • Chặng 100m
               </span>
             </div>
@@ -844,7 +845,7 @@ export const DuckRaceGame: React.FC = () => {
             return (
               <div key={st.id} className="flex items-center gap-1.5 text-xs font-black">
                 <span>{medal}</span>
-                <img src={st.avatar} alt={st.name} className="w-5 h-5 rounded-full object-cover border border-white" />
+                <img src={st.avatar} onError={(e) => handleAvatarImgError(e, st?.gender, st?.name)} alt={st.name} className="w-5 h-5 rounded-full object-cover object-center border border-white" />
                 <span className="truncate max-w-[80px] sm:max-w-[110px] text-white text-[11px]">{st.name}</span>
               </div>
             );
@@ -862,7 +863,7 @@ export const DuckRaceGame: React.FC = () => {
         {countdown !== null && (
           <div className="absolute inset-0 z-40 bg-black/50 backdrop-blur-xs flex flex-col items-center justify-center animate-in fade-in zoom-in-95 duration-200">
             <div className="text-center">
-              <div className="w-28 h-28 sm:w-36 sm:h-36 rounded-full bg-gradient-to-tr from-amber-400 to-orange-500 border-4 border-white shadow-2xl flex items-center justify-center text-5xl sm:text-6xl font-black text-white animate-bounce">
+              <div className="w-28 h-28 sm:w-36 sm:h-36 rounded-full bg-gradient-to-tr from-amber-600 to-orange-600 border-4 border-white shadow-2xl flex items-center justify-center text-5xl sm:text-6xl font-black text-white animate-bounce">
                 {countdown === 0 ? '🏁 GO!' : countdown}
               </div>
               <p className="mt-4 text-xl sm:text-2xl font-black text-white uppercase tracking-wider drop-shadow-md">
@@ -874,7 +875,7 @@ export const DuckRaceGame: React.FC = () => {
 
         {/* Stadium Top Bar: Start Gate & Finish Arch */}
         <div className="flex items-center justify-between text-white font-black text-xs uppercase tracking-wider mb-4 relative z-10 px-2">
-          <div className="flex items-center gap-2 bg-white/20 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/30 shadow-xs">
+          <div className="flex items-center gap-2 bg-sky-700/85 px-3 py-1.5 rounded-full border border-white/50 shadow-xs">
             <Flag className="w-3.5 h-3.5 text-amber-300" />
             <span>VẠCH XUẤT PHÁT (0M)</span>
           </div>
@@ -907,7 +908,7 @@ export const DuckRaceGame: React.FC = () => {
                 key={st.id}
                 className={`relative h-14 sm:h-16 rounded-2xl flex items-center px-3 overflow-hidden transition-all duration-150 ${
                   isWinner
-                    ? 'bg-amber-300/40 border-2 border-amber-300 shadow-lg shadow-amber-400/30 ring-2 ring-amber-300'
+                    ? 'bg-amber-600/40 border-2 border-amber-300 shadow-lg shadow-amber-400/30 ring-2 ring-amber-300'
                     : isBoosting
                     ? 'bg-white/40 border-2 border-yellow-300 shadow-md'
                     : 'bg-white/25 hover:bg-white/30 border border-white/40 shadow-inner'
@@ -931,7 +932,7 @@ export const DuckRaceGame: React.FC = () => {
                 </div>
 
                 {/* Finish Line Checkered Strip with Red Ribbon */}
-                <div className="absolute right-0 top-0 bottom-0 w-12 border-l-2 border-dashed border-red-500 bg-gradient-to-r from-red-500/20 to-red-600/40 flex items-center justify-center font-black text-white text-xs pointer-events-none z-10">
+                <div className="absolute right-0 top-0 bottom-0 w-12 border-l-2 border-dashed border-red-500 bg-gradient-to-r from-red-500/80 to-red-600/90 flex items-center justify-center font-black text-white text-xs pointer-events-none z-10">
                   <div className="flex flex-col items-center">
                     <span className="text-sm">🏁</span>
                     <span className="text-[8px] font-black text-white uppercase tracking-tighter">ĐÍCH</span>
@@ -960,7 +961,7 @@ export const DuckRaceGame: React.FC = () => {
 
                   {/* Nitro Boost Flash */}
                   {isBoosting && (
-                    <div className="absolute -top-3.5 left-2 px-2 py-0.5 rounded-full bg-gradient-to-r from-amber-400 via-orange-500 to-red-500 text-white font-black text-[9px] shadow-lg animate-bounce whitespace-nowrap z-30 flex items-center gap-0.5">
+                    <div className="absolute -top-3.5 left-2 px-2 py-0.5 rounded-full bg-gradient-to-r from-amber-600 via-orange-600 to-red-500 text-white font-black text-[9px] shadow-lg animate-bounce whitespace-nowrap z-30 flex items-center gap-0.5">
                       <Flame className="w-2.5 h-2.5 fill-yellow-200" />
                       <span>NITRO!</span>
                     </div>
@@ -1040,7 +1041,7 @@ export const DuckRaceGame: React.FC = () => {
                         ? 'w-9 h-9 border-2 border-amber-300 shadow-lg shadow-amber-400/80 ring-2 ring-white'
                         : 'w-8 h-8 border-2 border-white shadow-md ring-1 ring-sky-300'
                       }`}>
-                      <img src={st.avatar} alt={st.name} className="w-full h-full object-cover rounded-full" />
+                      <img src={st.avatar} onError={(e) => handleAvatarImgError(e, st?.gender, st?.name)} alt={st.name} className="w-full h-full object-cover object-center rounded-full" />
                     </div>
                   </div>
 
@@ -1067,7 +1068,7 @@ export const DuckRaceGame: React.FC = () => {
       {/* 4. MÀN HÌNH POP-UP RUNG LỚN: VINH DANH QUÁN QUÂN & TUNG HOA RƠI LẢ TẢ   */}
       {/* ========================================================================= */}
       {showGrandVictoryModal && raceWinner && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-slate-950/90 backdrop-blur-md animate-in fade-in duration-300">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-sky-900/20 backdrop-blur-xs animate-in fade-in duration-300">
           {/* Falling Flowers Shower Canvas */}
           <canvas
             ref={flowerCanvasRef}
@@ -1082,7 +1083,7 @@ export const DuckRaceGame: React.FC = () => {
             {/* Close button */}
             <button
               onClick={() => setShowGrandVictoryModal(false)}
-              className="absolute -top-3 -right-3 z-30 w-9 h-9 rounded-full bg-slate-800 hover:bg-slate-700 text-white flex items-center justify-center transition-colors cursor-pointer border-2 border-white/20 shadow-xl"
+              className="absolute -top-3 -right-3 z-30 w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-800 flex items-center justify-center transition-colors cursor-pointer border-2 border-slate-200 shadow-xl"
             >
               <X className="w-4 h-4" />
             </button>
@@ -1099,7 +1100,7 @@ export const DuckRaceGame: React.FC = () => {
             {/* MAIN BODY - dark navy premium */}
             <div
               className="relative rounded-b-[2rem] px-6 pb-5 text-center text-white"
-              style={{ background: 'linear-gradient(160deg, #1e3a5f 0%, #0f2044 35%, #1a1060 65%, #2d1b69 100%)', paddingTop: '8px' }}
+              style={{ background: 'linear-gradient(160deg, #3b82f6 0%, #2563eb 35%, #4f46e5 65%, #7c3aed 100%)', paddingTop: '8px' }}
             >
               {/* Bokeh orbs */}
               <div className="absolute top-4 left-6 w-24 h-24 rounded-full bg-amber-400/10 blur-2xl pointer-events-none" />
@@ -1139,7 +1140,7 @@ export const DuckRaceGame: React.FC = () => {
                     style={{
                       width: 160,
                       height: 160,
-                      background: '#0f2044',
+                      background: '#2563eb',
                       zIndex: 2
                     }}
                   />
@@ -1171,7 +1172,7 @@ export const DuckRaceGame: React.FC = () => {
                     }}
                   >
                     <img
-                      src={raceWinner.avatar}
+                      src={raceWinner.avatar} onError={(e) => handleAvatarImgError(e, raceWinner?.gender, raceWinner?.name)}
                       alt={raceWinner.name}
                       style={{
                         width: '100%',
@@ -1265,7 +1266,7 @@ export const DuckRaceGame: React.FC = () => {
                         className={`px-4 py-1.5 rounded-lg text-sm font-black transition-all cursor-pointer disabled:opacity-50 ${
                           rewardXu === val
                             ? 'scale-105 shadow-md text-amber-950'
-                            : 'text-white/70 hover:bg-white/10'
+                            : 'text-white/90 hover:bg-white/10'
                         }`}
                         style={rewardXu === val ? { background: 'linear-gradient(180deg,#fde047,#f59e0b)' } : {}}
                       >

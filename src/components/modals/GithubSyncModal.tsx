@@ -154,10 +154,10 @@ export const GithubSyncModal: React.FC<GithubSyncModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-sky-900/20 backdrop-blur-xs animate-in fade-in duration-200">
       <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-2xl overflow-hidden flex flex-col max-h-[92vh]">
         {/* Header */}
-        <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white p-5 flex items-center justify-between border-b border-slate-800">
+        <div className="bg-gradient-to-r from-sky-600 via-indigo-600 to-indigo-500 text-white p-5 flex items-center justify-between border-b border-slate-800">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-2xl bg-indigo-500/20 border border-indigo-400/40 flex items-center justify-center text-indigo-300">
               <GitBranch className="w-5 h-5 animate-pulse" />
@@ -166,7 +166,7 @@ export const GithubSyncModal: React.FC<GithubSyncModalProps> = ({
               <h2 className="text-base font-black tracking-wide flex items-center gap-2">
                 ĐỒNG BỘ GITHUB SERVER & DỮ LIỆU ĐA THIẾT BỊ
               </h2>
-              <p className="text-xs text-indigo-200">
+              <p className="text-xs text-white">
                 Lưu trữ tập trung trên máy chủ • Tự động đẩy lên GitHub • Liên thông tức thời giữa các máy tính
               </p>
             </div>
@@ -271,7 +271,7 @@ export const GithubSyncModal: React.FC<GithubSyncModalProps> = ({
           </div>
 
           {/* 🛡️ TÍNH NĂNG BẢO TOÀN DỮ LIỆU ĐỘC QUYỀN: NÂNG CẤP CHỈ CODE */}
-          <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-indigo-950 via-slate-900 to-indigo-950 text-white shadow-md space-y-2.5 border border-indigo-500/40">
+          <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-indigo-600 via-blue-500 to-indigo-600 text-white shadow-md space-y-2.5 border border-indigo-500/40">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Shield className="w-5 h-5 text-emerald-400" />
@@ -320,9 +320,9 @@ export const GithubSyncModal: React.FC<GithubSyncModalProps> = ({
             <button
               onClick={handleCheckpointNow}
               disabled={actionLoading !== null}
-              className="py-3 px-4 rounded-2xl bg-slate-800 hover:bg-slate-900 active:scale-98 text-white font-black text-xs uppercase flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer disabled:opacity-50"
+              className="py-3 px-4 rounded-2xl bg-slate-100 hover:bg-slate-100 active:scale-98 text-slate-800 font-black text-xs uppercase flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer disabled:opacity-50"
             >
-              <Check className="w-4 h-4 text-emerald-400" />
+              <Check className="w-4 h-4 text-emerald-600" />
               <span>{actionLoading === 'checkpoint' ? 'Đang lưu...' : 'TẠO ĐIỂM SAO LƯU'}</span>
             </button>
           </div>

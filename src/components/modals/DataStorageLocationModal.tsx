@@ -210,7 +210,7 @@ export const DataStorageLocationModal: React.FC<DataStorageLocationModalProps> =
   const isCurrentSafe = !customPath.toUpperCase().startsWith('C:');
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/70 backdrop-blur-xs animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-sky-900/20 backdrop-blur-xs animate-in fade-in duration-200">
       <div className="relative w-full max-w-2xl bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[92vh]">
         
         {/* Header chuẩn Ảnh 4 & 5 */}
@@ -223,14 +223,14 @@ export const DataStorageLocationModal: React.FC<DataStorageLocationModalProps> =
               <h2 className="text-sm sm:text-base font-black tracking-wide uppercase flex items-center gap-2">
                 NƠI LƯU TRỮ DATA LỚP HỌC (Ổ D/E)
               </h2>
-              <p className="text-[11px] text-amber-100 font-medium">
+              <p className="text-[11px] text-white font-medium">
                 Lưu 01 file JSON duy nhất - Cực kỳ dễ sao chép vào USB, gửi Zalo & khôi phục
               </p>
             </div>
           </div>
           <button 
             onClick={onClose}
-            className="p-1.5 rounded-lg text-amber-100 hover:text-white hover:bg-white/10 transition-colors"
+            className="p-1.5 rounded-lg text-white hover:text-white hover:bg-white/10 transition-colors"
             title="Đóng modal"
           >
             <X className="w-5 h-5" />
@@ -315,17 +315,17 @@ export const DataStorageLocationModal: React.FC<DataStorageLocationModalProps> =
                 onClick={() => handleSelectDrive('C:')}
                 className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
                   selectedDrive === 'C:'
-                    ? 'bg-amber-500 border-amber-600 text-white shadow-xs'
+                    ? 'bg-amber-600 border-amber-600 text-white shadow-xs'
                     : 'bg-white border-amber-300 hover:bg-amber-50 text-slate-700'
                 }`}
               >
                 <div className={`text-xs font-black flex items-center justify-between ${selectedDrive === 'C:' ? 'text-white' : 'text-amber-800'}`}>
                   <span>C:\</span>
-                  <span className={`px-1 py-0.2 rounded text-[9px] font-bold ${selectedDrive === 'C:' ? 'bg-amber-700 text-amber-100' : 'bg-amber-100 text-amber-800'}`}>
+                  <span className={`px-1 py-0.2 rounded text-[9px] font-bold ${selectedDrive === 'C:' ? 'bg-amber-700 text-white' : 'bg-amber-100 text-amber-800'}`}>
                     Ổ Windows
                   </span>
                 </div>
-                <div className={`text-[10.5px] font-medium mt-0.5 ${selectedDrive === 'C:' ? 'text-amber-100' : 'text-slate-500'}`}>
+                <div className={`text-[10.5px] font-medium mt-0.5 ${selectedDrive === 'C:' ? 'text-white' : 'text-slate-500'}`}>
                   Dễ mất khi cài Win
                 </div>
               </button>
@@ -349,7 +349,7 @@ export const DataStorageLocationModal: React.FC<DataStorageLocationModalProps> =
               <button
                 type="button"
                 onClick={handleBrowseFolder}
-                className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs uppercase flex items-center gap-1.5 transition-colors cursor-pointer shrink-0"
+                className="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-100 text-slate-800 font-bold text-xs uppercase flex items-center gap-1.5 transition-colors cursor-pointer shrink-0"
               >
                 <FolderOpen className="w-4 h-4" />
                 <span>DUYỆT THƯ MỤC</span>
@@ -373,7 +373,7 @@ export const DataStorageLocationModal: React.FC<DataStorageLocationModalProps> =
               type="button"
               onClick={handleSaveLocation}
               disabled={isSavingDisk}
-              className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 disabled:opacity-75 text-white font-black text-xs uppercase tracking-wide flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer active:scale-[0.99]"
+              className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 disabled:opacity-75 text-white font-black text-xs uppercase tracking-wide flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer active:scale-[0.99]"
             >
               <HardDrive className={`w-4 h-4 ${isSavingDisk ? 'animate-bounce' : ''}`} />
               <span>{isSavingDisk ? `ĐANG TỰ ĐỘNG LƯU FILE ${roleFileName}...` : 'LƯU NƠI LƯU TRỮ DỮ LIỆU LỚP HỌC'}</span>
@@ -390,12 +390,12 @@ export const DataStorageLocationModal: React.FC<DataStorageLocationModalProps> =
                 <Sparkles className="w-3.5 h-3.5 text-yellow-300" />
                 LƯU TRỮ VẬT LÝ AN TOÀN: {roleTitleDisplay}
               </span>
-              <span className="font-mono text-[11px] bg-black/25 px-2.5 py-0.5 rounded font-bold text-yellow-200">
+              <span className="font-mono text-[11px] bg-black/25 px-2.5 py-0.5 rounded font-bold text-white">
                 {roleFileName}
               </span>
             </div>
-            <p className="text-[11.5px] text-emerald-50 leading-relaxed pt-0.5">
-              Toàn bộ dữ liệu của bạn được tự động lưu và ghi đè trọn vẹn trong 01 file duy nhất <strong className="text-yellow-200 font-mono">{roleFileName}</strong> tại thư mục đã chọn. Khi đổi máy tính hoặc sao lưu vào USB, chỉ cần sao chép đúng file này là toàn bộ số liệu được bảo toàn 100%!
+            <p className="text-[11.5px] text-white leading-relaxed pt-0.5">
+              Toàn bộ dữ liệu của bạn được tự động lưu và ghi đè trọn vẹn trong 01 file duy nhất <strong className="text-white font-mono">{roleFileName}</strong> tại thư mục đã chọn. Khi đổi máy tính hoặc sao lưu vào USB, chỉ cần sao chép đúng file này là toàn bộ số liệu được bảo toàn 100%!
             </p>
             <div className="pt-1 flex justify-end">
               <button
@@ -512,7 +512,7 @@ export const DataStorageLocationModal: React.FC<DataStorageLocationModalProps> =
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs uppercase flex items-center gap-1.5 transition-colors cursor-pointer shrink-0"
+                className="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-100 text-slate-800 font-bold text-xs uppercase flex items-center gap-1.5 transition-colors cursor-pointer shrink-0"
               >
                 <FolderOpen className="w-4 h-4" />
                 <span>DUYỆT THƯ MỤC</span>
@@ -544,7 +544,7 @@ export const DataStorageLocationModal: React.FC<DataStorageLocationModalProps> =
           <button
             type="button"
             onClick={onClose}
-            className="px-5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold uppercase transition-colors cursor-pointer"
+            className="px-5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-100 text-slate-800 text-xs font-bold uppercase transition-colors cursor-pointer"
           >
             ĐÓNG
           </button>

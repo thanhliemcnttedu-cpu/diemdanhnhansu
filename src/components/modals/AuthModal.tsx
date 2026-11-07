@@ -333,7 +333,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   return (
     <div 
       className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4"
-      style={{ background: 'linear-gradient(135deg, #1e3a5f 0%, #2d5a87 30%, #3d7ab5 60%, #4a90c4 100%)' }}
+      style={{ background: 'linear-gradient(135deg, #0284c7 0%, #2563eb 50%, #4f46e5 100%)' }}
     >
       {/* Background pattern overlay */}
       <div className="absolute inset-0 opacity-10" style={{
@@ -364,7 +364,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               }}>
                 HỆ THỐNG QUẢN TRỊ CSDL LỚP HỌC HẠNH PHÚC
               </h1>
-              <p className="text-[10px] sm:text-xs text-blue-100/80 font-medium mt-0.5 hidden sm:block">
+              <p className="text-[10px] sm:text-xs text-white/95 font-semibold mt-0.5 drop-shadow hidden sm:block">
                 SCHOOL DATABASE MANAGEMENT SYSTEM • Phiên bản chuyên nghiệp
               </p>
             </div>
@@ -388,7 +388,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               onClick={() => setIsCdKeyModalOpen(true)}
               className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-full font-black text-[10px] sm:text-[11px] uppercase tracking-wide shadow-lg transition-all hover:scale-[1.03] active:scale-[0.98] flex items-center gap-1.5 cursor-pointer ${
                 isCdKeyActivated
-                  ? 'bg-emerald-600 hover:bg-emerald-500 text-white'
+                  ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
                   : 'bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950'
               }`}
               title="Kích hoạt CDKEY (LOP-HOC-HANH-PHUC)"
@@ -415,7 +415,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           
           {/* ═══════════ LEFT PANEL - LOGIN FORM & RESCUE ═══════════ */}
           <div className="md:w-[44%] shrink-0 flex flex-col rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl" style={{
-            background: 'linear-gradient(160deg, #1e3a5f 0%, #2d5a87 40%, #1a2f4a 100%)',
+            background: 'linear-gradient(160deg, #1d4ed8 0%, #2563eb 50%, #4338ca 100%)',
             boxShadow: '0 25px 50px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1)'
           }}>
             <div className="flex-1 p-3 sm:p-4 flex flex-col overflow-y-auto">
@@ -424,7 +424,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 <div className="mb-3 p-3 rounded-2xl bg-rose-600/35 border-2 border-rose-400 text-white text-xs sm:text-sm font-black flex items-start gap-2.5 backdrop-blur-md shadow-xl animate-in fade-in slide-in-from-top duration-200">
                   <AlertCircle className="w-5 h-5 text-rose-300 shrink-0 mt-0.5" />
                   <div className="flex-1">
-                    <div className="text-[10px] font-black uppercase tracking-wider text-rose-200 mb-0.5">
+                    <div className="text-[10px] font-black uppercase tracking-wider text-white mb-0.5">
                       BẢNG THÔNG BÁO HỆ THỐNG
                     </div>
                     <div className="text-white text-xs sm:text-[13px] font-black leading-snug">
@@ -434,7 +434,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   <button 
                     type="button" 
                     onClick={() => setErrorMessage('')}
-                    className="text-rose-200 hover:text-white p-0.5 transition-colors cursor-pointer"
+                    className="text-white hover:text-white p-0.5 transition-colors cursor-pointer"
                     title="Đóng thông báo"
                   >
                     <X className="w-4 h-4" />
@@ -442,7 +442,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 </div>
               )}
               {successMessage && (
-                <div className="mb-3 p-3 rounded-2xl bg-emerald-500/25 border-2 border-emerald-400 text-emerald-100 text-xs sm:text-sm font-black flex items-center gap-2.5 backdrop-blur-md shadow-xl">
+                <div className="mb-3 p-3 rounded-2xl bg-emerald-500/25 border-2 border-emerald-400 text-white text-xs sm:text-sm font-black flex items-center gap-2.5 backdrop-blur-md shadow-xl">
                   <CheckCircle2 className="w-5 h-5 text-emerald-300 shrink-0" />
                   <span>{successMessage}</span>
                 </div>
@@ -453,7 +453,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 {(!driveConfigured || showDriveForm) ? (
                   <div className="p-3 rounded-xl space-y-2" style={{ background: 'rgba(245, 158, 11, 0.16)', border: '1px solid rgba(245, 158, 11, 0.45)' }}>
                     <div className="flex items-center justify-between gap-2">
-                      <div className="text-[11px] font-black text-amber-100 uppercase flex items-center gap-1.5">
+                      <div className="text-[11px] font-black text-white uppercase flex items-center gap-1.5">
                         <Cloud className="w-3.5 h-3.5" />
                         <span>{driveConfigured ? 'Đổi thư mục dùng chung của nhà trường' : '1. Kết nối thư mục dùng chung của nhà trường'}</span>
                       </div>
@@ -467,11 +467,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                         </button>
                       )}
                     </div>
-                    <p className="text-[10.5px] text-amber-50/90 font-medium leading-snug">
+                    <p className="text-[10.5px] text-white font-medium leading-snug">
                       Dán 2 đường link do Quản trị nhà trường cung cấp rồi bấm <b>Xác thực</b> (mỗi máy chỉ làm 1 lần).
                     </p>
                     <label className="block space-y-1">
-                      <span className="text-[10px] font-black text-amber-100 uppercase">Ô 1 · Link thư mục dùng chung (Google Drive)</span>
+                      <span className="text-[10px] font-black text-white uppercase">Ô 1 · Link thư mục dùng chung (Google Drive)</span>
                       <input
                         type="text"
                         value={folderLinkInput}
@@ -481,7 +481,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                       />
                     </label>
                     <label className="block space-y-1">
-                      <span className="text-[10px] font-black text-amber-100 uppercase">Ô 2 · Link mã script của nhà trường (Apps Script)</span>
+                      <span className="text-[10px] font-black text-white uppercase">Ô 2 · Link mã script của nhà trường (Apps Script)</span>
                       <input
                         type="text"
                         value={scriptLinkInput}
@@ -494,20 +494,20 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                       type="button"
                       onClick={handleApplyConnection}
                       disabled={!folderLinkInput.trim() || !scriptLinkInput.trim() || driveChecking}
-                      className="w-full py-2 rounded-lg bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white text-[11px] font-black uppercase cursor-pointer flex items-center justify-center gap-1.5"
+                      className="w-full py-2 rounded-lg bg-amber-600 hover:bg-amber-700 disabled:opacity-80 text-white text-[11px] font-black uppercase cursor-pointer flex items-center justify-center gap-1.5"
                     >
                       <ShieldCheck className="w-3.5 h-3.5" />
                       {driveChecking ? 'Đang xác thực với Google Drive...' : 'Xác thực & kết nối'}
                     </button>
                     {!driveConfigured && (
-                      <p className="text-[10px] text-amber-50/80 font-medium leading-snug">
+                      <p className="text-[10px] text-white font-medium leading-snug">
                         Quản trị nhà trường lần đầu: chọn vai trò Quản trị cao nhất và đăng nhập để tạo thư mục, mã script.
                       </p>
                     )}
                   </div>
                 ) : (
                   <div className="px-3 py-2 rounded-xl flex items-center justify-between gap-2" style={{ background: 'rgba(16, 185, 129, 0.14)', border: '1px solid rgba(16, 185, 129, 0.35)' }}>
-                    <div className="text-[10.5px] font-bold text-emerald-100 flex items-center gap-1.5 min-w-0">
+                    <div className="text-[10.5px] font-bold text-white flex items-center gap-1.5 min-w-0">
                       <Cloud className="w-3.5 h-3.5 shrink-0" />
                       <span className="truncate">
                         {driveChecking
@@ -529,21 +529,20 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
                 {/* Username Input */}
                 <div>
-                  <label className="block text-[11px] font-black text-blue-100/90 uppercase mb-1.5 tracking-wider">
+                  <label className="block text-[11px] font-black text-white uppercase mb-1.5 tracking-wider">
                     2. Tên Đăng Nhập
                   </label>
                   <div className="relative">
-                    <User className="w-4 h-4 text-blue-300/60 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                    <User className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                     <input
                       type="text"
                       value={username}
                       onChange={(e) => setUsername(e.target.value)}
                       placeholder="Ví dụ: gvcn_1a1, bgh_hieutruong, adminquantri..."
-                      className="w-full pl-10 pr-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-bold text-white placeholder-blue-300/40 focus:outline-none focus:ring-2 focus:ring-blue-400/50 transition-all"
+                      className="w-full pl-10 pr-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-bold text-slate-800 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-300 transition-all"
                       style={{
-                        background: 'rgba(255,255,255,0.08)',
-                        border: '1px solid rgba(255,255,255,0.12)',
-                        backdropFilter: 'blur(8px)'
+                        background: '#ffffff',
+                        border: '1px solid #bfdbfe'
                       }}
                       required
                     />
@@ -552,28 +551,27 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
                 {/* Password Input */}
                 <div>
-                  <label className="block text-[11px] font-black text-blue-100/90 uppercase mb-1.5 tracking-wider">
+                  <label className="block text-[11px] font-black text-white uppercase mb-1.5 tracking-wider">
                     3. Mật Khẩu
                   </label>
                   <div className="relative">
-                    <Lock className="w-4 h-4 text-blue-300/60 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                    <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                     <input
                       type={showPassword ? 'text' : 'password'}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder="Nhập mật khẩu..."
-                      className="w-full pl-10 pr-11 py-2.5 rounded-xl text-xs sm:text-sm font-bold text-white placeholder-blue-300/40 focus:outline-none focus:ring-2 focus:ring-blue-400/50 transition-all"
+                      className="w-full pl-10 pr-11 py-2.5 rounded-xl text-xs sm:text-sm font-bold text-slate-800 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-300 transition-all"
                       style={{
-                        background: 'rgba(255,255,255,0.08)',
-                        border: '1px solid rgba(255,255,255,0.12)',
-                        backdropFilter: 'blur(8px)'
+                        background: '#ffffff',
+                        border: '1px solid #bfdbfe'
                       }}
                       required
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-blue-300/60 hover:text-blue-200 transition-colors"
+                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-blue-600 transition-colors"
                     >
                       {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
@@ -587,7 +585,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     border: '1px solid rgba(59, 130, 246, 0.25)'
                   }}>
                     <div className="flex items-center justify-between mb-1.5">
-                      <label className="text-[11px] font-black text-blue-200 uppercase flex items-center gap-1.5">
+                      <label className="text-[11px] font-black text-white uppercase flex items-center gap-1.5">
                         <School className="w-3.5 h-3.5" />
                         <span>Chọn Tên Trường:</span>
                       </label>
@@ -595,7 +593,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                         type="button"
                         onClick={handleQuickPullFromDrive}
                         disabled={isPullingDrive}
-                        className="text-[10px] px-2 py-0.5 rounded-md bg-sky-500/30 hover:bg-sky-500/50 text-sky-200 border border-sky-400/30 font-bold flex items-center gap-1 transition-all cursor-pointer"
+                        className="text-[10px] px-2 py-0.5 rounded-md bg-white/20 hover:bg-white/30 text-white border border-white/40 font-bold flex items-center gap-1 transition-all cursor-pointer"
                         title="Tự động kéo CSDL trường và tài khoản mới nhất từ Google Drive"
                       >
                         <RefreshCw className={`w-2.5 h-2.5 ${isPullingDrive ? 'animate-spin' : ''}`} />
@@ -625,7 +623,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                           className="w-full px-3 py-2 rounded-lg border text-xs sm:text-sm font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white shadow-xs"
                           style={{ borderColor: 'rgba(59, 130, 246, 0.3)' }}
                         />
-                        <div className="text-[10px] text-blue-200 font-medium">
+                        <div className="text-[10px] text-white font-medium">
                           💡 Nhập tên trường của bạn (hoặc tạo trường trong tài khoản <strong className="text-white">@adminquantri</strong>)
                         </div>
                       </div>
@@ -639,7 +637,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   disabled={loading}
                   className="w-full py-3 px-4 rounded-xl font-black text-xs sm:text-sm uppercase tracking-wider transition-all flex items-center justify-center gap-2.5 disabled:opacity-50 cursor-pointer hover:scale-[1.01] active:scale-[0.99]"
                   style={{
-                    background: 'linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%)',
+                    background: 'linear-gradient(135deg, #059669 0%, #047857 55%, #065f46 100%)',
                     color: 'white',
                     boxShadow: '0 8px 24px rgba(16, 185, 129, 0.35), inset 0 1px 0 rgba(255,255,255,0.2)'
                   }}
@@ -658,7 +656,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 <button
                   type="button"
                   onClick={() => setIsGoogleDriveModalOpen(true)}
-                  className="flex-1 px-2 py-1.5 rounded-lg border border-sky-400/30 bg-sky-600/20 hover:bg-sky-600/40 text-sky-200 hover:text-white text-[10.5px] font-black flex items-center justify-center gap-1 cursor-pointer"
+                  className="flex-1 px-2 py-1.5 rounded-lg border border-white/40 bg-white/15 hover:bg-white/25 text-white text-[10.5px] font-black flex items-center justify-center gap-1 cursor-pointer"
                   title="Kéo dữ liệu từ thư mục Google Drive dùng chung"
                 >
                   <Cloud className="w-3.5 h-3.5" /> Google Drive
@@ -666,7 +664,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 <button
                   type="button"
                   onClick={() => setIsDataStorageModalOpen(true)}
-                  className="flex-1 px-2 py-1.5 rounded-lg border border-emerald-400/30 bg-emerald-600/20 hover:bg-emerald-600/40 text-emerald-200 hover:text-white text-[10.5px] font-black flex items-center justify-center gap-1 cursor-pointer"
+                  className="flex-1 px-2 py-1.5 rounded-lg border border-emerald-300/60 bg-emerald-600/40 hover:bg-emerald-700/60 text-white text-[10.5px] font-black flex items-center justify-center gap-1 cursor-pointer"
                   title="Chọn tệp JSON an toàn trên ổ D / E hoặc USB"
                 >
                   <HardDrive className="w-3.5 h-3.5" /> Ổ D / E & USB
@@ -680,11 +678,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               borderTop: '1px solid rgba(245,158,11,0.2)'
             }}>
               <span className="font-black text-white">Tác giả: NGUYỄN THANH LIÊM</span>
-              <span className="font-bold text-blue-200/70">TH Số 1 Tân Uyên</span>
-              <a href="https://zalo.me/0888358363" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-blue-200/80 hover:text-amber-300">
+              <span className="font-bold text-white">TH Số 1 Tân Uyên</span>
+              <a href="https://zalo.me/0888358363" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-white hover:text-amber-300">
                 <Phone className="w-3 h-3" /><span className="text-amber-300 font-mono font-bold">0888.358.363</span>
               </a>
-              <a href="https://www.facebook.com/nguyenthanhliemautotech/" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-blue-200/80 hover:text-blue-300">
+              <a href="https://www.facebook.com/nguyenthanhliemautotech/" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-white hover:text-blue-300">
                 <Globe className="w-3 h-3" /><span className="font-bold">Facebook</span>
               </a>
             </div>
@@ -714,7 +712,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 onClick={() => setRightPanelTab('features')}
                 className={`flex-1 py-2 px-3 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
                   rightPanelTab === 'features'
-                    ? 'bg-gradient-to-r from-amber-500 to-rose-500 text-white shadow-sm'
+                    ? 'bg-gradient-to-r from-amber-600 to-rose-500 text-white shadow-sm'
                     : 'text-slate-500 hover:text-slate-800'
                 }`}
               >
@@ -751,7 +749,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                             setSelectedRoleScope(opt.id);
                           }}
                           title={isLocked ? 'Cần cấu hình thư mục dùng chung của nhà trường trước' : undefined}
-                          className={`group relative p-2 sm:p-2.5 rounded-xl sm:rounded-2xl border-2 transition-all duration-200 cursor-pointer flex items-start gap-2.5 sm:gap-3 ${isLocked ? 'opacity-40 grayscale ' : ''}${
+                          className={`group relative p-2 sm:p-2.5 rounded-xl sm:rounded-2xl border-2 transition-all duration-200 cursor-pointer flex items-start gap-2.5 sm:gap-3 ${isLocked ? 'opacity-75 grayscale ' : ''}${
                             isSelected 
                               ? `${opt.activeBorder} ${opt.activeBg} shadow-md` 
                               : 'border-slate-200/80 hover:border-slate-300 bg-white hover:bg-slate-50/50'

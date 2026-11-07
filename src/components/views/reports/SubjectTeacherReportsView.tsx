@@ -162,7 +162,7 @@ export const SubjectTeacherReportsView: React.FC<{ onNavigate?: (view: any) => v
               <span className="px-3 py-1 rounded-xl bg-amber-400 text-amber-950 font-black text-xs uppercase tracking-wider shadow-2xs">
                 MÔN: {subjectName}
               </span>
-              <span className="px-3 py-1 rounded-xl bg-emerald-500/80 text-white font-bold text-xs uppercase tracking-wider">
+              <span className="px-3 py-1 rounded-xl bg-emerald-600/80 text-white font-bold text-xs uppercase tracking-wider">
                 {classes.length} LỚP PHỤ TRÁCH
               </span>
             </div>
@@ -172,7 +172,7 @@ export const SubjectTeacherReportsView: React.FC<{ onNavigate?: (view: any) => v
               <span>BÁO CÁO THỐNG KÊ THI ĐUA VÀ TÍCH XU BỘ MÔN</span>
             </h1>
 
-            <p className="text-xs md:text-sm text-emerald-100 max-w-2xl font-medium leading-relaxed">
+            <p className="text-xs md:text-sm text-white max-w-2xl font-medium leading-relaxed">
               Tổng hợp chi tiết kết quả khen thưởng sao thi đua và điểm xu của tất cả các lớp giảng dạy, so sánh xếp hạng các lớp, tra cứu học sinh theo lớp và xuất file Excel hoàn chỉnh.
             </p>
           </div>
@@ -522,7 +522,7 @@ export const SubjectTeacherReportsView: React.FC<{ onNavigate?: (view: any) => v
                             <span className="px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 text-[10px] font-black uppercase">
                               {st.role.split('•')[0]}
                             </span>
-                          ) : <span className="text-slate-300">---</span>}
+                          ) : <span className="text-slate-500">---</span>}
                         </td>
                         <td className="py-3 px-4 text-center">
                           <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-amber-50 text-amber-900 border border-amber-200 font-black">

@@ -18,12 +18,12 @@ export const HeadTiltReportModal: React.FC<HeadTiltReportModalProps> = ({
   const percent = Math.round((result.correctCount / Math.max(1, result.totalQuestions)) * 100);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-sky-900/20 backdrop-blur-xs animate-in fade-in">
       {viewMode === 'summary' ? (
         /* MÀN HÌNH HOÀN THÀNH TỔNG KẾT (Page 16 trong PDF) */
         <div className="relative w-full max-w-md bg-white rounded-3xl p-8 shadow-2xl border border-slate-100 text-center animate-in zoom-in-95">
           {/* Confetti icon header */}
-          <div className="w-20 h-20 mx-auto mb-4 rounded-3xl bg-gradient-to-tr from-amber-400 to-rose-400 flex items-center justify-center shadow-lg shadow-amber-500/30 text-white">
+          <div className="w-20 h-20 mx-auto mb-4 rounded-3xl bg-gradient-to-tr from-amber-600 to-rose-500 flex items-center justify-center shadow-lg shadow-amber-500/30 text-white">
             <Trophy className="w-10 h-10" />
           </div>
 
@@ -113,7 +113,7 @@ export const HeadTiltReportModal: React.FC<HeadTiltReportModalProps> = ({
                 <div className="flex items-start gap-3">
                   <div
                     className={`w-7 h-7 rounded-xl shrink-0 flex items-center justify-center font-black text-xs text-white ${
-                      rec.isCorrect ? 'bg-emerald-500' : 'bg-rose-500'
+                      rec.isCorrect ? 'bg-emerald-600' : 'bg-rose-500'
                     }`}
                   >
                     {rec.isCorrect ? <Check className="w-4 h-4" /> : <X className="w-4 h-4" />}

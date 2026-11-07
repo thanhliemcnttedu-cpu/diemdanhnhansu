@@ -4514,7 +4514,7 @@ export const ClassroomProvider: React.FC<{ children: React.ReactNode }> = ({ chi
                 <AlertCircle className="w-6 h-6 text-white" />
                 <h3 className="text-white font-bold text-lg shadow-sm">Cảnh Báo Phân Quyền</h3>
               </div>
-              <button onClick={() => setPermissionAlert(null)} className="text-white/80 hover:text-white hover:bg-white/20 p-1.5 rounded-full transition-all">
+              <button onClick={() => setPermissionAlert(null)} className="text-white/90 hover:text-white hover:bg-white/20 p-1.5 rounded-full transition-all">
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -4524,7 +4524,7 @@ export const ClassroomProvider: React.FC<{ children: React.ReactNode }> = ({ chi
               </p>
             </div>
             <div className="bg-gray-50/80 p-4 flex justify-end border-t border-gray-100">
-              <button onClick={() => setPermissionAlert(null)} className="px-6 py-2.5 bg-gray-800 text-white font-medium rounded-xl hover:bg-gray-900 transition-colors shadow-sm w-full sm:w-auto">
+              <button onClick={() => setPermissionAlert(null)} className="px-6 py-2.5 bg-slate-100 text-slate-800 font-medium rounded-xl hover:bg-slate-100 transition-colors shadow-sm w-full sm:w-auto">
                 Đã hiểu
               </button>
             </div>

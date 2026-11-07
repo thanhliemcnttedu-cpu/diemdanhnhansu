@@ -359,7 +359,7 @@ export const RewardImageEditorModal: React.FC<RewardImageEditorModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 backdrop-blur-xs p-2 sm:p-4 animate-in fade-in duration-150">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-sky-900/20 backdrop-blur-xs p-2 sm:p-4 animate-in fade-in duration-150">
       <div 
         className="bg-white rounded-3xl max-w-2xl w-full p-3.5 sm:p-6 shadow-2xl border border-slate-200 flex flex-col max-h-[88dvh] overflow-hidden"
         onMouseUp={handleMouseUp}
@@ -545,21 +545,21 @@ export const RewardImageEditorModal: React.FC<RewardImageEditorModalProps> = ({
           {/* ========================================================================= */}
           {/* KHUNG XEM TRƯỚC VÀ CẮT ẢNH TRỰC QUAN (LIVE CROP VIEWPORT) */}
           {/* ========================================================================= */}
-          <div className="flex flex-col items-center justify-center p-3 bg-slate-900 rounded-3xl border border-slate-800 shadow-inner relative overflow-hidden select-none">
+          <div className="flex flex-col items-center justify-center p-3 bg-white rounded-3xl border border-slate-200 shadow-inner relative overflow-hidden select-none">
             {/* Thanh thông báo hướng dẫn di chuyển */}
-            <div className="absolute top-2 left-3 right-3 flex items-center justify-between text-[10px] text-slate-400 z-10 pointer-events-none">
-              <span className="flex items-center gap-1 text-amber-300 font-bold bg-slate-950/70 px-2 py-0.5 rounded-lg border border-slate-700">
+            <div className="absolute top-2 left-3 right-3 flex items-center justify-between text-[10px] text-slate-500 z-10 pointer-events-none">
+              <span className="flex items-center gap-1 text-amber-600 font-bold bg-white/70 px-2 py-0.5 rounded-lg border border-slate-200">
                 <Move className="w-3 h-3" />
                 <span>GIỮ & KÉO CHUỘT / CHẠM ĐỂ DI CHUYỂN VỊ TRÍ ẢNH</span>
               </span>
-              <span className="bg-slate-950/70 px-2 py-0.5 rounded-lg text-slate-300 font-mono">
+              <span className="bg-white/70 px-2 py-0.5 rounded-lg text-slate-600 font-mono">
                 Zoom: {Math.round(scale * 100)}% • Xoay: {rotation}°
               </span>
             </div>
 
             {/* VÙNG KHUNG CẮT CHÍNH */}
             <div 
-              className="relative overflow-hidden rounded-2xl shadow-2xl border-2 border-indigo-400/90 cursor-grab active:cursor-grabbing bg-slate-950 mt-4"
+              className="relative overflow-hidden rounded-2xl shadow-2xl border-2 border-indigo-400/90 cursor-grab active:cursor-grabbing bg-white mt-4"
               style={{
                 width: `${frameWidth}px`,
                 height: `${frameHeight}px`
@@ -599,15 +599,15 @@ export const RewardImageEditorModal: React.FC<RewardImageEditorModalProps> = ({
 
               {/* Lưới chia ba (Rule of Thirds Grid) hỗ trợ căn bố cục */}
               {showGrid && (
-                <div className="absolute inset-0 pointer-events-none grid grid-cols-3 grid-rows-3 border border-white/20">
-                  <div className="border-r border-b border-white/25"></div>
-                  <div className="border-r border-b border-white/25"></div>
-                  <div className="border-b border-white/25"></div>
-                  <div className="border-r border-b border-white/25"></div>
-                  <div className="border-r border-b border-white/25"></div>
-                  <div className="border-b border-white/25"></div>
-                  <div className="border-r border-white/25"></div>
-                  <div className="border-r border-white/25"></div>
+                <div className="absolute inset-0 pointer-events-none grid grid-cols-3 grid-rows-3 border border-slate-200">
+                  <div className="border-r border-b border-slate-200"></div>
+                  <div className="border-r border-b border-slate-200"></div>
+                  <div className="border-b border-slate-200"></div>
+                  <div className="border-r border-b border-slate-200"></div>
+                  <div className="border-r border-b border-slate-200"></div>
+                  <div className="border-b border-slate-200"></div>
+                  <div className="border-r border-slate-200"></div>
+                  <div className="border-r border-slate-200"></div>
                   <div></div>
                 </div>
               )}
@@ -620,12 +620,12 @@ export const RewardImageEditorModal: React.FC<RewardImageEditorModalProps> = ({
             </div>
 
             {/* Thanh điều khiển nhanh góc dưới ảnh */}
-            <div className="flex items-center justify-between w-full max-w-[380px] mt-2 text-[10px] text-slate-400">
+            <div className="flex items-center justify-between w-full max-w-[380px] mt-2 text-[10px] text-slate-500">
               <button
                 type="button"
                 onClick={() => setShowGrid(!showGrid)}
                 className={`px-2 py-0.5 rounded-lg border transition-all ${
-                  showGrid ? 'bg-indigo-900/60 border-indigo-500 text-indigo-200' : 'bg-slate-800 border-slate-700 text-slate-400'
+                  showGrid ? 'bg-indigo-600/60 border-indigo-500 text-white' : 'bg-slate-100 border-slate-200 text-slate-500'
                 }`}
               >
                 <Grid className="w-3 h-3 inline mr-1" />
@@ -639,7 +639,7 @@ export const RewardImageEditorModal: React.FC<RewardImageEditorModalProps> = ({
               <button
                 type="button"
                 onClick={handleReset}
-                className="px-2 py-0.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700"
+                className="px-2 py-0.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 border border-slate-200"
               >
                 <RefreshCw className="w-3 h-3 inline mr-1" />
                 <span>Đặt lại</span>

@@ -82,7 +82,7 @@ export const ChangePasswordModal: React.FC<Props> = ({ currentUser }) => {
   const inputCls = 'w-full pl-3 pr-10 py-2.5 rounded-xl border border-slate-300 bg-white text-sm font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-400';
 
   return (
-    <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm" onClick={() => !loading && setIsOpen(false)}>
+    <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-sky-900/20 backdrop-blur-xs" onClick={() => !loading && setIsOpen(false)}>
       <form onSubmit={handleSubmit} onClick={e => e.stopPropagation()} className="w-full max-w-md bg-white rounded-2xl shadow-2xl p-5 space-y-3.5">
         <div className="flex items-start gap-3">
           <div className="w-10 h-10 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center shrink-0">

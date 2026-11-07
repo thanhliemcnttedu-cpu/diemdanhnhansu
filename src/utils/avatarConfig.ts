@@ -24,27 +24,27 @@ export interface AvatarFolderStructure {
 }
 
 // 1. Static Initial Manifest: Pre-indexed from public/avatars/
-// Includes all formats: .jpg, .jpeg, .png, .webp, .svg, .jfif, .avif
+// Ảnh mẫu đã chuẩn hóa: vuông 1:1, 512x512, JPG (scripts: normalize avatars). Quét thư mục vẫn nhận mọi định dạng.
 const STATIC_AVATAR_MANIFEST: AvatarFolderStructure = {
   default: {
     boys: [
       '/avatars/default/boys/boy1.jpg',
-      '/avatars/default/boys/boy4.jfif',
-      '/avatars/default/boys/boy5.jfif',
-      '/avatars/default/boys/boy6.jfif',
-      '/avatars/default/boys/boy7.jfif',
-      '/avatars/default/boys/boy8.jfif',
-      '/avatars/default/boys/boy9.jfif',
-      '/avatars/default/boys/boy10.jfif',
-      '/avatars/default/boys/boy11.jfif',
-      '/avatars/default/boys/boy12.jfif'
+      '/avatars/default/boys/boy4.jpg',
+      '/avatars/default/boys/boy5.jpg',
+      '/avatars/default/boys/boy6.jpg',
+      '/avatars/default/boys/boy7.jpg',
+      '/avatars/default/boys/boy8.jpg',
+      '/avatars/default/boys/boy9.jpg',
+      '/avatars/default/boys/boy10.jpg',
+      '/avatars/default/boys/boy11.jpg',
+      '/avatars/default/boys/boy12.jpg'
     ],
     girls: [
-      '/avatars/default/girls/girl1.jfif',
-      '/avatars/default/girls/girl2.jfif',
-      '/avatars/default/girls/girl3.png',
+      '/avatars/default/girls/girl1.jpg',
+      '/avatars/default/girls/girl2.jpg',
+      '/avatars/default/girls/girl3.jpg',
       '/avatars/default/girls/girl4.jpg',
-      '/avatars/default/girls/girl5.png'
+      '/avatars/default/girls/girl5.jpg'
     ]
   },
   real_demo: {
@@ -281,6 +281,12 @@ export function getFallbackAvatar(gender?: Gender, name?: string): string {
  */
 export function handleAvatarImgError(e: React.SyntheticEvent<HTMLImageElement, Event>, gender?: Gender, name?: string) {
   const target = e.currentTarget;
+  // Tương thích dữ liệu cũ: ảnh mẫu trước đây là .jfif / .png / .jpeg — nay đều đã chuẩn hóa sang .jpg
+  const legacy = target.src.match(/^(.*\/avatars\/(?:default|real_demo)\/(?:boys|girls)\/[^/?#]+)\.(jfif|png|jpeg|webp)(\?.*)?$/i);
+  if (legacy) {
+    target.src = `${legacy[1]}.jpg`;
+    return;
+  }
   const isFemale = gender === 'Nữ';
   const primaryFallback = isFemale 
     ? '/avatars/real_demo/girls/student-avatar-16.jpg' 
@@ -297,3 +303,29 @@ export function handleAvatarImgError(e: React.SyntheticEvent<HTMLImageElement, E
 }
 
 
+
+/**
+ * 🛡️ Lớp bảo vệ chung: mọi ảnh trong /avatars/ bị lỗi (đường dẫn cũ .jfif/.png, tệp đã đổi tên...)
+ * tự chuyển sang bản .jpg đã chuẩn hóa, nếu vẫn lỗi thì dùng ảnh hoạt hình dự phòng theo tên.
+ * Áp dụng cả với những thẻ <img> chưa gắn onError riêng (cài 1 lần ở main.tsx).
+ */
+export function installGlobalAvatarFallback(): void {
+  if (typeof document === 'undefined' || (window as any).__lhhpAvatarFallback) return;
+  (window as any).__lhhpAvatarFallback = true;
+  document.addEventListener('error', (ev) => {
+    const img = ev.target;
+    if (!(img instanceof HTMLImageElement)) return;
+    const src = img.currentSrc || img.src || '';
+    if (!/\/avatars\/(?:default|real_demo)\//.test(src)) return;
+    const tries = Number(img.dataset.avatarFallback || '0');
+    if (tries >= 2) return;
+    img.dataset.avatarFallback = String(tries + 1);
+    const legacy = src.match(/^(.*\/avatars\/(?:default|real_demo)\/(?:boys|girls)\/[^/?#]+)\.(jfif|png|jpeg|webp)(\?.*)?$/i);
+    if (legacy && tries === 0) {
+      img.src = `${legacy[1]}.jpg`;
+      return;
+    }
+    const isGirl = /\/girls\//.test(src);
+    img.src = `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(img.alt || (isGirl ? 'Girl' : 'Boy'))}&backgroundColor=${isGirl ? 'ffd5dc' : 'd1d4f9'}`;
+  }, true);
+}

@@ -3,6 +3,7 @@ import {createRoot} from 'react-dom/client';
 import App from './App.tsx';
 import './index.css';
 import { schoolDriveDbService } from './services/schoolDriveDbService';
+import { installGlobalAvatarFallback } from './utils/avatarConfig';
 
 // 🌐 Bản web tĩnh (Vercel): không có máy chủ Express (/api/*). Dò 1 lần khi khởi động; nếu không có,
 // trả 404 ngay tại trình duyệt cho các lần gọi /api sau đó (cùng kiểu phản hồi như máy chủ tĩnh,
@@ -33,6 +34,8 @@ import { schoolDriveDbService } from './services/schoolDriveDbService';
 
 // 🧹 Bản web: dữ liệu trình duyệt chỉ thuộc 1 thư mục dùng chung — dọn bộ nhớ đệm cũ trước khi nạp
 schoolDriveDbService.ensureCacheOwnership();
+// 🛡️ Ảnh avatar học sinh lỗi ở bất kỳ màn hình nào → tự sửa / dùng ảnh dự phòng
+installGlobalAvatarFallback();
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

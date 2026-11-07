@@ -174,7 +174,7 @@ export const ExportStudentListModal: React.FC<ExportStudentListModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-slate-900/60 backdrop-blur-sm overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-sky-900/20 backdrop-blur-xs overflow-y-auto">
       <div className="bg-white w-full max-w-4xl rounded-3xl shadow-2xl border border-indigo-100 overflow-hidden my-auto animate-in fade-in zoom-in-95 duration-200">
         
         {/* Header */}
@@ -185,7 +185,7 @@ export const ExportStudentListModal: React.FC<ExportStudentListModalProps> = ({
             </div>
             <div>
               <h2 className="text-lg font-black tracking-tight">Xuất Danh Sách Học Sinh</h2>
-              <p className="text-xs text-emerald-100 font-semibold">
+              <p className="text-xs text-white font-semibold">
                 Lớp <span className="text-amber-300 font-black">{classroom.name}</span> • Sĩ số: {filteredStudents.length} học sinh
               </p>
             </div>

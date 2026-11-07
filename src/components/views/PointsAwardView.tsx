@@ -211,7 +211,7 @@ export const PointsAwardView: React.FC = () => {
                     <img
                       src={student.avatar}
                       alt={student.name}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover object-center"
                       referrerPolicy="no-referrer"
                       onError={(e) => handleAvatarImgError(e, student.gender, student.name)}
                     />

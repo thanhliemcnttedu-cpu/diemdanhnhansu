@@ -609,7 +609,7 @@ export const AttendanceExportModal: React.FC<AttendanceExportModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 md:p-6 bg-slate-900/60 backdrop-blur-xs overflow-y-auto animate-in fade-in duration-150">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 md:p-6 bg-sky-900/20 backdrop-blur-xs overflow-y-auto animate-in fade-in duration-150">
       <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-6xl my-auto max-h-[94vh] flex flex-col overflow-hidden">
         {/* Modal Header */}
         <div className="p-4 md:p-5 border-b border-slate-200 flex items-center justify-between bg-slate-50/80 shrink-0">
@@ -766,7 +766,7 @@ export const AttendanceExportModal: React.FC<AttendanceExportModalProps> = ({
               <ImageIcon className="w-3 h-3 text-teal-600" />
               <span>🖼️ Tải Ảnh Dọc</span>
             </button>
-            <span className="text-slate-300">|</span>
+            <span className="text-slate-500">|</span>
             <button
               onClick={() => exportScope === 'single' ? handleExportSingleClassPdf('landscape') : handleExportMultiClassPdf('landscape')}
               disabled={isExportingPdf || isExportingPng}

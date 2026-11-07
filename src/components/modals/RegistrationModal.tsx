@@ -92,7 +92,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
   return (
     <div 
       className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4"
-      style={{ background: 'linear-gradient(135deg, #1e3a5f 0%, #2d5a87 30%, #3d7ab5 60%, #4a90c4 100%)' }}
+      style={{ background: 'linear-gradient(135deg, #7dd3fc 0%, #38bdf8 30%, #60a5fa 65%, #818cf8 100%)' }}
     >
       {/* Background pattern */}
       <div className="absolute inset-0 opacity-10" style={{
@@ -123,7 +123,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
               }}>
                 ĐĂNG KÝ SỬ DỤNG ỨNG DỤNG PHẦN MỀM LỚP HỌC HẠNH PHÚC
               </h1>
-              <p className="text-[10px] sm:text-xs text-blue-100/80 font-medium mt-0.5 hidden sm:block">
+              <p className="text-[10px] sm:text-xs text-white font-medium mt-0.5 hidden sm:block">
                 Cấp tài khoản chính thức • Khởi tạo cơ sở dữ liệu riêng • Hỗ trợ kỹ thuật 24/7
               </p>
             </div>
@@ -359,7 +359,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
 
           {/* ═══════ COLUMN 3: QR & Thanh Toán ═══════ */}
           <div className="lg:w-[26%] shrink-0 flex flex-col rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl" style={{
-            background: 'linear-gradient(160deg, #1e293b 0%, #312e81 50%, #1e1b4b 100%)',
+            background: 'linear-gradient(160deg, #4f46e5 0%, #6366f1 50%, #7c3aed 100%)',
             boxShadow: '0 25px 50px rgba(0,0,0,0.3)'
           }}>
             <div className="flex-1 p-4 sm:p-5 overflow-y-auto space-y-3">
@@ -393,8 +393,8 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                     alt="VietQR Chuyển khoản" 
                     className="w-full h-full object-contain transition-transform group-hover:scale-105"
                   />
-                  <div className="absolute inset-x-0 bottom-0 bg-slate-950/70 text-white text-[9px] font-black uppercase text-center py-1 flex items-center justify-center gap-1 opacity-80 group-hover:opacity-100">
-                    <ZoomIn className="w-2.5 h-2.5 text-amber-300" />
+                  <div className="absolute inset-x-0 bottom-0 bg-white/70 text-slate-800 text-[9px] font-black uppercase text-center py-1 flex items-center justify-center gap-1 opacity-80 group-hover:opacity-100">
+                    <ZoomIn className="w-2.5 h-2.5 text-amber-600" />
                     <span>NHẤP PHÓNG TO</span>
                   </div>
                 </div>
@@ -446,7 +446,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
 
           {/* ═══════ COLUMN 4: Lưu Ý & Liên Hệ ═══════ */}
           <div className="lg:w-[22%] shrink-0 flex flex-col rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl" style={{
-            background: 'linear-gradient(160deg, #1e293b 0%, #2e2c6d 50%, #1e1b4b 100%)',
+            background: 'linear-gradient(160deg, #2563eb 0%, #4f46e5 50%, #7c3aed 100%)',
             boxShadow: '0 25px 50px rgba(0,0,0,0.25)'
           }}>
             <div className="flex-1 p-3 sm:p-4 overflow-y-auto flex flex-col">
@@ -459,7 +459,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                   <AlertTriangle className="w-4 h-4 md:w-5 md:h-5 shrink-0 mt-0.5 opacity-80" />
                   <span>LƯU Ý QUAN TRỌNG DÀNH CHO QUÝ THẦY / CÔ:</span>
                 </h3>
-                <p className="italic text-amber-200/95 leading-relaxed font-medium text-justify">
+                <p className="italic text-white leading-relaxed font-medium text-justify">
                   "Quý Thầy/Cô thực hiện đăng ký thông tin sử dụng xong, thực hiện chuyển khoản phí sử dụng, chụp ảnh màn hình giao dịch lại và gửi qua ZALO, nhắn tin hoặc gọi điện cho Tác giả để cấp quyền sử dụng, nếu Thầy/Cô đã chuyển khoản thành công và gọi điện mà tác giả chưa bắt máy thì yên tâm có thể tác giả đang bận và sẽ gọi lại ngay cho Thầy/Cô."
                 </p>
               </div>
@@ -481,7 +481,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                 </a>
                 <a
                   href="tel:0888358363"
-                  className="py-2.5 px-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[10px] sm:text-[11px] uppercase flex items-center justify-center gap-1.5 shadow-lg transition-all hover:scale-[1.02] active:scale-[0.98]"
+                  className="py-2.5 px-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[10px] sm:text-[11px] uppercase flex items-center justify-center gap-1.5 shadow-lg transition-all hover:scale-[1.02] active:scale-[0.98]"
                 >
                   <Phone className="w-3.5 h-3.5 shrink-0" />
                   <div className="flex flex-col items-center leading-tight">
@@ -498,7 +498,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
       {/* ═══════ QR ZOOM LIGHTBOX ═══════ */}
       {isQrZoomed && (
         <div 
-          className="fixed inset-0 z-[70] flex items-center justify-center p-3 md:p-6 bg-slate-950/85 backdrop-blur-md animate-in fade-in duration-200 select-none"
+          className="fixed inset-0 z-[70] flex items-center justify-center p-3 md:p-6 bg-sky-900/20 backdrop-blur-xs animate-in fade-in duration-200 select-none"
           onClick={() => setIsQrZoomed(false)}
         >
           <div 
@@ -596,7 +596,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
               <button
                 type="button"
                 onClick={() => setIsQrZoomed(false)}
-                className="flex-1 py-2.5 px-3 rounded-xl bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs uppercase text-center transition-colors cursor-pointer"
+                className="flex-1 py-2.5 px-3 rounded-xl bg-slate-100 hover:bg-slate-100 text-slate-800 font-bold text-xs uppercase text-center transition-colors cursor-pointer"
               >
                 Đóng
               </button>

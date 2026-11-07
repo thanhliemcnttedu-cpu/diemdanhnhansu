@@ -218,7 +218,7 @@ export const HeadTiltQuizManageView: React.FC<HeadTiltQuizManageViewProps> = ({
                 <button
                   type="button"
                   onClick={() => onPlayQuiz(quiz)}
-                  className="w-full py-2.5 px-4 rounded-2xl bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-700 hover:from-indigo-700 hover:to-purple-800 text-white font-black text-xs shadow-md shadow-indigo-600/20 hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer mt-2"
+                  className="w-full py-2.5 px-4 rounded-2xl bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-700 hover:from-indigo-800 hover:to-purple-700 text-white font-black text-xs shadow-md shadow-indigo-600/20 hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer mt-2"
                 >
                   <Play className="w-3.5 h-3.5 fill-white" />
                   CHƠI

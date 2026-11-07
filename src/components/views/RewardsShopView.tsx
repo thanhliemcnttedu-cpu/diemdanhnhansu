@@ -177,7 +177,7 @@ export const RewardsShopView: React.FC = () => {
                     <span>Kho: {reward.stock} món</span>
                   </div>
 
-                  <div className="absolute bottom-3 left-3 bg-amber-500 text-white px-3 py-1 rounded-xl text-xs font-bold font-mono shadow-sm flex items-center gap-1">
+                  <div className="absolute bottom-3 left-3 bg-amber-600 text-white px-3 py-1 rounded-xl text-xs font-bold font-mono shadow-sm flex items-center gap-1">
                     <Sparkles className="w-3 h-3 text-amber-200" />
                     <span>{reward.cost} xu</span>
                   </div>
@@ -307,7 +307,7 @@ export const RewardsShopView: React.FC = () => {
 
       {/* Modal: Redeem for a Student */}
       {selectedRewardToRedeem && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-sky-900/20 backdrop-blur-xs p-4">
           <div className="bg-white rounded-2xl shadow-xl border border-slate-200 max-w-lg w-full p-6 space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <div>
@@ -381,7 +381,7 @@ export const RewardsShopView: React.FC = () => {
 
       {/* Modal: Add New Reward */}
       {isAddRewardOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-sky-900/20 backdrop-blur-xs p-4">
           <div className="bg-white rounded-2xl shadow-xl border border-slate-200 max-w-md w-full p-6">
             <h3 className="text-base font-bold text-slate-800 mb-4">Thêm phần quà vào kho</h3>
             <form onSubmit={handleAddSubmit} className="space-y-4">
@@ -505,7 +505,7 @@ export const RewardsShopView: React.FC = () => {
 
       {/* Modal: Edit Reward */}
       {editingReward && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-sky-900/20 backdrop-blur-xs p-4">
           <div className="bg-white rounded-2xl shadow-xl border border-slate-200 max-w-md w-full p-6">
             <h3 className="text-base font-bold text-slate-800 mb-4">Chỉnh sửa phần quà</h3>
             <form onSubmit={handleUpdateSubmit} className="space-y-4">

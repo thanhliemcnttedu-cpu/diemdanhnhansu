@@ -360,7 +360,7 @@ export const QuestionBankModal: React.FC<QuestionBankModalProps> = ({
   };
 
   return (
-    <div className={`fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-2 sm:p-4 select-none overflow-y-auto ${
+    <div className={`fixed inset-0 z-50 bg-sky-900/20 backdrop-blur-xs flex items-center justify-center p-2 sm:p-4 select-none overflow-y-auto ${
       isFullscreen ? 'p-0' : ''
     }`}>
       <div className={`bg-white rounded-3xl w-full shadow-2xl border border-slate-200 overflow-hidden flex flex-col transition-all duration-200 animate-in fade-in ${
@@ -382,7 +382,7 @@ export const QuestionBankModal: React.FC<QuestionBankModalProps> = ({
                   {bank.length} Câu hỏi
                 </span>
               </div>
-              <p className="text-xs text-indigo-100/90 font-medium hidden sm:block">
+              <p className="text-xs text-white font-medium hidden sm:block">
                 Hỗ trợ 7 dạng câu hỏi phong phú • Tùy biến số lượng đáp án • Chèn ảnh riêng cho từng phương án
               </p>
             </div>
@@ -393,7 +393,7 @@ export const QuestionBankModal: React.FC<QuestionBankModalProps> = ({
             <button
               type="button"
               onClick={() => setIsFullscreen(!isFullscreen)}
-              className="p-2 text-white/80 hover:text-white hover:bg-white/20 rounded-xl cursor-pointer transition-colors"
+              className="p-2 text-white/90 hover:text-white hover:bg-white/20 rounded-xl cursor-pointer transition-colors"
               title={isFullscreen ? 'Thu nhỏ giao diện' : 'Phóng to toàn màn hình'}
             >
               {isFullscreen ? <Minimize2 className="w-5 h-5" /> : <Maximize2 className="w-5 h-5" />}
@@ -401,7 +401,7 @@ export const QuestionBankModal: React.FC<QuestionBankModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="p-2 text-white/80 hover:text-white hover:bg-white/20 rounded-xl cursor-pointer transition-colors"
+              className="p-2 text-white/90 hover:text-white hover:bg-white/20 rounded-xl cursor-pointer transition-colors"
               title="Đóng cửa sổ"
             >
               <X className="w-5 h-5" />
@@ -410,7 +410,7 @@ export const QuestionBankModal: React.FC<QuestionBankModalProps> = ({
         </div>
 
         {toastMessage && (
-          <div className="bg-emerald-500 text-white text-xs font-bold px-4 py-2 text-center animate-in fade-in duration-150">
+          <div className="bg-emerald-600 text-white text-xs font-bold px-4 py-2 text-center animate-in fade-in duration-150">
             {toastMessage}
           </div>
         )}
@@ -1579,7 +1579,7 @@ export const QuestionBankModal: React.FC<QuestionBankModalProps> = ({
           </span>
           <button
             onClick={onClose}
-            className="px-5 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-black uppercase cursor-pointer transition-all shadow-sm"
+            className="px-5 py-2 bg-white hover:bg-slate-200 text-slate-800 rounded-xl text-xs font-black uppercase cursor-pointer transition-all shadow-sm"
           >
             Đóng & Áp Dụng
           </button>

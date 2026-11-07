@@ -134,8 +134,8 @@ export const SubjectTeacherDashboard: React.FC<SubjectTeacherDashboardProps> = (
     <div className="p-2.5 sm:p-3.5 md:p-4 max-w-7xl mx-auto space-y-2.5 sm:space-y-3">
       {/* Toast Alert */}
       {awardFeedbackToast && (
-        <div className="fixed bottom-6 right-6 z-50 bg-slate-900 text-white px-3.5 py-2 rounded-xl shadow-2xl border border-slate-700 text-xs font-black flex items-center gap-2 animate-in fade-in duration-150">
-          <Star className="w-4 h-4 text-amber-400 fill-amber-400" />
+        <div className="fixed bottom-6 right-6 z-50 bg-white text-slate-800 px-3.5 py-2 rounded-xl shadow-2xl border border-slate-200 text-xs font-black flex items-center gap-2 animate-in fade-in duration-150">
+          <Star className="w-4 h-4 text-amber-600 fill-amber-400" />
           <span>{awardFeedbackToast}</span>
         </div>
       )}
@@ -199,7 +199,7 @@ export const SubjectTeacherDashboard: React.FC<SubjectTeacherDashboardProps> = (
 
             <button
               onClick={() => onNavigate('picker')}
-              className="px-2.5 py-1 bg-sky-500 hover:bg-sky-600 text-white rounded-lg font-black text-[10.5px] flex items-center justify-center gap-1 shadow-2xs hover-zoom-btn uppercase"
+              className="px-2.5 py-1 bg-sky-600 hover:bg-sky-700 text-white rounded-lg font-black text-[10.5px] flex items-center justify-center gap-1 shadow-2xs hover-zoom-btn uppercase"
             >
               <Sparkles className="w-3 h-3" />
               <span>GỌI TÊN</span>
@@ -517,7 +517,7 @@ export const SubjectTeacherDashboard: React.FC<SubjectTeacherDashboardProps> = (
                   }}
                   className={`px-3 py-1 rounded-xl text-xs font-black uppercase transition-all shrink-0 hover-zoom-btn ${
                     quickAwardClassId === cls.id
-                      ? 'bg-amber-500 text-white shadow-xs'
+                      ? 'bg-amber-600 text-white shadow-xs'
                       : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                   }`}
                 >
@@ -558,7 +558,7 @@ export const SubjectTeacherDashboard: React.FC<SubjectTeacherDashboardProps> = (
                       </button>
                       <button
                         onClick={() => handleQuickAward(st.id, st.name, 2)}
-                        className="px-2 py-1 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-black text-xs uppercase shadow-2xs hover-zoom-btn"
+                        className="px-2 py-1 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-black text-xs uppercase shadow-2xs hover-zoom-btn"
                         title="Thưởng +2 xu"
                       >
                         +2 ⭐

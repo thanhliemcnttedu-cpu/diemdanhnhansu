@@ -19,7 +19,7 @@ const DAY_LABELS = [
   { day: 4, label: 'THỨ TƯ', short: 'T4', color: 'from-amber-500 to-orange-600', light: 'bg-amber-50 text-amber-900 border-amber-200' },
   { day: 5, label: 'THỨ NĂM', short: 'T5', color: 'from-purple-600 to-violet-600', light: 'bg-purple-50 text-purple-900 border-purple-200' },
   { day: 6, label: 'THỨ SÁU', short: 'T6', color: 'from-rose-500 to-pink-600', light: 'bg-rose-50 text-rose-900 border-rose-200' },
-  { day: 7, label: 'THỨ BẢY', short: 'T7', color: 'from-slate-700 to-slate-900', light: 'bg-slate-50 text-slate-900 border-slate-200' }
+  { day: 7, label: 'THỨ BẢY', short: 'T7', color: 'from-slate-700 to-indigo-500', light: 'bg-slate-50 text-slate-900 border-slate-200' }
 ];
 
 interface SlotModalState {
@@ -261,8 +261,8 @@ export const SubjectTeacherTimetableView: React.FC<{ onNavigate?: (view: any) =>
     <div className="space-y-6 max-w-7xl mx-auto pb-12">
       {/* Toast Alert */}
       {quickToast && (
-        <div className="fixed bottom-6 right-6 z-50 bg-slate-900 text-white px-4 py-2.5 rounded-2xl shadow-xl border border-slate-700 text-xs font-black flex items-center gap-2 animate-in fade-in slide-in-from-bottom-3 duration-200">
-          <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+        <div className="fixed bottom-6 right-6 z-50 bg-white text-slate-800 px-4 py-2.5 rounded-2xl shadow-xl border border-slate-200 text-xs font-black flex items-center gap-2 animate-in fade-in slide-in-from-bottom-3 duration-200">
+          <CheckCircle2 className="w-4 h-4 text-emerald-600" />
           <span>{quickToast}</span>
         </div>
       )}
@@ -280,7 +280,7 @@ export const SubjectTeacherTimetableView: React.FC<{ onNavigate?: (view: any) =>
               <span className="px-3 py-1 rounded-xl bg-amber-400 text-amber-950 font-black text-xs uppercase tracking-wider shadow-2xs">
                 MÔN: {subjectTeacherConfig.subjectName}
               </span>
-              <span className="px-3 py-1 rounded-xl bg-emerald-500/80 text-white font-bold text-xs uppercase tracking-wider">
+              <span className="px-3 py-1 rounded-xl bg-emerald-600/80 text-white font-bold text-xs uppercase tracking-wider">
                 {subjectTeacherConfig.scheduleScope === 'semester' ? 'DÙNG CHUNG CẢ HỌC KỲ' : 'THEO THỜI ĐIỂM'}
               </span>
             </div>
@@ -290,7 +290,7 @@ export const SubjectTeacherTimetableView: React.FC<{ onNavigate?: (view: any) =>
               <span>THỜI KHÓA BIỂU GIẢNG DẠY BỘ MÔN ({classes.length} LỚP PHỤ TRÁCH)</span>
             </h1>
 
-            <p className="text-xs md:text-sm text-emerald-100 max-w-2xl font-medium leading-relaxed">
+            <p className="text-xs md:text-sm text-white max-w-2xl font-medium leading-relaxed">
               Sắp lịch dạy linh hoạt cho nhiều lớp (lên tới 20+ lớp), áp dụng dùng chung cả học kì hoặc theo tuần. Bấm vào bất kỳ tiết nào để vào lớp dạy và chấm sao tặng xu cho học sinh ngay lập tức!
             </p>
           </div>
@@ -306,7 +306,7 @@ export const SubjectTeacherTimetableView: React.FC<{ onNavigate?: (view: any) =>
               <div className="text-[10px] font-bold text-white/90 uppercase mt-0.5">Tiết Dạy / Tuần</div>
             </div>
             <div className="bg-white/15 backdrop-blur-md border border-white/20 px-4 py-3 rounded-2xl text-center min-w-[110px] shadow-sm">
-              <div className="text-2xl font-black text-emerald-200">{students.length}</div>
+              <div className="text-2xl font-black text-white">{students.length}</div>
               <div className="text-[10px] font-bold text-white/90 uppercase mt-0.5">Tổng Học Sinh</div>
             </div>
           </div>
@@ -354,7 +354,7 @@ export const SubjectTeacherTimetableView: React.FC<{ onNavigate?: (view: any) =>
             {/* 1. KHỞI TẠO LỚP DẠY BỘ MÔN (Thay thế hoàn toàn 20 lớp bộ môn) */}
             <button
               onClick={() => setIsInitSubjectClassesModalOpen(true)}
-              className="px-3.5 py-2 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-black text-xs transition-all flex items-center gap-1.5 shadow-md shadow-emerald-600/30 hover-zoom-btn uppercase"
+              className="px-3.5 py-2 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-black text-xs transition-all flex items-center gap-1.5 shadow-md shadow-emerald-600/30 hover-zoom-btn uppercase"
               title="Tạo nhanh các lớp giảng dạy bộ môn, điền thông tin lớp và số lượng học sinh"
             >
               <School className="w-4 h-4 text-amber-300" />
@@ -538,7 +538,7 @@ export const SubjectTeacherTimetableView: React.FC<{ onNavigate?: (view: any) =>
                                 </div>
                               </div>
                             ) : (
-                              <div className="py-2 text-slate-300 group-hover:text-emerald-600 text-[11px] font-bold">
+                              <div className="py-2 text-slate-500 group-hover:text-emerald-600 text-[11px] font-bold">
                                 <span className="opacity-0 group-hover:opacity-100 transition-opacity">+ Xếp lớp</span>
                               </div>
                             )}
@@ -590,7 +590,7 @@ export const SubjectTeacherTimetableView: React.FC<{ onNavigate?: (view: any) =>
                                 </div>
                               </div>
                             ) : (
-                              <div className="py-2 text-slate-300 group-hover:text-emerald-600 text-[11px] font-bold">
+                              <div className="py-2 text-slate-500 group-hover:text-emerald-600 text-[11px] font-bold">
                                 <span className="opacity-0 group-hover:opacity-100 transition-opacity">+ Xếp lớp</span>
                               </div>
                             )}
@@ -938,7 +938,7 @@ export const SubjectTeacherTimetableView: React.FC<{ onNavigate?: (view: any) =>
 
       {/* Slot Assignment / Editing Modal */}
       {activeSlotModal?.isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-150">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-sky-900/20 backdrop-blur-xs animate-in fade-in duration-150">
           <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-100 space-y-4">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div className="flex items-center gap-2.5">
@@ -1136,7 +1136,7 @@ export const SubjectTeacherTimetableView: React.FC<{ onNavigate?: (view: any) =>
 
       {/* Config Timetable & Subject Teacher Modal */}
       {isConfigModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-150">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-sky-900/20 backdrop-blur-xs animate-in fade-in duration-150">
           <div className="bg-white rounded-3xl max-w-2xl w-full p-5 md:p-6 shadow-2xl border border-slate-100 space-y-4 my-auto max-h-[92vh] overflow-y-auto">
             {/* Header */}
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
@@ -1529,7 +1529,7 @@ export const SubjectTeacherTimetableView: React.FC<{ onNavigate?: (view: any) =>
 
       {/* Clear Confirm Modal */}
       {isClearConfirmOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-150">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-sky-900/20 backdrop-blur-xs animate-in fade-in duration-150">
           <div className="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-slate-100 space-y-4 text-center">
             <div className="w-12 h-12 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center mx-auto font-black">
               <AlertTriangle className="w-6 h-6" />

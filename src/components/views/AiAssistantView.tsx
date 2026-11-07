@@ -771,11 +771,11 @@ QUY TẮC BẮT BUỘC:
         {currentQ.type === 'single_choice' && currentQ.options && (
           <div className="space-y-3">
             <div className={`flex items-center justify-between font-bold ${
-              isFullscreen ? 'text-sm text-slate-300' : 'text-xs text-slate-600'
+              isFullscreen ? 'text-sm text-slate-500' : 'text-xs text-slate-600'
             }`}>
               <span>Bấm chọn 1 đáp án chính xác:</span>
               {userSingleAnswer !== null && (
-                <span className={isFullscreen ? 'text-amber-300 font-extrabold' : 'text-blue-600 font-bold'}>
+                <span className={isFullscreen ? 'text-amber-700 font-extrabold' : 'text-blue-600 font-bold'}>
                   Đã chọn: {String.fromCharCode(65 + userSingleAnswer)}
                 </span>
               )}
@@ -842,10 +842,10 @@ QUY TẮC BẮT BUỘC:
         {currentQ.type === 'multiple_choice' && currentQ.options && (
           <div className="space-y-3">
             <div className={`flex items-center justify-between font-bold ${
-              isFullscreen ? 'text-sm text-slate-300' : 'text-xs text-slate-700'
+              isFullscreen ? 'text-sm text-slate-500' : 'text-xs text-slate-700'
             }`}>
               <span>
-                Chọn ĐÚNG 2 đáp án (Đã chọn: <strong className={isFullscreen ? 'text-amber-300' : 'text-blue-600'}>{userMultipleAnswers.length}/2</strong>):
+                Chọn ĐÚNG 2 đáp án (Đã chọn: <strong className={isFullscreen ? 'text-amber-700' : 'text-blue-600'}>{userMultipleAnswers.length}/2</strong>):
               </span>
               <span className={`text-[11px] italic ${isFullscreen ? 'text-slate-400' : 'text-slate-500'}`}>
                 Học sinh cần chọn đủ và đúng 2 phương án
@@ -926,12 +926,12 @@ QUY TẮC BẮT BUỘC:
                   ? 'p-4 md:p-5 bg-white/10 border-white/20 text-white text-sm md:text-base'
                   : 'p-3 md:p-3.5 bg-slate-50 border-slate-200 text-slate-800 text-xs md:text-sm'
               }`}>
-                <strong className={isFullscreen ? 'text-amber-300' : 'text-blue-700'}>Nhận định: </strong>
+                <strong className={isFullscreen ? 'text-amber-700' : 'text-blue-700'}>Nhận định: </strong>
                 {currentQ.statement}
               </div>
             )}
 
-            <div className={`font-bold ${isFullscreen ? 'text-sm text-slate-300' : 'text-xs text-slate-600'}`}>
+            <div className={`font-bold ${isFullscreen ? 'text-sm text-slate-500' : 'text-xs text-slate-600'}`}>
               Em hãy đánh giá nhận định trên là ĐÚNG hay SAI:
             </div>
 
@@ -944,14 +944,14 @@ QUY TẮC BẮT BUỘC:
                 } ${
                   isAnswerChecked
                     ? currentQ.isTrue === true
-                      ? 'bg-emerald-500 border-emerald-400 text-white font-black shadow-xl ring-2 ring-emerald-300 scale-[1.02]'
+                      ? 'bg-emerald-600 border-emerald-400 text-white font-black shadow-xl ring-2 ring-emerald-300 scale-[1.02]'
                       : userTrueFalseAnswer === true
                       ? 'bg-rose-500 border-rose-400 text-white font-bold'
-                      : isFullscreen ? 'bg-white/5 border-white/10 text-white/30' : 'bg-slate-50 border-slate-200 text-slate-400'
+                      : isFullscreen ? 'bg-white/5 border-white/10 text-white/90' : 'bg-slate-50 border-slate-200 text-slate-400'
                     : userTrueFalseAnswer === true
                     ? 'bg-emerald-600 border-emerald-400 text-white font-black shadow-lg ring-2 ring-emerald-300'
                     : isFullscreen
-                    ? 'bg-emerald-950/40 border-emerald-500/40 text-emerald-200 hover:bg-emerald-900/60 font-bold'
+                    ? 'bg-emerald-600/40 border-emerald-500/40 text-white hover:bg-emerald-900/60 font-bold'
                     : 'bg-emerald-50/50 border-emerald-200 text-emerald-800 hover:bg-emerald-100 font-bold'
                 }`}
               >
@@ -968,14 +968,14 @@ QUY TẮC BẮT BUỘC:
                 } ${
                   isAnswerChecked
                     ? currentQ.isTrue === false
-                      ? 'bg-emerald-500 border-emerald-400 text-white font-black shadow-xl ring-2 ring-emerald-300 scale-[1.02]'
+                      ? 'bg-emerald-600 border-emerald-400 text-white font-black shadow-xl ring-2 ring-emerald-300 scale-[1.02]'
                       : userTrueFalseAnswer === false
                       ? 'bg-rose-500 border-rose-400 text-white font-bold'
-                      : isFullscreen ? 'bg-white/5 border-white/10 text-white/30' : 'bg-slate-50 border-slate-200 text-slate-400'
+                      : isFullscreen ? 'bg-white/5 border-white/10 text-white/90' : 'bg-slate-50 border-slate-200 text-slate-400'
                     : userTrueFalseAnswer === false
                     ? 'bg-rose-600 border-rose-400 text-white font-black shadow-lg ring-2 ring-rose-300'
                     : isFullscreen
-                    ? 'bg-rose-950/40 border-rose-500/40 text-rose-200 hover:bg-rose-900/60 font-bold'
+                    ? 'bg-rose-600/40 border-rose-500/40 text-white hover:bg-rose-900/60 font-bold'
                     : 'bg-rose-50/50 border-rose-200 text-rose-800 hover:bg-rose-100 font-bold'
                 }`}
               >
@@ -997,11 +997,11 @@ QUY TẮC BẮT BUỘC:
             return (
               <div className="space-y-3.5">
                 <div className={`flex items-center justify-between font-bold ${
-                  isFullscreen ? 'text-sm text-slate-300' : 'text-xs text-slate-700'
+                  isFullscreen ? 'text-sm text-slate-500' : 'text-xs text-slate-700'
                 }`}>
                   <span>Em hãy ghép mỗi ý ở Cột A với nội dung tương ứng ở Cột B:</span>
                   <span className={`px-2.5 py-1 rounded-lg border font-bold ${
-                    isFullscreen ? 'bg-blue-900/60 border-blue-400/40 text-blue-200' : 'bg-blue-50 text-blue-600 border-blue-100'
+                    isFullscreen ? 'bg-blue-600/60 border-blue-400/40 text-white' : 'bg-blue-50 text-blue-600 border-blue-100'
                   }`}>
                     Đã nối: {Object.keys(userMatches).length} / {currentQ.matchingPairs.length} cặp
                   </span>
@@ -1011,11 +1011,11 @@ QUY TẮC BẮT BUỘC:
                   {/* Cột A */}
                   <div className="space-y-2">
                     <div className={`text-xs font-extrabold uppercase px-2 flex items-center justify-between ${
-                      isFullscreen ? 'text-blue-300' : 'text-blue-800'
+                      isFullscreen ? 'text-blue-600' : 'text-blue-800'
                     }`}>
                       <span>📌 Cột A (Bấm chọn trước)</span>
                       <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
-                        isFullscreen ? 'bg-blue-900/80 text-blue-200' : 'bg-blue-50 text-blue-600'
+                        isFullscreen ? 'bg-blue-600/80 text-white' : 'bg-blue-50 text-blue-600'
                       }`}>
                         {selectedMatchingLeft ? 'Đang chọn' : 'Chưa chọn'}
                       </span>
@@ -1032,11 +1032,11 @@ QUY TẮC BẮT BUỘC:
                       if (isAnswerChecked) {
                         if (isPairCorrect) {
                           boxClass = isFullscreen
-                            ? 'bg-emerald-900/60 border-emerald-400 text-emerald-100 font-bold ring-1 ring-emerald-400'
+                            ? 'bg-emerald-600/60 border-emerald-400 text-white font-bold ring-1 ring-emerald-400'
                             : 'bg-emerald-50 border-emerald-400 text-emerald-950 font-bold shadow-xs';
                         } else {
                           boxClass = isFullscreen
-                            ? 'bg-rose-900/60 border-rose-400 text-rose-100 font-medium ring-1 ring-rose-400'
+                            ? 'bg-rose-600/60 border-rose-400 text-white font-medium ring-1 ring-rose-400'
                             : 'bg-rose-50 border-rose-300 text-rose-950 font-medium';
                         }
                       } else if (isCurrentSelected) {
@@ -1045,7 +1045,7 @@ QUY TẮC BẮT BUỘC:
                           : 'bg-blue-100 border-blue-500 ring-2 ring-blue-300 text-blue-950 font-black';
                       } else if (matchedRight) {
                         boxClass = isFullscreen
-                          ? 'bg-indigo-900/50 border-indigo-400 text-indigo-100 font-bold'
+                          ? 'bg-indigo-600/50 border-indigo-400 text-white font-bold'
                           : 'bg-indigo-50/70 border-indigo-200 text-indigo-950 font-bold';
                       }
 
@@ -1058,7 +1058,7 @@ QUY TẮC BẮT BUỘC:
                           } ${boxClass}`}
                         >
                           <div className="flex items-center justify-between">
-                            <span className={`font-extrabold mr-2 shrink-0 ${isFullscreen ? 'text-blue-300' : 'text-blue-700'}`}>A{idx + 1}.</span>
+                            <span className={`font-extrabold mr-2 shrink-0 ${isFullscreen ? 'text-blue-600' : 'text-blue-700'}`}>A{idx + 1}.</span>
                             <span className="flex-1 font-semibold">{pair.left}</span>
                           </div>
                           {matchedRight && (
@@ -1067,10 +1067,10 @@ QUY TẮC BẮT BUỘC:
                             }`}>
                               <div className="flex items-center gap-1">
                                 <span className={isFullscreen ? 'text-slate-400' : 'text-slate-500'}>➔ Nối với:</span>
-                                <span className={`italic ${isFullscreen ? 'text-purple-300' : 'text-purple-700'}`}>"{matchedRight}"</span>
+                                <span className={`italic ${isFullscreen ? 'text-purple-600' : 'text-purple-700'}`}>"{matchedRight}"</span>
                               </div>
                               {isAnswerChecked && (
-                                <span className={isPairCorrect ? 'text-emerald-400 font-black' : 'text-rose-400 font-bold'}>
+                                <span className={isPairCorrect ? 'text-emerald-600 font-black' : 'text-rose-600 font-bold'}>
                                   {isPairCorrect ? '✅ Đúng' : `❌ Sai (Đáp án: ${pair.right})`}
                                 </span>
                               )}
@@ -1084,11 +1084,11 @@ QUY TẮC BẮT BUỘC:
                   {/* Cột B */}
                   <div className="space-y-2">
                     <div className={`text-xs font-extrabold uppercase px-2 flex items-center justify-between ${
-                      isFullscreen ? 'text-purple-300' : 'text-purple-800'
+                      isFullscreen ? 'text-purple-600' : 'text-purple-800'
                     }`}>
                       <span>🎯 Cột B (Bấm chọn để nối với Cột A)</span>
                       <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                        isFullscreen ? 'bg-purple-900/80 text-purple-200' : 'bg-purple-100 text-purple-700'
+                        isFullscreen ? 'bg-purple-600/80 text-white' : 'bg-purple-100 text-purple-700'
                       }`}>
                         Đã xáo trộn thứ tự
                       </span>
@@ -1117,7 +1117,7 @@ QUY TẮC BẮT BUỘC:
                           } ${
                             matchedLeftPair
                               ? isFullscreen
-                                ? 'bg-purple-900/60 border-purple-400 text-purple-100 font-bold'
+                                ? 'bg-purple-600/60 border-purple-400 text-white font-bold'
                                 : 'bg-purple-50/90 border-purple-300 text-purple-950 font-bold shadow-xs'
                               : selectedMatchingLeft
                               ? isFullscreen
@@ -1133,7 +1133,7 @@ QUY TẮC BẮT BUỘC:
                           } ${
                             matchedLeftPair
                               ? 'bg-purple-600 text-white'
-                              : isFullscreen ? 'bg-purple-900/80 text-purple-200' : 'bg-purple-100 text-purple-800'
+                              : isFullscreen ? 'bg-purple-600/80 text-white' : 'bg-purple-100 text-purple-800'
                           }`}>
                             B{idx + 1}
                           </span>
@@ -1163,7 +1163,7 @@ QUY TẮC BẮT BUỘC:
                         setSelectedMatchingLeft(null);
                       }}
                       className={`text-xs font-bold flex items-center gap-1 hover:underline cursor-pointer ${
-                        isFullscreen ? 'text-rose-400 hover:text-rose-300' : 'text-rose-600 hover:text-rose-800'
+                        isFullscreen ? 'text-rose-600 hover:text-rose-600' : 'text-rose-600 hover:text-rose-800'
                       }`}
                     >
                       <RotateCcw className="w-3.5 h-3.5" />
@@ -1181,7 +1181,7 @@ QUY TẮC BẮT BUỘC:
           <div className="space-y-3.5">
             <div>
               <label className={`block font-bold mb-1.5 ${
-                isFullscreen ? 'text-sm text-slate-300' : 'text-xs text-slate-700'
+                isFullscreen ? 'text-sm text-slate-500' : 'text-xs text-slate-700'
               }`}>
                 Học sinh trả lời bằng lời hoặc gõ câu trả lời vào đây:
               </label>
@@ -1201,7 +1201,7 @@ QUY TẮC BẮT BUỘC:
             {/* Barem gợi ý cho giáo viên */}
             <div className={`rounded-2xl border space-y-1.5 ${
               isFullscreen
-                ? 'p-3.5 md:p-4 bg-amber-950/40 border-amber-500/30 text-amber-200 text-xs md:text-sm'
+                ? 'p-3.5 md:p-4 bg-amber-600/40 border-amber-500/30 text-white text-xs md:text-sm'
                 : 'p-3 md:p-3.5 bg-amber-50/70 border-amber-200 text-amber-950 text-xs'
             }`}>
               <div className={`font-black flex items-center gap-1.5 ${
@@ -1237,7 +1237,7 @@ QUY TẮC BẮT BUỘC:
                     essayTeacherDecision === 'correct'
                       ? 'bg-emerald-600 text-white shadow-md'
                       : isFullscreen
-                      ? 'bg-emerald-950/60 text-emerald-200 border border-emerald-500/40 hover:bg-emerald-900/60'
+                      ? 'bg-emerald-600/60 text-white border border-emerald-500/40 hover:bg-emerald-900/60'
                       : 'bg-emerald-50 text-emerald-800 hover:bg-emerald-100 border border-emerald-200'
                   }`}
                 >
@@ -1252,7 +1252,7 @@ QUY TẮC BẮT BUỘC:
                     essayTeacherDecision === 'incorrect'
                       ? 'bg-rose-600 text-white shadow-md'
                       : isFullscreen
-                      ? 'bg-rose-950/60 text-rose-200 border border-rose-500/40 hover:bg-rose-900/60'
+                      ? 'bg-rose-600/60 text-white border border-rose-500/40 hover:bg-rose-900/60'
                       : 'bg-rose-50 text-rose-800 hover:bg-rose-100 border border-rose-200'
                   }`}
                 >
@@ -1278,23 +1278,23 @@ QUY TẮC BẮT BUỘC:
               <Brain className="w-8 h-8 text-amber-300 animate-pulse" />
             </div>
             <div>
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/15 backdrop-blur-sm text-xs font-bold text-amber-200 mb-1">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/15 backdrop-blur-sm text-xs font-bold text-white mb-1">
                 <Sparkles className="w-3.5 h-3.5" />
                 Trí Tuệ Nhân Tạo AI Thông Minh
               </div>
               <h1 className="text-xl md:text-2xl font-black tracking-tight">
                 Trợ Lý Sư Phạm & Lớp Học Hạnh Phúc
               </h1>
-              <p className="text-xs md:text-sm text-blue-100 mt-0.5">
+              <p className="text-xs md:text-sm text-white mt-0.5">
                 Tự động hóa lời phê, khởi tạo trò chơi thi đua 5 phút, tối ưu sơ đồ bàn học và tư vấn giáo dục tích cực
               </p>
             </div>
           </div>
 
           <div className="flex items-center gap-2 bg-white/10 backdrop-blur-md px-4 py-2 rounded-2xl border border-white/15">
-            <div className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping" />
+            <div className="w-2.5 h-2.5 rounded-full bg-emerald-600 animate-ping" />
             <span className="text-xs font-semibold text-white">
-              Lớp đang chọn: <strong className="text-amber-200">{activeClass?.name}</strong> ({classStudents.length} học sinh)
+              Lớp đang chọn: <strong className="text-white">{activeClass?.name}</strong> ({classStudents.length} học sinh)
             </span>
           </div>
         </div>
@@ -1451,30 +1451,30 @@ QUY TẮC BẮT BUỘC:
           {/* FULLSCREEN ARENA OVERLAY (KHI BẬT TOÀN MÀN HÌNH)                          */}
           {/* ========================================================================= */}
           {isQuizFullscreen && quizQuestions.length > 0 && quizQuestions[activeQuizIndex] && (
-            <div className="fixed inset-0 z-[100] bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 text-white flex flex-col overflow-y-auto animate-fadeIn select-none">
+            <div className="fixed inset-0 z-[100] bg-gradient-to-br from-sky-600 via-blue-500 to-indigo-600 text-white flex flex-col overflow-y-auto animate-fadeIn select-none">
               {/* FULLSCREEN TOP BAR */}
-              <div className="sticky top-0 z-30 bg-slate-900/95 backdrop-blur-md px-4 md:px-6 py-2.5 border-b border-white/10 flex flex-wrap items-center justify-between gap-3 shadow-lg">
+              <div className="sticky top-0 z-30 bg-white/95 backdrop-blur-md px-4 md:px-6 py-2.5 border-b border-slate-200 flex flex-wrap items-center justify-between gap-3 shadow-lg">
                 <div className="flex items-center gap-3">
                   <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center font-black text-amber-300 shadow-md">
                     <Play className="w-4 h-4 fill-current" />
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="text-[11px] font-black text-amber-300 bg-amber-400/20 px-2 py-0.5 rounded-full border border-amber-400/30">
+                      <span className="text-[11px] font-black text-amber-700 bg-amber-400/20 px-2 py-0.5 rounded-full border border-amber-400/30">
                         SGK KẾT NỐI TRI THỨC
                       </span>
-                      <span className="text-xs font-bold text-slate-300">
+                      <span className="text-xs font-bold text-slate-600">
                         {quizConfig.subject} · {quizConfig.grade} ({quizConfig.semester})
                       </span>
                     </div>
-                    <h2 className="text-xs md:text-sm font-black text-white truncate max-w-md">
+                    <h2 className="text-xs md:text-sm font-black text-slate-800 truncate max-w-md">
                       {quizQuestions[activeQuizIndex]?.topic || quizConfig.topic || 'Đấu Trường Khởi Động & Đố Vui Đầu Giờ'}
                     </h2>
                   </div>
                 </div>
 
                 {/* Random Student Caller in Fullscreen */}
-                <div className="flex items-center gap-2 bg-white/10 backdrop-blur-md px-3 py-1 rounded-2xl border border-white/15">
+                <div className="flex items-center gap-2 bg-slate-100 backdrop-blur-md px-3 py-1 rounded-2xl border border-slate-200">
                   {selectedStudent ? (
                     <img
                       src={selectedStudent.avatar}
@@ -1482,15 +1482,15 @@ QUY TẮC BẮT BUỘC:
                       className="w-7 h-7 rounded-lg object-cover bg-white ring-2 ring-amber-400 shrink-0"
                     />
                   ) : (
-                    <div className="w-7 h-7 rounded-lg bg-white/20 flex items-center justify-center font-bold text-amber-300 text-xs">
+                    <div className="w-7 h-7 rounded-lg bg-slate-100 flex items-center justify-center font-bold text-amber-600 text-xs">
                       ?
                     </div>
                   )}
                   <div className="text-left">
-                    <div className="text-[9px] text-blue-200 font-bold uppercase leading-none">Học sinh trả lời:</div>
-                    <div className="text-xs font-black text-white leading-tight">
+                    <div className="text-[9px] text-blue-700 font-bold uppercase leading-none">Học sinh trả lời:</div>
+                    <div className="text-xs font-black text-slate-800 leading-tight">
                       {isSpinningStudent ? (
-                        <span className="text-amber-300 animate-pulse">{spinningStudentName}...</span>
+                        <span className="text-amber-600 animate-pulse">{spinningStudentName}...</span>
                       ) : selectedStudent ? (
                         <>#{selectedStudent.stt} - {selectedStudent.name} ({selectedStudent.points} xu)</>
                       ) : (
@@ -1515,7 +1515,7 @@ QUY TẮC BẮT BUỘC:
                       setSelectedStudentId(e.target.value);
                       setPickedAnnouncement(null);
                     }}
-                    className="px-2 py-1 bg-white/20 hover:bg-white/30 text-white rounded-lg text-xs font-bold border border-white/20 focus:outline-none cursor-pointer"
+                    className="px-2 py-1 bg-slate-100 hover:bg-white/30 text-slate-800 rounded-lg text-xs font-bold border border-slate-200 focus:outline-none cursor-pointer"
                   >
                     <option value="" className="text-slate-900">-- Chỉ định khác --</option>
                     {classStudents.map(s => (
@@ -1536,7 +1536,7 @@ QUY TẮC BẮT BUỘC:
                         className={`w-7 h-7 rounded-lg text-xs font-black transition-all cursor-pointer ${
                           activeQuizIndex === idx 
                             ? 'bg-blue-600 text-white shadow-lg ring-2 ring-blue-300' 
-                            : 'bg-white/10 text-white/80 hover:bg-white/20'
+                            : 'bg-white/10 text-white/90 hover:bg-white/20'
                         }`}
                       >
                         {idx + 1}
@@ -1547,7 +1547,7 @@ QUY TẮC BẮT BUỘC:
                   <button
                     type="button"
                     onClick={toggleQuizFullscreen}
-                    className="px-3 py-1 bg-rose-600/80 hover:bg-rose-600 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all shadow-md cursor-pointer ml-1"
+                    className="px-3 py-1 bg-rose-600/80 hover:bg-rose-700 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all shadow-md cursor-pointer ml-1"
                     title="Thu nhỏ hoặc nhấn phím Esc"
                   >
                     <Minimize2 className="w-3.5 h-3.5" />
@@ -1569,7 +1569,7 @@ QUY TẮC BẮT BUỘC:
                             CÂU {activeQuizIndex + 1} / {quizQuestions.length}
                           </span>
 
-                          <span className="px-2.5 py-0.5 rounded-full bg-purple-900/60 border border-purple-400/40 text-purple-200 font-bold text-xs">
+                          <span className="px-2.5 py-0.5 rounded-full bg-purple-600/60 border border-purple-400/40 text-white font-bold text-xs">
                             {currentQ.type === 'single_choice' && '🎯 Trắc nghiệm 1 đáp án đúng'}
                             {currentQ.type === 'multiple_choice' && '✨ Trắc nghiệm 2 đáp án đúng'}
                             {currentQ.type === 'true_false' && '⚖️ Đúng / Sai'}
@@ -1579,10 +1579,10 @@ QUY TẮC BẮT BUỘC:
 
                           <span className={`px-2 py-0.5 rounded-md font-extrabold text-xs ${
                             currentQ.difficulty === 'DỄ' 
-                              ? 'bg-emerald-900/60 border border-emerald-400/40 text-emerald-200' 
+                              ? 'bg-emerald-600/60 border border-emerald-400/40 text-white' 
                               : currentQ.difficulty === 'TRUNG BÌNH' 
-                              ? 'bg-sky-900/60 border border-sky-400/40 text-sky-200' 
-                              : 'bg-rose-900/60 border border-rose-400/40 text-rose-200'
+                              ? 'bg-sky-600/60 border border-sky-400/40 text-white' 
+                              : 'bg-rose-600/60 border border-rose-400/40 text-white'
                           }`}>
                             Mức độ: {currentQ.difficulty}
                           </span>
@@ -1594,7 +1594,7 @@ QUY TẮC BẮT BUỘC:
                       </div>
 
                       {/* Big Question Box */}
-                      <div className="p-5 md:p-7 bg-gradient-to-r from-blue-900/50 via-indigo-900/50 to-purple-900/50 rounded-2xl md:rounded-3xl border border-white/20 shadow-2xl backdrop-blur-md">
+                      <div className="p-5 md:p-7 bg-gradient-to-r from-blue-500/50 via-indigo-500/50 to-purple-500/50 rounded-2xl md:rounded-3xl border border-white/20 shadow-2xl backdrop-blur-md">
                         <h3 className="text-base md:text-xl lg:text-2xl font-black text-white text-center leading-relaxed drop-shadow-sm">
                           {currentQ.question}
                         </h3>
@@ -1607,8 +1607,8 @@ QUY TẮC BẮT BUỘC:
                       {isAnswerChecked && (
                         <div className={`p-4 rounded-2xl border text-xs md:text-sm leading-relaxed transition-all shadow-xl ${
                           isAnswerCorrect
-                            ? 'bg-emerald-950/80 border-emerald-400 text-emerald-100'
-                            : 'bg-rose-950/80 border-rose-400 text-rose-100'
+                            ? 'bg-emerald-600/80 border-emerald-400 text-white'
+                            : 'bg-rose-600/80 border-rose-400 text-white'
                         }`}>
                           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                             <div className="flex items-center gap-3">
@@ -1644,7 +1644,7 @@ QUY TẮC BẮT BUỘC:
                                 disabled={rewardAwarded}
                                 className={`px-4 py-2 rounded-xl text-xs md:text-sm font-black flex items-center gap-2 hover-zoom-btn shrink-0 transition-all cursor-pointer ${
                                   rewardAwarded
-                                    ? 'bg-emerald-800 text-emerald-200 cursor-default'
+                                    ? 'bg-emerald-800 text-white cursor-default'
                                     : 'bg-gradient-to-r from-amber-400 to-yellow-500 hover:from-amber-500 hover:to-yellow-600 text-slate-950 shadow-lg shadow-amber-500/30'
                                 }`}
                               >
@@ -1662,7 +1662,7 @@ QUY TẮC BẮT BUỘC:
 
                       {/* Explanation Box in Fullscreen */}
                       {showExplanation && (
-                        <div className="p-4 bg-blue-950/80 rounded-2xl border border-blue-400/40 text-xs md:text-sm text-blue-100 leading-relaxed space-y-2 shadow-xl">
+                        <div className="p-4 bg-blue-600/80 rounded-2xl border border-blue-400/40 text-xs md:text-sm text-white leading-relaxed space-y-2 shadow-xl">
                           <div className="font-black text-amber-300 flex items-center gap-2">
                             <CheckCircle2 className="w-4 h-4 text-emerald-400" />
                             <span>Đáp án & Lời giải thích sư phạm:</span>
@@ -1695,12 +1695,12 @@ QUY TẮC BẮT BUỘC:
               </div>
 
               {/* FULLSCREEN BOTTOM CONTROL BAR */}
-              <div className="sticky bottom-0 z-30 bg-slate-900/95 backdrop-blur-md px-4 md:px-6 py-2.5 border-t border-white/10 flex flex-wrap items-center justify-between gap-3 shadow-lg">
+              <div className="sticky bottom-0 z-30 bg-white/95 backdrop-blur-md px-4 md:px-6 py-2.5 border-t border-slate-200 flex flex-wrap items-center justify-between gap-3 shadow-lg">
                 <div className="flex items-center gap-2">
                   <button
                     type="button"
                     onClick={handleCheckAnswer}
-                    className="px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-black text-xs md:text-sm rounded-xl flex items-center gap-1.5 shadow-md shadow-emerald-500/30 hover-zoom-btn cursor-pointer"
+                    className="px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-black text-xs md:text-sm rounded-xl flex items-center gap-1.5 shadow-md shadow-emerald-500/30 hover-zoom-btn cursor-pointer"
                   >
                     <CheckCircle2 className="w-4 h-4" />
                     <span>Kiểm tra đáp án</span>
@@ -1709,19 +1709,19 @@ QUY TẮC BẮT BUỘC:
                   <button
                     type="button"
                     onClick={() => setShowExplanation(!showExplanation)}
-                    className="px-3.5 py-2 bg-white/10 hover:bg-white/20 text-white font-bold text-xs rounded-xl flex items-center gap-1.5 hover-zoom-btn cursor-pointer"
+                    className="px-3.5 py-2 bg-slate-100 hover:bg-slate-100 text-slate-800 font-bold text-xs rounded-xl flex items-center gap-1.5 hover-zoom-btn cursor-pointer"
                   >
-                    {showExplanation ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4 text-blue-400" />}
+                    {showExplanation ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4 text-blue-600" />}
                     <span>{showExplanation ? 'Ẩn lời giải' : 'Hiện lời giải'}</span>
                   </button>
 
                   <button
                     type="button"
                     onClick={handleRetryCurrentQuestion}
-                    className="px-3 py-2 bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white font-bold text-xs rounded-xl flex items-center gap-1 hover-zoom-btn cursor-pointer"
+                    className="px-3 py-2 bg-slate-100 hover:bg-slate-100 text-slate-600 hover:text-slate-800 font-bold text-xs rounded-xl flex items-center gap-1 hover-zoom-btn cursor-pointer"
                     title="Làm lại câu hỏi này"
                   >
-                    <RotateCcw className="w-3.5 h-3.5 text-amber-400" />
+                    <RotateCcw className="w-3.5 h-3.5 text-amber-600" />
                     <span>Làm lại</span>
                   </button>
                 </div>
@@ -1735,7 +1735,7 @@ QUY TẮC BẮT BUỘC:
                       }
                     }}
                     disabled={activeQuizIndex === 0}
-                    className="px-3.5 py-2 bg-white/10 hover:bg-white/20 text-white font-bold text-xs rounded-xl flex items-center gap-1 hover-zoom-btn disabled:opacity-40 cursor-pointer"
+                    className="px-3.5 py-2 bg-slate-100 hover:bg-slate-100 text-slate-800 font-bold text-xs rounded-xl flex items-center gap-1 hover-zoom-btn disabled:opacity-40 cursor-pointer"
                   >
                     <ChevronLeft className="w-4 h-4" />
                     <span>Câu trước</span>
@@ -1762,10 +1762,10 @@ QUY TẮC BẮT BUỘC:
           {/* ========================================================================= */}
           {/* IN-PAGE COMPACT BANNER & STUDENT PICKER                                   */}
           {/* ========================================================================= */}
-          <div className="bg-gradient-to-r from-blue-700 via-indigo-700 to-purple-800 rounded-2xl md:rounded-3xl p-3.5 md:p-4 text-white shadow-md space-y-3">
+          <div className="bg-gradient-to-r from-blue-700 via-indigo-700 to-purple-500 rounded-2xl md:rounded-3xl p-3.5 md:p-4 text-white shadow-md space-y-3">
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
               <div className="space-y-1">
-                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white/20 backdrop-blur-md text-[11px] font-black text-amber-200">
+                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white/20 backdrop-blur-md text-[11px] font-black text-white">
                   <BookOpen className="w-3 h-3" />
                   SGK KẾT NỐI TRI THỨC VỚI CUỘC SỐNG
                 </div>
@@ -1773,7 +1773,7 @@ QUY TẮC BẮT BUỘC:
                   <Play className="w-4 h-4 md:w-5 md:h-5 text-amber-300" />
                   Đấu Trường Khởi Động & Đố Vui Đầu Giờ
                 </h2>
-                <p className="text-xs text-blue-100 max-w-xl truncate hidden sm:block">
+                <p className="text-xs text-white max-w-xl truncate hidden sm:block">
                   Khởi động hào hứng, kích hoạt tư duy, gọi tên học sinh ngẫu nhiên & cộng xu thưởng ngay!
                 </p>
               </div>
@@ -1794,7 +1794,7 @@ QUY TẮC BẮT BUỘC:
                     </div>
                   )}
                   <div className="text-left">
-                    <div className="text-[10px] text-blue-200 font-bold uppercase leading-none">Học sinh được gọi:</div>
+                    <div className="text-[10px] text-white font-bold uppercase leading-none">Học sinh được gọi:</div>
                     <div className="text-xs font-black text-white leading-tight">
                       {isSpinningStudent ? (
                         <span className="text-amber-300 animate-pulse">{spinningStudentName}...</span>
@@ -1839,7 +1839,7 @@ QUY TẮC BẮT BUỘC:
                 <button
                   type="button"
                   onClick={toggleQuizFullscreen}
-                  className="px-3.5 py-2 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-black text-xs md:text-sm rounded-xl flex items-center gap-1.5 shadow-md shadow-emerald-500/30 transition-all hover-zoom-btn cursor-pointer shrink-0"
+                  className="px-3.5 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-black text-xs md:text-sm rounded-xl flex items-center gap-1.5 shadow-md shadow-emerald-500/30 transition-all hover-zoom-btn cursor-pointer shrink-0"
                   title="Xem toàn màn hình để chiếu lớp học và thao tác dễ dàng trực quan"
                 >
                   <Maximize2 className="w-4 h-4" />
@@ -2094,7 +2094,7 @@ QUY TẮC BẮT BUỘC:
                           onClick={() => setQuizConfig(prev => ({ ...prev, rewardCoins: c }))}
                           className={`px-2 py-0.5 rounded-md text-xs font-black transition-all cursor-pointer ${
                             quizConfig.rewardCoins === c
-                              ? 'bg-amber-500 text-white shadow-xs'
+                              ? 'bg-amber-600 text-white shadow-xs'
                               : 'bg-white text-amber-800 border border-amber-200'
                           }`}
                         >
@@ -2269,7 +2269,7 @@ QUY TẮC BẮT BUỘC:
                           <button
                             type="button"
                             onClick={toggleQuizFullscreen}
-                            className="ml-1 px-2.5 py-1 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-bold text-xs rounded-lg flex items-center gap-1 shadow-xs hover-zoom-btn cursor-pointer"
+                            className="ml-1 px-2.5 py-1 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold text-xs rounded-lg flex items-center gap-1 shadow-xs hover-zoom-btn cursor-pointer"
                             title="Mở toàn màn hình để chiếu lớp học"
                           >
                             <Maximize2 className="w-3.5 h-3.5" />
@@ -2408,7 +2408,7 @@ QUY TẮC BẮT BUỘC:
                                   className={`px-3.5 py-2 rounded-xl text-xs font-black flex items-center gap-1.5 hover-zoom-btn shrink-0 transition-all cursor-pointer ${
                                     rewardAwarded
                                       ? 'bg-emerald-200 text-emerald-900 cursor-default'
-                                      : 'bg-amber-500 hover:bg-amber-600 text-white shadow-md shadow-amber-500/25'
+                                      : 'bg-amber-600 hover:bg-amber-700 text-white shadow-md shadow-amber-500/25'
                                   }`}
                                 >
                                   <Award className="w-4 h-4" />
@@ -2649,7 +2649,7 @@ QUY TẮC BẮT BUỘC:
                             <FileText className="w-3.5 h-3.5 text-blue-200 shrink-0" />
                           )}
                           <span className="truncate max-w-[130px]" title={att.name}>{att.name}</span>
-                          <span className="text-[10px] text-blue-200">({att.sizeFormatted})</span>
+                          <span className="text-[10px] text-white">({att.sizeFormatted})</span>
                         </div>
                       ))}
                     </div>

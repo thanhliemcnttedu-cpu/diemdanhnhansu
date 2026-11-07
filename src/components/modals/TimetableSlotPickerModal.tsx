@@ -64,7 +64,7 @@ export const TimetableSlotPickerModal: React.FC<TimetableSlotPickerModalProps> =
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-slate-900/50 backdrop-blur-xs animate-in fade-in duration-150">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-sky-900/20 backdrop-blur-xs animate-in fade-in duration-150">
       <div className="bg-white w-full max-w-lg rounded-3xl shadow-2xl border border-indigo-100 overflow-hidden my-auto animate-in zoom-in-95 duration-150">
         
         {/* Header */}
@@ -75,7 +75,7 @@ export const TimetableSlotPickerModal: React.FC<TimetableSlotPickerModalProps> =
             </div>
             <div>
               <h3 className="text-sm font-black tracking-tight">Chọn Môn Học Cho Tiết</h3>
-              <p className="text-[11px] text-indigo-100 font-medium">
+              <p className="text-[11px] text-white font-medium">
                 {dayLabel} • {session === 'morning' ? 'Buổi Sáng' : 'Buổi Chiều'} • Tiết {period}
               </p>
             </div>

@@ -1485,13 +1485,13 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
   });
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/65 backdrop-blur-sm animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-sky-900/20 backdrop-blur-xs animate-in fade-in duration-200">
       <div 
         className="bg-white shadow-2xl w-full h-full max-w-none max-h-none overflow-hidden flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-indigo-900 p-5 md:px-7 md:py-5 text-white flex items-center justify-between shrink-0">
+        <div className="bg-gradient-to-r from-sky-600 via-indigo-600 to-indigo-500 p-5 md:px-7 md:py-5 text-white flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
             <div className={`w-11 h-11 rounded-2xl flex items-center justify-center shadow-lg font-black shrink-0 ${
               isSuperAdmin ? 'bg-amber-400 text-slate-950' : (isSchoolAdmin ? 'bg-blue-500 text-white' : 'bg-purple-500 text-white')
@@ -1613,7 +1613,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
               onClick={() => setActiveTab('database')}
               className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 uppercase ${
                 activeTab === 'database'
-                  ? 'bg-slate-800 text-white shadow-xs'
+                  ? 'bg-slate-100 text-slate-800 shadow-xs'
                   : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
               }`}
             >
@@ -1669,7 +1669,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                 showNotify(res.success ? 'success' : 'error', res.success ? `☁️ ${res.message}` : `☁️ ${res.message}`);
                 onRefreshUsers();
               }}
-              className="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-[11px] font-black shrink-0"
+              className="px-3 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-[11px] font-black shrink-0"
             >
               LƯU LÊN DRIVE NGAY
             </button>
@@ -1745,25 +1745,25 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
 
             <div className="flex flex-col lg:flex-row gap-5 flex-1 min-h-0">
               {/* Left Column: Tree View */}
-              <div className="lg:w-1/3 flex flex-col p-4 rounded-2xl bg-slate-900 text-white border border-slate-800 space-y-3 overflow-y-auto">
-                <div className="text-xs font-black text-amber-400 uppercase flex items-center gap-2">
+              <div className="lg:w-1/3 flex flex-col p-4 rounded-2xl bg-white text-slate-800 border border-slate-200 space-y-3 overflow-y-auto">
+                <div className="text-xs font-black text-amber-600 uppercase flex items-center gap-2">
                   <FolderTree className="w-4 h-4" />
                   <span>SƠ ĐỒ CÂY QUẢN TRỊ (SUPER ADMIN)</span>
                 </div>
 
-                <div className="text-xs font-mono space-y-1.5 pl-2 border-l-2 border-slate-700">
-                  <div className="text-rose-400 font-bold flex items-center gap-1.5">
+                <div className="text-xs font-mono space-y-1.5 pl-2 border-l-2 border-slate-200">
+                  <div className="text-rose-600 font-bold flex items-center gap-1.5">
                     <span>👑 [Hệ Thống] (adminquantri)</span>
                   </div>
 
-                  <div className="pl-4 space-y-2 border-l border-slate-700 ml-2 mt-1">
+                  <div className="pl-4 space-y-2 border-l border-slate-200 ml-2 mt-1">
                     {/* Nhánh 1: CSDL Trường học */}
                     <div 
                       onClick={() => setSelectedAdminBranch('branch1')}
                       className={`space-y-1 p-2 rounded-xl cursor-pointer transition-all ${
                         selectedAdminBranch === 'branch1' 
-                          ? 'bg-blue-950/80 border border-blue-500/50 text-blue-200 shadow-xs' 
-                          : 'hover:bg-slate-800/60'
+                          ? 'bg-blue-600/80 border border-blue-500/50 text-white shadow-xs' 
+                          : 'hover:bg-slate-200'
                       }`}
                     >
                       <div className="text-blue-300 font-bold flex items-center justify-between gap-1.5">
@@ -1803,8 +1803,8 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                       onClick={() => setSelectedAdminBranch('branch2')}
                       className={`space-y-1 mt-2.5 p-2 rounded-xl cursor-pointer transition-all ${
                         selectedAdminBranch === 'branch2' 
-                          ? 'bg-purple-950/80 border border-purple-500/50 text-purple-200 shadow-xs' 
-                          : 'hover:bg-slate-800/60'
+                          ? 'bg-purple-600/80 border border-purple-500/50 text-white shadow-xs' 
+                          : 'hover:bg-slate-200'
                       }`}
                     >
                       <div className="text-purple-300 font-bold flex items-center justify-between gap-1.5">
@@ -2277,7 +2277,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                       className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 cursor-pointer ${
                         isSelected
                           ? isDemo
-                            ? 'bg-amber-500 text-white shadow-xs'
+                            ? 'bg-amber-600 text-white shadow-xs'
                             : 'bg-blue-600 text-white shadow-xs'
                           : isDemo
                             ? 'text-slate-600 hover:text-amber-700'
@@ -2372,14 +2372,14 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                     onClick={() => setGradeFilter(gradeFilter === 'other' ? 'all' : 'other')}
                     className={`px-2.5 py-1 rounded-xl text-xs font-black transition-all flex items-center gap-1 cursor-pointer ${
                       gradeFilter === 'other'
-                        ? 'bg-slate-700 text-white shadow-xs'
+                        ? 'bg-slate-200 text-slate-800 shadow-xs'
                         : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                     }`}
                     title="Lọc tài khoản Giáo viên bộ môn, Ban Giám Hiệu, Quản trị không gán theo khối lớp cụ thể"
                   >
                     <span>Bộ Môn / Khác</span>
                     <span className={`text-[10px] px-1 py-0.2 rounded-full font-bold ${
-                      gradeFilter === 'other' ? 'bg-slate-800 text-white' : 'bg-slate-200 text-slate-600'
+                      gradeFilter === 'other' ? 'bg-slate-100 text-slate-800' : 'bg-slate-200 text-slate-600'
                     }`}>
                       {scopedUsers.filter(u => getUserGrade(u) === null).length}
                     </span>
@@ -2418,7 +2418,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                     onClick={() => setRoleFilter('all')}
                     className={`px-2.5 py-1 rounded-xl text-xs font-black transition-all cursor-pointer ${
                       roleFilter === 'all'
-                        ? 'bg-amber-500 text-white shadow-xs'
+                        ? 'bg-amber-600 text-white shadow-xs'
                         : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                     }`}
                   >
@@ -3237,7 +3237,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                   <h3 className="text-base md:text-lg font-black uppercase tracking-tight">
                     Tạo Tài Khoản Cho Giáo Viên Đồng Loạt Bằng Cách Import Biểu Mẫu
                   </h3>
-                  <p className="text-xs text-emerald-100 font-medium mt-0.5">
+                  <p className="text-xs text-white font-medium mt-0.5">
                     Tải biểu mẫu Excel chuẩn, điền danh sách giáo viên chủ nhiệm & bộ môn, sau đó tải lên để hệ thống tự động khởi tạo độc lập
                   </p>
                 </div>
@@ -3753,10 +3753,10 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
         {activeTab === 'database' && (
           <div className="flex-1 overflow-y-auto p-5 md:p-8 space-y-6">
             {/* Database Storage & System Quota Stats Card (Yêu cầu 4) */}
-            <div className="bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-950 text-white rounded-3xl p-6 md:p-7 shadow-xl border border-slate-800 space-y-6">
+            <div className="bg-gradient-to-br from-sky-600 via-indigo-600 to-indigo-600 text-white rounded-3xl p-6 md:p-7 shadow-xl border border-slate-800 space-y-6">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div className="flex items-center gap-3.5">
-                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white flex items-center justify-center font-black shadow-lg shadow-emerald-500/20 shrink-0">
+                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-600 to-teal-600 text-white flex items-center justify-center font-black shadow-lg shadow-emerald-500/20 shrink-0">
                     <Database className="w-6 h-6" />
                   </div>
                   <div>
@@ -3765,7 +3765,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                         Thống Kê Toàn Bộ Dung Lượng Database Hệ Thống
                       </h3>
                       <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[10px] font-black uppercase flex items-center gap-1.5">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse" />
                         Trực Tuyến
                       </span>
                     </div>
@@ -3872,9 +3872,9 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                 </div>
 
                 {/* Multi-segment Progress Bar */}
-                <div className="w-full h-3 rounded-full bg-slate-800 overflow-hidden flex shadow-inner">
+                <div className="w-full h-3 rounded-full bg-slate-100 overflow-hidden flex shadow-inner">
                   <div 
-                    className="h-full bg-emerald-500 transition-all duration-500" 
+                    className="h-full bg-emerald-600 transition-all duration-500" 
                     style={{ width: `${Math.max(stats?.storageBreakdown?.userData.percent || 60, 5)}%` }}
                     title={`Dữ liệu Giáo viên: ${stats?.storageBreakdown?.userData.sizeKB || 0} KB`}
                   />
@@ -3884,7 +3884,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                     title={`Nhật ký Audit: ${stats?.storageBreakdown?.auditLogs.sizeKB || 0} KB`}
                   />
                   <div 
-                    className="h-full bg-amber-400 transition-all duration-500" 
+                    className="h-full bg-amber-600 transition-all duration-500" 
                     style={{ width: `${Math.max(stats?.storageBreakdown?.users.percent || 15, 3)}%` }}
                     title={`Tài khoản người dùng: ${stats?.storageBreakdown?.users.sizeKB || 0} KB`}
                   />
@@ -3894,7 +3894,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                 <div className="flex flex-wrap items-center justify-between text-[11px] text-slate-400 pt-1">
                   <div className="flex flex-wrap items-center gap-4">
                     <span className="flex items-center gap-1.5">
-                      <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+                      <span className="w-2.5 h-2.5 rounded-full bg-emerald-600" />
                       <span>Dữ liệu học tập các lớp ({stats?.storageBreakdown?.userData.percent || 0}%)</span>
                     </span>
                     <span className="flex items-center gap-1.5">
@@ -3902,7 +3902,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                       <span>Nhật ký Audit Logs ({stats?.storageBreakdown?.auditLogs.percent || 0}%)</span>
                     </span>
                     <span className="flex items-center gap-1.5">
-                      <span className="w-2.5 h-2.5 rounded-full bg-amber-400" />
+                      <span className="w-2.5 h-2.5 rounded-full bg-amber-600" />
                       <span>Hồ sơ Tài khoản ({stats?.storageBreakdown?.users.percent || 0}%)</span>
                     </span>
                   </div>
@@ -4093,7 +4093,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
             </div>
 
             {/* KHU VỰC QUẢN LÝ DỮ LIỆU & CHUẨN BỊ NĂM HỌC MỚI (Yêu cầu c, d, e) */}
-            <div className="bg-gradient-to-br from-indigo-900 via-blue-950 to-slate-900 border-2 border-indigo-500/30 rounded-3xl p-6 text-white shadow-xl space-y-4">
+            <div className="bg-gradient-to-br from-indigo-500 via-blue-600 to-indigo-500 border-2 border-indigo-500/30 rounded-3xl p-6 text-white shadow-xl space-y-4">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
                   <div className="w-12 h-12 rounded-2xl bg-indigo-500/20 border border-indigo-400 text-indigo-300 flex items-center justify-center font-black">
@@ -4112,7 +4112,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                         {isSchoolAdmin ? 'Cấp Trường' : isGuestAdmin ? 'Khối Cá Nhân' : 'Phân Vùng Hệ Thống'}
                       </span>
                     </div>
-                    <p className="text-xs text-indigo-200 mt-0.5">
+                    <p className="text-xs text-white mt-0.5">
                       {isSchoolAdmin 
                         ? `Tải về Data JSON của ${currentSchoolScope}, nạp dữ liệu hoặc dọn dẹp dữ liệu cũ đón năm học mới.`
                         : isGuestAdmin 
@@ -4135,7 +4135,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                     setSchoolResetConfirmCode('');
                     setSchoolResetModalOpen(true);
                   }}
-                  className="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-rose-600 to-amber-600 hover:from-rose-500 hover:to-amber-500 text-white font-black text-xs uppercase shadow-lg shadow-rose-600/30 transition-all flex items-center gap-2 shrink-0 cursor-pointer hover:scale-102"
+                  className="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-rose-600 to-amber-600 hover:from-rose-700 hover:to-amber-700 text-white font-black text-xs uppercase shadow-lg shadow-rose-600/30 transition-all flex items-center gap-2 shrink-0 cursor-pointer hover:scale-102"
                 >
                   <Trash2 className="w-4 h-4" />
                   <span>Dọn Dẹp Dữ Liệu Năm Học Mới</span>
@@ -4164,7 +4164,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                       <div className="text-xs font-black text-white">Nhập Data JSON Khối Cá Nhân</div>
                       <div className="text-[11px] text-slate-300">Khôi phục danh sách GV cá nhân từ file đã lưu</div>
                     </div>
-                    <label className="px-3 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-black uppercase transition-colors flex items-center gap-1.5 cursor-pointer">
+                    <label className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black uppercase transition-colors flex items-center gap-1.5 cursor-pointer">
                       <Upload className="w-3.5 h-3.5" />
                       <span>Upload</span>
                       <input type="file" accept=".json" onChange={(e) => handleImportScoped(e, 'guest')} className="hidden" />
@@ -4192,7 +4192,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                       <div className="text-xs font-black text-white">Nhập Data JSON Nhà Trường</div>
                       <div className="text-[11px] text-slate-300">Khôi phục danh sách trường từ file backup</div>
                     </div>
-                    <label className="px-3 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-black uppercase transition-colors flex items-center gap-1.5 cursor-pointer">
+                    <label className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black uppercase transition-colors flex items-center gap-1.5 cursor-pointer">
                       <Upload className="w-3.5 h-3.5" />
                       <span>Upload</span>
                       <input type="file" accept=".json" onChange={(e) => handleImportScoped(e, 'school')} className="hidden" />
@@ -4251,7 +4251,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
           <div className="flex-1 overflow-y-auto p-5 md:p-7 flex flex-col space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-gradient-to-r from-amber-50 to-orange-50 p-4 rounded-2xl border border-amber-200">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-amber-500 text-white flex items-center justify-center font-black shrink-0">
+                <div className="w-10 h-10 rounded-2xl bg-amber-600 text-white flex items-center justify-center font-black shrink-0">
                   <Sparkles className="w-5 h-5" />
                 </div>
                 <div>
@@ -4283,7 +4283,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
             <div className="flex-1 border border-slate-200 rounded-2xl overflow-hidden shadow-2xs bg-white">
               <div className="overflow-x-auto h-full">
                 <table className="w-full text-left border-collapse text-xs">
-                  <thead className="bg-white border-b-2 border-slate-300 text-[11px] font-black text-emerald-500 tracking-wider sticky top-0 z-10">
+                  <thead className="bg-white border-b-2 border-slate-300 text-[11px] font-black text-emerald-600 tracking-wider sticky top-0 z-10">
                     <tr>
                       <th rowSpan={2} className="py-2 px-2 text-center w-12 border-r border-slate-300 border-l border-slate-300 border-t border-slate-300">STT</th>
                       <th rowSpan={2} className="py-2 px-2 border-r border-slate-300 border-t border-slate-300 text-center">Họ và tên Thầy / Cô</th>
@@ -4327,7 +4327,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                           <button
                             onClick={() => { if (reg.status !== 'approved') handleApproveRegistration(reg); }}
                             className={`w-4 h-4 mx-auto rounded-sm flex items-center justify-center transition-colors border ${
-                              reg.status === 'approved' ? 'bg-green-500 border-green-500 text-white' : 'bg-white border-slate-400 hover:border-green-500'
+                              reg.status === 'approved' ? 'bg-green-600 border-green-500 text-white' : 'bg-white border-slate-400 hover:border-green-500'
                             }`}
                             title="Đánh dấu Đã giải quyết (Duyệt)"
                           >
@@ -4385,7 +4385,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
 
       {/* Modal Xác Nhận Dọn Dẹp / Xóa Dữ Liệu Năm Học Mới (Yêu cầu 3 & c, d, e) */}
       {schoolResetModalOpen && (
-        <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-sm animate-in fade-in duration-150">
+        <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-sky-900/20 backdrop-blur-xs animate-in fade-in duration-150">
           <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 space-y-4">
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center font-black shrink-0">
@@ -4546,7 +4546,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
 
       {/* Modal Thêm Mới / Sửa CSDL Trường Học (Multi-tenant SaaS: Super Admin) */}
       {schoolModalOpen && (
-        <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-sm animate-in fade-in duration-150">
+        <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-sky-900/20 backdrop-blur-xs animate-in fade-in duration-150">
           <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 space-y-4 max-h-[90vh] overflow-y-auto">
             {/* Nếu vừa khởi tạo thành công -> Hiển thị Phiếu Bàn Giao Tài Khoản BGH */}
             {provisionedSchoolInfo ? (
@@ -4618,7 +4618,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                       setProvisionedSchoolInfo(null);
                       setSchoolModalOpen(false);
                     }}
-                    className="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold uppercase transition-colors cursor-pointer"
+                    className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-100 text-slate-800 text-xs font-bold uppercase transition-colors cursor-pointer"
                   >
                     Hoàn Tất & Đóng
                   </button>
@@ -4844,10 +4844,10 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
 
       {/* 🚀 MODAL DI CHUYỂN TOÀN BỘ CSDL GIÁO VIÊN VÀO NHÀ TRƯỜNG (SUPER ADMIN) */}
       {transferModalOpen && userToTransfer && (
-        <div className="fixed inset-0 z-[70] flex items-center justify-center p-3 md:p-4 bg-slate-950/70 backdrop-blur-xs animate-in fade-in duration-150">
+        <div className="fixed inset-0 z-[70] flex items-center justify-center p-3 md:p-4 bg-sky-900/20 backdrop-blur-xs animate-in fade-in duration-150">
           <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-xl overflow-hidden animate-in zoom-in-95 duration-150">
             {/* Header */}
-            <div className="bg-gradient-to-r from-purple-900 via-indigo-900 to-blue-900 p-5 text-white flex items-center justify-between">
+            <div className="bg-gradient-to-r from-purple-500 via-indigo-500 to-blue-500 p-5 text-white flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-2xl bg-purple-500/30 border border-purple-300/40 text-white flex items-center justify-center font-black shadow-inner">
                   <Building2 className="w-5 h-5 text-purple-200" />
@@ -4855,11 +4855,11 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                 <div>
                   <h4 className="text-sm font-black uppercase tracking-tight flex items-center gap-2">
                     <span>GÁN CSDL GIÁO VIÊN VÀO NHÀ TRƯỜNG</span>
-                    <span className="text-[10px] bg-purple-400/30 text-purple-200 px-2 py-0.5 rounded-full border border-purple-300/30 font-bold">
+                    <span className="text-[10px] bg-purple-400/30 text-white px-2 py-0.5 rounded-full border border-purple-300/30 font-bold">
                       Bảo Toàn 100%
                     </span>
                   </h4>
-                  <p className="text-xs text-purple-200/90 font-medium">
+                  <p className="text-xs text-white font-medium">
                     Di chuyển tài khoản, lớp học, học sinh từ Vãng Lai sang Nhà Trường trực thuộc
                   </p>
                 </div>
@@ -5010,7 +5010,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
 
       {/* Reject Registration Modal */}
       {rejectModalOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-sky-900/20 backdrop-blur-xs">
           <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl overflow-hidden border border-slate-200">
             <div className="flex justify-between items-center p-4 border-b border-slate-100 bg-slate-50">
               <div className="flex items-center gap-3">
@@ -5071,7 +5071,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
 
       {/* Edit Registration Modal */}
       {editRegistrationModalOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-sky-900/20 backdrop-blur-xs">
           <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl overflow-hidden border border-slate-200">
             <div className="flex justify-between items-center p-4 border-b border-slate-100 bg-slate-50">
               <div className="flex items-center gap-3">
@@ -5159,7 +5159,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
 
       {/* 🗑️ MODAL XÁC NHẬN XÓA CSDL TRƯỜNG HỌC (CHUẨN GIAO DIỆN PREMIUM NHƯ MODAL XÓA HỌC SINH) */}
       {schoolToDelete && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 animate-in fade-in duration-150">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-sky-900/20 backdrop-blur-xs p-4 animate-in fade-in duration-150">
           <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 max-w-sm w-full p-6 space-y-4 animate-in zoom-in-95 duration-150">
             <div className="w-14 h-14 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center mx-auto shadow-2xs">
               <Trash2 className="w-7 h-7" />
@@ -5206,7 +5206,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
 
       {/* 🗑️ MODAL XÁC NHẬN XÓA TÀI KHOẢN (CHUẨN GIAO DIỆN PREMIUM NHƯ MODAL XÓA HỌC SINH) */}
       {userToDelete && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 animate-in fade-in duration-150">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-sky-900/20 backdrop-blur-xs p-4 animate-in fade-in duration-150">
           <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 max-w-sm w-full p-6 space-y-4 animate-in zoom-in-95 duration-150">
             <div className="w-14 h-14 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center mx-auto shadow-2xs">
               <Trash2 className="w-7 h-7" />
@@ -5253,7 +5253,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
 
       {/* 🏛️ MODAL CẤP NHANH TÀI KHOẢN BGH CHO TRƯỜNG CHƯA CÓ TÀI KHOẢN */}
       {provisionModalOpen && provisioningSchool && (
-        <div className="fixed inset-0 z-[75] flex items-center justify-center p-3 md:p-4 bg-slate-950/70 backdrop-blur-xs animate-in fade-in duration-150">
+        <div className="fixed inset-0 z-[75] flex items-center justify-center p-3 md:p-4 bg-sky-900/20 backdrop-blur-xs animate-in fade-in duration-150">
           <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md border border-slate-100 animate-in slide-in-from-bottom-4 duration-200 overflow-hidden">
             
             {/* Header */}
@@ -5326,7 +5326,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                     <button
                       type="button"
                       onClick={() => { setProvisionModalOpen(false); setProvisionedResult(null); }}
-                      className="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-900 text-white text-xs font-black uppercase transition-colors cursor-pointer"
+                      className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-100 text-slate-800 text-xs font-black uppercase transition-colors cursor-pointer"
                     >
                       Đóng
                     </button>

@@ -9,6 +9,7 @@ import {
 import { useClassroom } from '../../context/ClassroomContext';
 import { OPEN_CHANGE_PASSWORD_EVENT } from '../modals/ChangePasswordModal';
 import { APP_AUTHOR_INFO } from '../../data/initialData';
+import { OPEN_ZALO_QR_EVENT } from '../modals/ZaloQrModal';
 import { getOfficialDisplayName, getOfficialRoleTitle } from '../../utils/accountIdentity';
 
 export type NavigationMenuId = 
@@ -438,123 +439,49 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </div>
         )}
 
-        {/* Các nút tính năng nhanh: Nơi lưu D..., Google Dr..., Kích hoạt CDKEY (Ảnh 3 & 8) */}
-        {!isEffectivelyCollapsed ? (
-          <div className="px-2 mb-1.5 space-y-1.5 shrink-0">
-            {/* Hàng 2 nút Nơi lưu Data & Google Drive */}
-            <div className="grid grid-cols-2 gap-1.5">
-              <button
-                onClick={() => {
-                  setIsDataStorageModalOpen(true);
-                  if (isMobileDrawer && onCloseMobile) onCloseMobile();
-                }}
-                className="btn-3d btn-3d-sm btn-3d-blue text-[9.5px] py-1 px-1.5 gap-1 shrink-0 truncate"
-                title="Nơi lưu trữ data an toàn (Ổ D/E) - File JSON"
-              >
-                <HardDrive className="w-3 h-3 text-sky-200 shrink-0" />
-                <span className="truncate">Nơi lưu D...</span>
-              </button>
-
-              <button
-                onClick={() => {
-                  setIsGoogleDriveModalOpen(true);
-                  if (isMobileDrawer && onCloseMobile) onCloseMobile();
-                }}
-                className="btn-3d btn-3d-sm btn-3d-cyan text-[9.5px] py-1 px-1.5 gap-1 shrink-0 truncate"
-                title="Đồng bộ Google Drive liên thông"
-              >
-                <Cloud className="w-3 h-3 text-white shrink-0" />
-                <span className="truncate">Google Dr...</span>
-              </button>
+        {/* Tiện ích nhanh: lưới ô gọn, hiện đại (Nơi lưu, Drive, CDKEY, Đổi mật khẩu, Đăng ký, Zalo) */}
+        {(() => {
+          const runTool = (fn: () => void) => () => { fn(); if (isMobileDrawer && onCloseMobile) onCloseMobile(); };
+          const tools = [
+            { key: 'storage', label: 'Nơi lưu', title: 'Nơi lưu trữ data an toàn (Ổ D/E) - File JSON', icon: <HardDrive className="w-4 h-4" />, cls: 'bg-blue-50 text-blue-800 border-blue-200 hover:bg-blue-100', onClick: () => setIsDataStorageModalOpen(true) },
+            { key: 'drive', label: 'Drive', title: 'Đồng bộ Google Drive liên thông', icon: <Cloud className="w-4 h-4" />, cls: 'bg-cyan-50 text-cyan-800 border-cyan-200 hover:bg-cyan-100', onClick: () => setIsGoogleDriveModalOpen(true) },
+            { key: 'cdkey', label: isCdKeyActivated ? 'Bản PRO' : 'CDKEY', title: 'Kích hoạt mã CDKEY bản quyền phần mềm (LOP-HOC-HANH-PHUC)', icon: <KeyRound className="w-4 h-4" />, cls: isCdKeyActivated ? 'bg-emerald-50 text-emerald-800 border-emerald-200 hover:bg-emerald-100' : 'bg-amber-100 text-amber-900 border-amber-300 hover:bg-amber-200', onClick: () => setIsCdKeyModalOpen(true) },
+            { key: 'password', label: 'Mật khẩu', title: 'Đổi mật khẩu đăng nhập của tài khoản này', icon: <Lock className="w-4 h-4" />, cls: 'bg-indigo-50 text-indigo-800 border-indigo-200 hover:bg-indigo-100', onClick: () => window.dispatchEvent(new Event(OPEN_CHANGE_PASSWORD_EVENT)) },
+            { key: 'register', label: 'Đăng ký', title: 'Đăng ký sử dụng bản quyền phần mềm Lớp Học Hạnh Phúc', icon: <Sparkles className="w-4 h-4" />, cls: 'bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100', onClick: () => setIsRegistrationModalOpen(true) },
+            { key: 'zalo', label: 'Zalo QR', title: 'Mã QR Zalo liên hệ tác giả', icon: <span className="text-[11px] font-black leading-none">Zalo</span>, cls: 'bg-sky-50 text-sky-800 border-sky-200 hover:bg-sky-100', onClick: () => window.dispatchEvent(new Event(OPEN_ZALO_QR_EVENT)) }
+          ];
+          return !isEffectivelyCollapsed ? (
+            <div className="px-2 mb-1.5 shrink-0">
+              <div className="text-[9px] font-black text-slate-500 uppercase tracking-wider px-0.5 mb-1">Tiện ích</div>
+              <div className="grid grid-cols-3 gap-1.5">
+                {tools.map(t => (
+                  <button
+                    key={t.key}
+                    onClick={runTool(t.onClick)}
+                    title={t.title}
+                    className={`h-12 rounded-xl border flex flex-col items-center justify-center gap-0.5 text-[9.5px] font-bold transition-colors ${t.cls}`}
+                  >
+                    {t.icon}
+                    <span className="truncate max-w-full px-0.5">{t.label}</span>
+                  </button>
+                ))}
+              </div>
             </div>
-
-            {/* Nút Kích Hoạt CDKEY Bản Quyền */}
-            <button
-              onClick={() => {
-                setIsCdKeyModalOpen(true);
-                if (isMobileDrawer && onCloseMobile) onCloseMobile();
-              }}
-              className={`btn-3d btn-3d-sm w-full py-1.5 px-2 text-[10px] gap-1.5 ${
-                isCdKeyActivated
-                  ? 'btn-3d-light text-amber-900 border-amber-300'
-                  : 'btn-3d-amber animate-pulse'
-              }`}
-              title="Kích hoạt mã CDKEY bản quyền phần mềm (LOP-HOC-HANH-PHUC)"
-            >
-              <KeyRound className="w-3.5 h-3.5 shrink-0" />
-              <span>{isCdKeyActivated ? 'BẢN QUYỀN PRO' : 'KÍCH HOẠT CDKEY'}</span>
-            </button>
-
-            {/* Nút Đổi mật khẩu (tùy chọn) — mật khẩu mới tự cập nhật cho Quản trị nhà trường */}
-            <button
-              onClick={() => {
-                window.dispatchEvent(new Event(OPEN_CHANGE_PASSWORD_EVENT));
-                if (isMobileDrawer && onCloseMobile) onCloseMobile();
-              }}
-              className="btn-3d btn-3d-sm btn-3d-light w-full py-1.5 px-2 text-[10px] gap-1.5 text-indigo-900 border-indigo-200"
-              title="Đổi mật khẩu đăng nhập của tài khoản này"
-            >
-              <Lock className="w-3.5 h-3.5 shrink-0" />
-              <span>ĐỔI MẬT KHẨU</span>
-            </button>
-          </div>
-        ) : (
-          <div className="px-2 mb-1.5 space-y-1.5 shrink-0 flex flex-col items-center">
-            <button
-              onClick={() => setIsDataStorageModalOpen(true)}
-              className="btn-3d btn-3d-sm btn-3d-blue p-2"
-              title="Nơi lưu trữ Data Ổ D/E"
-            >
-              <HardDrive className="w-3.5 h-3.5 text-sky-200" />
-            </button>
-            <button
-              onClick={() => setIsGoogleDriveModalOpen(true)}
-              className="btn-3d btn-3d-sm btn-3d-cyan p-2"
-              title="Google Drive"
-            >
-              <Cloud className="w-3.5 h-3.5 text-white" />
-            </button>
-            <button
-              onClick={() => setIsCdKeyModalOpen(true)}
-              className={`btn-3d btn-3d-sm p-2 ${isCdKeyActivated ? 'btn-3d-light' : 'btn-3d-amber animate-pulse'}`}
-              title="Kích hoạt CDKEY"
-            >
-              <KeyRound className="w-3.5 h-3.5" />
-            </button>
-            <button
-              onClick={() => window.dispatchEvent(new Event(OPEN_CHANGE_PASSWORD_EVENT))}
-              className="btn-3d btn-3d-sm btn-3d-light p-2"
-              title="Đổi mật khẩu"
-            >
-              <Lock className="w-3.5 h-3.5 text-indigo-700" />
-            </button>
-          </div>
-        )}
-
-        {/* Nút Đăng Ký Sử Dụng Bản Quyền */}
-        <div className="px-2 mb-1.5 shrink-0">
-          {!isEffectivelyCollapsed ? (
-            <button
-              onClick={() => {
-                setIsRegistrationModalOpen(true);
-                if (isMobileDrawer && onCloseMobile) onCloseMobile();
-              }}
-              className="btn-3d btn-3d-sm btn-3d-rose w-full py-1.5 px-2.5 text-[10.5px] gap-1.5"
-              title="Đăng ký sử dụng bản quyền phần mềm Lớp Học Hạnh Phúc"
-            >
-              <Sparkles className="w-3.5 h-3.5 text-yellow-200 animate-pulse" />
-              <span>ĐĂNG KÝ SỬ DỤNG</span>
-            </button>
           ) : (
-            <button
-              onClick={() => setIsRegistrationModalOpen(true)}
-              className="btn-3d btn-3d-sm btn-3d-rose w-full py-1.5 flex items-center justify-center"
-              title="Đăng ký sử dụng bản quyền"
-            >
-              <Sparkles className="w-3.5 h-3.5 text-yellow-200 animate-pulse" />
-            </button>
-          )}
-        </div>
+            <div className="px-2 mb-1.5 space-y-1.5 shrink-0 flex flex-col items-center">
+              {tools.map(t => (
+                <button
+                  key={t.key}
+                  onClick={runTool(t.onClick)}
+                  title={t.title}
+                  className={`w-9 h-9 rounded-xl border flex items-center justify-center transition-colors ${t.cls}`}
+                >
+                  {t.icon}
+                </button>
+              ))}
+            </div>
+          );
+        })()}
 
         {/* Author Footer: CỐ ĐỊNH THEO YÊU CẦU 6 - KHÔNG LẤY TỪ CÀI ĐẶT */}
         {!isEffectivelyCollapsed && (
@@ -621,7 +548,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       {isMobileOpen && (
         <div className="lg:hidden fixed inset-0 z-50">
           <div 
-            className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs transition-opacity animate-in fade-in duration-200" 
+            className="fixed inset-0 bg-sky-900/20 backdrop-blur-xs transition-opacity animate-in fade-in duration-200" 
             onClick={onCloseMobile} 
           />
           <aside className="fixed inset-y-0 left-0 w-72 max-w-[85vw] bg-white z-50 shadow-2xl flex flex-col animate-in slide-in-from-left duration-250 select-none">

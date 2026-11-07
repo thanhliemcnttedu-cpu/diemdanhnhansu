@@ -89,7 +89,7 @@ export const TimetableConfigModal: React.FC<TimetableConfigModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-slate-900/60 backdrop-blur-sm overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-sky-900/20 backdrop-blur-xs overflow-y-auto">
       <div className="bg-white w-full max-w-3xl rounded-3xl shadow-2xl border border-indigo-100 overflow-hidden my-auto animate-in fade-in zoom-in-95 duration-200">
         
         {/* Header */}
@@ -100,7 +100,7 @@ export const TimetableConfigModal: React.FC<TimetableConfigModalProps> = ({
             </div>
             <div>
               <h2 className="text-lg font-black tracking-tight">Cấu Hình Thời Khóa Biểu</h2>
-              <p className="text-xs text-indigo-100 font-medium">
+              <p className="text-xs text-white font-medium">
                 Thiết lập thông tin hiển thị, số tiết học và khung giờ chi tiết
               </p>
             </div>

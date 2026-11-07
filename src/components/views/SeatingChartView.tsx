@@ -10,6 +10,7 @@ import confetti from 'canvas-confetti';
 import { toPng } from 'html-to-image';
 import { exportElementToPdf } from '../../utils/printHelper';
 
+import { handleAvatarImgError } from '../../utils/avatarConfig';
 export type SeatingPerspectiveTheme = 
   | 'wood_3d' 
   | 'modern_mint_3d' 
@@ -49,11 +50,11 @@ export const SEATING_THEMES: Record<SeatingPerspectiveTheme, ThemeConfig> = {
     badge: 'Mẫu ảnh gốc',
     containerBg: 'bg-[#f4ece1]',
     containerBorder: 'border-4 border-[#c5a880]',
-    headerBg: 'bg-gradient-to-r from-[#173059] via-[#1e3a6c] to-[#173059] text-white border-2 border-[#d4af37]',
+    headerBg: 'bg-gradient-to-r from-[#2563eb] via-[#3b82f6] to-[#2563eb] text-white border-2 border-[#d4af37]',
     headerBorder: 'border-[#d4af37]',
     podiumBg: 'bg-[#e4cfb4] border-2 border-[#b89870]',
     podiumBorder: 'border-[#b89870]',
-    boardBg: 'bg-gradient-to-b from-[#1b5e39] to-[#124227] border-4 border-[#8e6b3e] text-white',
+    boardBg: 'bg-gradient-to-b from-[#2f8f5b] to-[#237a4b] border-4 border-[#8e6b3e] text-white',
     boardBorder: 'border-[#8e6b3e]',
     boardText: 'text-amber-300',
     deskHeaderBg: 'bg-[#ecd6ba] text-[#7a4e21] border-[#cdae86]',
@@ -71,11 +72,11 @@ export const SEATING_THEMES: Record<SeatingPerspectiveTheme, ThemeConfig> = {
     badge: 'Châu Âu',
     containerBg: 'bg-[#eaf7f5]',
     containerBorder: 'border-4 border-[#2dd4bf]',
-    headerBg: 'bg-gradient-to-r from-[#0f766e] via-[#0d9488] to-[#115e59] text-white border-2 border-[#5eead4]',
+    headerBg: 'bg-gradient-to-r from-[#0d9488] via-[#0d9488] to-[#0f766e] text-white border-2 border-[#5eead4]',
     headerBorder: 'border-[#5eead4]',
     podiumBg: 'bg-[#ccfbf1] border-2 border-[#99f6e4]',
     podiumBorder: 'border-[#99f6e4]',
-    boardBg: 'bg-gradient-to-b from-[#0f766e] to-[#134e4a] border-4 border-[#2dd4bf] text-white',
+    boardBg: 'bg-gradient-to-b from-[#0d9488] to-[#0f766e] border-4 border-[#2dd4bf] text-white',
     boardBorder: 'border-[#2dd4bf]',
     boardText: 'text-teal-200',
     deskHeaderBg: 'bg-[#ccfbf1] text-teal-900 border-[#99f6e4]',
@@ -83,7 +84,7 @@ export const SEATING_THEMES: Record<SeatingPerspectiveTheme, ThemeConfig> = {
     deskSurface: 'bg-gradient-to-b from-[#ffffff] to-[#f0fdfa]',
     columnBg: 'bg-[#ccfbf1]/40 border-[#99f6e4]',
     columnBorder: 'border-[#99f6e4]',
-    columnBadge: 'bg-gradient-to-r from-[#0f766e] via-[#14b8a6] to-[#0f766e] text-white border-[#5eead4]'
+    columnBadge: 'bg-gradient-to-r from-[#0d9488] via-[#14b8a6] to-[#0d9488] text-white border-[#5eead4]'
   },
   royal_navy_3d: {
     id: 'royal_navy_3d',
@@ -93,11 +94,11 @@ export const SEATING_THEMES: Record<SeatingPerspectiveTheme, ThemeConfig> = {
     badge: 'Sang trọng',
     containerBg: 'bg-[#edf2fa]',
     containerBorder: 'border-4 border-[#3b82f6]',
-    headerBg: 'bg-gradient-to-r from-[#0f172a] via-[#1e3a8a] to-[#0f172a] text-white border-2 border-[#fbbf24]',
+    headerBg: 'bg-gradient-to-r from-[#1d4ed8] via-[#2563eb] to-[#1d4ed8] text-white border-2 border-[#fbbf24]',
     headerBorder: 'border-[#fbbf24]',
     podiumBg: 'bg-[#dbeafe] border-2 border-[#bfdbfe]',
     podiumBorder: 'border-[#bfdbfe]',
-    boardBg: 'bg-gradient-to-b from-[#1e293b] to-[#0f172a] border-4 border-[#fbbf24] text-white',
+    boardBg: 'bg-gradient-to-b from-[#3b5b92] to-[#1d4ed8] border-4 border-[#fbbf24] text-white',
     boardBorder: 'border-[#fbbf24]',
     boardText: 'text-amber-400',
     deskHeaderBg: 'bg-[#dbeafe] text-blue-900 border-[#bfdbfe]',
@@ -105,7 +106,7 @@ export const SEATING_THEMES: Record<SeatingPerspectiveTheme, ThemeConfig> = {
     deskSurface: 'bg-gradient-to-b from-[#ffffff] to-[#eff6ff]',
     columnBg: 'bg-[#dbeafe]/40 border-[#bfdbfe]',
     columnBorder: 'border-[#bfdbfe]',
-    columnBadge: 'bg-gradient-to-r from-[#1e3a8a] via-[#2563eb] to-[#1e3a8a] text-white border-[#60a5fa]'
+    columnBadge: 'bg-gradient-to-r from-[#2563eb] via-[#2563eb] to-[#2563eb] text-white border-[#60a5fa]'
   },
   standard_2d: {
     id: 'standard_2d',
@@ -115,7 +116,7 @@ export const SEATING_THEMES: Record<SeatingPerspectiveTheme, ThemeConfig> = {
     badge: 'Tối ưu in ấn',
     containerBg: 'bg-white',
     containerBorder: 'border-4 border-slate-300',
-    headerBg: 'bg-slate-800 text-white border-2 border-slate-700',
+    headerBg: 'bg-slate-100 text-slate-800 border-2 border-slate-200',
     headerBorder: 'border-slate-700',
     podiumBg: 'bg-slate-100 border-2 border-slate-200',
     podiumBorder: 'border-slate-200',
@@ -127,7 +128,7 @@ export const SEATING_THEMES: Record<SeatingPerspectiveTheme, ThemeConfig> = {
     deskSurface: 'bg-white',
     columnBg: 'bg-slate-50/80 border-slate-200',
     columnBorder: 'border-slate-200',
-    columnBadge: 'bg-slate-700 text-white border-slate-600'
+    columnBadge: 'bg-slate-200 text-slate-800 border-slate-200'
   },
   rainbow_2d: {
     id: 'rainbow_2d',
@@ -312,9 +313,9 @@ export const SeatingChartView: React.FC = () => {
       <div className="flex items-center justify-center gap-2.5">
         <div className="relative shrink-0">
           <img 
-            src={teacherProfile.avatar} 
+            src={teacherProfile.avatar} onError={(e) => handleAvatarImgError(e, undefined, teacherProfile?.name)} 
             alt="Avatar Giáo viên"
-            className="w-12 h-12 rounded-xl object-cover border-2 border-[#a77e53] shadow-xs bg-white" 
+            className="w-12 h-12 rounded-xl object-cover object-center border-2 border-[#a77e53] shadow-xs bg-white" 
           />
           <span className="absolute -bottom-1 -right-1 text-xs">💻</span>
         </div>
@@ -331,11 +332,11 @@ export const SeatingChartView: React.FC = () => {
   );
 
   const renderChalkboard = (colSpan: string = 'col-span-6') => (
-    <div className={`${colSpan} h-full min-h-[90px] bg-gradient-to-b from-[#1b5e39] to-[#124227] rounded-xl border-4 border-[#8e6b3e] p-2.5 text-center shadow-lg relative transition-all duration-300 flex flex-col justify-center`}>
+    <div className={`${colSpan} h-full min-h-[90px] bg-gradient-to-b from-[#2f8f5b] to-[#237a4b] rounded-xl border-4 border-[#8e6b3e] p-2.5 text-center shadow-lg relative transition-all duration-300 flex flex-col justify-center`}>
       <div className="text-xs sm:text-sm md:text-base font-black tracking-wide text-white drop-shadow-md uppercase">
         BẢNG LỚP HỌC HẠNH PHÚC
       </div>
-      <div className="text-[10px] text-amber-300 font-bold truncate px-1 mt-1">
+      <div className="text-[10px] text-amber-200 font-bold truncate px-1 mt-1">
         - LỚP {activeClass?.name || '4A1'} • {activeClass?.slogan || 'Chăm ngoan, sáng tạo, tự tin'} -
       </div>
     </div>
@@ -629,7 +630,7 @@ export const SeatingChartView: React.FC = () => {
                     <span>{deskNumberingOrder === 'vertical' ? '✓' : '○'}</span>
                     <span>THEO DỌC</span>
                   </div>
-                  <div className={`text-[10px] mt-0.5 leading-tight ${deskNumberingOrder === 'vertical' ? 'text-blue-100' : 'text-slate-500'}`}>
+                  <div className={`text-[10px] mt-0.5 leading-tight ${deskNumberingOrder === 'vertical' ? 'text-white' : 'text-slate-500'}`}>
                     Dãy 1: Bàn 1..N, rồi đến Dãy 2, Dãy 3...
                   </div>
                 </button>
@@ -647,7 +648,7 @@ export const SeatingChartView: React.FC = () => {
                     <span>{deskNumberingOrder === 'horizontal' ? '✓' : '○'}</span>
                     <span>THEO NGANG</span>
                   </div>
-                  <div className={`text-[10px] mt-0.5 leading-tight ${deskNumberingOrder === 'horizontal' ? 'text-blue-100' : 'text-slate-500'}`}>
+                  <div className={`text-[10px] mt-0.5 leading-tight ${deskNumberingOrder === 'horizontal' ? 'text-white' : 'text-slate-500'}`}>
                     Hàng 1: Bàn 1, 2... rồi đến Hàng 2, Hàng 3...
                   </div>
                 </button>
@@ -713,7 +714,7 @@ export const SeatingChartView: React.FC = () => {
                     onClick={() => setDoorPos(p.id as DoorPosition)}
                     className={`py-1.5 rounded-xl font-bold text-xs transition-all hover-zoom-btn ${
                       doorPos === p.id
-                        ? 'bg-amber-500 text-white shadow-xs font-black'
+                        ? 'bg-amber-600 text-white shadow-xs font-black'
                         : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-100'
                     }`}
                   >
@@ -1003,9 +1004,9 @@ export const SeatingChartView: React.FC = () => {
                                   <>
                                     <div className="relative mb-1">
                                       <img 
-                                        src={studentLeft.avatar} 
+                                        src={studentLeft.avatar} onError={(e) => handleAvatarImgError(e, studentLeft?.gender, studentLeft?.name)} 
                                         alt={studentLeft.name}
-                                        className="w-11 h-11 rounded-full object-cover border-2 border-amber-300 bg-sky-100 shadow-xs" 
+                                        className="w-11 h-11 rounded-full object-cover object-center border-2 border-amber-300 bg-sky-100 shadow-xs" 
                                       />
                                     </div>
                                     <span className="text-[11px] font-black text-slate-900 line-clamp-2 leading-tight text-center px-0.5">
@@ -1036,9 +1037,9 @@ export const SeatingChartView: React.FC = () => {
                                   <>
                                     <div className="relative mb-1">
                                       <img 
-                                        src={studentRight.avatar} 
+                                        src={studentRight.avatar} onError={(e) => handleAvatarImgError(e, studentRight?.gender, studentRight?.name)} 
                                         alt={studentRight.name}
-                                        className="w-11 h-11 rounded-full object-cover border-2 border-amber-300 bg-sky-100 shadow-xs" 
+                                        className="w-11 h-11 rounded-full object-cover object-center border-2 border-amber-300 bg-sky-100 shadow-xs" 
                                       />
                                     </div>
                                     <span className="text-[11px] font-black text-slate-900 line-clamp-2 leading-tight text-center px-0.5">
@@ -1145,13 +1146,13 @@ export const SeatingChartView: React.FC = () => {
                     }`}
                   >
                     <img 
-                      src={student.avatar} 
+                      src={student.avatar} onError={(e) => handleAvatarImgError(e, student?.gender, student?.name)} 
                       alt={student.name}
-                      className="w-8 h-8 rounded-xl object-cover bg-white border border-slate-200" 
+                      className="w-8 h-8 rounded-xl object-cover object-center bg-white border border-slate-200" 
                     />
                     <div className="min-w-0 flex-1">
                       <div className="text-xs font-bold truncate">{student.name}</div>
-                      <div className={`text-[10px] ${selectedStudentToSeat?.id === student.id ? 'text-indigo-100' : 'text-slate-400'}`}>
+                      <div className={`text-[10px] ${selectedStudentToSeat?.id === student.id ? 'text-white' : 'text-slate-400'}`}>
                         #{student.stt} • {student.gender} • {student.group || 'Tổ 1'}
                       </div>
                     </div>

@@ -213,7 +213,7 @@ export const TeacherAvatarEditorModal: React.FC<TeacherAvatarEditorModalProps> =
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/65 backdrop-blur-xs p-4 animate-in fade-in duration-150">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-sky-900/20 backdrop-blur-xs p-4 animate-in fade-in duration-150">
       <div 
         className="bg-white rounded-3xl shadow-2xl border border-slate-200 max-w-lg w-full overflow-hidden"
         onMouseUp={handleMouseUp}
@@ -229,7 +229,7 @@ export const TeacherAvatarEditorModal: React.FC<TeacherAvatarEditorModalProps> =
               <h3 className="text-base font-black tracking-tight">
                 Thu Phóng & Căn Chỉnh Ảnh Giáo Viên
               </h3>
-              <p className="text-xs text-blue-100 font-medium">
+              <p className="text-xs text-white font-medium">
                 Giáo viên: <strong className="text-amber-300">{teacherName || 'Chủ nhiệm'}</strong>
               </p>
             </div>
@@ -315,8 +315,8 @@ export const TeacherAvatarEditorModal: React.FC<TeacherAvatarEditorModalProps> =
               </div>
 
               {/* Floating Helper Pill */}
-              <div className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-slate-900/80 text-white text-[10px] font-bold px-3 py-1 rounded-full pointer-events-none flex items-center gap-1.5 backdrop-blur-xs whitespace-nowrap shadow-md">
-                <Move className="w-3 h-3 text-amber-300" />
+              <div className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-white/80 text-slate-800 text-[10px] font-bold px-3 py-1 rounded-full pointer-events-none flex items-center gap-1.5 backdrop-blur-xs whitespace-nowrap shadow-md">
+                <Move className="w-3 h-3 text-amber-600" />
                 <span>Kéo di chuyển • Cuộn chuột để zoom</span>
               </div>
             </div>

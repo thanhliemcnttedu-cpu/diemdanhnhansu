@@ -394,7 +394,7 @@ export const EnergizerGameArena: React.FC<EnergizerGameArenaProps> = ({
                 <div className="text-[10px] text-slate-500">Đứng lên vỗ 2 cái</div>
               </div>
 
-              <div className="text-xl font-black text-amber-400">➔</div>
+              <div className="text-xl font-black text-amber-700">➔</div>
 
               <div className={`p-2.5 rounded-2xl transition-all ${clappingStep === 2 ? 'bg-amber-100 ring-2 ring-amber-400 scale-105' : 'bg-slate-50'}`}>
                 <div className="text-2xl">😄</div>
@@ -402,7 +402,7 @@ export const EnergizerGameArena: React.FC<EnergizerGameArenaProps> = ({
                 <div className="text-[10px] text-slate-500">Cười HA HA!</div>
               </div>
 
-              <div className="text-xl font-black text-amber-400">➔</div>
+              <div className="text-xl font-black text-amber-700">➔</div>
 
               <div className={`p-2.5 rounded-2xl transition-all ${clappingStep === 3 ? 'bg-amber-100 ring-2 ring-amber-400 scale-105' : 'bg-slate-50'}`}>
                 <div className="text-2xl">🎉</div>
@@ -416,14 +416,14 @@ export const EnergizerGameArena: React.FC<EnergizerGameArenaProps> = ({
               <button
                 type="button"
                 onClick={() => handleTriggerClap(1)}
-                className="flex-1 py-2 px-3 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-black shadow-xs hover-zoom-btn flex items-center justify-center gap-1.5 cursor-pointer"
+                className="flex-1 py-2 px-3 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-black shadow-xs hover-zoom-btn flex items-center justify-center gap-1.5 cursor-pointer"
               >
                 <span>👏 Gõ Nhịp 1</span>
               </button>
               <button
                 type="button"
                 onClick={() => handleTriggerClap(2)}
-                className="flex-1 py-2 px-3 bg-orange-500 hover:bg-orange-600 text-white rounded-xl text-xs font-black shadow-xs hover-zoom-btn flex items-center justify-center gap-1.5 cursor-pointer"
+                className="flex-1 py-2 px-3 bg-orange-600 hover:bg-orange-700 text-white rounded-xl text-xs font-black shadow-xs hover-zoom-btn flex items-center justify-center gap-1.5 cursor-pointer"
               >
                 <span>😄 Gõ Nhịp 2</span>
               </button>
@@ -533,7 +533,7 @@ export const EnergizerGameArena: React.FC<EnergizerGameArenaProps> = ({
 
             {/* Wind Graphic Display */}
             <div className="p-4 bg-white rounded-xl border border-cyan-100 flex items-center gap-3.5 shadow-xs">
-              <div className="w-14 h-14 rounded-2xl bg-cyan-500 text-white flex items-center justify-center text-3xl shadow-md shrink-0">
+              <div className="w-14 h-14 rounded-2xl bg-cyan-600 text-white flex items-center justify-center text-3xl shadow-md shrink-0">
                 💨
               </div>
               <div className="space-y-1">
@@ -609,7 +609,7 @@ export const EnergizerGameArena: React.FC<EnergizerGameArenaProps> = ({
 
             {/* Hourglass Graphic */}
             <div className="p-4 bg-white rounded-xl border border-amber-100 flex items-center gap-3.5 shadow-xs">
-              <div className="w-14 h-14 rounded-2xl bg-amber-500 text-white flex items-center justify-center text-3xl shadow-md shrink-0">
+              <div className="w-14 h-14 rounded-2xl bg-amber-600 text-white flex items-center justify-center text-3xl shadow-md shrink-0">
                 ⏳
               </div>
               <div className="space-y-1">
@@ -686,20 +686,20 @@ export const EnergizerGameArena: React.FC<EnergizerGameArenaProps> = ({
 
       {/* RESULT MODAL / BANNER KHI KẾT THÚC TRÒ CHƠI */}
       {isFinished && (
-        <div className="p-6 bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 text-white rounded-3xl shadow-xl space-y-4">
+        <div className="p-6 bg-gradient-to-r from-amber-600 via-orange-600 to-rose-500 text-white rounded-3xl shadow-xl space-y-4">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="flex items-center gap-4">
               <div className="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center shrink-0 shadow-inner">
                 <Trophy className="w-8 h-8 text-yellow-200" />
               </div>
               <div>
-                <span className="px-2.5 py-0.5 rounded-full bg-white/20 text-yellow-100 text-[10px] font-black uppercase">
+                <span className="px-2.5 py-0.5 rounded-full bg-white/20 text-white text-[10px] font-black uppercase">
                   Hoàn Thành Trò Chơi 5 Phút
                 </span>
                 <h2 className="text-xl md:text-2xl font-black tracking-tight mt-0.5">
                   TỔNG KẾT KẾT QUẢ: {game.title.toUpperCase()}
                 </h2>
-                <p className="text-xs md:text-sm text-yellow-100 font-medium">
+                <p className="text-xs md:text-sm text-white font-medium">
                   Cả lớp đã hoàn thành trọn vẹn thử thách nạp năng lượng tràn đầy tiếng cười và hào hứng!
                 </p>
               </div>
@@ -730,21 +730,21 @@ export const EnergizerGameArena: React.FC<EnergizerGameArenaProps> = ({
           {/* Quick Metrics */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
             <div className="p-3.5 bg-white/15 backdrop-blur-md rounded-2xl border border-white/20">
-              <div className="text-[11px] text-yellow-200 font-bold uppercase">Tổng xu đã tặng trong lượt chơi</div>
+              <div className="text-[11px] text-white font-bold uppercase">Tổng xu đã tặng trong lượt chơi</div>
               <div className="text-2xl font-black text-white mt-0.5">+{totalCoinsAwarded} xu</div>
-              <div className="text-[10px] text-yellow-100 mt-0.5">Đã cập nhật trực tiếp vào hệ thống</div>
+              <div className="text-[10px] text-white mt-0.5">Đã cập nhật trực tiếp vào hệ thống</div>
             </div>
 
             <div className="p-3.5 bg-white/15 backdrop-blur-md rounded-2xl border border-white/20">
-              <div className="text-[11px] text-yellow-200 font-bold uppercase">Số học sinh được vinh danh</div>
+              <div className="text-[11px] text-white font-bold uppercase">Số học sinh được vinh danh</div>
               <div className="text-2xl font-black text-white mt-0.5">{uniqueStudentsAwardedCount} / {classStudents.length} bạn</div>
-              <div className="text-[10px] text-yellow-100 mt-0.5">Tạo động lực thi đua tự giác</div>
+              <div className="text-[10px] text-white mt-0.5">Tạo động lực thi đua tự giác</div>
             </div>
 
             <div className="p-3.5 bg-white/15 backdrop-blur-md rounded-2xl border border-white/20">
-              <div className="text-[11px] text-yellow-200 font-bold uppercase">Tổng số lượt tặng xu</div>
+              <div className="text-[11px] text-white font-bold uppercase">Tổng số lượt tặng xu</div>
               <div className="text-2xl font-black text-white mt-0.5">{awardHistory.length} lượt</div>
-              <div className="text-[10px] text-yellow-100 mt-0.5">Ghi nhận minh bạch vào sổ thi đua</div>
+              <div className="text-[10px] text-white mt-0.5">Ghi nhận minh bạch vào sổ thi đua</div>
             </div>
           </div>
         </div>
@@ -789,7 +789,7 @@ export const EnergizerGameArena: React.FC<EnergizerGameArenaProps> = ({
           {renderGameThemeGraphics()}
 
           {/* Countdown Timer Display & Controls */}
-          <div className="p-6 bg-gradient-to-b from-slate-900 to-slate-950 text-white rounded-3xl shadow-lg space-y-5 text-center">
+          <div className="p-6 bg-gradient-to-b from-sky-600 to-indigo-600 text-white rounded-3xl shadow-lg space-y-5 text-center">
             <div className="text-xs font-bold uppercase tracking-widest text-slate-400">
               Thời Gian Đếm Ngược
             </div>
@@ -804,7 +804,7 @@ export const EnergizerGameArena: React.FC<EnergizerGameArenaProps> = ({
               <div className="text-xs text-slate-400 mt-1">
                 {isRunning ? (
                   <span className="text-emerald-400 font-semibold flex items-center justify-center gap-1">
-                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+                    <span className="w-2 h-2 rounded-full bg-emerald-600 animate-ping" />
                     Trò chơi đang diễn ra sôi nổi 🎵
                   </span>
                 ) : isFinished ? (
@@ -816,9 +816,9 @@ export const EnergizerGameArena: React.FC<EnergizerGameArenaProps> = ({
             </div>
 
             {/* Progress Bar */}
-            <div className="w-full bg-slate-800 rounded-full h-2.5 overflow-hidden">
+            <div className="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
               <div
-                className="bg-gradient-to-r from-amber-400 to-yellow-500 h-2.5 rounded-full transition-all duration-300 ease-out"
+                className="bg-gradient-to-r from-amber-600 to-yellow-600 h-2.5 rounded-full transition-all duration-300 ease-out"
                 style={{ width: `${progressPercent}%` }}
               />
             </div>
@@ -865,21 +865,21 @@ export const EnergizerGameArena: React.FC<EnergizerGameArenaProps> = ({
               <button
                 type="button"
                 onClick={() => setTimeLeft(prev => prev + 30)}
-                className="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg hover-zoom-btn"
+                className="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg hover-zoom-btn"
               >
                 +30s
               </button>
               <button
                 type="button"
                 onClick={() => setTimeLeft(prev => Math.max(0, prev - 30))}
-                className="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg hover-zoom-btn"
+                className="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg hover-zoom-btn"
               >
                 -30s
               </button>
               <button
                 type="button"
                 onClick={handleReset}
-                className="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg hover-zoom-btn flex items-center gap-1"
+                className="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg hover-zoom-btn flex items-center gap-1"
               >
                 <RotateCcw className="w-3 h-3" /> Đặt lại
               </button>
@@ -912,7 +912,7 @@ export const EnergizerGameArena: React.FC<EnergizerGameArenaProps> = ({
                     onClick={() => setSelectedCoinAmount(amt)}
                     className={`px-2.5 py-1 rounded-lg text-xs font-black transition-all cursor-pointer ${
                       selectedCoinAmount === amt
-                        ? 'bg-amber-500 text-white shadow-xs'
+                        ? 'bg-amber-600 text-white shadow-xs'
                         : 'text-slate-700 hover:bg-slate-200'
                     }`}
                   >
@@ -1018,7 +1018,7 @@ export const EnergizerGameArena: React.FC<EnergizerGameArenaProps> = ({
                 <button
                   type="button"
                   onClick={handleAwardStudent}
-                  className="w-full sm:w-auto px-5 py-2.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-black flex items-center justify-center gap-1.5 shadow-md shadow-amber-500/25 hover-zoom-btn shrink-0 cursor-pointer"
+                  className="w-full sm:w-auto px-5 py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-black flex items-center justify-center gap-1.5 shadow-md shadow-amber-500/25 hover-zoom-btn shrink-0 cursor-pointer"
                 >
                   <Award className="w-4 h-4" />
                   <span>Tặng +{selectedCoinAmount} Xu</span>

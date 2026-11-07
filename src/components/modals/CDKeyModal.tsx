@@ -97,11 +97,11 @@ export const CDKeyModal: React.FC<CDKeyModalProps> = ({ isOpen, onClose }) => {
   const qrImageUrl = `https://img.vietqr.io/image/BIDV-3627058363-compact2.png?amount=0&addInfo=CDKEY%20LOP%20HOC%20HANH%20PHUC&accountName=NGUYEN%20THANH%20LIEM`;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/70 backdrop-blur-xs animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-sky-900/20 backdrop-blur-xs animate-in fade-in duration-200">
       <div className="relative w-full max-w-2xl bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[92vh]">
         
         {/* Header theo thiết kế chuẩn Ảnh 1 & 2 */}
-        <div className="bg-gradient-to-r from-indigo-900 via-indigo-800 to-indigo-950 text-white px-5 py-3.5 flex items-center justify-between shrink-0 shadow-sm">
+        <div className="bg-gradient-to-r from-indigo-500 via-indigo-500 to-indigo-600 text-white px-5 py-3.5 flex items-center justify-between shrink-0 shadow-sm">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-amber-400 text-amber-950 flex items-center justify-center shadow-md shrink-0">
               <KeyRound className="w-5 h-5 text-amber-950" />
@@ -110,14 +110,14 @@ export const CDKeyModal: React.FC<CDKeyModalProps> = ({ isOpen, onClose }) => {
               <h2 className="text-sm sm:text-base font-black tracking-wide uppercase flex items-center gap-2">
                 BẢN QUYỀN PHẦN MỀM LỚP HỌC HẠNH PHÚC
               </h2>
-              <p className="text-[11px] text-indigo-200 font-medium">
+              <p className="text-[11px] text-white font-medium">
                 Xác thực bản quyền chính thức & Mở khóa tính năng không giới hạn
               </p>
             </div>
           </div>
           <button 
             onClick={onClose}
-            className="p-1.5 rounded-lg text-indigo-200 hover:text-white hover:bg-white/10 transition-colors"
+            className="p-1.5 rounded-lg text-white hover:text-white hover:bg-white/10 transition-colors"
             title="Đóng modal"
           >
             <X className="w-5 h-5" />
@@ -130,7 +130,7 @@ export const CDKeyModal: React.FC<CDKeyModalProps> = ({ isOpen, onClose }) => {
           {/* Cảnh báo Chế độ Dùng Thử hoặc Thông báo Đã kích hoạt */}
           {!licenseState.isActivated ? (
             <div className="p-3.5 rounded-xl bg-amber-50 border border-amber-300 text-amber-950 shadow-xs flex items-start gap-3">
-              <div className="p-1.5 rounded-lg bg-amber-500 text-white shrink-0 mt-0.5">
+              <div className="p-1.5 rounded-lg bg-amber-600 text-white shrink-0 mt-0.5">
                 <AlertTriangle className="w-4 h-4" />
               </div>
               <div className="space-y-1">
@@ -210,7 +210,7 @@ export const CDKeyModal: React.FC<CDKeyModalProps> = ({ isOpen, onClose }) => {
               disabled={!cdkeyInput.trim()}
               className={`w-full py-2.5 px-4 rounded-xl font-black text-xs sm:text-sm uppercase tracking-wide flex items-center justify-center gap-2 transition-all shadow-sm ${
                 cdkeyInput.trim()
-                  ? 'bg-gradient-to-r from-indigo-600 via-indigo-700 to-indigo-800 hover:from-indigo-700 hover:to-indigo-900 text-white cursor-pointer hover:shadow-md active:scale-[0.99]'
+                  ? 'bg-gradient-to-r from-indigo-600 via-indigo-700 to-indigo-500 hover:from-indigo-800 hover:to-indigo-800 text-white cursor-pointer hover:shadow-md active:scale-[0.99]'
                   : 'bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed'
               }`}
             >
@@ -262,7 +262,7 @@ export const CDKeyModal: React.FC<CDKeyModalProps> = ({ isOpen, onClose }) => {
               <div className="p-2.5 rounded-lg bg-white border border-slate-200">
                 <div className="text-[10px] font-bold text-slate-500 uppercase">ĐIỆN THOẠI / ZALO HỖ TRỢ:</div>
                 <div className="flex items-center justify-between mt-0.5">
-                  <span className="text-xs font-mono font-black text-blue-700">{APP_AUTHOR_INFO.zalo}</span>
+                  <a href={APP_AUTHOR_INFO.zaloUrl} title="Bấm để hiện mã QR Zalo" className="text-xs font-mono font-black text-blue-700 underline decoration-dotted underline-offset-2">{APP_AUTHOR_INFO.zalo}</a>
                   <div className="flex items-center gap-1">
                     <a
                       href={`tel:${APP_AUTHOR_INFO.zalo}`}
@@ -347,7 +347,7 @@ export const CDKeyModal: React.FC<CDKeyModalProps> = ({ isOpen, onClose }) => {
           <button
             type="button"
             onClick={onClose}
-            className="px-5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold uppercase transition-colors cursor-pointer"
+            className="px-5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-100 text-slate-800 text-xs font-bold uppercase transition-colors cursor-pointer"
           >
             ĐÓNG
           </button>

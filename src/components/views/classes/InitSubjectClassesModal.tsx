@@ -263,7 +263,7 @@ export const InitSubjectClassesModal: React.FC<InitSubjectClassesModalProps> = (
   const totalStudentsToGenerate = classItems.reduce((sum, item) => sum + (Number(item.studentCount) || 0), 0);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-sky-900/20 backdrop-blur-xs animate-in fade-in duration-200">
       <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-4xl max-h-[92vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
         
         {/* Modal Header */}
@@ -280,7 +280,7 @@ export const InitSubjectClassesModal: React.FC<InitSubjectClassesModalProps> = (
               <h2 className="text-xl sm:text-2xl font-black tracking-tight uppercase">
                 KHỞI TẠO LỚP DẠY BỘ MÔN
               </h2>
-              <p className="text-xs text-emerald-100 font-medium mt-0.5">
+              <p className="text-xs text-white font-medium mt-0.5">
                 Thiết lập nhanh các lớp giảng dạy bộ môn, điền thông tin lớp và số lượng học sinh mỗi lớp
               </p>
             </div>

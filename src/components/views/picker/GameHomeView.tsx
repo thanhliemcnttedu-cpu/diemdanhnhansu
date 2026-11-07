@@ -66,18 +66,18 @@ export const GameHomeView: React.FC<GameHomeViewProps> = ({
       gradient: 'from-purple-600 via-fuchsia-500 to-indigo-700',
       ringColor: 'ring-purple-400',
       visualComponent: (
-        <div className="relative w-44 h-44 sm:w-52 sm:h-52 rounded-full p-3 bg-gradient-to-tr from-purple-800 via-fuchsia-600 to-indigo-900 shadow-2xl flex items-center justify-center group-hover:scale-105 transition-transform duration-500">
-          <div className="w-36 h-36 sm:w-42 sm:h-42 rounded-full bg-slate-900 border-4 border-slate-300 shadow-inner flex items-center justify-center relative overflow-hidden">
+        <div className="relative w-44 h-44 sm:w-52 sm:h-52 rounded-full p-3 bg-gradient-to-tr from-purple-500 via-fuchsia-600 to-indigo-500 shadow-2xl flex items-center justify-center group-hover:scale-105 transition-transform duration-500">
+          <div className="w-36 h-36 sm:w-42 sm:h-42 rounded-full bg-white border-4 border-slate-300 shadow-inner flex items-center justify-center relative overflow-hidden">
             {/* Film strip spool */}
-            <div className="absolute inset-0 border-8 border-dashed border-slate-600 rounded-full animate-spin [animation-duration:12s]"></div>
-            <div className="w-16 h-16 rounded-full bg-slate-800 border-4 border-slate-400 flex items-center justify-center shadow-md">
-              <Film className="w-8 h-8 text-fuchsia-400" />
+            <div className="absolute inset-0 border-8 border-dashed border-slate-200 rounded-full animate-spin [animation-duration:12s]"></div>
+            <div className="w-16 h-16 rounded-full bg-slate-100 border-4 border-slate-400 flex items-center justify-center shadow-md">
+              <Film className="w-8 h-8 text-fuchsia-600" />
             </div>
             {/* Spool holes */}
-            <div className="absolute top-4 left-1/2 -translate-x-1/2 w-4 h-4 rounded-full bg-purple-950 border border-slate-500"></div>
-            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-4 h-4 rounded-full bg-purple-950 border border-slate-500"></div>
-            <div className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-purple-950 border border-slate-500"></div>
-            <div className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-purple-950 border border-slate-500"></div>
+            <div className="absolute top-4 left-1/2 -translate-x-1/2 w-4 h-4 rounded-full bg-purple-600 border border-slate-500"></div>
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-4 h-4 rounded-full bg-purple-600 border border-slate-500"></div>
+            <div className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-purple-600 border border-slate-500"></div>
+            <div className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-purple-600 border border-slate-500"></div>
           </div>
         </div>
       )
@@ -92,11 +92,11 @@ export const GameHomeView: React.FC<GameHomeViewProps> = ({
       gradient: 'from-blue-600 via-indigo-600 to-cyan-500',
       ringColor: 'ring-cyan-400',
       visualComponent: (
-        <div className="relative w-44 h-44 sm:w-52 sm:h-52 rounded-full p-2 bg-gradient-to-tr from-slate-950 via-indigo-950 to-blue-900 shadow-2xl flex items-center justify-center group-hover:scale-105 transition-transform duration-500 overflow-hidden">
+        <div className="relative w-44 h-44 sm:w-52 sm:h-52 rounded-full p-2 bg-gradient-to-tr from-sky-600 via-indigo-600 to-blue-500 shadow-2xl flex items-center justify-center group-hover:scale-105 transition-transform duration-500 overflow-hidden">
           {/* Starfield & Glow */}
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-cyan-500/20 via-transparent to-transparent"></div>
-          <div className="relative z-10 w-32 h-32 sm:w-36 sm:h-36 rounded-full bg-slate-900 border border-cyan-500/40 flex items-center justify-center shadow-lg group-hover:-translate-y-2 transition-transform duration-500">
-            <Rocket className="w-16 h-16 sm:w-20 sm:h-20 text-cyan-400 drop-shadow-[0_0_15px_rgba(6,182,212,0.8)] -rotate-45" />
+          <div className="relative z-10 w-32 h-32 sm:w-36 sm:h-36 rounded-full bg-white border border-cyan-500/40 flex items-center justify-center shadow-lg group-hover:-translate-y-2 transition-transform duration-500">
+            <Rocket className="w-16 h-16 sm:w-20 sm:h-20 text-cyan-600 drop-shadow-[0_0_15px_rgba(6,182,212,0.8)] -rotate-45" />
           </div>
           {/* Flame particles */}
           <div className="absolute bottom-6 right-8 w-6 h-6 rounded-full bg-amber-400/80 blur-xs animate-pulse"></div>
@@ -159,7 +159,7 @@ export const GameHomeView: React.FC<GameHomeViewProps> = ({
       ringColor: 'ring-purple-400',
       visualComponent: (
         <div className="relative w-44 h-44 sm:w-52 sm:h-52 rounded-full p-2.5 bg-gradient-to-tr from-purple-600 via-pink-500 to-indigo-600 shadow-2xl flex items-center justify-center group-hover:scale-105 transition-transform duration-500">
-          <div className="w-36 h-36 sm:w-42 sm:h-42 rounded-full bg-slate-900 border-4 border-white/80 shadow-2xl flex flex-col items-center justify-center relative overflow-hidden p-2">
+          <div className="w-36 h-36 sm:w-42 sm:h-42 rounded-full bg-white border-4 border-slate-200 shadow-2xl flex flex-col items-center justify-center relative overflow-hidden p-2">
             {/* Camera Frame Preview with cute child illustration */}
             <div className="text-4xl sm:text-5xl mb-1 animate-pulse">
               👧
@@ -168,11 +168,11 @@ export const GameHomeView: React.FC<GameHomeViewProps> = ({
               <span className="px-2 py-0.5 rounded-md bg-sky-400 text-slate-950 font-black text-[10px]">
                 👈 A
               </span>
-              <span className="px-2 py-0.5 rounded-md bg-orange-500 text-white font-black text-[10px]">
+              <span className="px-2 py-0.5 rounded-md bg-orange-600 text-white font-black text-[10px]">
                 B 👉
               </span>
             </div>
-            <div className="mt-1 flex items-center gap-1 text-[9px] font-bold text-emerald-400">
+            <div className="mt-1 flex items-center gap-1 text-[9px] font-bold text-emerald-600">
               <Camera className="w-2.5 h-2.5" />
               <span>Webcam Live</span>
             </div>
@@ -186,16 +186,16 @@ export const GameHomeView: React.FC<GameHomeViewProps> = ({
       subtitle: '(LUCKY CAMERA LENS)',
       description: 'Những bức ảnh học sinh di chuyển ngẫu nhiên trên màn hình ống kính, tạo cảm giác tò mò, hào hứng chờ xem ai sẽ được bắt trọn vào khung hình may mắn!',
       badge: 'HOT MỚI',
-      badgeColor: 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white',
+      badgeColor: 'bg-gradient-to-r from-cyan-600 to-blue-600 text-white',
       gradient: 'from-cyan-500 via-blue-600 to-indigo-700',
       ringColor: 'ring-cyan-400',
       visualComponent: (
         <div className="relative w-44 h-44 sm:w-52 sm:h-52 rounded-full p-2.5 bg-gradient-to-tr from-cyan-500 via-blue-600 to-indigo-700 shadow-2xl flex items-center justify-center group-hover:scale-105 transition-transform duration-500">
-          <div className="w-36 h-36 sm:w-42 sm:h-42 rounded-full bg-slate-950 border-4 border-cyan-400 shadow-2xl flex flex-col items-center justify-center relative overflow-hidden p-2">
+          <div className="w-36 h-36 sm:w-42 sm:h-42 rounded-full bg-white border-4 border-cyan-400 shadow-2xl flex flex-col items-center justify-center relative overflow-hidden p-2">
             {/* Viewfinder Lens graphics */}
             <div className="absolute inset-2 rounded-full border border-dashed border-cyan-400/60 animate-spin [animation-duration:15s]" />
-            <div className="w-16 h-16 rounded-full bg-slate-900 border-2 border-cyan-300 flex items-center justify-center shadow-lg relative z-10 group-hover:scale-110 transition-transform">
-              <Camera className="w-8 h-8 text-cyan-300 animate-pulse" />
+            <div className="w-16 h-16 rounded-full bg-white border-2 border-cyan-300 flex items-center justify-center shadow-lg relative z-10 group-hover:scale-110 transition-transform">
+              <Camera className="w-8 h-8 text-cyan-600 animate-pulse" />
             </div>
             <div className="relative z-10 mt-1.5 flex items-center gap-1 px-2 py-0.5 rounded-full bg-rose-600 text-white text-[9px] font-mono font-black uppercase shadow-xs">
               <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />
@@ -267,7 +267,7 @@ export const GameHomeView: React.FC<GameHomeViewProps> = ({
             {/* Play Button */}
             <button
               type="button"
-              className="w-full py-2.5 px-4 rounded-2xl bg-slate-900 group-hover:bg-gradient-to-r group-hover:from-indigo-600 group-hover:to-purple-600 text-white font-black text-xs uppercase tracking-wider shadow-md group-hover:shadow-indigo-500/25 transition-all duration-300 flex items-center justify-center gap-1.5 cursor-pointer"
+              className="w-full py-2.5 px-4 rounded-2xl bg-white group-hover:bg-gradient-to-r group-hover:from-indigo-600 group-hover:to-purple-600 text-slate-800 font-black text-xs uppercase tracking-wider shadow-md group-hover:shadow-indigo-500/25 transition-all duration-300 flex items-center justify-center gap-1.5 cursor-pointer"
             >
               <Play className="w-3.5 h-3.5 fill-white" />
               <span>VÀO CHƠI NGAY</span>

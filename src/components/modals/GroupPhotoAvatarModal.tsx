@@ -2,11 +2,13 @@ import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react'
 import { 
   Upload, X, ZoomIn, ZoomOut, Check, Move, RotateCcw, 
   Sparkles, Loader2, Camera, RefreshCw, Users, Search, 
-  CheckCircle2, AlertCircle, Eye, Trash2, ArrowRight, Crop, HelpCircle
+  CheckCircle2, AlertCircle, Eye, Trash2, ArrowRight, Crop, HelpCircle,
+  ScanFace, Zap, Save
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { Student } from '../../types';
 import { playCoinSound } from '../../utils/audio';
+import { detectFacesInGroupPhoto } from '../../utils/groupFaceDetector';
 
 interface Box {
   x: number;      // Natural pixel x on original image
@@ -73,6 +75,15 @@ export const GroupPhotoAvatarModal: React.FC<GroupPhotoAvatarModalProps> = ({
   // Saving state
   const [isSaving, setIsSaving] = useState(false);
 
+  // 🤖 Tự dò khuôn mặt + gán nhanh + tự lưu
+  const [detectedFaces, setDetectedFaces] = useState<Box[]>([]);
+  const [isDetecting, setIsDetecting] = useState(false);
+  const [detectProgress, setDetectProgress] = useState(0);
+  const [detectMessage, setDetectMessage] = useState<string | null>(null);
+  const [quickAssign, setQuickAssign] = useState(true);
+  const [autoSave, setAutoSave] = useState(true);
+  const [savedIds, setSavedIds] = useState<Record<string, boolean>>({});
+
   // Refs
   const fileInputRef = useRef<HTMLInputElement>(null);
   const imageRef = useRef<HTMLImageElement>(null);
@@ -93,6 +104,8 @@ export const GroupPhotoAvatarModal: React.FC<GroupPhotoAvatarModalProps> = ({
 
   // Load natural dimensions of group photo
   const handleImageLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
+    setDetectedFaces([]);
+    setDetectMessage(null);
     const img = e.currentTarget;
     setImgNaturalSize({
       width: img.naturalWidth,
@@ -160,7 +173,7 @@ export const GroupPhotoAvatarModal: React.FC<GroupPhotoAvatarModalProps> = ({
     if (!imageRef.current || !imgNaturalSize.width || !imgNaturalSize.height) return '';
 
     const canvas = document.createElement('canvas');
-    const OUTPUT_SIZE = 240; // Standard crisp avatar resolution
+    const OUTPUT_SIZE = 320; // Ảnh đại diện nét hơn nhưng vẫn nhẹ khi đồng bộ
     canvas.width = OUTPUT_SIZE;
     canvas.height = OUTPUT_SIZE;
     const ctx = canvas.getContext('2d');
@@ -187,7 +200,7 @@ export const GroupPhotoAvatarModal: React.FC<GroupPhotoAvatarModalProps> = ({
         srcX, srcY, srcW, srcH,
         0, 0, OUTPUT_SIZE, OUTPUT_SIZE
       );
-      return canvas.toDataURL('image/jpeg', 0.90);
+      return canvas.toDataURL('image/jpeg', 0.86);
     } catch (err) {
       console.warn('cropFaceToAvatarUrl error:', err);
       return '';
@@ -376,44 +389,91 @@ export const GroupPhotoAvatarModal: React.FC<GroupPhotoAvatarModalProps> = ({
   };
 
   // Assign current active box to a student
-  const handleAssignFaceToStudent = (student: Student) => {
-    if (!activeBox) {
-      alert('Vui lòng khoanh chọn khuôn mặt của học sinh trên ảnh trước.');
-      return;
-    }
-
-    if (activeBox.width < 15 || activeBox.height < 15) {
+  // Gán 1 khung khuôn mặt cho 1 học sinh (dùng chung cho khoanh tay và khuôn mặt tự dò)
+  const assignBoxToStudent = (box: Box, student: Student): boolean => {
+    if (box.width < 15 || box.height < 15) {
       alert('Vùng khuôn mặt quá nhỏ. Vui lòng kéo một khung rõ ràng hơn.');
-      return;
+      return false;
     }
-
-    // Crop avatar URL
-    const avatarUrl = cropFaceToAvatarUrl(activeBox);
+    const avatarUrl = cropFaceToAvatarUrl(box);
     if (!avatarUrl) {
       alert('Không thể cắt ảnh từ vùng chọn. Vui lòng thử lại.');
-      return;
+      return false;
     }
 
     setAssignments(prev => ({
       ...prev,
-      [student.id]: {
-        studentId: student.id,
-        box: { ...activeBox },
-        avatarUrl
-      }
+      [student.id]: { studentId: student.id, box: { ...box }, avatarUrl }
     }));
 
-    // Audio effect & small feedback
-    playCoinSound();
+    // 💾 Tự lưu ngay vào hồ sơ học sinh (không sợ mất khi lỡ đóng cửa sổ)
+    if (autoSave) {
+      Promise.resolve(onSave([{ studentId: student.id, avatar: avatarUrl }]))
+        .then(() => setSavedIds(prev => ({ ...prev, [student.id]: true })))
+        .catch(() => setSavedIds(prev => ({ ...prev, [student.id]: false })));
+    } else {
+      setSavedIds(prev => ({ ...prev, [student.id]: false }));
+    }
 
-    // Clear active box so teacher can immediately select next student
+    playCoinSound();
     setActiveBox(null);
     setHighlightedStudentId(student.id);
+    setTimeout(() => setHighlightedStudentId(null), 1500);
+    return true;
+  };
 
-    // Auto clear highlight after 1.5s
-    setTimeout(() => {
-      setHighlightedStudentId(null);
-    }, 1500);
+  const handleAssignFaceToStudent = (student: Student) => {
+    if (!activeBox) {
+      alert('Vui lòng khoanh chọn (hoặc bấm vào) khuôn mặt của học sinh trên ảnh trước.');
+      return;
+    }
+    assignBoxToStudent(activeBox, student);
+  };
+
+  // Học sinh kế tiếp chưa có ảnh (theo STT) — dùng cho chế độ Gán nhanh
+  const nextUnassignedStudent = useMemo(
+    () => [...students].sort((x, y) => (x.stt || 0) - (y.stt || 0)).find(st => !assignments[st.id]) || null,
+    [students, assignments]
+  );
+
+  // Khuôn mặt tự dò chưa dùng (không trùng với khung đã gán)
+  const isBoxUsed = useCallback((b: Box) => Object.values(assignments).some(a => {
+    const cx = b.x + b.width / 2;
+    const cy = b.y + b.height / 2;
+    return cx > a.box.x && cx < a.box.x + a.box.width && cy > a.box.y && cy < a.box.y + a.box.height;
+  }), [assignments]);
+
+  const handleDetectFaces = async () => {
+    if (!imageRef.current || !imageLoaded) return;
+    setIsDetecting(true);
+    setDetectProgress(0);
+    setDetectMessage(null);
+    try {
+      const faces = await detectFacesInGroupPhoto(imageRef.current, setDetectProgress);
+      setDetectedFaces(faces.map(f => ({ x: f.x, y: f.y, width: f.width, height: f.height })));
+      setMode('select');
+      setDetectMessage(faces.length
+        ? `Đã tìm thấy ${faces.length} khuôn mặt (đánh số theo hàng, trái → phải). ${quickAssign ? 'Bấm vào khuôn mặt để gán cho học sinh kế tiếp.' : 'Bấm khuôn mặt rồi chọn học sinh bên phải.'}`
+        : 'Không tìm thấy khuôn mặt rõ nét. Thầy/Cô có thể khoanh tay từng khuôn mặt như bình thường.');
+    } catch (err) {
+      console.warn('detectFacesInGroupPhoto error:', err);
+      setDetectMessage('Không tải được bộ nhận diện khuôn mặt (cần kết nối mạng). Thầy/Cô vẫn khoanh tay từng khuôn mặt được.');
+    } finally {
+      setIsDetecting(false);
+    }
+  };
+
+  const handleClickDetectedFace = (box: Box) => {
+    if (quickAssign) {
+      if (!nextUnassignedStudent) {
+        setActiveBox({ ...box });
+        alert('Tất cả học sinh đã có ảnh. Bấm tên học sinh bên phải để gán lại khuôn mặt này.');
+        return;
+      }
+      assignBoxToStudent(box, nextUnassignedStudent);
+    } else {
+      setActiveBox({ ...box });
+    }
   };
 
   // Remove assignment for a student
@@ -443,6 +503,13 @@ export const GroupPhotoAvatarModal: React.FC<GroupPhotoAvatarModalProps> = ({
     const list = Object.values(assignments);
     if (list.length === 0) {
       alert('Chưa có học sinh nào được gán ảnh. Vui lòng chọn ít nhất một khuôn mặt.');
+      return;
+    }
+
+    // Tất cả đã được tự lưu → chỉ cần đóng
+    if (list.every(a => savedIds[a.studentId])) {
+      playCoinSound();
+      onClose();
       return;
     }
 
@@ -496,7 +563,7 @@ export const GroupPhotoAvatarModal: React.FC<GroupPhotoAvatarModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-2 sm:p-4 animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-sky-900/20 backdrop-blur-xs p-2 sm:p-4 animate-in fade-in duration-200">
       <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-7xl h-[94vh] flex flex-col overflow-hidden">
         
         {/* --- MODAL HEADER --- */}
@@ -514,7 +581,7 @@ export const GroupPhotoAvatarModal: React.FC<GroupPhotoAvatarModalProps> = ({
                   Lớp: {classNameTitle}
                 </span>
               </div>
-              <p className="text-xs text-emerald-100 font-medium">
+              <p className="text-xs text-white font-medium">
                 Khoanh chọn từng khuôn mặt trên ảnh tập thể ➔ Ghép với tên học sinh trong danh sách
               </p>
             </div>
@@ -558,7 +625,7 @@ export const GroupPhotoAvatarModal: React.FC<GroupPhotoAvatarModalProps> = ({
           <div className="flex-1 p-6 sm:p-10 flex flex-col items-center justify-center bg-gradient-to-b from-slate-50 via-white to-emerald-50/20 overflow-y-auto">
             <div className="max-w-xl w-full text-center space-y-6">
               
-              <div className="w-20 h-20 mx-auto rounded-3xl bg-gradient-to-tr from-emerald-500 to-teal-400 text-white flex items-center justify-center shadow-xl shadow-emerald-500/20 animate-bounce duration-1000">
+              <div className="w-20 h-20 mx-auto rounded-3xl bg-gradient-to-tr from-emerald-600 to-teal-600 text-white flex items-center justify-center shadow-xl shadow-emerald-500/20 animate-bounce duration-1000">
                 <Camera className="w-10 h-10" />
               </div>
 
@@ -622,19 +689,19 @@ export const GroupPhotoAvatarModal: React.FC<GroupPhotoAvatarModalProps> = ({
           <div className="flex-1 flex flex-col lg:flex-row overflow-hidden relative">
             
             {/* === LEFT COLUMN: INTERACTIVE GROUP PHOTO CANVAS (70%) === */}
-            <div className="flex-1 flex flex-col bg-slate-900 border-r border-slate-200 overflow-hidden relative">
+            <div className="flex-1 flex flex-col bg-white border-r border-slate-200 overflow-hidden relative">
               
               {/* Photo Toolbar */}
-              <div className="px-4 py-2.5 bg-slate-800/95 backdrop-blur-xs border-b border-slate-700 text-white flex flex-wrap items-center justify-between gap-2 shrink-0 z-20">
+              <div className="px-4 py-2.5 bg-slate-100/95 backdrop-blur-xs border-b border-slate-200 text-slate-800 flex flex-wrap items-center justify-between gap-2 shrink-0 z-20">
                 {/* Mode Selector */}
-                <div className="flex items-center gap-1 bg-slate-900/80 p-1 rounded-xl border border-slate-700">
+                <div className="flex items-center gap-1 bg-white/80 p-1 rounded-xl border border-slate-200">
                   <button
                     type="button"
                     onClick={() => setMode('select')}
                     className={`px-3 py-1.5 rounded-lg text-xs font-black flex items-center gap-1.5 transition-all ${
                       mode === 'select'
                         ? 'bg-emerald-600 text-white shadow-sm'
-                        : 'text-slate-300 hover:text-white hover:bg-slate-800'
+                        : 'text-slate-300 hover:text-slate-800 hover:bg-slate-200'
                     }`}
                     title="Chế độ khoanh chọn khuôn mặt học sinh"
                   >
@@ -648,7 +715,7 @@ export const GroupPhotoAvatarModal: React.FC<GroupPhotoAvatarModalProps> = ({
                     className={`px-3 py-1.5 rounded-lg text-xs font-black flex items-center gap-1.5 transition-all ${
                       mode === 'pan'
                         ? 'bg-indigo-600 text-white shadow-sm'
-                        : 'text-slate-300 hover:text-white hover:bg-slate-800'
+                        : 'text-slate-300 hover:text-slate-800 hover:bg-slate-200'
                     }`}
                     title="Chế độ kéo di chuyển ảnh (khi phóng to)"
                   >
@@ -657,10 +724,36 @@ export const GroupPhotoAvatarModal: React.FC<GroupPhotoAvatarModalProps> = ({
                   </button>
                 </div>
 
+                {/* 🤖 Tự dò khuôn mặt + Gán nhanh + Tự lưu */}
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <button
+                    type="button"
+                    onClick={handleDetectFaces}
+                    disabled={!imageLoaded || isDetecting}
+                    className="px-3 py-1.5 rounded-lg text-xs font-black flex items-center gap-1.5 bg-sky-600 hover:bg-sky-700 disabled:opacity-50 text-white shadow-sm"
+                    title="Tự động tìm tất cả khuôn mặt trong ảnh tập thể"
+                  >
+                    {isDetecting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ScanFace className="w-3.5 h-3.5" />}
+                    <span>{isDetecting ? `Đang dò ${Math.round(detectProgress * 100)}%` : '🤖 Tự dò khuôn mặt'}</span>
+                  </button>
+                  <label className="flex items-center gap-1 text-[11px] font-bold text-amber-700 cursor-pointer select-none" title="Bấm vào khuôn mặt đã dò là gán ngay cho học sinh chưa có ảnh kế tiếp (theo STT)">
+                    <input type="checkbox" checked={quickAssign} onChange={e => setQuickAssign(e.target.checked)} className="accent-amber-400" />
+                    <Zap className="w-3 h-3" /> Gán nhanh
+                  </label>
+                  <label className="flex items-center gap-1 text-[11px] font-bold text-emerald-700 cursor-pointer select-none" title="Lưu ngay ảnh đại diện vào hồ sơ học sinh sau mỗi lần gán">
+                    <input type="checkbox" checked={autoSave} onChange={e => setAutoSave(e.target.checked)} className="accent-emerald-400" />
+                    <Save className="w-3 h-3" /> Tự lưu
+                  </label>
+                </div>
+
                 {/* Quick Hint */}
-                <div className="hidden md:flex items-center gap-1.5 text-xs text-emerald-300 font-medium bg-emerald-950/60 px-3 py-1 rounded-lg border border-emerald-800">
+                <div className="hidden md:flex items-center gap-1.5 text-xs text-white font-medium bg-emerald-600/60 px-3 py-1 rounded-lg border border-emerald-800">
                   <Sparkles className="w-3.5 h-3.5 text-amber-300 shrink-0" />
-                  <span>Kéo chuột khoanh mặt ➔ Bấm chọn học sinh bên phải để ghép</span>
+                  <span>
+                    {detectedFaces.length > 0 && quickAssign
+                      ? (nextUnassignedStudent ? `Bấm khuôn mặt ➔ gán cho #${nextUnassignedStudent.stt}. ${nextUnassignedStudent.name}` : 'Đã gán đủ cả lớp 🎉')
+                      : (detectMessage || 'Kéo chuột khoanh mặt (hoặc Tự dò) ➔ Bấm chọn học sinh bên phải để ghép')}
+                  </span>
                 </div>
 
                 {/* Zoom Controls */}
@@ -668,7 +761,7 @@ export const GroupPhotoAvatarModal: React.FC<GroupPhotoAvatarModalProps> = ({
                   <button
                     type="button"
                     onClick={handleZoomOut}
-                    className="w-7 h-7 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-200 flex items-center justify-center transition-colors"
+                    className="w-7 h-7 rounded-lg bg-slate-200 hover:bg-slate-600 text-slate-700 flex items-center justify-center transition-colors"
                     title="Thu nhỏ"
                   >
                     <ZoomOut className="w-3.5 h-3.5" />
@@ -681,13 +774,13 @@ export const GroupPhotoAvatarModal: React.FC<GroupPhotoAvatarModalProps> = ({
                     step="0.1"
                     value={zoom}
                     onChange={(e) => setZoom(parseFloat(e.target.value))}
-                    className="w-20 sm:w-28 h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-emerald-500"
+                    className="w-20 sm:w-28 h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-emerald-500"
                   />
 
                   <button
                     type="button"
                     onClick={handleZoomIn}
-                    className="w-7 h-7 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-200 flex items-center justify-center transition-colors"
+                    className="w-7 h-7 rounded-lg bg-slate-200 hover:bg-slate-600 text-slate-700 flex items-center justify-center transition-colors"
                     title="Phóng to"
                   >
                     <ZoomIn className="w-3.5 h-3.5" />
@@ -696,7 +789,7 @@ export const GroupPhotoAvatarModal: React.FC<GroupPhotoAvatarModalProps> = ({
                   <button
                     type="button"
                     onClick={handleResetZoom}
-                    className="px-2 py-1 rounded-lg bg-slate-700 hover:bg-slate-600 text-[10px] font-black text-slate-200 transition-colors uppercase"
+                    className="px-2 py-1 rounded-lg bg-slate-200 hover:bg-slate-600 text-[10px] font-black text-slate-700 transition-colors uppercase"
                     title="Vừa khung nhìn"
                   >
                     {Math.round(zoom * 100)}%
@@ -737,6 +830,30 @@ export const GroupPhotoAvatarModal: React.FC<GroupPhotoAvatarModalProps> = ({
                   />
 
                   {/* Render ALL Assigned Faces Badges directly on the photo */}
+                  {/* 🤖 Khuôn mặt tự dò chưa gán: bấm để gán nhanh / chọn */}
+                  {imageLoaded && imgNaturalSize.width > 0 && detectedFaces.map((f, idx) => {
+                    if (isBoxUsed(f)) return null;
+                    return (
+                      <div
+                        key={`det-${idx}`}
+                        onMouseDown={(e) => { e.stopPropagation(); }}
+                        onClick={(e) => { e.stopPropagation(); handleClickDetectedFace(f); }}
+                        style={{
+                          left: `${(f.x / imgNaturalSize.width) * 100}%`,
+                          top: `${(f.y / imgNaturalSize.height) * 100}%`,
+                          width: `${(f.width / imgNaturalSize.width) * 100}%`,
+                          height: `${(f.height / imgNaturalSize.height) * 100}%`
+                        }}
+                        className="absolute border-2 border-dashed border-sky-300 bg-sky-400/10 hover:bg-sky-400/30 hover:border-white rounded-xl z-10 cursor-pointer"
+                        title={quickAssign && nextUnassignedStudent ? `Bấm để gán cho #${nextUnassignedStudent.stt}. ${nextUnassignedStudent.name}` : 'Bấm để chọn khuôn mặt này'}
+                      >
+                        <span className="absolute -top-2.5 -left-2.5 w-5 h-5 rounded-full bg-sky-600 text-white text-[10px] font-black flex items-center justify-center border border-white shadow">
+                          {idx + 1}
+                        </span>
+                      </div>
+                    );
+                  })}
+
                   {imageLoaded && imgNaturalSize.width > 0 && Object.values(assignments).map(a => {
                     const st = students.find(s => s.id === a.studentId);
                     if (!st) return null;
@@ -958,7 +1075,7 @@ export const GroupPhotoAvatarModal: React.FC<GroupPhotoAvatarModalProps> = ({
                     onClick={() => setFilterTab('unassigned')}
                     className={`py-1 rounded-lg text-[10.5px] font-black transition-all ${
                       filterTab === 'unassigned'
-                        ? 'bg-amber-500 text-white shadow-xs'
+                        ? 'bg-amber-600 text-white shadow-xs'
                         : 'text-slate-500 hover:text-slate-700'
                     }`}
                   >
@@ -1089,7 +1206,7 @@ export const GroupPhotoAvatarModal: React.FC<GroupPhotoAvatarModalProps> = ({
                                 e.stopPropagation();
                                 handleAssignFaceToStudent(student);
                               }}
-                              className="px-2.5 py-1.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white rounded-xl text-[10.5px] font-black shadow-xs flex items-center gap-1 transition-all hover-zoom-btn uppercase"
+                              className="px-2.5 py-1.5 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white rounded-xl text-[10.5px] font-black shadow-xs flex items-center gap-1 transition-all hover-zoom-btn uppercase"
                             >
                               <Check className="w-3.5 h-3.5" />
                               <span>Ghép</span>
@@ -1117,9 +1234,11 @@ export const GroupPhotoAvatarModal: React.FC<GroupPhotoAvatarModalProps> = ({
             <span className="font-black text-slate-800">
               Đã ghép: <span className="text-emerald-600">{assignedCount}</span> / {totalCount} học sinh
             </span>
-            <span className="text-slate-300">•</span>
+            <span className="text-slate-500">•</span>
             <span className="text-slate-500 hidden sm:inline">
-              Nhấn <strong>Xong và chọn Lưu</strong> để hoàn tất cập nhật vào danh sách lớp.
+              {autoSave
+                ? <>Đang bật <strong>Tự lưu</strong>: mỗi lần gán là ảnh đã vào hồ sơ học sinh.</>
+                : <>Nhấn <strong>Xong và chọn Lưu</strong> để hoàn tất cập nhật vào danh sách lớp.</>}
             </span>
           </div>
 

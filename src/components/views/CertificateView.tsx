@@ -2219,7 +2219,7 @@ export const CertificateView: React.FC = () => {
         </div>
 
         {/* RIGHT COLUMN: Fixed Toolbar + Interactive Canvas Preview */}
-        <div className="flex-1 flex flex-col bg-slate-900 overflow-hidden">
+        <div className="flex-1 flex flex-col bg-white overflow-hidden">
           
           {/* =========================================================================
               1. PERSISTENT PROPERTIES PANEL (Fixed Toolbar at the top of Right Column)
@@ -2228,11 +2228,11 @@ export const CertificateView: React.FC = () => {
               - Active state: Immediate two-way binding controls for Text or Image
           ========================================================================= */}
           {isEditMode && (
-            <div className="bg-slate-800 border-b border-slate-700/80 px-5 py-2.5 flex items-center justify-between text-white shadow-md z-20 shrink-0 min-h-[52px]">
+            <div className="bg-slate-100 border-b border-slate-200 px-5 py-2.5 flex items-center justify-between text-slate-800 shadow-md z-20 shrink-0 min-h-[52px]">
               {activeElement ? (
                 <div className="flex items-center gap-3.5 flex-wrap w-full">
-                  <div className="flex items-center gap-1.5 text-xs font-black text-indigo-400 uppercase border-r border-slate-600 pr-3 shrink-0">
-                    <Sliders className="w-4 h-4 text-indigo-400" />
+                  <div className="flex items-center gap-1.5 text-xs font-black text-indigo-600 uppercase border-r border-slate-200 pr-3 shrink-0">
+                    <Sliders className="w-4 h-4 text-indigo-600" />
                     <span>
                       {activeElement.type === 'text' 
                         ? 'ĐỐI TƯỢNG VĂN BẢN' 
@@ -2247,41 +2247,41 @@ export const CertificateView: React.FC = () => {
                     <>
                       {/* Text Input */}
                       <div className="flex items-center gap-1.5 shrink-0">
-                        <span className="text-[11px] font-bold text-slate-300">Nội dung:</span>
+                        <span className="text-[11px] font-bold text-slate-600">Nội dung:</span>
                         <input
                           type="text"
                           value={activeElement.content}
                           onChange={e => updateActiveElement({ content: e.target.value })}
-                          className="text-xs font-bold bg-slate-900 border border-slate-600 focus:border-indigo-500 rounded-lg px-2.5 py-1 text-white outline-none w-48 sm:w-64"
+                          className="text-xs font-bold bg-white border border-slate-200 focus:border-indigo-500 rounded-lg px-2.5 py-1 text-slate-800 outline-none w-48 sm:w-64"
                           placeholder="Nhập nội dung chữ..."
                         />
                       </div>
 
                       {/* Font Family Dropdown with preview font styling */}
-                      <div className="flex items-center gap-1.5 border-l border-slate-700 pl-3 shrink-0">
-                        <span className="text-[11px] font-bold text-slate-300">Phông chữ:</span>
+                      <div className="flex items-center gap-1.5 border-l border-slate-200 pl-3 shrink-0">
+                        <span className="text-[11px] font-bold text-slate-600">Phông chữ:</span>
                         <select
                           value={activeElement.fontFamily}
                           onChange={e => updateActiveElement({ fontFamily: e.target.value })}
-                          className="text-xs font-bold bg-slate-900 border border-slate-600 focus:border-indigo-500 rounded-lg px-2.5 py-1 text-white outline-none cursor-pointer max-w-[210px]"
+                          className="text-xs font-bold bg-white border border-slate-200 focus:border-indigo-500 rounded-lg px-2.5 py-1 text-slate-800 outline-none cursor-pointer max-w-[210px]"
                         >
-                          <optgroup label="── Ký tên & Nghệ thuật (Cursive) ──" className="text-amber-400 bg-slate-950 font-bold">
+                          <optgroup label="── Ký tên & Nghệ thuật (Cursive) ──" className="text-amber-600 bg-white font-bold">
                             {CERT_FONTS.filter(f => f.category === 'cursive').map(f => (
-                              <option key={f.id} value={f.font} style={{ fontFamily: f.font }} className="text-white py-1">
+                              <option key={f.id} value={f.font} style={{ fontFamily: f.font }} className="text-slate-800 py-1">
                                 {f.name}
                               </option>
                             ))}
                           </optgroup>
-                          <optgroup label="── Sang trọng & Cổ điển (Serif) ──" className="text-sky-400 bg-slate-950 font-bold">
+                          <optgroup label="── Sang trọng & Cổ điển (Serif) ──" className="text-sky-600 bg-white font-bold">
                             {CERT_FONTS.filter(f => f.category === 'serif').map(f => (
-                              <option key={f.id} value={f.font} style={{ fontFamily: f.font }} className="text-white py-1">
+                              <option key={f.id} value={f.font} style={{ fontFamily: f.font }} className="text-slate-800 py-1">
                                 {f.name}
                               </option>
                             ))}
                           </optgroup>
-                          <optgroup label="── Hiện đại & Chuẩn mực (Sans) ──" className="text-emerald-400 bg-slate-950 font-bold">
+                          <optgroup label="── Hiện đại & Chuẩn mực (Sans) ──" className="text-emerald-600 bg-white font-bold">
                             {CERT_FONTS.filter(f => f.category === 'sans').map(f => (
-                              <option key={f.id} value={f.font} style={{ fontFamily: f.font }} className="text-white py-1">
+                              <option key={f.id} value={f.font} style={{ fontFamily: f.font }} className="text-slate-800 py-1">
                                 {f.name}
                               </option>
                             ))}
@@ -2290,8 +2290,8 @@ export const CertificateView: React.FC = () => {
                       </div>
 
                       {/* Font Size Input & Slider */}
-                      <div className="flex items-center gap-2 border-l border-slate-700 pl-3 shrink-0">
-                        <span className="text-[11px] font-bold text-slate-300">Cỡ chữ:</span>
+                      <div className="flex items-center gap-2 border-l border-slate-200 pl-3 shrink-0">
+                        <span className="text-[11px] font-bold text-slate-600">Cỡ chữ:</span>
                         <input
                           type="range"
                           min="18"
@@ -2306,13 +2306,13 @@ export const CertificateView: React.FC = () => {
                           max="220"
                           value={activeElement.fontSize || 32}
                           onChange={e => updateActiveElement({ fontSize: Number(e.target.value) })}
-                          className="w-14 text-xs font-mono font-bold bg-slate-900 border border-slate-600 rounded-lg px-1.5 py-1 text-center text-indigo-300 outline-none"
+                          className="w-14 text-xs font-mono font-bold bg-white border border-slate-200 rounded-lg px-1.5 py-1 text-center text-indigo-600 outline-none"
                         />
                       </div>
 
                       {/* Letter Spacing Slider & Input (Giãn khoảng cách chữ) */}
-                      <div className="flex items-center gap-2 border-l border-slate-700 pl-3 shrink-0">
-                        <span className="text-[11px] font-bold text-slate-300">Giãn chữ:</span>
+                      <div className="flex items-center gap-2 border-l border-slate-200 pl-3 shrink-0">
+                        <span className="text-[11px] font-bold text-slate-600">Giãn chữ:</span>
                         <input
                           type="range"
                           min="-0.05"
@@ -2326,19 +2326,19 @@ export const CertificateView: React.FC = () => {
                           className="w-20 accent-indigo-500 cursor-pointer"
                           title="Khoảng cách giữa các chữ cái (Tracking)"
                         />
-                        <span className="text-xs font-mono font-bold text-indigo-300 w-14 text-center">
+                        <span className="text-xs font-mono font-bold text-indigo-600 w-14 text-center">
                           {activeElement.letterSpacing || '0em'}
                         </span>
                       </div>
 
                       {/* Color Picker */}
-                      <div className="flex items-center gap-2 border-l border-slate-700 pl-3 shrink-0">
-                        <span className="text-[11px] font-bold text-slate-300">Màu chữ:</span>
+                      <div className="flex items-center gap-2 border-l border-slate-200 pl-3 shrink-0">
+                        <span className="text-[11px] font-bold text-slate-600">Màu chữ:</span>
                         <input
                           type="color"
                           value={activeElement.color || '#1e3a8a'}
                           onChange={e => updateActiveElement({ color: e.target.value })}
-                          className="w-7 h-7 rounded-lg cursor-pointer border border-slate-600 bg-transparent p-0"
+                          className="w-7 h-7 rounded-lg cursor-pointer border border-slate-200 bg-transparent p-0"
                           title="Chọn màu chữ"
                         />
                       </div>
@@ -2353,7 +2353,7 @@ export const CertificateView: React.FC = () => {
                         <>
                           {/* Border Width Slider */}
                           <div className="flex items-center gap-2 shrink-0">
-                            <span className="text-[11px] font-bold text-slate-300">Độ dày viền:</span>
+                            <span className="text-[11px] font-bold text-slate-600">Độ dày viền:</span>
                             <input
                               type="range"
                               min="0"
@@ -2368,14 +2368,14 @@ export const CertificateView: React.FC = () => {
                               }}
                               className="w-28 accent-indigo-500 cursor-pointer"
                             />
-                            <span className="text-xs font-mono font-bold text-indigo-300 w-10">
+                            <span className="text-xs font-mono font-bold text-indigo-600 w-10">
                               {activeElement.borderWidth !== undefined ? activeElement.borderWidth : 10}px
                             </span>
                           </div>
 
                           {/* Border Color Picker */}
-                          <div className="flex items-center gap-2 border-l border-slate-700 pl-3 shrink-0">
-                            <span className="text-[11px] font-bold text-slate-300">Màu viền:</span>
+                          <div className="flex items-center gap-2 border-l border-slate-200 pl-3 shrink-0">
+                            <span className="text-[11px] font-bold text-slate-600">Màu viền:</span>
                             <input
                               type="color"
                               value={activeElement.borderColor || '#ffffff'}
@@ -2387,14 +2387,14 @@ export const CertificateView: React.FC = () => {
                                   border: `${bw}px solid ${bc}`
                                 });
                               }}
-                              className="w-7 h-7 rounded-lg cursor-pointer border border-slate-600 bg-transparent p-0"
+                              className="w-7 h-7 rounded-lg cursor-pointer border border-slate-200 bg-transparent p-0"
                               title="Chọn màu viền"
                             />
                           </div>
 
                           {/* Avatar Size Slider */}
-                          <div className="flex items-center gap-2 border-l border-slate-700 pl-3 shrink-0">
-                            <span className="text-[11px] font-bold text-slate-300">Kích thước:</span>
+                          <div className="flex items-center gap-2 border-l border-slate-200 pl-3 shrink-0">
+                            <span className="text-[11px] font-bold text-slate-600">Kích thước:</span>
                             <input
                               type="range"
                               min="200"
@@ -2406,7 +2406,7 @@ export const CertificateView: React.FC = () => {
                               }}
                               className="w-28 accent-indigo-500 cursor-pointer"
                             />
-                            <span className="text-xs font-mono font-bold text-indigo-300 w-12">
+                            <span className="text-xs font-mono font-bold text-indigo-600 w-12">
                               {activeElement.width || 460}px
                             </span>
                           </div>
@@ -2415,7 +2415,7 @@ export const CertificateView: React.FC = () => {
                         /* DIGITAL SIGNATURE & LOGO CONTROLS */
                         <>
                           <div className="flex items-center gap-2 shrink-0">
-                            <span className="text-[11px] font-bold text-slate-300">
+                            <span className="text-[11px] font-bold text-slate-600">
                               Kích thước {activeElement.id === 'school_logo' ? 'Logo' : (activeElement.id === 'signature' ? 'chữ ký' : 'ảnh')}:
                             </span>
                             <input
@@ -2435,13 +2435,13 @@ export const CertificateView: React.FC = () => {
                               }}
                               className="w-32 accent-indigo-500 cursor-pointer"
                             />
-                            <span className="text-xs font-mono font-bold text-indigo-300 w-12 text-center">
+                            <span className="text-xs font-mono font-bold text-indigo-600 w-12 text-center">
                               {activeElement.width || (activeElement.id === 'school_logo' ? 140 : 260)}px
                             </span>
                           </div>
 
                           {/* Quick Scale Buttons */}
-                          <div className="flex items-center gap-1.5 border-l border-slate-700 pl-3 shrink-0">
+                          <div className="flex items-center gap-1.5 border-l border-slate-200 pl-3 shrink-0">
                             <button
                               type="button"
                               onClick={() => {
@@ -2454,7 +2454,7 @@ export const CertificateView: React.FC = () => {
                                   updateActiveElement({ width: nextW, height: undefined });
                                 }
                               }}
-                              className="px-2 py-1 rounded bg-slate-700 hover:bg-slate-600 text-xs font-bold text-slate-200 transition-colors"
+                              className="px-2 py-1 rounded bg-slate-200 hover:bg-slate-600 text-xs font-bold text-slate-700 transition-colors"
                               title="Thu nhỏ 20px"
                             >
                               -20px
@@ -2471,7 +2471,7 @@ export const CertificateView: React.FC = () => {
                                   updateActiveElement({ width: nextW, height: undefined });
                                 }
                               }}
-                              className="px-2 py-1 rounded bg-slate-700 hover:bg-slate-600 text-xs font-bold text-slate-200 transition-colors"
+                              className="px-2 py-1 rounded bg-slate-200 hover:bg-slate-600 text-xs font-bold text-slate-700 transition-colors"
                               title="Phóng to 20px"
                             >
                               +20px
@@ -2487,14 +2487,14 @@ export const CertificateView: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => setActiveElementId(null)}
-                      className="px-2.5 py-1 text-xs font-bold text-slate-400 hover:text-white rounded-lg hover:bg-slate-700 transition-colors"
+                      className="px-2.5 py-1 text-xs font-bold text-slate-500 hover:text-slate-800 rounded-lg hover:bg-slate-200 transition-colors"
                     >
                       Bỏ chọn
                     </button>
                     <button
                       type="button"
                       onClick={deleteActiveElement}
-                      className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-bold text-rose-400 hover:text-white rounded-lg hover:bg-rose-600 transition-colors border border-rose-500/40"
+                      className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-bold text-rose-600 hover:text-slate-800 rounded-lg hover:bg-rose-600 transition-colors border border-rose-500/40"
                       title="Xóa đối tượng này"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
@@ -2504,19 +2504,19 @@ export const CertificateView: React.FC = () => {
                 </div>
               ) : (
                 /* EMPTY STATE GUIDANCE */
-                <div className="flex items-center justify-between w-full text-slate-400 text-xs">
+                <div className="flex items-center justify-between w-full text-slate-500 text-xs">
                   <div className="flex items-center gap-2">
-                    <MousePointer className="w-4 h-4 text-indigo-400 animate-bounce" />
-                    <span className="font-medium text-slate-300">
+                    <MousePointer className="w-4 h-4 text-indigo-600 animate-bounce" />
+                    <span className="font-medium text-slate-600">
                       Vui lòng click chọn một đoạn chữ hoặc hình ảnh trên thư khen để chỉnh sửa.
                     </span>
                   </div>
-                  <div className="flex items-center gap-2.5 text-[11px] text-slate-400">
+                  <div className="flex items-center gap-2.5 text-[11px] text-slate-500">
                     <button
                       type="button"
                       onClick={() => appendLogoToCanvas()}
                       disabled={isExporting}
-                      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-600/80 hover:bg-amber-600 disabled:opacity-50 disabled:pointer-events-none text-white text-[11px] font-bold transition-all shadow-xs cursor-pointer"
+                      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-700 hover:bg-amber-800 disabled:opacity-50 disabled:pointer-events-none text-white text-[11px] font-bold transition-all shadow-xs cursor-pointer"
                       title="Chèn logo nhà trường đã tách nền vào bản vẽ"
                     >
                       <Award className="w-3.5 h-3.5" />
@@ -2533,9 +2533,9 @@ export const CertificateView: React.FC = () => {
                       <span>{teacherSignatureImage ? 'Chèn chữ ký ngay' : 'Tải & chèn chữ ký'}</span>
                     </button>
                     <span>•</span>
-                    <span>Di chuột: <strong className="text-indigo-300">Kéo vị trí</strong></span>
+                    <span>Di chuột: <strong className="text-indigo-600">Kéo vị trí</strong></span>
                     <span>•</span>
-                    <span>Tỷ lệ Zoom: <strong className="text-emerald-300">{Math.round(previewScale * 100)}%</strong></span>
+                    <span>Tỷ lệ Zoom: <strong className="text-emerald-600">{Math.round(previewScale * 100)}%</strong></span>
                   </div>
                 </div>
               )}
@@ -2554,7 +2554,7 @@ export const CertificateView: React.FC = () => {
           >
             {/* MASTER 1920x1080 CANVAS CONTAINER */}
             <div
-              className="relative shadow-2xl rounded-2xl overflow-hidden ring-4 ring-white/10 shrink-0"
+              className="relative shadow-2xl rounded-2xl overflow-hidden ring-4 ring-slate-200 shrink-0"
               style={{
                 width: `${CANVAS_WIDTH * previewScale}px`,
                 height: `${CANVAS_HEIGHT * previewScale}px`,
@@ -2691,25 +2691,25 @@ export const CertificateView: React.FC = () => {
 
             {/* Bottom Export Overlay Progress (Visible during batch export) */}
             {isExporting && (
-              <div className="absolute inset-0 bg-slate-950/85 backdrop-blur-sm z-50 flex flex-col items-center justify-center text-white animate-in fade-in">
+              <div className="absolute inset-0 bg-white/85 backdrop-blur-sm z-50 flex flex-col items-center justify-center text-slate-800 animate-in fade-in">
                 <div className="w-20 h-20 rounded-full border-4 border-emerald-500/20 border-t-emerald-500 animate-spin flex items-center justify-center mb-6">
-                  <Award className="w-8 h-8 text-emerald-400" />
+                  <Award className="w-8 h-8 text-emerald-600" />
                 </div>
                 <h2 className="text-xl font-black uppercase tracking-wider mb-2">
                   ĐANG KẾT XUẤT THƯ KHEN FULL HD (1920 × 1080)
                 </h2>
-                <p className="text-sm text-slate-300 font-medium mb-4">
+                <p className="text-sm text-slate-600 font-medium mb-4">
                   {exportMessage}
                 </p>
                 
                 {/* Progress Bar */}
-                <div className="w-80 h-3 rounded-full bg-slate-800 overflow-hidden border border-slate-700">
+                <div className="w-80 h-3 rounded-full bg-slate-100 overflow-hidden border border-slate-200">
                   <div
                     className="h-full bg-gradient-to-r from-emerald-500 via-teal-400 to-green-400 transition-all duration-300"
                     style={{ width: `${exportProgress}%` }}
                   ></div>
                 </div>
-                <span className="text-xs font-mono font-bold text-emerald-400 mt-2">
+                <span className="text-xs font-mono font-bold text-emerald-600 mt-2">
                   {exportProgress}% hoàn thành
                 </span>
               </div>

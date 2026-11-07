@@ -18,6 +18,7 @@ import confetti from 'canvas-confetti';
 import { QuestionBankModal } from '../modals/QuestionBankModal';
 import { loadQuizBank, saveQuizBank } from '../../utils/quizParser';
 
+import { handleAvatarImgError } from '../../utils/avatarConfig';
 const FRAME_WIDTH = 155; // Width of each 35mm film frame
 const FRAME_GAP = 14; // Gap between frames
 const TOTAL_FRAME_SPACE = FRAME_WIDTH + FRAME_GAP; // 169px
@@ -492,7 +493,7 @@ export const FilmReelView: React.FC = () => {
             type="button"
             onClick={() => setCallMode('coins')}
             className={`px-2 sm:px-3.5 py-1.5 rounded-xl text-[11px] sm:text-xs font-black transition-all cursor-pointer uppercase text-center ${
-              callMode === 'coins' ? 'bg-amber-500 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'
+              callMode === 'coins' ? 'bg-amber-600 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'
             }`}
           >
             <span className="hidden sm:inline">2. Gọi + Tặng Xu</span>
@@ -568,24 +569,24 @@ export const FilmReelView: React.FC = () => {
         <div className="lg:col-span-8 space-y-5">
           
           {/* Main Film Projector Strip Box */}
-          <div className="bg-slate-950 rounded-3xl p-4 md:p-6 shadow-2xl border-4 border-amber-900/60 relative select-none hover-zoom-card overflow-hidden">
+          <div className="bg-white rounded-3xl p-4 md:p-6 shadow-2xl border-4 border-amber-900/60 relative select-none hover-zoom-card overflow-hidden">
             
             {/* Top Header Label */}
-            <div className="flex items-center justify-between pb-3 px-2 text-amber-400">
+            <div className="flex items-center justify-between pb-3 px-2 text-amber-600">
               <div className="flex items-center gap-2">
-                <Film className="w-5 h-5 text-amber-400 animate-pulse" />
-                <span className="font-mono text-xs font-black uppercase tracking-widest text-amber-300">
+                <Film className="w-5 h-5 text-amber-600 animate-pulse" />
+                <span className="font-mono text-xs font-black uppercase tracking-widest text-amber-600">
                   CUỘN PHIM TOÀN CẢNH • KODAK VISION3 35MM
                 </span>
               </div>
-              <span className="text-[11px] font-mono text-slate-400">
+              <span className="text-[11px] font-mono text-slate-500">
                 {isRolling ? `Đang trượt từ phải sang trái (${spinDuration}s)...` : 'Sẵn sàng quay (Phím cách)'}
               </span>
             </div>
 
             {/* Mode 3 Subject Banner Indicator */}
             {callMode === 'quiz' && (
-              <div className="mb-3 py-1.5 px-3 rounded-xl bg-purple-950/80 border border-purple-500/40 flex items-center justify-between text-[11px] text-purple-200">
+              <div className="mb-3 py-1.5 px-3 rounded-xl bg-purple-600/80 border border-purple-500/40 flex items-center justify-between text-[11px] text-white">
                 <div className="flex items-center gap-1.5 font-bold flex-wrap">
                   <BookOpen className="w-3.5 h-3.5 text-purple-400 shrink-0" />
                   <span>BỘ ĐỀ ĐANG DÙNG:</span>
@@ -610,7 +611,7 @@ export const FilmReelView: React.FC = () => {
             {/* Sprocket Perforations - Top */}
             <div className="w-full flex items-center justify-between pb-3 border-b-2 border-dashed border-amber-600/30 overflow-hidden">
               {Array.from({ length: 24 }).map((_, i) => (
-                <div key={i} className="w-3.5 h-4.5 rounded-xs bg-slate-900 border border-amber-600/40 shadow-inner shrink-0 mx-1" />
+                <div key={i} className="w-3.5 h-4.5 rounded-xs bg-white border border-amber-600/40 shadow-inner shrink-0 mx-1" />
               ))}
             </div>
 
@@ -657,24 +658,24 @@ export const FilmReelView: React.FC = () => {
                         width: `${FRAME_WIDTH}px`, 
                         marginRight: `${FRAME_GAP}px` 
                       }}
-                      className="shrink-0 h-[215px] rounded-2xl bg-gradient-to-b from-slate-900 via-slate-850 to-slate-900 border-2 border-slate-700 p-2.5 flex flex-col items-center justify-between shadow-lg relative group"
+                      className="shrink-0 h-[215px] rounded-2xl bg-gradient-to-b from-sky-600 via-blue-600 to-indigo-600 border-2 border-blue-300 p-2.5 flex flex-col items-center justify-between shadow-lg relative group"
                     >
                       {/* Frame STT & Gender badge */}
                       <div className="w-full flex items-center justify-between text-[10px] font-mono px-1">
                         <span className="text-amber-400 font-bold">#{student.stt}</span>
                         <span className={`px-1.5 py-0.2 rounded-md text-[9px] font-black ${
-                          student.gender === 'Nam' ? 'bg-blue-900 text-blue-300' : 'bg-pink-900 text-pink-300'
+                          student.gender === 'Nam' ? 'bg-blue-600 text-white' : 'bg-pink-600 text-white'
                         }`}>
                           {student.gender}
                         </span>
                       </div>
 
                       {/* Large Clear Student Avatar */}
-                      <div className="w-24 h-24 rounded-2xl overflow-hidden border-2 border-amber-400/60 bg-slate-800 shadow-md my-1 relative shrink-0">
+                      <div className="w-24 h-24 rounded-2xl overflow-hidden border-2 border-amber-400/60 bg-slate-100 shadow-md my-1 relative shrink-0">
                         <img
-                          src={student.avatar}
+                          src={student.avatar} onError={(e) => handleAvatarImgError(e, student?.gender, student?.name)}
                           alt={student.name}
-                          className="w-full h-full object-cover"
+                          className="w-full h-full object-cover object-center"
                           referrerPolicy="no-referrer"
                         />
                       </div>
@@ -684,7 +685,7 @@ export const FilmReelView: React.FC = () => {
                         <div className="text-xs font-black text-white truncate leading-tight" title={student.name}>
                           {student.name}
                         </div>
-                        <div className="text-[10px] text-slate-400 truncate mt-0.5">
+                        <div className="text-[10px] text-sky-100 truncate mt-0.5">
                           {student.group || 'Tổ 1'} • 🪙 {student.points}x
                         </div>
                       </div>
@@ -697,7 +698,7 @@ export const FilmReelView: React.FC = () => {
             {/* Sprocket Perforations - Bottom */}
             <div className="w-full flex items-center justify-between pt-3 border-t-2 border-dashed border-amber-600/30 overflow-hidden">
               {Array.from({ length: 24 }).map((_, i) => (
-                <div key={i} className="w-3.5 h-4.5 rounded-xs bg-slate-900 border border-amber-600/40 shadow-inner shrink-0 mx-1" />
+                <div key={i} className="w-3.5 h-4.5 rounded-xs bg-white border border-amber-600/40 shadow-inner shrink-0 mx-1" />
               ))}
             </div>
           </div>
@@ -712,11 +713,11 @@ export const FilmReelView: React.FC = () => {
                 <div className="flex items-center gap-4 text-center sm:text-left">
                   <div className="relative shrink-0">
                     <img 
-                      src={currentWinner.avatar} 
+                      src={currentWinner.avatar} onError={(e) => handleAvatarImgError(e, currentWinner?.gender, currentWinner?.name)} 
                       alt={currentWinner.name} 
-                      className="w-16 h-16 md:w-20 md:h-20 rounded-2xl object-cover border-4 border-amber-400 bg-white shadow-md"
+                      className="w-16 h-16 md:w-20 md:h-20 rounded-2xl object-cover object-center border-4 border-amber-400 bg-white shadow-md"
                     />
-                    <span className="absolute -bottom-1 -right-1 px-2 py-0.5 bg-amber-500 text-white font-black text-[10px] rounded-full shadow-xs">
+                    <span className="absolute -bottom-1 -right-1 px-2 py-0.5 bg-amber-600 text-white font-black text-[10px] rounded-full shadow-xs">
                       #{currentWinner.stt}
                     </span>
                   </div>
@@ -756,7 +757,7 @@ export const FilmReelView: React.FC = () => {
                         className={`px-5 py-2.5 rounded-2xl text-xs font-black shadow-md flex items-center gap-1.5 transition-all hover-zoom-btn uppercase ${
                           hasAwarded
                             ? 'bg-emerald-600 text-white shadow-emerald-600/20'
-                            : 'bg-amber-500 hover:bg-amber-600 text-white shadow-amber-500/25'
+                            : 'bg-amber-600 hover:bg-amber-700 text-white shadow-amber-500/25'
                         }`}
                       >
                         {hasAwarded ? <Check className="w-4 h-4" /> : <Award className="w-4 h-4" />}
@@ -824,7 +825,7 @@ export const FilmReelView: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => handleOpenRandomQuestion()}
-                      className="flex-1 py-3.5 px-5 bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-700 hover:from-purple-700 hover:to-indigo-800 text-white font-black text-xs sm:text-sm md:text-base rounded-2xl shadow-md shadow-purple-500/25 flex items-center justify-center gap-2.5 transition-all hover-zoom-btn uppercase cursor-pointer"
+                      className="flex-1 py-3.5 px-5 bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-700 hover:from-purple-800 hover:to-indigo-700 text-white font-black text-xs sm:text-sm md:text-base rounded-2xl shadow-md shadow-purple-500/25 flex items-center justify-center gap-2.5 transition-all hover-zoom-btn uppercase cursor-pointer"
                     >
                       <Sparkles className="w-5 h-5 text-amber-300 animate-spin" />
                       <span>🎲 BỐC VÀ HIỂN THỊ CÂU HỎI NGẪU NHIÊN (MÀN HÌNH RỘNG)</span>
@@ -865,7 +866,7 @@ export const FilmReelView: React.FC = () => {
           <button
             onClick={startFilmReel}
             disabled={isRolling || pool.length === 0}
-            className="w-full py-3.5 sm:py-4 px-4 sm:px-6 bg-gradient-to-r from-amber-500 via-rose-500 to-indigo-600 hover:from-amber-600 hover:to-indigo-700 text-white font-black text-xs sm:text-base rounded-2xl sm:rounded-3xl shadow-lg shadow-rose-500/25 flex items-center justify-center gap-2 transition-all hover-zoom-btn disabled:opacity-50 uppercase cursor-pointer"
+            className="w-full py-3.5 sm:py-4 px-4 sm:px-6 bg-gradient-to-r from-amber-600 via-rose-500 to-indigo-600 hover:from-amber-700 hover:to-indigo-700 text-white font-black text-xs sm:text-base rounded-2xl sm:rounded-3xl shadow-lg shadow-rose-500/25 flex items-center justify-center gap-2 transition-all hover-zoom-btn disabled:opacity-50 uppercase cursor-pointer"
           >
             <Play className={`w-4 h-4 sm:w-5 sm:h-5 fill-white shrink-0 ${isRolling ? 'animate-spin' : ''}`} />
             <span className="hidden sm:inline">
@@ -963,9 +964,9 @@ export const FilmReelView: React.FC = () => {
                   >
                     <div className="flex items-center gap-2.5 min-w-0">
                       <img
-                        src={h.avatar}
+                        src={h.avatar} onError={(e) => handleAvatarImgError(e, undefined, h?.name)}
                         alt={h.name}
-                        className="w-9 h-9 rounded-xl object-cover bg-white ring-1 ring-slate-200 shrink-0"
+                        className="w-9 h-9 rounded-xl object-cover object-center bg-white ring-1 ring-slate-200 shrink-0"
                       />
                       <div className="truncate">
                         <div className="text-xs font-black text-slate-900 truncate">{h.name}</div>
@@ -1027,8 +1028,8 @@ export const FilmReelView: React.FC = () => {
         const hasAnyImage = Boolean(currentQuestion.image || hasOptionImages || currentQuestion.answerImage);
 
         return (
-          <div className="fixed inset-0 z-50 bg-slate-950/95 backdrop-blur-md flex flex-col items-center justify-center p-2 sm:p-4 overflow-y-auto animate-in fade-in zoom-in-95 duration-150 select-none">
-            <div className={`bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 border-2 border-amber-400/90 rounded-3xl w-full max-w-5xl md:max-w-6xl max-h-[98vh] overflow-y-auto shadow-[0_0_60px_rgba(251,191,36,0.3)] text-white flex flex-col justify-between ${
+          <div className="fixed inset-0 z-50 bg-sky-900/20 backdrop-blur-xs flex flex-col items-center justify-center p-2 sm:p-4 overflow-y-auto animate-in fade-in zoom-in-95 duration-150 select-none">
+            <div className={`bg-gradient-to-b from-sky-600 via-blue-500 to-indigo-600 border-2 border-amber-400/90 rounded-3xl w-full max-w-5xl md:max-w-6xl max-h-[98vh] overflow-y-auto shadow-[0_0_60px_rgba(251,191,36,0.3)] text-white flex flex-col justify-between ${
               hasAnyImage ? 'p-3.5 sm:p-5 space-y-2.5' : 'p-5 sm:p-7 md:p-8 space-y-4 sm:space-y-5'
             }`}>
               
@@ -1038,9 +1039,9 @@ export const FilmReelView: React.FC = () => {
                 <div className="flex items-center gap-3">
                   <div className="relative shrink-0">
                     <img
-                      src={currentWinner.avatar}
+                      src={currentWinner.avatar} onError={(e) => handleAvatarImgError(e, currentWinner?.gender, currentWinner?.name)}
                       alt={currentWinner.name}
-                      className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl object-cover border-2 border-amber-400 bg-slate-800 shadow-md"
+                      className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl object-cover object-center border-2 border-amber-400 bg-slate-100 shadow-md"
                     />
                     <span className="absolute -bottom-1 -right-1 px-1.5 py-0.2 bg-amber-500 text-slate-950 font-black text-[10px] rounded-full shadow-xs">
                       #{currentWinner.stt}
@@ -1064,18 +1065,18 @@ export const FilmReelView: React.FC = () => {
                 {/* Các nút điều khiển hàng đầu: Đổi môn + NÚT ĐỔI CÂU HỎI KHÁC + Đóng */}
                 <div className="flex flex-wrap items-center gap-2 justify-end">
                   {/* Dropdown môn học */}
-                  <div className="flex items-center gap-1.5 bg-slate-800 border border-slate-700 px-3 py-1.5 rounded-xl">
-                    <BookOpen className="w-4 h-4 text-purple-400 shrink-0" />
+                  <div className="flex items-center gap-1.5 bg-slate-100 border border-slate-200 px-3 py-1.5 rounded-xl">
+                    <BookOpen className="w-4 h-4 text-purple-600 shrink-0" />
                     <select
                       value={selectedQuizSubject}
                       onChange={(e) => handleChangeSubject(e.target.value)}
-                      className="bg-transparent text-xs font-bold text-purple-200 focus:outline-none cursor-pointer"
+                      className="bg-transparent text-xs font-bold text-purple-700 focus:outline-none cursor-pointer"
                     >
-                      <option value="all" className="bg-slate-900 text-white">🎲 Toàn bộ môn ({quizBank.length})</option>
+                      <option value="all" className="bg-white text-slate-800">🎲 Toàn bộ môn ({quizBank.length})</option>
                       {quizSubjects.map(sub => {
                         const count = quizBank.filter(q => (q.subject || 'Tổng hợp') === sub).length;
                         return (
-                          <option key={sub} value={sub} className="bg-slate-900 text-white">
+                          <option key={sub} value={sub} className="bg-white text-slate-800">
                             📖 Môn {sub} ({count})
                           </option>
                         );
@@ -1101,17 +1102,17 @@ export const FilmReelView: React.FC = () => {
                       setEditTargetQuestion(currentQuestion);
                       setIsQuestionBankOpen(true);
                     }}
-                    className="p-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-bold border border-slate-700 cursor-pointer"
+                    className="p-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-xs font-bold border border-slate-200 cursor-pointer"
                     title="Chỉnh sửa câu hỏi này"
                   >
-                    <Edit3 className="w-4 h-4 text-amber-400" />
+                    <Edit3 className="w-4 h-4 text-amber-600" />
                   </button>
 
                   {/* Nút đóng màn hình rộng */}
                   <button
                     type="button"
                     onClick={() => setIsQuestionModalOpen(false)}
-                    className="p-2 bg-slate-800 hover:bg-rose-900/60 text-slate-400 hover:text-white rounded-xl text-xs font-bold border border-slate-700 cursor-pointer"
+                    className="p-2 bg-slate-100 hover:bg-rose-900/60 text-slate-500 hover:text-slate-800 rounded-xl text-xs font-bold border border-slate-200 cursor-pointer"
                     title="Thu nhỏ / Quay lại Cuộn Phim"
                   >
                     <X className="w-4 h-4" />
@@ -1120,7 +1121,7 @@ export const FilmReelView: React.FC = () => {
               </div>
 
               {/* Thông tin loại câu hỏi & Xu thưởng */}
-              <div className="flex flex-wrap items-center justify-between gap-2 p-2.5 rounded-2xl bg-slate-800/80 border border-slate-700 text-xs">
+              <div className="flex flex-wrap items-center justify-between gap-2 p-2.5 rounded-2xl bg-slate-100/80 border border-slate-200 text-xs">
                 <div className="flex items-center gap-2">
                   <span className="px-3 py-1 rounded-xl bg-purple-600 text-white font-black text-[11px] uppercase tracking-wide shadow-xs">
                     {currentQuestion.type === 'multiple_choice' && '📝 Trắc Nghiệm 1 Đáp Án'}
@@ -1131,15 +1132,15 @@ export const FilmReelView: React.FC = () => {
                     {currentQuestion.type === 'matching' && '🔗 Nối Cột A Với Cột B'}
                     {currentQuestion.type === 'oral' && '🗣️ Tự Luận / Bằng Lời'}
                   </span>
-                  <span className="text-slate-300 font-medium text-xs">
-                    Môn: <strong className="text-purple-300">{currentQuestion.subject || 'Tổng hợp'}</strong>
+                  <span className="text-slate-600 font-medium text-xs">
+                    Môn: <strong className="text-purple-600">{currentQuestion.subject || 'Tổng hợp'}</strong>
                   </span>
                 </div>
 
                 {/* Chọn mức xu thưởng */}
-                <div className="flex items-center gap-1.5 bg-slate-900/80 px-2.5 py-1 rounded-xl border border-slate-700">
-                  <Award className="w-4 h-4 text-amber-400 shrink-0" />
-                  <span className="text-[11px] font-black text-amber-300 uppercase">Xu thưởng:</span>
+                <div className="flex items-center gap-1.5 bg-white/80 px-2.5 py-1 rounded-xl border border-slate-200">
+                  <Award className="w-4 h-4 text-amber-600 shrink-0" />
+                  <span className="text-[11px] font-black text-amber-600 uppercase">Xu thưởng:</span>
                   {[1, 2, 3, 4, 5, 10].map((pts) => (
                     <button
                       key={pts}
@@ -1149,7 +1150,7 @@ export const FilmReelView: React.FC = () => {
                       className={`px-2 py-0.5 rounded-lg text-xs font-black transition-colors cursor-pointer ${
                         customOralPoints === pts 
                           ? 'bg-amber-400 text-slate-950 shadow-xs' 
-                          : 'text-amber-300 hover:bg-slate-800'
+                          : 'text-amber-300 hover:bg-slate-200'
                       }`}
                       title={`Đặt mức thưởng ${pts} xu`}
                     >
@@ -1160,10 +1161,10 @@ export const FilmReelView: React.FC = () => {
               </div>
 
               {/* NỘI DUNG CÂU HỎI (Tự động tăng cỡ chữ cực đại khi không có ảnh để giáo viên & học sinh dễ đọc) */}
-              <div className={`bg-slate-950/85 rounded-2xl md:rounded-3xl border border-slate-800 shadow-inner ${
+              <div className={`bg-white/85 rounded-2xl md:rounded-3xl border border-slate-200 shadow-inner ${
                 hasAnyImage ? 'p-3.5 sm:p-4 space-y-2.5' : 'p-5 sm:p-7 md:p-8 space-y-3'
               }`}>
-                <div className={`font-black text-amber-200 leading-snug tracking-wide ${
+                <div className={`font-black text-amber-700 leading-snug tracking-wide ${
                   hasAnyImage 
                     ? 'text-base sm:text-lg md:text-xl' 
                     : 'text-xl sm:text-2xl md:text-3xl lg:text-4xl'
@@ -1179,7 +1180,7 @@ export const FilmReelView: React.FC = () => {
                         src={currentQuestion.image} 
                         alt="Ảnh minh họa câu hỏi" 
                         onClick={() => setZoomedImage({ url: currentQuestion.image!, title: 'Ảnh minh họa câu hỏi' })}
-                        className="max-h-36 sm:max-h-44 rounded-xl border-2 border-slate-700 object-contain bg-slate-900 shadow-md cursor-zoom-in hover:opacity-95 transition-opacity"
+                        className="max-h-36 sm:max-h-44 rounded-xl border-2 border-slate-200 object-contain bg-white shadow-md cursor-zoom-in hover:opacity-95 transition-opacity"
                       />
                       <span className="absolute bottom-1.5 right-1.5 bg-black/80 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-md pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity">
                         🔍 Phóng to
@@ -1199,13 +1200,13 @@ export const FilmReelView: React.FC = () => {
                       const isSelected = selectedOption === idx;
                       const isCorrect = currentQuestion.correctOptionIndex === idx;
                       const optImage = currentQuestion.optionImages?.[idx];
-                      let btnStyle = 'bg-slate-800/90 border-slate-700 text-white hover:border-amber-400 hover:bg-slate-800';
+                      let btnStyle = 'bg-slate-100/90 border-slate-200 text-slate-800 hover:border-amber-400 hover:bg-slate-200';
 
                       if (selectedOption !== null) {
                         if (isCorrect) {
-                          btnStyle = 'bg-emerald-950/90 border-emerald-400 text-emerald-100 font-bold ring-2 ring-emerald-400/50';
+                          btnStyle = 'bg-emerald-600/90 border-emerald-400 text-white font-bold ring-2 ring-emerald-400/50';
                         } else if (isSelected) {
-                          btnStyle = 'bg-rose-950/90 border-rose-500 text-rose-100';
+                          btnStyle = 'bg-rose-600/90 border-rose-500 text-white';
                         }
                       }
 
@@ -1226,10 +1227,10 @@ export const FilmReelView: React.FC = () => {
                               hasAnyImage ? 'w-6 h-6 sm:w-7 sm:h-7 text-xs' : 'w-9 h-9 sm:w-11 sm:h-11 text-base sm:text-lg shadow-sm'
                             } ${
                               selectedOption !== null && isCorrect 
-                                ? 'bg-emerald-500 text-white shadow-xs' 
+                                ? 'bg-emerald-600 text-white shadow-xs' 
                                 : selectedOption !== null && isSelected
                                 ? 'bg-rose-500 text-white'
-                                : 'bg-slate-700 text-amber-300'
+                                : 'bg-slate-200 text-amber-600'
                             }`}>
                               {String.fromCharCode(65 + idx)}
                             </span>
@@ -1244,7 +1245,7 @@ export const FilmReelView: React.FC = () => {
                           </div>
 
                           {optImage && (
-                            <div className="mt-2 w-full bg-slate-900/90 rounded-xl p-1.5 border border-slate-700 flex flex-col items-center justify-center overflow-hidden">
+                            <div className="mt-2 w-full bg-white/90 rounded-xl p-1.5 border border-slate-200 flex flex-col items-center justify-center overflow-hidden">
                               <img 
                                 src={optImage} 
                                 alt={`Ảnh đáp án ${String.fromCharCode(65 + idx)}`} 
@@ -1282,14 +1283,14 @@ export const FilmReelView: React.FC = () => {
                       const optImage = currentQuestion.optionImages?.[idx];
 
                       let cardStyle = isChecked 
-                        ? 'bg-indigo-950/80 border-indigo-400 ring-2 ring-indigo-400/40 text-white' 
-                        : 'bg-slate-800/90 border-slate-700 text-slate-200 hover:border-slate-500';
+                        ? 'bg-indigo-600/80 border-indigo-400 ring-2 ring-indigo-400/40 text-white' 
+                        : 'bg-slate-100/90 border-slate-200 text-slate-700 hover:border-slate-500';
 
                       if (isAnswerCorrect !== null) {
                         if (isCorrectAnswer) {
-                          cardStyle = 'bg-emerald-950/90 border-emerald-400 text-emerald-100 font-bold ring-2 ring-emerald-400/50';
+                          cardStyle = 'bg-emerald-600/90 border-emerald-400 text-white font-bold ring-2 ring-emerald-400/50';
                         } else if (isChecked && !isCorrectAnswer) {
-                          cardStyle = 'bg-rose-950/90 border-rose-500 text-rose-100';
+                          cardStyle = 'bg-rose-600/90 border-rose-500 text-white';
                         }
                       }
 
@@ -1314,7 +1315,7 @@ export const FilmReelView: React.FC = () => {
                             <span className={`rounded-xl flex items-center justify-center font-black shrink-0 ${
                               hasAnyImage ? 'w-6 h-6 sm:w-7 sm:h-7 text-xs' : 'w-9 h-9 sm:w-11 sm:h-11 text-base sm:text-lg shadow-sm'
                             } ${
-                              isChecked ? 'bg-indigo-600 text-white' : 'bg-slate-700 text-slate-300'
+                              isChecked ? 'bg-indigo-600 text-white' : 'bg-slate-200 text-slate-600'
                             }`}>
                               {isChecked ? '✓' : String.fromCharCode(65 + idx)}
                             </span>
@@ -1329,7 +1330,7 @@ export const FilmReelView: React.FC = () => {
                           </div>
 
                           {optImage && (
-                            <div className="mt-2 w-full bg-slate-900/90 rounded-xl p-1.5 border border-slate-700 flex flex-col items-center justify-center overflow-hidden">
+                            <div className="mt-2 w-full bg-white/90 rounded-xl p-1.5 border border-slate-200 flex flex-col items-center justify-center overflow-hidden">
                               <img 
                                 src={optImage} 
                                 alt={`Ảnh đáp án ${String.fromCharCode(65 + idx)}`} 
@@ -1377,8 +1378,8 @@ export const FilmReelView: React.FC = () => {
                             ? 'bg-emerald-600 text-white border-emerald-400 ring-2 sm:ring-4 ring-emerald-400/50'
                             : selectedTrueFalse === true
                             ? 'bg-rose-600 text-white border-rose-400'
-                            : 'bg-slate-800 text-slate-500 border-slate-700'
-                          : 'bg-slate-800/90 text-emerald-300 border-emerald-500/50 hover:bg-emerald-950/80 hover:border-emerald-400'
+                            : 'bg-slate-100 text-slate-500 border-slate-200'
+                          : 'bg-slate-100/90 text-emerald-600 border-emerald-500/50 hover:bg-emerald-950/80 hover:border-emerald-400'
                       }`}
                     >
                       <Check className="w-6 h-6 sm:w-7 sm:h-7" />
@@ -1395,8 +1396,8 @@ export const FilmReelView: React.FC = () => {
                             ? 'bg-emerald-600 text-white border-emerald-400 ring-2 sm:ring-4 ring-emerald-400/50'
                             : selectedTrueFalse === false
                             ? 'bg-rose-600 text-white border-rose-400'
-                            : 'bg-slate-800 text-slate-500 border-slate-700'
-                          : 'bg-slate-800/90 text-rose-300 border-rose-500/50 hover:bg-rose-950/80 hover:border-rose-400'
+                            : 'bg-slate-100 text-slate-500 border-slate-200'
+                          : 'bg-slate-100/90 text-rose-600 border-rose-500/50 hover:bg-rose-950/80 hover:border-rose-400'
                       }`}
                     >
                       <X className="w-6 h-6 sm:w-7 sm:h-7" />
@@ -1411,8 +1412,8 @@ export const FilmReelView: React.FC = () => {
                 <div className="space-y-2.5 pt-0.5">
                   {/* Word bank pool to choose from */}
                   {isAnswerCorrect === null && (
-                    <div className="p-2.5 sm:p-3 bg-slate-900/90 rounded-2xl border border-slate-700 space-y-1.5">
-                      <div className="text-[11px] font-bold text-amber-300 uppercase">
+                    <div className="p-2.5 sm:p-3 bg-white/90 rounded-2xl border border-slate-200 space-y-1.5">
+                      <div className="text-[11px] font-bold text-amber-600 uppercase">
                         👉 Bấm vào các từ bên dưới để điền vào ô trống:
                       </div>
                       <div className="flex flex-wrap items-center gap-1.5">
@@ -1437,8 +1438,8 @@ export const FilmReelView: React.FC = () => {
                                 }}
                                 className={`px-3 py-1.5 rounded-xl text-xs sm:text-sm font-black transition-all cursor-pointer shadow-sm ${
                                   isUsed 
-                                    ? 'bg-slate-800 text-slate-600 border border-slate-700 opacity-40' 
-                                    : 'bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white border border-indigo-400 hover-zoom-btn'
+                                    ? 'bg-slate-100 text-slate-600 border border-slate-200 opacity-40' 
+                                    : 'bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white border border-indigo-400 hover-zoom-btn'
                                 }`}
                               >
                                 {word}
@@ -1450,19 +1451,19 @@ export const FilmReelView: React.FC = () => {
                   )}
 
                   {/* Slot Answers Display */}
-                  <div className="p-2.5 sm:p-3 bg-slate-800/90 rounded-2xl border border-slate-700 space-y-2">
-                    <div className="text-[11px] font-bold text-slate-300 uppercase">Các vị trí cần điền:</div>
+                  <div className="p-2.5 sm:p-3 bg-slate-100/90 rounded-2xl border border-slate-200 space-y-2">
+                    <div className="text-[11px] font-bold text-slate-600 uppercase">Các vị trí cần điền:</div>
                     <div className="flex flex-wrap items-center gap-2.5">
                       {(currentQuestion.blankAnswers || ['']).map((_, sIdx) => {
                         const filled = filledBlankWords[sIdx];
                         return (
                           <div key={sIdx} className="flex items-center gap-1.5">
-                            <span className="text-[11px] text-slate-400 font-bold">Vị trí {sIdx + 1}:</span>
+                            <span className="text-[11px] text-slate-500 font-bold">Vị trí {sIdx + 1}:</span>
                             <div className="flex items-center gap-1">
                               <span className={`px-3 py-1.5 rounded-xl text-xs sm:text-sm font-black border-2 min-w-[100px] text-center ${
                                 filled 
-                                  ? 'bg-purple-950 border-purple-400 text-amber-200' 
-                                  : 'bg-slate-900 border-dashed border-slate-600 text-slate-500'
+                                  ? 'bg-purple-600 border-purple-400 text-white' 
+                                  : 'bg-white border-dashed border-slate-200 text-slate-500'
                               }`}>
                                 {filled || '[ Trống ]'}
                               </span>
@@ -1474,7 +1475,7 @@ export const FilmReelView: React.FC = () => {
                                     delete next[sIdx];
                                     setFilledBlankWords(next);
                                   }}
-                                  className="p-1 bg-slate-700 hover:bg-rose-900 text-slate-300 rounded-lg text-xs"
+                                  className="p-1 bg-slate-200 hover:bg-rose-900 text-slate-600 rounded-lg text-xs"
                                   title="Gỡ từ này ra"
                                 >
                                   ✕
@@ -1492,7 +1493,7 @@ export const FilmReelView: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => setFilledBlankWords({})}
-                        className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs rounded-xl"
+                        className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-xs rounded-xl"
                       >
                         Làm lại
                       </button>
@@ -1520,7 +1521,7 @@ export const FilmReelView: React.FC = () => {
                     {shuffledSequence.map((step, idx) => (
                       <div 
                         key={idx}
-                        className="p-2.5 bg-slate-800/90 border border-slate-700 hover:border-cyan-400 rounded-xl flex items-center justify-between gap-2.5 text-white transition-all shadow-sm"
+                        className="p-2.5 bg-slate-100/90 border border-slate-200 hover:border-cyan-400 rounded-xl flex items-center justify-between gap-2.5 text-slate-800 transition-all shadow-sm"
                       >
                         <div className="flex items-center gap-2">
                           <span className="w-6 h-6 rounded-lg bg-cyan-600 text-white font-black text-xs flex items-center justify-center shrink-0">
@@ -1541,7 +1542,7 @@ export const FilmReelView: React.FC = () => {
                                 newSeq[idx] = temp;
                                 setShuffledSequence(newSeq);
                               }}
-                              className="px-2.5 py-1 bg-slate-700 hover:bg-cyan-600 disabled:opacity-20 text-white font-black text-xs rounded-lg cursor-pointer"
+                              className="px-2.5 py-1 bg-slate-200 hover:bg-cyan-600 disabled:opacity-20 text-slate-800 font-black text-xs rounded-lg cursor-pointer"
                               title="Di chuyển lên trên"
                             >
                               ↑
@@ -1556,7 +1557,7 @@ export const FilmReelView: React.FC = () => {
                                 newSeq[idx] = temp;
                                 setShuffledSequence(newSeq);
                               }}
-                              className="px-2.5 py-1 bg-slate-700 hover:bg-cyan-600 disabled:opacity-20 text-white font-black text-xs rounded-lg cursor-pointer"
+                              className="px-2.5 py-1 bg-slate-200 hover:bg-cyan-600 disabled:opacity-20 text-slate-800 font-black text-xs rounded-lg cursor-pointer"
                               title="Di chuyển xuống dưới"
                             >
                               ↓
@@ -1610,10 +1611,10 @@ export const FilmReelView: React.FC = () => {
                             }}
                             className={`p-2.5 rounded-xl border text-left cursor-pointer transition-all shadow-xs ${
                               isSelected
-                                ? 'bg-amber-950 border-amber-400 ring-2 ring-amber-400/50'
+                                ? 'bg-amber-600 border-amber-400 ring-2 ring-amber-400/50'
                                 : matchedRightId !== undefined
-                                ? 'bg-slate-800 border-indigo-500/80'
-                                : 'bg-slate-800/90 border-slate-700 hover:border-slate-500'
+                                ? 'bg-slate-100 border-indigo-500/80'
+                                : 'bg-slate-100/90 border-slate-200 hover:border-slate-500'
                             }`}
                           >
                             <div className="flex items-center justify-between gap-1.5">
@@ -1621,10 +1622,10 @@ export const FilmReelView: React.FC = () => {
                                 <span className="w-5 h-5 rounded-md bg-amber-500 text-slate-950 font-black text-[11px] flex items-center justify-center shrink-0">
                                   A{leftIdx + 1}
                                 </span>
-                                <span className="text-xs sm:text-sm font-bold text-white leading-snug">{pair.left}</span>
+                                <span className="text-xs sm:text-sm font-bold text-slate-800 leading-snug">{pair.left}</span>
                               </div>
                               {matchedRightObj && (
-                                <span className="text-[10px] px-2 py-0.5 bg-purple-900/80 text-purple-200 border border-purple-400 rounded-md font-bold truncate max-w-[120px]">
+                                <span className="text-[10px] px-2 py-0.5 bg-purple-600/80 text-white border border-purple-400 rounded-md font-bold truncate max-w-[120px]">
                                   🔗 {matchedRightObj.text}
                                 </span>
                               )}
@@ -1656,17 +1657,17 @@ export const FilmReelView: React.FC = () => {
                             }}
                             className={`p-2.5 rounded-xl border text-left cursor-pointer transition-all shadow-xs ${
                               isLinkedToLeft
-                                ? 'bg-purple-950 border-purple-400 ring-2 ring-purple-400/40 text-purple-100'
+                                ? 'bg-purple-600 border-purple-400 ring-2 ring-purple-400/40 text-white'
                                 : selectedLeftMatchIndex !== null
-                                ? 'bg-slate-800 border-slate-600 hover:border-purple-400 hover:bg-slate-700'
-                                : 'bg-slate-800/90 border-slate-700'
+                                ? 'bg-slate-100 border-slate-200 hover:border-purple-400 hover:bg-slate-200'
+                                : 'bg-slate-100/90 border-slate-200'
                             }`}
                           >
                             <div className="flex items-center gap-2">
                               <span className="w-5 h-5 rounded-md bg-purple-600 text-white font-black text-[11px] flex items-center justify-center shrink-0">
                                 B{rIdx + 1}
                               </span>
-                              <span className="text-xs sm:text-sm font-bold text-white leading-snug">{rightItem.text}</span>
+                              <span className="text-xs sm:text-sm font-bold text-slate-800 leading-snug">{rightItem.text}</span>
                             </div>
                           </div>
                         );
@@ -1679,7 +1680,7 @@ export const FilmReelView: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => { setUserMatches({}); setSelectedLeftMatchIndex(null); }}
-                        className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs rounded-xl"
+                        className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-xs rounded-xl"
                       >
                         Nối lại
                       </button>
@@ -1700,17 +1701,17 @@ export const FilmReelView: React.FC = () => {
               {currentQuestion.type !== 'oral' && isAnswerCorrect !== null && (
                 <div className="space-y-3 pt-2 animate-in fade-in duration-150">
                   {isAnswerCorrect ? (
-                    <div className="p-4 bg-emerald-950/90 border-2 border-emerald-400 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-lg">
+                    <div className="p-4 bg-emerald-600/90 border-2 border-emerald-400 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-lg">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-emerald-500 text-white flex items-center justify-center font-black shrink-0 shadow-md">
+                        <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-black shrink-0 shadow-md">
                           <Check className="w-6 h-6" />
                         </div>
                         <div>
-                          <div className="text-sm sm:text-base font-black text-emerald-200 uppercase">
+                          <div className="text-sm sm:text-base font-black text-white uppercase">
                             🎉 CHÍNH XÁC! {currentWinner.name} ĐÃ ĐƯỢC CỘNG +{customOralPoints || currentQuestion.pointsReward || 2} XU!
                           </div>
                           <p className="text-xs text-emerald-400 font-medium mt-0.5">
-                            Điểm xu hiện tại của học sinh: <strong className="text-emerald-200 font-black">{currentWinner.points} xu</strong>
+                            Điểm xu hiện tại của học sinh: <strong className="text-white font-black">{currentWinner.points} xu</strong>
                           </p>
                         </div>
                       </div>
@@ -1719,13 +1720,13 @@ export const FilmReelView: React.FC = () => {
                       </span>
                     </div>
                   ) : (
-                    <div className="p-4 bg-rose-950/90 border-2 border-rose-400 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-lg">
+                    <div className="p-4 bg-rose-600/90 border-2 border-rose-400 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-lg">
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-xl bg-rose-500 text-white flex items-center justify-center font-black shrink-0 shadow-md text-base">
                           ✕
                         </div>
                         <div>
-                          <div className="text-sm sm:text-base font-black text-rose-200 uppercase">
+                          <div className="text-sm sm:text-base font-black text-white uppercase">
                             ❌ RẤT TIẾC, CHƯA CHÍNH XÁC! KHÔNG ĐƯỢC CỘNG XU (0 XU)
                           </div>
                           <p className="text-xs text-rose-400 font-medium mt-0.5">
@@ -1737,7 +1738,7 @@ export const FilmReelView: React.FC = () => {
                         <button
                           type="button"
                           onClick={handleRetryQuestion}
-                          className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-rose-200 border border-rose-500/50 rounded-xl text-xs font-bold transition-colors cursor-pointer"
+                          className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-rose-700 border border-rose-500/50 rounded-xl text-xs font-bold transition-colors cursor-pointer"
                         >
                           Cho làm lại 🔄
                         </button>
@@ -1754,7 +1755,7 @@ export const FilmReelView: React.FC = () => {
                           onClick={() => handleAward(1, `Thưởng động viên câu hỏi môn ${currentQuestion.subject || 'Tổng hợp'}`)}
                           className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-colors cursor-pointer ${
                             hasAwarded 
-                              ? 'bg-slate-800 text-slate-500' 
+                              ? 'bg-slate-100 text-slate-500' 
                               : 'bg-amber-600 hover:bg-amber-700 text-white'
                           }`}
                           title="Tặng 1 xu động viên học sinh đã nỗ lực"
@@ -1767,20 +1768,20 @@ export const FilmReelView: React.FC = () => {
 
                   {/* Lời giải chi tiết */}
                   {(currentQuestion.teacherAnswerKey || currentQuestion.answerImage) && (
-                    <div className="p-2.5 sm:p-3 bg-slate-800/80 border border-slate-700 rounded-xl text-xs text-slate-200 space-y-1">
+                    <div className="p-2.5 sm:p-3 bg-slate-100/80 border border-slate-200 rounded-xl text-xs text-slate-700 space-y-1">
                       {currentQuestion.teacherAnswerKey && (
                         <div>
-                          <strong className="text-amber-300">Giải thích / Đáp án chuẩn:</strong> {currentQuestion.teacherAnswerKey}
+                          <strong className="text-amber-600">Giải thích / Đáp án chuẩn:</strong> {currentQuestion.teacherAnswerKey}
                         </div>
                       )}
                       {currentQuestion.answerImage && (
                         <div className="pt-0.5">
-                          <span className="text-[10px] font-black uppercase text-slate-400 block mb-0.5">Ảnh minh họa lời giải:</span>
+                          <span className="text-[10px] font-black uppercase text-slate-500 block mb-0.5">Ảnh minh họa lời giải:</span>
                           <img
                             src={currentQuestion.answerImage}
                             alt="Ảnh minh họa đáp án"
                             onClick={() => setZoomedImage({ url: currentQuestion.answerImage!, title: 'Ảnh minh họa lời giải chi tiết' })}
-                            className="max-h-28 sm:max-h-36 rounded-lg border border-slate-600 object-contain bg-slate-900 shadow-sm cursor-zoom-in"
+                            className="max-h-28 sm:max-h-36 rounded-lg border border-slate-200 object-contain bg-white shadow-sm cursor-zoom-in"
                           />
                         </div>
                       )}
@@ -1804,7 +1805,7 @@ export const FilmReelView: React.FC = () => {
                   </div>
 
                   {showTeacherKey && (
-                    <div className="p-2.5 sm:p-3 bg-slate-800/90 border border-amber-500/40 rounded-xl text-xs text-amber-200 space-y-1.5 animate-in fade-in">
+                    <div className="p-2.5 sm:p-3 bg-slate-100/90 border border-amber-500/40 rounded-xl text-xs text-amber-700 space-y-1.5 animate-in fade-in">
                       {currentQuestion.teacherAnswerKey && (
                         <div>
                           <strong>Gợi ý chấm của giáo viên:</strong> {currentQuestion.teacherAnswerKey}
@@ -1816,7 +1817,7 @@ export const FilmReelView: React.FC = () => {
                             src={currentQuestion.answerImage}
                             alt="Ảnh đáp án giáo viên"
                             onClick={() => setZoomedImage({ url: currentQuestion.answerImage!, title: 'Ảnh đáp án giáo viên' })}
-                            className="max-h-28 sm:max-h-36 rounded-lg border border-amber-400/40 object-contain bg-slate-900 shadow-md cursor-zoom-in"
+                            className="max-h-28 sm:max-h-36 rounded-lg border border-amber-400/40 object-contain bg-white shadow-md cursor-zoom-in"
                           />
                         </div>
                       )}
@@ -1825,10 +1826,10 @@ export const FilmReelView: React.FC = () => {
 
                   {/* Giáo viên xác nhận tự luận */}
                   {oralStatus === 'pending' && (
-                    <div className="p-3 bg-slate-800/90 border border-slate-700 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
-                      <div className="text-xs text-slate-200">
-                        <strong className="block text-xs sm:text-sm font-black text-amber-300 uppercase">Học sinh đang trả lời trước lớp:</strong>
-                        <span className="text-slate-400 text-[11px]">Thầy/cô lắng nghe và bấm xác nhận để cộng điểm:</span>
+                    <div className="p-3 bg-slate-100/90 border border-slate-200 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                      <div className="text-xs text-slate-700">
+                        <strong className="block text-xs sm:text-sm font-black text-amber-600 uppercase">Học sinh đang trả lời trước lớp:</strong>
+                        <span className="text-slate-500 text-[11px]">Thầy/cô lắng nghe và bấm xác nhận để cộng điểm:</span>
                       </div>
 
                       <div className="flex flex-wrap items-center gap-2">
@@ -1843,7 +1844,7 @@ export const FilmReelView: React.FC = () => {
                         <button
                           type="button"
                           onClick={handleConfirmOralIncorrect}
-                          className="px-3 py-2 rounded-xl text-xs font-bold border border-rose-500/50 bg-slate-900 hover:bg-rose-950 text-rose-300 flex items-center gap-1 cursor-pointer"
+                          className="px-3 py-2 rounded-xl text-xs font-bold border border-rose-500/50 bg-white hover:bg-rose-950 text-rose-600 flex items-center gap-1 cursor-pointer"
                         >
                           <span>✕ Chưa đúng (0 xu)</span>
                         </button>
@@ -1853,17 +1854,17 @@ export const FilmReelView: React.FC = () => {
 
                   {/* Kết quả tự luận đúng */}
                   {oralStatus === 'correct' && (
-                    <div className="p-3 bg-emerald-950/90 border-2 border-emerald-400 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 animate-in fade-in">
+                    <div className="p-3 bg-emerald-600/90 border-2 border-emerald-400 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 animate-in fade-in">
                       <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 rounded-xl bg-emerald-500 text-white flex items-center justify-center font-black shrink-0 shadow-md">
+                        <div className="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-black shrink-0 shadow-md">
                           <Check className="w-5 h-5" />
                         </div>
                         <div>
-                          <div className="text-xs sm:text-sm font-black text-emerald-200 uppercase">
+                          <div className="text-xs sm:text-sm font-black text-white uppercase">
                             🎉 GIÁO VIÊN ĐÃ XÁC NHẬN: TRẢ LỜI ĐÚNG VÀ CỘNG +{customOralPoints} XU!
                           </div>
                           <p className="text-[11px] text-emerald-400 font-medium mt-0.5">
-                            Đã cộng vào tài khoản của <strong>{currentWinner.name}</strong>. Tổng điểm xu: <strong className="text-emerald-200 font-black">{currentWinner.points} xu</strong>
+                            Đã cộng vào tài khoản của <strong>{currentWinner.name}</strong>. Tổng điểm xu: <strong className="text-white font-black">{currentWinner.points} xu</strong>
                           </p>
                         </div>
                       </div>
@@ -1875,13 +1876,13 @@ export const FilmReelView: React.FC = () => {
 
                   {/* Kết quả tự luận chưa đúng */}
                   {oralStatus === 'incorrect' && (
-                    <div className="p-3 bg-rose-950/90 border-2 border-rose-400 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 animate-in fade-in">
+                    <div className="p-3 bg-rose-600/90 border-2 border-rose-400 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 animate-in fade-in">
                       <div className="flex items-center gap-2.5">
                         <div className="w-8 h-8 rounded-xl bg-rose-500 text-white flex items-center justify-center font-black shrink-0 shadow-md text-sm">
                           ✕
                         </div>
                         <div>
-                          <div className="text-xs sm:text-sm font-black text-rose-200 uppercase">
+                          <div className="text-xs sm:text-sm font-black text-white uppercase">
                             ❌ CHƯA ĐẠT YÊU CẦU – KHÔNG CỘNG XU
                           </div>
                           <p className="text-[11px] text-rose-400 font-medium mt-0.5">
@@ -1893,7 +1894,7 @@ export const FilmReelView: React.FC = () => {
                         <button
                           type="button"
                           onClick={handleResetOralEvaluation}
-                          className="px-2.5 py-1 bg-slate-800 text-rose-200 border border-rose-500/50 rounded-lg text-xs font-bold cursor-pointer"
+                          className="px-2.5 py-1 bg-slate-100 text-rose-700 border border-rose-500/50 rounded-lg text-xs font-bold cursor-pointer"
                         >
                           Chấm lại 🔄
                         </button>
@@ -1915,7 +1916,7 @@ export const FilmReelView: React.FC = () => {
                 <button
                   type="button"
                   onClick={handlePickAnotherQuestion}
-                  className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-amber-300 font-bold text-xs rounded-xl flex items-center gap-1.5 cursor-pointer transition-colors"
+                  className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-amber-600 font-bold text-xs rounded-xl flex items-center gap-1.5 cursor-pointer transition-colors"
                 >
                   <RefreshCw className="w-3.5 h-3.5" />
                   <span>Đổi câu hỏi khác cho em này</span>

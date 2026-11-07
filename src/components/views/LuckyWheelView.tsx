@@ -15,6 +15,7 @@ import {
 } from '../../utils/audio';
 import confetti from 'canvas-confetti';
 
+import { handleAvatarImgError } from '../../utils/avatarConfig';
 const SLICE_COLORS = [
   '#3B82F6', '#10B981', '#F59E0B', '#EF4444', 
   '#8B5CF6', '#06B6D4', '#EC4899', '#14B8A6',
@@ -110,14 +111,14 @@ export const LuckyWheelView: React.FC = () => {
     // Outer decorative border
     ctx.beginPath();
     ctx.arc(center, center, radius + 4, 0, 2 * Math.PI);
-    ctx.strokeStyle = '#1e293b';
+    ctx.strokeStyle = '#1d4ed8';
     ctx.lineWidth = 8;
     ctx.stroke();
 
     // Center peg hub
     ctx.beginPath();
     ctx.arc(center, center, 32, 0, 2 * Math.PI);
-    ctx.fillStyle = '#0f172a';
+    ctx.fillStyle = '#2563eb';
     ctx.fill();
     ctx.strokeStyle = '#f8fafc';
     ctx.lineWidth = 4;
@@ -316,7 +317,7 @@ export const LuckyWheelView: React.FC = () => {
                     type="button"
                     onClick={() => setRewardXu(pts)}
                     className={`px-2.5 py-1 rounded-lg text-xs font-black transition-all cursor-pointer ${
-                      rewardXu === pts ? 'bg-amber-500 text-white shadow-xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                      rewardXu === pts ? 'bg-amber-600 text-white shadow-xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                     }`}
                   >
                     +{pts} xu
@@ -339,7 +340,7 @@ export const LuckyWheelView: React.FC = () => {
           {/* Winner Showcase Card */}
           {(winnerStudent || winnerGroup) && (
             <div className="bg-gradient-to-br from-violet-500 to-indigo-600 text-white rounded-2xl p-5 shadow-md animate-in zoom-in-95 duration-200 space-y-4">
-              <div className="flex items-center gap-2 text-violet-200 text-xs font-black uppercase tracking-wider">
+              <div className="flex items-center gap-2 text-white text-xs font-black uppercase tracking-wider">
                 <Trophy className="w-4 h-4 text-amber-300" />
                 <span>CHÚC MỪNG NGƯỜI CHIẾN THẮNG!</span>
               </div>
@@ -348,16 +349,16 @@ export const LuckyWheelView: React.FC = () => {
                 {winnerStudent ? (
                   <>
                     <img
-                      src={winnerStudent.avatar}
+                      src={winnerStudent.avatar} onError={(e) => handleAvatarImgError(e, winnerStudent?.gender, winnerStudent?.name)}
                       alt={winnerStudent.name}
-                      className="w-16 h-16 rounded-full border-2 border-white object-cover bg-white/20 shrink-0 shadow-inner"
+                      className="w-16 h-16 rounded-full border-2 border-white object-cover object-center bg-white/20 shrink-0 shadow-inner"
                       referrerPolicy="no-referrer"
                     />
                     <div>
                       <div className="text-xl font-extrabold text-white leading-tight uppercase">
                         {winnerStudent.name}
                       </div>
-                      <div className="text-xs text-violet-200 mt-0.5 uppercase font-bold">
+                      <div className="text-xs text-white mt-0.5 uppercase font-bold">
                         STT #{winnerStudent.stt} · {winnerStudent.group || 'Chưa chia tổ'}
                       </div>
                     </div>
@@ -372,7 +373,7 @@ export const LuckyWheelView: React.FC = () => {
               {/* Direct Reward on Winner Screen */}
               <div className="pt-3 border-t border-white/20 flex items-center justify-between gap-3">
                 <div className="flex items-center gap-2">
-                  <span className="text-xs text-violet-100 font-bold uppercase">THƯỞNG:</span>
+                  <span className="text-xs text-white font-bold uppercase">THƯỞNG:</span>
                   <input
                     type="number"
                     min="1"

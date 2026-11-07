@@ -347,7 +347,7 @@ export const TimerView: React.FC = () => {
       {/* ANALOG CLOCK STAGE (ĐỒNG HỒ KIM THỜI GIAN THỰC & NGÀY THÁNG NĂM)      */}
       {/* ===================================================================== */}
       {(viewMode === 'analog' || viewMode === 'split') && (
-        <div className={`bg-gradient-to-br from-indigo-900 via-slate-900 to-indigo-950 rounded-3xl p-4 sm:p-6 md:p-8 text-white shadow-xl border border-indigo-500/20 relative overflow-hidden hover-zoom-card ${viewMode === 'analog' ? 'max-w-3xl mx-auto' : ''}`}>
+        <div className={`bg-gradient-to-br from-indigo-500 via-blue-500 to-indigo-600 rounded-3xl p-4 sm:p-6 md:p-8 text-white shadow-xl border border-indigo-500/20 relative overflow-hidden hover-zoom-card ${viewMode === 'analog' ? 'max-w-3xl mx-auto' : ''}`}>
           {/* Subtle Ambient Lights */}
           <div className="absolute top-0 right-0 w-72 h-72 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
           <div className="absolute bottom-0 left-0 w-72 h-72 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
@@ -442,14 +442,14 @@ export const TimerView: React.FC = () => {
 
             {/* Right: Date, Day of Week & Digital Time Banner */}
             <div className="flex-1 text-center md:text-left space-y-2.5 sm:space-y-3">
-              <div className="inline-flex items-center gap-2 px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-400/30 text-[11px] sm:text-xs font-black uppercase tracking-wider">
-                <CalendarIcon className="w-3.5 h-3.5 text-amber-300" />
+              <div className="inline-flex items-center gap-2 px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-full bg-white/20 text-white border border-white/40 text-[11px] sm:text-xs font-black uppercase tracking-wider">
+                <CalendarIcon className="w-3.5 h-3.5 text-amber-200" />
                 <span>Thời Gian Hiện Tại • Năm Học 2026 - 2027</span>
               </div>
 
               {/* Day of Week & Full Date */}
               <div>
-                <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-amber-300 tracking-tight">
+                <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-white tracking-tight drop-shadow">
                   {dayOfWeekVi}
                 </h2>
                 <p className="text-sm sm:text-lg md:text-xl font-bold text-slate-100 mt-0.5 sm:mt-1">
@@ -458,11 +458,11 @@ export const TimerView: React.FC = () => {
               </div>
 
               {/* Big Digital Clock */}
-              <div className="inline-block bg-slate-950/70 border border-indigo-500/30 px-4 sm:px-6 py-1.5 sm:py-2.5 rounded-2xl shadow-inner font-mono text-2xl sm:text-3xl md:text-4xl font-black tracking-widest text-cyan-300">
+              <div className="inline-block bg-white border border-white px-4 sm:px-6 py-1.5 sm:py-2.5 rounded-2xl shadow-inner font-mono text-2xl sm:text-3xl md:text-4xl font-black tracking-widest text-blue-700">
                 {digitalTimeVi}
               </div>
 
-              <p className="text-[11px] sm:text-xs text-indigo-200/80 font-medium">
+              <p className="text-[11px] sm:text-xs text-white font-medium">
                 Đồng hồ kim và lịch ngày tháng tự động đồng bộ chính xác theo giờ hệ thống của máy tính và lớp học.
               </p>
             </div>
@@ -489,7 +489,7 @@ export const TimerView: React.FC = () => {
                       {alarmSecondsLeft}s
                     </span>
                   </div>
-                  <p className="text-sm font-bold text-red-100 mt-1">
+                  <p className="text-sm font-bold text-white mt-1">
                     Chuông báo hiệu đang reo trong 10 giây (còn {alarmSecondsLeft} giây)
                   </p>
                 </div>
@@ -609,7 +609,7 @@ export const TimerView: React.FC = () => {
                   }}
                   className={`flex-1 min-w-[110px] sm:min-w-[130px] px-3 sm:px-8 py-2.5 sm:py-3 rounded-2xl font-black text-xs sm:text-sm text-white shadow-md flex items-center justify-center gap-1.5 sm:gap-2 hover-zoom-btn ${
                     isRunning
-                      ? 'bg-amber-500 hover:bg-amber-600 shadow-amber-500/25'
+                      ? 'bg-amber-600 hover:bg-amber-700 shadow-amber-500/25'
                       : 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-600/25'
                   }`}
                 >
@@ -671,7 +671,7 @@ export const TimerView: React.FC = () => {
                     </button>
                   </div>
 
-                  <span className="text-lg sm:text-xl font-bold text-slate-300 -mt-3 sm:-mt-4">:</span>
+                  <span className="text-lg sm:text-xl font-bold text-slate-500 -mt-3 sm:-mt-4">:</span>
 
                   {/* Mins */}
                   <div className="flex flex-col items-center">
@@ -695,7 +695,7 @@ export const TimerView: React.FC = () => {
                     </button>
                   </div>
 
-                  <span className="text-lg sm:text-xl font-bold text-slate-300 -mt-3 sm:-mt-4">:</span>
+                  <span className="text-lg sm:text-xl font-bold text-slate-500 -mt-3 sm:-mt-4">:</span>
 
                   {/* Secs */}
                   <div className="flex flex-col items-center">

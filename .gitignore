@@ -42,3 +42,7 @@ release/
 
 # Local machine storage path (never commit)
 data/storage_location.json
+
+# Python cache
+__pycache__/
+*.pyc

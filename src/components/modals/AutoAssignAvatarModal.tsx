@@ -61,7 +61,7 @@ export const AutoAssignAvatarModal: React.FC<AutoAssignAvatarModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/65 backdrop-blur-xs p-4 animate-in fade-in duration-150">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-sky-900/20 backdrop-blur-xs p-4 animate-in fade-in duration-150">
       <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 max-w-lg w-full overflow-hidden">
         {/* Modal Header */}
         <div className="px-6 py-4 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white flex items-center justify-between">
@@ -73,7 +73,7 @@ export const AutoAssignAvatarModal: React.FC<AutoAssignAvatarModalProps> = ({
               <h3 className="text-base font-black tracking-tight uppercase">
                 Tự Động Gán Ảnh Đại Diện Học Sinh
               </h3>
-              <p className="text-xs text-purple-100 font-medium">
+              <p className="text-xs text-white font-medium">
                 Áp dụng cho: <strong className="text-amber-300">{classNameTitle || 'Lớp học'}</strong> ({totalStudents} học sinh)
               </p>
             </div>

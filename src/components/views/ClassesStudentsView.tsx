@@ -1723,17 +1723,17 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
           {/* STATS OVERVIEW: Thống kê số lớp đang quản lý, mỗi lớp bao nhiêu học sinh */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5 sm:gap-3">
             {/* Card 1: Tổng số lớp đang quản lý */}
-            <div className="bg-gradient-to-br from-indigo-600 via-blue-600 to-cyan-500 rounded-2xl p-3 sm:p-3.5 text-white shadow-sm shadow-indigo-500/20 hover-zoom-card flex items-center gap-3">
+            <div className="bg-gradient-to-br from-indigo-600 via-blue-600 to-cyan-600 rounded-2xl p-3 sm:p-3.5 text-white shadow-sm shadow-indigo-500/20 hover-zoom-card flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-md text-white flex items-center justify-center font-black shadow-xs shrink-0">
                 <School className="w-5 h-5" />
               </div>
               <div>
-                <span className="text-[10px] font-black text-indigo-100 uppercase tracking-wider block">TỔNG LỚP ĐANG QUẢN LÝ</span>
+                <span className="text-[10px] font-black text-white uppercase tracking-wider block">TỔNG LỚP ĐANG QUẢN LÝ</span>
                 <div className="text-xl sm:text-2xl font-black text-white font-mono mt-0.5">
-                  {allSchoolHomeroomClasses.length} <span className="text-xs font-bold text-cyan-100 uppercase">LỚP HỌC</span>
+                  {allSchoolHomeroomClasses.length} <span className="text-xs font-bold text-white uppercase">LỚP HỌC</span>
                 </div>
                 {statsHomeroomClasses.length !== allSchoolHomeroomClasses.length && (
-                  <div className="text-[10px] font-bold text-amber-200 mt-0.5 flex items-center gap-1">
+                  <div className="text-[10px] font-bold text-white mt-0.5 flex items-center gap-1">
                     <span>⚡ Đang hiển thị:</span>
                     <span className="bg-white/20 px-1.5 py-0.2 rounded-md">{statsHomeroomClasses.length} lớp</span>
                   </div>
@@ -1742,17 +1742,17 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
             </div>
 
             {/* Card 2: Tổng số học sinh toàn trường */}
-            <div className="bg-gradient-to-br from-emerald-500 via-teal-500 to-green-600 rounded-2xl p-3 sm:p-3.5 text-white shadow-sm shadow-emerald-500/20 hover-zoom-card flex items-center gap-3">
+            <div className="bg-gradient-to-br from-emerald-600 via-teal-600 to-green-600 rounded-2xl p-3 sm:p-3.5 text-white shadow-sm shadow-emerald-500/20 hover-zoom-card flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-md text-white flex items-center justify-center font-black shadow-xs shrink-0">
                 <Users className="w-5 h-5" />
               </div>
               <div>
-                <span className="text-[10px] font-black text-emerald-100 uppercase tracking-wider block">TỔNG SỐ HỌC SINH CÁC LỚP</span>
+                <span className="text-[10px] font-black text-white uppercase tracking-wider block">TỔNG SỐ HỌC SINH CÁC LỚP</span>
                 <div className="text-xl sm:text-2xl font-black text-white font-mono mt-0.5">
-                  {totalSchoolStudentsCount} <span className="text-xs font-bold text-emerald-100 uppercase">EM HỌC SINH</span>
+                  {totalSchoolStudentsCount} <span className="text-xs font-bold text-white uppercase">EM HỌC SINH</span>
                 </div>
                 {statsHomeroomClasses.length !== allSchoolHomeroomClasses.length && (
-                  <div className="text-[10px] font-bold text-teal-100 mt-0.5 flex items-center gap-1">
+                  <div className="text-[10px] font-bold text-white mt-0.5 flex items-center gap-1">
                     <span>⚡ Đang lọc:</span>
                     <span className="bg-white/20 px-1.5 py-0.2 rounded-md">{statsTotalStudents} em</span>
                   </div>
@@ -1761,9 +1761,9 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
             </div>
 
             {/* Card 3: Thống kê nhanh sĩ số từng lớp */}
-            <div className="bg-gradient-to-br from-amber-500 via-orange-500 to-rose-500 rounded-2xl p-3 sm:p-3.5 text-white shadow-sm shadow-orange-500/20 hover-zoom-card flex flex-col justify-between h-full space-y-2">
+            <div className="bg-gradient-to-br from-amber-600 via-orange-600 to-rose-500 rounded-2xl p-3 sm:p-3.5 text-white shadow-sm shadow-orange-500/20 hover-zoom-card flex flex-col justify-between h-full space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-[10px] font-black text-amber-100 uppercase tracking-wider block">CHI TIẾT SĨ SỐ TỪNG LỚP</span>
+                <span className="text-[10px] font-black text-white uppercase tracking-wider block">CHI TIẾT SĨ SỐ TỪNG LỚP</span>
                 <div className="p-1.5 rounded-lg bg-white/20 backdrop-blur-md text-white font-black shadow-xs shrink-0">
                   <BarChart3 className="w-4 h-4" />
                 </div>
@@ -1771,7 +1771,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
               <div className="flex items-center justify-between mt-auto pt-1">
                 <div>
                   <div className="text-lg font-black text-white mt-1">Bảng Tổng Hợp</div>
-                  <div className="text-[11px] text-amber-100 font-semibold">
+                  <div className="text-[11px] text-white font-semibold">
                     {allSchoolHomeroomClasses.length} lớp học đang hoạt động
                     {statsHomeroomClasses.length !== allSchoolHomeroomClasses.length && ` (Lọc: ${statsHomeroomClasses.length})`}
                   </div>
@@ -2828,12 +2828,12 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                   <div className="h-1.5 w-full rounded-full" style={{ backgroundColor: cls.color || '#3B82F6' }} />
 
                   {/* KHUNG ẢNH ĐẠI DIỆN LỚP CÂN ĐỐI CHUẨN TỈ LỆ BANNER 16:7 KHỚP 100% GÓC NHÌN CROP, VỪA VẶN MÀN HÌNH 1366x768 */}
-                  <div className="relative w-full aspect-[16/7] min-h-[110px] sm:min-h-[120px] max-h-[150px] rounded-xl md:rounded-2xl overflow-hidden bg-slate-900 shadow-xs group/photo border border-indigo-200">
+                  <div className="relative w-full aspect-[16/7] min-h-[110px] sm:min-h-[120px] max-h-[150px] rounded-xl md:rounded-2xl overflow-hidden bg-white shadow-xs group/photo border border-indigo-200">
                     {cls.avatar ? (
                       <img
-                        src={cls.avatar}
+                        src={cls.avatar} onError={(e) => handleAvatarImgError(e, undefined, cls?.name)}
                         alt={displayName}
-                        className="w-full h-full object-cover transition-transform duration-300 group-hover/photo:scale-102"
+                        className="w-full h-full object-cover object-center transition-transform duration-300 group-hover/photo:scale-102"
                         style={
                           (cls.avatarScale && cls.avatarScale !== 1) || (cls.avatarPosition && (cls.avatarPosition.x !== 0 || cls.avatarPosition.y !== 0))
                             ? {
@@ -2845,21 +2845,21 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                       />
                     ) : (
                       <div 
-                        className="w-full h-full flex flex-col items-center justify-center font-black text-white text-2xl shadow-xs"
+                        className="w-full h-full flex flex-col items-center justify-center font-black text-slate-800 text-2xl shadow-xs"
                         style={{ backgroundColor: cls.color || '#6366F1' }}
                       >
                         <span>{cls.name}</span>
-                        <span className="text-[10px] font-semibold text-white/80 mt-0.5 uppercase">CHƯA CÀI ĐẶT ẢNH LỚP</span>
+                        <span className="text-[10px] font-semibold text-slate-600 mt-0.5 uppercase">CHƯA CÀI ĐẶT ẢNH LỚP</span>
                       </div>
                     )}
 
                     {/* Gradient overlay for badges */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-indigo-950/70 via-transparent to-indigo-950/40 pointer-events-none" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-indigo-600/70 via-transparent to-indigo-600/40 pointer-events-none" />
 
                     {/* Top Badges */}
                     <div className="absolute top-2 left-2 right-2 flex items-center justify-between gap-1.5">
                       <span 
-                        className="px-2 py-0.5 rounded-full text-white text-[10px] sm:text-[11px] font-black shadow-sm flex items-center gap-1.5 backdrop-blur-md uppercase"
+                        className="px-2 py-0.5 rounded-full text-slate-800 text-[10px] sm:text-[11px] font-black shadow-sm flex items-center gap-1.5 backdrop-blur-md uppercase"
                         style={{ backgroundColor: cls.color ? `${cls.color}ee` : '#6366F1ee' }}
                       >
                         <span className="w-1.5 h-1.5 rounded-full bg-white ring-2 ring-white/40" />
@@ -2867,7 +2867,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                       </span>
 
                       {isSelected ? (
-                        <span className="px-2 py-0.5 rounded-full bg-emerald-500 text-white font-black text-[10px] sm:text-[11px] tracking-wide shadow-sm flex items-center gap-1 backdrop-blur-md uppercase">
+                        <span className="px-2 py-0.5 rounded-full bg-emerald-600 text-white font-black text-[10px] sm:text-[11px] tracking-wide shadow-sm flex items-center gap-1 backdrop-blur-md uppercase">
                           <Check className="w-3 h-3" />
                           <span>✓ ĐANG CHỌN</span>
                         </span>
@@ -2894,12 +2894,12 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                         className={`px-2 py-1 rounded-lg text-[10px] sm:text-[11px] font-black flex items-center gap-1.5 shadow-md backdrop-blur-md border transition-all hover-zoom-btn uppercase ${
                           isClassChecked
                             ? 'bg-amber-400 text-amber-950 border-amber-300 ring-2 ring-amber-300/60 font-black'
-                            : 'bg-indigo-950/85 hover:bg-indigo-900 text-white border-white/25'
+                            : 'bg-indigo-600/85 hover:bg-indigo-900 text-white border-white/25'
                         }`}
                         title="Tích chọn lớp này để thao tác đồng loạt (xóa, sửa)"
                       >
                         <div className={`w-3 h-3 rounded border flex items-center justify-center ${
-                          isClassChecked ? 'bg-amber-500 border-amber-600 text-white' : 'border-white/60 bg-white/20'
+                          isClassChecked ? 'bg-amber-600 border-amber-600 text-white' : 'border-white/60 bg-white/20'
                         }`}>
                           {isClassChecked && <Check className="w-2.5 h-2.5 stroke-[3]" />}
                         </div>
@@ -2911,7 +2911,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                       <div className="absolute bottom-2 right-2 flex items-center gap-1.5">
                         <button
                           onClick={() => setAvatarEditingClass(cls)}
-                          className="px-2 py-1 bg-indigo-950/85 hover:bg-indigo-950 text-white rounded-lg text-[10px] sm:text-[11px] font-black flex items-center gap-1.5 shadow-md backdrop-blur-md border border-white/25 transition-all hover-zoom-btn uppercase"
+                          className="px-2 py-1 bg-indigo-600/85 hover:bg-indigo-950 text-white rounded-lg text-[10px] sm:text-[11px] font-black flex items-center gap-1.5 shadow-md backdrop-blur-md border border-white/25 transition-all hover-zoom-btn uppercase"
                           title="Phóng to, thu nhỏ và căn chỉnh vị trí ảnh lớp học"
                         >
                           <ZoomIn className="w-3 h-3 text-amber-300" />
@@ -3054,7 +3054,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
           <div className="bg-gradient-to-r from-teal-50 via-emerald-50 to-indigo-50/70 rounded-2xl border border-emerald-200/70 p-2.5 px-3.5 shadow-2xs space-y-1.5 hover-zoom-card">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div className="flex items-center gap-2 flex-wrap">
-                <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-amber-400 to-yellow-500 text-white flex items-center justify-center shadow-xs">
+                <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-amber-600 to-yellow-600 text-white flex items-center justify-center shadow-xs">
                   <Sparkles className="w-3.5 h-3.5" />
                 </div>
                 <div>
@@ -3355,7 +3355,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
 
           {/* Sticky Floating Bulk Action Bar when Students are selected (Yêu cầu 3 & 4) */}
           {selectedStudentIds.length > 0 && (
-            <div className="sticky top-20 z-30 bg-gradient-to-r from-indigo-800 via-indigo-900 to-violet-900 text-white rounded-3xl p-3 md:p-4 shadow-2xl border-2 border-indigo-400/40 flex flex-wrap items-center justify-between gap-3 animate-in fade-in slide-in-from-top-2 backdrop-blur-md">
+            <div className="sticky top-20 z-30 bg-gradient-to-r from-indigo-500 via-indigo-500 to-violet-500 text-white rounded-3xl p-3 md:p-4 shadow-2xl border-2 border-indigo-400/40 flex flex-wrap items-center justify-between gap-3 animate-in fade-in slide-in-from-top-2 backdrop-blur-md">
               <div className="flex items-center gap-2.5">
                 <div className="w-9 h-9 rounded-2xl bg-amber-400 text-indigo-950 flex items-center justify-center font-black shadow-md">
                   <CheckSquare className="w-5 h-5" />
@@ -3364,7 +3364,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                   <span className="text-xs md:text-sm font-black text-amber-300 uppercase tracking-wide block">
                     ĐÃ CHỌN {selectedStudentIds.length} HỌC SINH
                   </span>
-                  <span className="text-[11px] text-indigo-200 font-medium">
+                  <span className="text-[11px] text-white font-medium">
                     Chọn các thao tác nhanh hàng loạt bên cạnh:
                   </span>
                 </div>
@@ -3380,7 +3380,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                       setBulkAwardReason('');
                       setIsBulkAwardOpen(true);
                     }}
-                    className="px-3.5 py-2 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white rounded-xl text-xs font-black flex items-center gap-1.5 shadow-md shadow-emerald-500/25 transition-all hover-zoom-btn uppercase"
+                    className="px-3.5 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-xl text-xs font-black flex items-center gap-1.5 shadow-md shadow-emerald-500/25 transition-all hover-zoom-btn uppercase"
                     title="Gán xu hoặc trừ xu đồng loạt cho các học sinh đã chọn"
                   >
                     <Coins className="w-3.5 h-3.5" />
@@ -3435,7 +3435,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
 
                 <button
                   onClick={() => setSelectedStudentIds([])}
-                  className="px-3 py-2 bg-white/10 hover:bg-white/20 text-indigo-100 rounded-xl text-xs font-bold transition-all hover-zoom-btn uppercase"
+                  className="px-3 py-2 bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs font-bold transition-all hover-zoom-btn uppercase"
                 >
                   ✕ BỎ CHỌN
                 </button>
@@ -3513,7 +3513,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                             className="w-3.5 h-3.5 rounded text-indigo-600 focus:ring-indigo-500 cursor-pointer"
                           />
                           <span className="px-2 py-0.5 rounded-full bg-gradient-to-r from-indigo-700 to-violet-700 text-amber-300 font-black text-xs shadow-xs ring-1 ring-indigo-500 shrink-0 flex items-center gap-1">
-                            <span className="text-[9.5px] text-indigo-200 font-bold uppercase tracking-tight">STT</span>
+                            <span className="text-[9.5px] text-white font-bold uppercase tracking-tight">STT</span>
                             <span className="font-mono">{student.stt}</span>
                           </span>
                           <span className={`px-2 py-0.5 rounded-full border font-black text-[9.5px] ${groupClass}`}>
@@ -3621,7 +3621,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
 
                           {canEditStudentAvatar && (
                             <>
-                              <div className="absolute inset-0 bg-indigo-950/65 text-white text-[9px] font-black flex flex-col items-center justify-center opacity-0 group-hover/avatar:opacity-100 transition-opacity">
+                              <div className="absolute inset-0 bg-indigo-600/65 text-white text-[9px] font-black flex flex-col items-center justify-center opacity-0 group-hover/avatar:opacity-100 transition-opacity">
                                 <Camera className="w-3.5 h-3.5 mb-0.5 text-amber-300" />
                                 <span>CHỈNH ẢNH</span>
                               </div>
@@ -3701,7 +3701,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                           <>
                             <button
                               onClick={() => handleQuickAdd(student)}
-                              className="w-7.5 h-7.5 rounded-lg bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-black text-xs flex items-center justify-center shadow-xs shadow-emerald-500/25 transition-all hover-zoom-btn shrink-0"
+                              className="w-7.5 h-7.5 rounded-lg bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-black text-xs flex items-center justify-center shadow-xs shadow-emerald-500/25 transition-all hover-zoom-btn shrink-0"
                               title={`Cộng xu khen thưởng cho học sinh theo môn ${activeEvalSubject}`}
                             >
                               <Plus className="w-3.5 h-3.5" />
@@ -3723,7 +3723,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                                 setCustomCoins(1);
                                 setSelectedSubjectForAward(activeEvalSubject || appliedSubjects[0]?.name || 'GHI CHUNG / NỀ NẾP');
                               }}
-                              className="w-8 h-8 sm:w-8.5 sm:h-8.5 rounded-xl bg-gradient-to-r from-amber-400 to-yellow-500 hover:from-amber-500 hover:to-yellow-600 text-white font-black text-xs sm:text-sm flex items-center justify-center shadow-xs shadow-amber-500/30 transition-all hover-zoom-btn shrink-0"
+                              className="w-8 h-8 sm:w-8.5 sm:h-8.5 rounded-xl bg-gradient-to-r from-amber-600 to-yellow-600 hover:from-amber-700 hover:to-yellow-700 text-white font-black text-xs sm:text-sm flex items-center justify-center shadow-xs shadow-amber-500/30 transition-all hover-zoom-btn shrink-0"
                               title="Tặng sao thi đua cho học sinh theo môn học"
                             >
                               <Star className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-white text-white" />
@@ -3801,7 +3801,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
       {/* MODAL: CẤU HÌNH NHẬN XU & MÔN HỌC ĐÁNH GIÁ (User Request: "CẤU HÌNH NHẬN XU") */}
       {/* ========================================================================= */}
       {isSubjectConfigOpen && canConfigureCoinSubjects && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-3 sm:p-4 animate-in fade-in duration-150">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-sky-900/20 backdrop-blur-xs p-3 sm:p-4 animate-in fade-in duration-150">
           <div className="bg-white rounded-3xl shadow-2xl border border-indigo-100 max-w-4xl lg:max-w-5xl w-full p-5 sm:p-6 space-y-4 max-h-[94vh] flex flex-col justify-between overflow-y-auto">
             {/* Header */}
             <div className="flex items-center justify-between pb-3 border-b border-indigo-100">
@@ -3889,7 +3889,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                     <button
                       type="button"
                       onClick={handleApplyOnlyCoreSubjects}
-                      className="px-2.5 py-1.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-[10px] font-black transition-all hover-zoom-btn uppercase shadow-xs cursor-pointer text-center"
+                      className="px-2.5 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-[10px] font-black transition-all hover-zoom-btn uppercase shadow-xs cursor-pointer text-center"
                       title="Chỉ áp dụng các môn GVCN thường dạy (Toán, TV, Đạo đức, TNXH, LS&ĐL, Khoa học...)"
                     >
                       ⚡ Mặc Định GVCN
@@ -4104,7 +4104,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
       {/* MODAL: ĐÁNH GIÁ THI ĐUA - CỘNG XU, TRỪ XU HOẶC TẶNG SAO THEO MÔN HỌC (Yêu cầu 3) */}
       {/* ========================================================================= */}
       {rewardingStudent && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-sky-900/20 backdrop-blur-xs p-4">
           <div className="bg-white rounded-3xl shadow-2xl border border-indigo-100 max-w-xl w-full p-6 space-y-4 animate-in fade-in zoom-in-95 duration-150 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <div className="flex items-center gap-3">
@@ -4140,7 +4140,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                 <img
                   src={rewardingStudent.avatar}
                   alt={rewardingStudent.name}
-                  className="w-12 h-12 rounded-xl object-cover bg-white ring-2 ring-indigo-200"
+                  className="w-12 h-12 rounded-xl object-cover object-center bg-white ring-2 ring-indigo-200"
                   onError={(e) => handleAvatarImgError(e, rewardingStudent.gender, rewardingStudent.name)}
                 />
                 <div>
@@ -4194,7 +4194,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                     setCustomCoins(1);
                   }}
                   className={`py-2.5 px-3 rounded-2xl text-xs font-black flex items-center justify-center gap-1.5 transition-all hover-zoom-btn ${
-                    rewardMode === 'sao' ? 'bg-amber-500 text-white shadow-md shadow-amber-500/25 scale-102' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                    rewardMode === 'sao' ? 'bg-amber-600 text-white shadow-md shadow-amber-500/25 scale-102' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                   }`}
                 >
                   <Star className="w-4 h-4 fill-current" />
@@ -4254,7 +4254,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                       onClick={() => setCustomCoins(num)}
                       className={`py-2.5 rounded-2xl text-xs font-black transition-all hover-zoom-btn ${
                         customCoins === num 
-                          ? 'bg-amber-500 text-white shadow-md shadow-amber-500/25' 
+                          ? 'bg-amber-600 text-white shadow-md shadow-amber-500/25' 
                           : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
                       }`}
                     >
@@ -4344,7 +4344,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                   rewardMode === 'minus'
                     ? 'bg-rose-600 hover:bg-rose-700 shadow-rose-600/20'
                     : rewardMode === 'sao'
-                    ? 'bg-amber-500 hover:bg-amber-600 shadow-amber-500/25'
+                    ? 'bg-amber-600 hover:bg-amber-700 shadow-amber-500/25'
                     : 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-600/20'
                 }`}
               >
@@ -4366,7 +4366,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
       {/* MODAL: TẠO LỚP HỌC MỚI CÓ ẢNH ĐẠI DIỆN LỚP (User Request 1) */}
       {/* ========================================================================= */}
       {isCreateClassOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-sky-900/20 backdrop-blur-xs p-4">
           <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 max-w-4xl w-full p-6 space-y-4 animate-in fade-in zoom-in-95 duration-150 max-h-[95vh] overflow-hidden flex flex-col">
             <div className="flex items-center justify-between pb-3 border-b border-indigo-100 shrink-0">
               <div>
@@ -4434,7 +4434,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                         <button
                           type="button"
                           onClick={() => setIsNewClassAvatarEditorOpen(true)}
-                          className="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-xs transition-all hover-zoom-btn"
+                          className="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-xs transition-all hover-zoom-btn"
                           title="Thu phóng và căn chỉnh góc nhìn ảnh lớp"
                         >
                           <ZoomIn className="w-3.5 h-3.5" />
@@ -4872,7 +4872,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
       {/* MODAL: XEM TRƯỚC VÀ XÁC NHẬN IMPORT HÀNG LOẠT LỚP HỌC TỪ EXCEL (User Request) */}
       {/* ========================================================================= */}
       {isClassesPreviewOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs p-3 sm:p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-sky-900/20 backdrop-blur-xs p-3 sm:p-4">
           <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 max-w-4xl w-full p-5 sm:p-6 space-y-4 animate-in fade-in zoom-in-95 duration-150 max-h-[92vh] flex flex-col">
             {/* Header */}
             <div className="flex items-center justify-between pb-3 border-b border-indigo-100 shrink-0">
@@ -4984,7 +4984,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
       {/* MODAL: CẤU HÌNH PHÂN HIỆU & ĐIỂM TRƯỜNG THUỘC PHÂN HIỆU (User Request) */}
       {/* ========================================================================= */}
       {isSchoolBranchModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-3 sm:p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-sky-900/20 backdrop-blur-xs p-3 sm:p-4">
           <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 max-w-3xl w-full p-5 sm:p-6 space-y-4 animate-in fade-in zoom-in-95 duration-150 max-h-[92vh] flex flex-col">
             {/* Header Modal */}
             <div className="flex items-center justify-between pb-3 border-b border-indigo-100 shrink-0">
@@ -5177,7 +5177,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
       {/* MODAL: SỬA LỚP HỌC - THIẾT KẾ THEO HƯỚNG NGANG GỌN GÀNG KHÔNG CUỘN (User Request) */}
       {/* ========================================================================= */}
       {editingClass && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs p-3 sm:p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-sky-900/20 backdrop-blur-xs p-3 sm:p-4">
           <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 max-w-4xl lg:max-w-5xl w-full p-5 sm:p-6 space-y-3.5 animate-in fade-in zoom-in-95 duration-150 max-h-[95vh] overflow-y-auto">
             {/* Header modal */}
             <div className="flex items-center justify-between pb-3 border-b border-indigo-100">
@@ -5231,9 +5231,9 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                     <div className="flex items-center gap-3">
                       <div className="relative shrink-0">
                         <img 
-                          src={editingClass.avatar || CLASS_AVATARS[0].url} 
+                          src={editingClass.avatar || CLASS_AVATARS[0].url} onError={(e) => handleAvatarImgError(e, undefined, editingClass?.name)} 
                           alt="Xem trước ảnh lớp" 
-                          className="w-14 h-14 rounded-2xl object-cover border-2 shadow-xs bg-white"
+                          className="w-14 h-14 rounded-2xl object-cover object-center border-2 shadow-xs bg-white"
                           style={{ borderColor: editingClass.color || '#6366F1' }}
                         />
                         <span 
@@ -5256,7 +5256,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                             <button
                               type="button"
                               onClick={() => setAvatarEditingClass(editingClass)}
-                              className="px-2.5 py-1 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-[11px] font-bold flex items-center gap-1 shadow-xs transition-all hover-zoom-btn"
+                              className="px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-[11px] font-bold flex items-center gap-1 shadow-xs transition-all hover-zoom-btn"
                               title="Thu phóng và căn chỉnh góc nhìn ảnh lớp"
                             >
                               <ZoomIn className="w-3 h-3" />
@@ -5766,7 +5766,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-2.5 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 text-white text-xs font-black rounded-xl shadow-md shadow-indigo-600/25 hover-zoom-btn flex items-center gap-1.5"
+                  className="px-6 py-2.5 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-800 hover:to-indigo-800 text-white text-xs font-black rounded-xl shadow-md shadow-indigo-600/25 hover-zoom-btn flex items-center gap-1.5"
                 >
                   <Check className="w-3.5 h-3.5" />
                   <span>Lưu Toàn Bộ Thông Tin</span>
@@ -5779,7 +5779,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
 
       {/* MODAL: XÓA LỚP */}
       {deleteConfirmClass && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-sky-900/20 backdrop-blur-xs p-4">
           <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 max-w-sm w-full p-6 space-y-4 animate-in fade-in zoom-in-95 duration-150">
             <div className="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center mx-auto shadow-2xs">
               <AlertTriangle className="w-6 h-6" />
@@ -5815,7 +5815,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
 
       {/* MODAL: XÓA HẾT TẤT CẢ CÁC LỚP HỌC (Yêu cầu 4) */}
       {isDeleteAllClassesOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-sky-900/20 backdrop-blur-xs p-4">
           <div className="bg-white rounded-3xl shadow-2xl border border-rose-200 max-w-md w-full p-6 space-y-4 animate-in fade-in zoom-in-95 duration-150">
             <div className="w-14 h-14 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center mx-auto shadow-xs">
               <AlertTriangle className="w-8 h-8 text-rose-600" />
@@ -5863,7 +5863,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
 
       {/* MODAL: EXCEL PREVIEW */}
       {isExcelPreviewOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-sky-900/20 backdrop-blur-xs p-4">
           <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 max-w-2xl w-full p-6 space-y-4 animate-in fade-in zoom-in-95 duration-150 max-h-[85vh] flex flex-col justify-between">
             <div>
               <div className="flex items-center justify-between pb-3 border-b border-slate-100">
@@ -5951,7 +5951,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
 
       {/* MODAL: XÓA CẢ DANH SÁCH LỚP */}
       {isClearAllConfirmOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-sky-900/20 backdrop-blur-xs p-4">
           <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 max-w-sm w-full p-6 space-y-4 animate-in fade-in zoom-in-95 duration-150">
             <div className="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center mx-auto shadow-2xs">
               <AlertTriangle className="w-6 h-6" />
@@ -5984,7 +5984,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
 
       {/* MODAL: XÓA CÁC HỌC SINH ĐÃ CHỌN */}
       {isBulkDeleteConfirmOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-sky-900/20 backdrop-blur-xs p-4">
           <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 max-w-sm w-full p-6 space-y-4 animate-in fade-in zoom-in-95 duration-150">
             <div className="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center mx-auto shadow-2xs">
               <Trash2 className="w-6 h-6" />
@@ -6017,7 +6017,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
 
       {/* MODAL: XÓA ĐỒNG LOẠT CÁC LỚP ĐÃ CHỌN (Yêu cầu 1) */}
       {isBulkClassDeleteOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-sky-900/20 backdrop-blur-xs p-4">
           <div className="bg-white rounded-3xl shadow-2xl border border-rose-200 max-w-md w-full p-6 space-y-4 animate-in fade-in zoom-in-95 duration-150">
             <div className="w-14 h-14 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center mx-auto shadow-sm">
               <Trash2 className="w-7 h-7" />
@@ -6067,7 +6067,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
 
       {/* MODAL: SỬA THÔNG TIN ĐỒNG LOẠT CÁC LỚP ĐÃ CHỌN (Yêu cầu 1) */}
       {isBulkClassEditOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-sky-900/20 backdrop-blur-xs p-4">
           <div className="bg-white rounded-3xl shadow-2xl border border-indigo-200 max-w-lg w-full p-6 space-y-4 animate-in fade-in zoom-in-95 duration-150 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <div className="flex items-center gap-2.5">
@@ -6225,7 +6225,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
 
       {/* MODAL: THÊM HỌC SINH */}
       {isSingleAddOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-sky-900/20 backdrop-blur-xs p-4">
           <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 max-w-md w-full p-5 sm:p-6 space-y-4 animate-in fade-in zoom-in-95 duration-150 max-h-[92vh] overflow-y-auto">
             <div className="flex items-center justify-between pb-2 border-b border-indigo-100">
               <div>
@@ -6364,7 +6364,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
 
       {/* MODAL: SỬA HỌC SINH (Layout 2 cột ngang hiển thị đầy đủ trên màn hình, không phải cuộn chuột) */}
       {editingStudent && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-3 sm:p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-sky-900/20 backdrop-blur-xs p-3 sm:p-4">
           <div className="bg-white rounded-3xl shadow-2xl border border-indigo-100 max-w-3xl lg:max-w-4xl w-full p-5 sm:p-6 space-y-3.5 animate-in fade-in zoom-in-95 duration-150 max-h-[95vh] flex flex-col justify-between overflow-y-auto">
             {/* Header */}
             <div className="flex items-center justify-between pb-2.5 border-b border-indigo-100">
@@ -6421,7 +6421,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                       <img
                         src={editingStudent.avatar}
                         alt={editingStudent.name}
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-cover object-center"
                         referrerPolicy="no-referrer"
                         onError={(e) => handleAvatarImgError(e, editingStudent.gender, editingStudent.name)}
                       />
@@ -6650,7 +6650,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
       {/* MODAL: CHỈ ĐỊNH CHỨC VỤ CHO 1 HỌC SINH (TỐI ĐA 3 CHỨC VỤ) */}
       {/* ========================================================================= */}
       {quickRoleStudent && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 animate-in fade-in duration-150">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-sky-900/20 backdrop-blur-xs p-4 animate-in fade-in duration-150">
           <div className="bg-white rounded-3xl shadow-2xl border border-indigo-100 max-w-lg w-full p-6 space-y-4 max-h-[90vh] flex flex-col justify-between">
             <div>
               <div className="flex items-center justify-between pb-3 border-b border-indigo-100">
@@ -6806,7 +6806,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
       {/* MODAL: GÁN XU HÀNG LOẠT CHO NHIỀU HỌC SINH (Yêu cầu 3) */}
       {/* ========================================================================= */}
       {isBulkAwardOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 animate-in fade-in duration-150">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-sky-900/20 backdrop-blur-xs p-4 animate-in fade-in duration-150">
           <div className="bg-white rounded-3xl shadow-2xl border border-indigo-100 max-w-xl w-full p-6 space-y-4 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between pb-3 border-b border-indigo-100">
               <div className="flex items-center gap-2.5">
@@ -6887,7 +6887,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                     setBulkAwardCoins(1);
                   }}
                   className={`py-2.5 px-3 rounded-2xl text-xs font-black flex items-center justify-center gap-1.5 transition-all hover-zoom-btn ${
-                    bulkAwardMode === 'sao' ? 'bg-amber-500 text-white shadow-md shadow-amber-500/25 scale-102' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                    bulkAwardMode === 'sao' ? 'bg-amber-600 text-white shadow-md shadow-amber-500/25 scale-102' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                   }`}
                 >
                   <Star className="w-4 h-4 fill-current" />
@@ -6946,7 +6946,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                       type="button"
                       onClick={() => setBulkAwardCoins(num)}
                       className={`py-2.5 rounded-2xl text-xs font-black transition-all hover-zoom-btn ${
-                        bulkAwardCoins === num ? 'bg-amber-500 text-white shadow-md shadow-amber-500/25' : 'bg-slate-100 text-slate-700'
+                        bulkAwardCoins === num ? 'bg-amber-600 text-white shadow-md shadow-amber-500/25' : 'bg-slate-100 text-slate-700'
                       }`}
                     >
                       {num === 1 ? '⭐ 1 Sao (+5 xu)' : num === 2 ? '⭐⭐ 2 Sao (+10 xu)' : '⭐⭐⭐ 3 Sao (+15 xu)'}
@@ -6999,7 +6999,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                 type="button"
                 onClick={handleConfirmBulkAward}
                 className={`px-5 py-2.5 text-white text-xs font-black rounded-xl shadow-md transition-all hover-zoom-btn flex items-center gap-1.5 ${
-                  bulkAwardMode === 'minus' ? 'bg-rose-600 hover:bg-rose-700 shadow-rose-600/20' : bulkAwardMode === 'sao' ? 'bg-amber-500 hover:bg-amber-600 shadow-amber-500/25' : 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-600/20'
+                  bulkAwardMode === 'minus' ? 'bg-rose-600 hover:bg-rose-700 shadow-rose-600/20' : bulkAwardMode === 'sao' ? 'bg-amber-600 hover:bg-amber-700 shadow-amber-500/25' : 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-600/20'
                 }`}
               >
                 {bulkAwardMode === 'minus' ? <Minus className="w-4 h-4" /> : bulkAwardMode === 'sao' ? <Star className="w-4 h-4 fill-white" /> : <Plus className="w-4 h-4" />}
@@ -7020,7 +7020,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
       {/* MODAL: CHỈ ĐỊNH CHỨC VỤ HÀNG LOẠT (Tối đa 3 chức vụ) */}
       {/* ========================================================================= */}
       {isBulkRoleModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 animate-in fade-in duration-150">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-sky-900/20 backdrop-blur-xs p-4 animate-in fade-in duration-150">
           <div className="bg-white rounded-3xl shadow-2xl border border-indigo-100 max-w-lg w-full p-6 space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-indigo-100">
               <div className="flex items-center gap-2.5">
@@ -7174,7 +7174,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
       {/* MODAL: ĐẶT VỀ 0 XU CHO CÁC HỌC SINH ĐÃ CHỌN (Yêu cầu 3) */}
       {/* ========================================================================= */}
       {isBulkResetCoinsOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 animate-in fade-in duration-150">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-sky-900/20 backdrop-blur-xs p-4 animate-in fade-in duration-150">
           <div className="bg-white rounded-3xl shadow-2xl border border-amber-200 max-w-sm w-full p-6 space-y-4">
             <div className="w-12 h-12 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center mx-auto shadow-xs">
               <RotateCcw className="w-6 h-6 text-amber-600" />
@@ -7199,7 +7199,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
               <button
                 type="button"
                 onClick={handleConfirmBulkResetCoins}
-                className="flex-1 py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-black text-xs rounded-xl shadow-md shadow-amber-500/20 hover-zoom-btn flex items-center justify-center gap-1.5"
+                className="flex-1 py-2.5 bg-amber-600 hover:bg-amber-700 text-white font-black text-xs rounded-xl shadow-md shadow-amber-500/20 hover-zoom-btn flex items-center justify-center gap-1.5"
               >
                 <RotateCcw className="w-4 h-4" />
                 <span>Đặt Về 0 Xu</span>
@@ -7213,7 +7213,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
       {/* MODAL: RESET TOÀN BỘ XU CẢ LỚP VỀ 0 (Yêu cầu 3) */}
       {/* ========================================================================= */}
       {isClassResetCoinsOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 animate-in fade-in duration-150">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-sky-900/20 backdrop-blur-xs p-4 animate-in fade-in duration-150">
           <div className="bg-white rounded-3xl shadow-2xl border border-amber-200 max-w-sm w-full p-6 space-y-4">
             <div className="w-12 h-12 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center mx-auto shadow-xs">
               <RotateCcw className="w-6 h-6 text-amber-600" />
@@ -7238,7 +7238,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
               <button
                 type="button"
                 onClick={handleConfirmClassResetCoins}
-                className="flex-1 py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-black text-xs rounded-xl shadow-md shadow-amber-500/20 hover-zoom-btn flex items-center justify-center gap-1.5"
+                className="flex-1 py-2.5 bg-amber-600 hover:bg-amber-700 text-white font-black text-xs rounded-xl shadow-md shadow-amber-500/20 hover-zoom-btn flex items-center justify-center gap-1.5"
               >
                 <RotateCcw className="w-4 h-4" />
                 <span>Reset Cả Lớp Về 0</span>
@@ -7404,11 +7404,11 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
 
       {/* MODAL: Bảng Tổng Hợp Chi Tiết Sĩ Số Từng Lớp */}
       {isClassStatsModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-sky-900/20 backdrop-blur-xs p-4">
           <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 max-w-3xl w-full p-6 animate-in fade-in zoom-in-95 duration-150 max-h-[90vh] flex flex-col overflow-hidden">
             <div className="flex items-center justify-between pb-4 border-b border-slate-100 shrink-0">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-500 text-white flex items-center justify-center shadow-sm">
+                <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-amber-600 to-orange-600 text-white flex items-center justify-center shadow-sm">
                   <BarChart3 className="w-5 h-5" />
                 </div>
                 <div>

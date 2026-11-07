@@ -4,7 +4,7 @@ import {
   Maximize2, Minimize2, 
   Sparkles, Award, ShieldAlert,
   ChevronDown, School, ShieldCheck, Database, LogIn, LogOut, Users,
-  Menu, Monitor, Cloud, HardDrive, KeyRound
+  Menu, Monitor, Cloud, HardDrive, KeyRound, MoreHorizontal
 } from 'lucide-react';
 import { googleDriveService } from '../../services/googleDriveService';
 import { playNoiseAlertSound } from '../../utils/audio';
@@ -138,6 +138,9 @@ export const TopBar: React.FC<TopBarProps> = ({
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isClassDropdownOpen, setIsClassDropdownOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
+  // Kiểu "chip" hiện đại cho các tiện ích ở thanh trên cùng
+  const chipBase = 'inline-flex items-center gap-1.5 h-8 px-2.5 rounded-xl text-[11px] font-bold border transition-colors shrink-0 cursor-pointer';
   const [currentTimeStr, setCurrentTimeStr] = useState('13:13');
   const [driveSyncState, setDriveSyncState] = useState<{ status: string; lastSyncTime?: string }>({ 
     status: googleDriveService.getConfig().syncStatus || 'idle',
@@ -233,10 +236,26 @@ export const TopBar: React.FC<TopBarProps> = ({
     }
   };
 
+
+  const driveLabel =
+    driveSyncState.status === 'syncing' ? 'Đang đẩy Drive…' :
+    driveSyncState.status === 'pending' ? 'Chờ đẩy Drive' :
+    driveSyncState.status === 'success' ? `Drive (${driveSyncState.lastSyncTime || 'OK'})` :
+    driveSyncState.status === 'error' ? 'Lỗi Drive' : 'Google Drive';
+  const driveChipClass =
+    driveSyncState.status === 'error' ? 'bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100' :
+    (driveSyncState.status === 'syncing' || driveSyncState.status === 'pending') ? 'bg-amber-50 text-amber-800 border-amber-200 hover:bg-amber-100' :
+    'bg-cyan-50 text-cyan-800 border-cyan-200 hover:bg-cyan-100';
+  const adminLabel = isSuperAdmin ? 'Quản trị hệ thống' : (isSchoolAdminAccount ? 'Quản trị trường' : 'Quản trị Admin');
+  const openAdmin = () => {
+    if (canManageAccounts) setIsAccountManagerOpen(true);
+    else setIsAuthModalOpen(true);
+  };
+
   return (
     <>
       {demoWarningMessage && (
-        <div className="bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 text-white text-[11px] md:text-xs font-black py-1 px-3.5 flex items-center justify-between shadow-xs sticky top-0 z-31 animate-in slide-in-from-top duration-300">
+        <div className="bg-gradient-to-r from-amber-600 via-orange-600 to-rose-500 text-white text-[11px] md:text-xs font-black py-1 px-3.5 flex items-center justify-between shadow-xs sticky top-0 z-31 animate-in slide-in-from-top duration-300">
           <div className="flex items-center gap-2 truncate">
             <span className="animate-bounce">⚠️</span>
             <span className="truncate">{demoWarningMessage}</span>
@@ -252,7 +271,7 @@ export const TopBar: React.FC<TopBarProps> = ({
 
       {/* ⚠️ Cảnh Báo Chế Độ Dùng Thử (Trial Mode) - Chuẩn Ảnh 3 & 8 */}
       {!isCdKeyActivated && (
-        <div className="bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 text-white text-[11px] md:text-xs font-black py-1 px-3.5 flex items-center justify-between shadow-xs sticky top-0 z-31 animate-in slide-in-from-top duration-300">
+        <div className="bg-gradient-to-r from-orange-600 via-orange-700 to-red-600 text-white text-[11px] md:text-xs font-black py-1 px-3.5 flex items-center justify-between shadow-xs sticky top-0 z-31 animate-in slide-in-from-top duration-300">
           <div className="flex items-center gap-2 truncate">
             <span className="animate-bounce">⚠️</span>
             <span className="truncate">
@@ -282,8 +301,8 @@ export const TopBar: React.FC<TopBarProps> = ({
           <Menu className="w-5 h-5 text-slate-700" />
         </button>
 
-        <div className="flex flex-col justify-center min-w-0 flex-1">
-          <h2 className="text-xs sm:text-sm md:text-base font-black text-slate-900 tracking-tight leading-tight truncate">
+        <div className="flex flex-col justify-center min-w-[96px] flex-1">
+          <h2 className="text-sm md:text-base font-black text-slate-900 tracking-tight leading-tight truncate">
             <span className="sm:hidden">{viewInfo.shortTitle || viewInfo.title}</span>
             <span className="hidden sm:inline">{viewInfo.title}</span>
             {currentView !== 'dashboard' && currentView !== 'classes' && (
@@ -304,101 +323,80 @@ export const TopBar: React.FC<TopBarProps> = ({
         </div>
       </div>
 
-      {/* Zone 2: Status Pill, Role Switcher, Class Selector, Profile & Quick Actions */}
-      <div className="flex items-center gap-1 sm:gap-1.5 shrink-0 max-w-full">
-        {/* Nhóm các nút chức năng 3D công nghệ - Tự động co giãn mượt mà */}
-        <div className="flex items-center gap-1 sm:gap-1.5 overflow-x-auto no-scrollbar py-0.5">
-
-
-          {/* ☁️ Google Drive 1-Click Cloud Sync Button 3D */}
+      {/* Zone 2: tiện ích dạng "chip" gọn gàng (máy tính) + menu ⋯ (màn hình nhỏ), chọn lớp, tài khoản */}
+      <div className="flex items-center gap-1.5 shrink-0 max-w-full">
+        <div className="hidden lg:flex items-center gap-1.5">
+          {/* ☁️ Google Drive */}
           <button
             onClick={() => setIsGoogleDriveModalOpen(true)}
-            className={`btn-3d btn-3d-sm ${
-              driveSyncState.status === 'success'
-                ? 'btn-3d-cyan'
-                : driveSyncState.status === 'syncing' || driveSyncState.status === 'pending'
-                ? 'btn-3d-amber'
-                : driveSyncState.status === 'error'
-                ? 'btn-3d-rose'
-                : 'btn-3d-cyan'
-            } flex items-center gap-1 shrink-0`}
+            className={`${chipBase} ${driveChipClass}`}
             title="Cầu nối Google Drive: Tự động sao lưu dữ liệu lớp và liên thông BGH"
           >
-            <Cloud className={`w-3.5 h-3.5 ${
-              driveSyncState.status === 'syncing' ? 'animate-bounce text-yellow-300' : 'text-white'
-            }`} />
-            <span className="font-bold">
-              {driveSyncState.status === 'syncing' ? 'ĐANG ĐẨY...' :
-               driveSyncState.status === 'pending' ? 'CHỜ ĐẨY' :
-               driveSyncState.status === 'success' ? `DRIVE (${driveSyncState.lastSyncTime || 'OK'})` :
-               driveSyncState.status === 'error' ? 'LỖI DRIVE' : 'GOOGLE DRIVE'}
-            </span>
+            <Cloud className={`w-4 h-4 ${driveSyncState.status === 'syncing' ? 'animate-bounce' : ''}`} />
+            <span className="hidden xl:inline">{driveLabel}</span>
           </button>
 
-          {/* 💾 Nơi Lưu Data (Ổ D/E) Button 3D */}
+          {/* 💾 Nơi lưu Data (Ổ D/E) */}
           <button
             onClick={() => setIsDataStorageModalOpen(true)}
-            className="btn-3d btn-3d-sm btn-3d-blue flex items-center gap-1 shrink-0"
+            className={`${chipBase} bg-blue-50 text-blue-800 border-blue-200 hover:bg-blue-100`}
             title="Nơi lưu trữ DATA an toàn trên Ổ D / E hoặc USB"
           >
-            <HardDrive className="w-3.5 h-3.5 text-sky-200" />
-            <span className="font-bold">Ổ D / E AN TOÀN</span>
+            <HardDrive className="w-4 h-4" />
+            <span className="hidden 2xl:inline">Ổ D / E an toàn</span>
           </button>
 
-          {/* 🔑 Bản Quyền CDKEY Button 3D */}
+          {/* 🔑 Bản quyền CDKEY */}
           <button
             onClick={() => setIsCdKeyModalOpen(true)}
-            className={`btn-3d btn-3d-sm ${
-              isCdKeyActivated 
-                ? 'btn-3d-light text-amber-900 border-amber-300' 
-                : 'btn-3d-amber animate-pulse'
-            } flex items-center gap-1 shrink-0`}
+            className={`${chipBase} ${isCdKeyActivated ? 'bg-emerald-50 text-emerald-800 border-emerald-200 hover:bg-emerald-100' : 'bg-amber-100 text-amber-900 border-amber-300 hover:bg-amber-200'}`}
             title="Kích hoạt mã CDKEY bản quyền phần mềm (LOP-HOC-HANH-PHUC)"
           >
-            <KeyRound className="w-3.5 h-3.5" />
-            <span className="font-bold">{isCdKeyActivated ? 'BẢN QUYỀN PRO' : 'KÍCH HOẠT CDKEY'}</span>
+            <KeyRound className="w-4 h-4" />
+            <span className="hidden xl:inline">{isCdKeyActivated ? 'Bản quyền PRO' : 'Kích hoạt CDKEY'}</span>
           </button>
 
-          {/* Nút Đăng Ký Sử Dụng 3D */}
+          {/* Đăng ký sử dụng */}
           <button
             onClick={() => setIsRegistrationModalOpen(true)}
-            className="btn-3d btn-3d-sm btn-3d-rose flex items-center gap-1 shrink-0"
+            className={`${chipBase} bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100`}
             title="Đăng ký sử dụng bản quyền phần mềm Lớp học Hạnh phúc"
           >
-            <Sparkles className="w-3.5 h-3.5 text-yellow-300 animate-pulse" />
-            <span className="hidden xl:inline">ĐĂNG KÝ SỬ DỤNG</span>
-            <span className="xl:hidden">ĐĂNG KÝ</span>
+            <Sparkles className="w-4 h-4" />
+            <span className="hidden 2xl:inline">Đăng ký sử dụng</span>
           </button>
 
-          {/* Nút Quản Trị Admin / Nhà Trường luôn hiển thị dễ dàng truy cập */}
+          {/* Quản trị */}
           <button
-            onClick={() => {
-              if (canManageAccounts) {
-                setIsAccountManagerOpen(true);
-              } else {
-                // Nếu chưa ở vai trò admin, mở bảng chuyển đổi vai trò hoặc đăng nhập admin
-                setIsAuthModalOpen(true);
-              }
-            }}
-            className="btn-3d btn-3d-sm btn-3d-indigo inline-flex items-center gap-1.5 shrink-0 shadow-sm"
+            onClick={openAdmin}
+            className={`${chipBase} bg-indigo-600 text-white border-indigo-600 hover:bg-indigo-700`}
             title="Quản trị tài khoản & Cơ sở dữ liệu trường học (Admin / Quản trị nhà trường / BGH)"
           >
-            <ShieldCheck className="w-3.5 h-3.5 text-sky-200 animate-pulse" />
-            <span className="font-black text-[11px] tracking-tight">
-              {isSuperAdmin ? 'QUẢN TRỊ HỆ THỐNG' : (isSchoolAdminAccount ? 'QUẢN TRỊ TRƯỜNG' : 'QUẢN TRỊ ADMIN')}
-            </span>
+            <ShieldCheck className="w-4 h-4" />
+            <span className="hidden xl:inline">{adminLabel}</span>
           </button>
 
-          {isBgh && (
-            <span 
-              className="btn-3d btn-3d-sm btn-3d-amber inline-flex items-center gap-1 shrink-0 cursor-default"
-              title="Tài khoản Ban Giám Hiệu (Toàn quyền giám sát & xem dữ liệu)"
-            >
-              <span>🏛️</span>
-              <span className="hidden 2xl:inline">BAN GIÁM HIỆU</span>
-              <span className="2xl:hidden">BGH</span>
-            </span>
-          )}
+          {/* Trợ lý AI */}
+          <button
+            onClick={() => onNavigate('ai')}
+            className={`${chipBase} bg-violet-50 text-violet-700 border-violet-200 hover:bg-violet-100`}
+            title="Mở Trợ lý Sư phạm Trí tuệ Nhân tạo AI"
+          >
+            <Sparkles className="w-4 h-4" />
+            <span className="hidden 2xl:inline">Trợ lý AI</span>
+          </button>
+        </div>
+
+        {isBgh && (
+          <span
+            className={`${chipBase} bg-amber-100 text-amber-900 border-amber-300 cursor-default hidden sm:inline-flex`}
+            title="Tài khoản Ban Giám Hiệu (Toàn quyền giám sát & xem dữ liệu)"
+          >
+            <span>🏛️</span>
+            <span className="hidden 2xl:inline">Ban giám hiệu</span>
+            <span className="2xl:hidden">BGH</span>
+          </span>
+        )}
 
           {/* Class Selector Dropdown */}
           {!isManagementAdmin && (
@@ -411,7 +409,7 @@ export const TopBar: React.FC<TopBarProps> = ({
                   <School className="w-3 h-3 text-white" />
                 </div>
                 <span>{activeClass?.name}</span>
-                <span className="text-[9.5px] text-sky-200 font-bold hidden 2xl:inline uppercase">
+                <span className="text-[9.5px] text-white font-bold hidden 2xl:inline uppercase">
                   {activeClass?.grade} • {currentClassStudents.length} HS
                 </span>
                 <ChevronDown className="w-3 h-3 text-sky-200" />
@@ -467,33 +465,60 @@ export const TopBar: React.FC<TopBarProps> = ({
             </div>
           )}
 
-          {/* Quick AI Assistant Button 3D */}
-          <button
-            onClick={() => onNavigate('ai')}
-            className="btn-3d btn-3d-sm btn-3d-sky hidden sm:inline-flex items-center gap-1 shrink-0"
-            title="Mở Trợ lý Sư phạm Trí tuệ Nhân tạo AI"
-          >
-            <Sparkles className="w-3.5 h-3.5 text-yellow-200 animate-pulse" />
-            <span className="hidden xl:inline">TRỢ LÝ AI</span>
-          </button>
 
-          {/* Quick Alarm 3D */}
-          <button
-            onClick={handleQuickAlarm}
-            className="btn-3d btn-3d-sm btn-3d-rose p-1.5 shrink-0"
-            title="Phát chuông ổn định trật tự lớp học ngay lập tức"
-          >
-            <ShieldAlert className="w-3.5 h-3.5 animate-pulse" />
-          </button>
+        {/* Chuông trật tự */}
+        <button
+          onClick={handleQuickAlarm}
+          className="w-8 h-8 rounded-xl bg-rose-500 hover:bg-rose-600 text-white flex items-center justify-center shrink-0 shadow-sm"
+          title="Phát chuông ổn định trật tự lớp học ngay lập tức"
+        >
+          <ShieldAlert className="w-4 h-4" />
+        </button>
 
-          {/* Fullscreen Toggle 3D */}
+        {/* Toàn màn hình */}
+        <button
+          onClick={toggleFullscreen}
+          className="hidden lg:flex w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 items-center justify-center shrink-0"
+          title={isFullscreen ? 'Thu nhỏ cửa sổ' : 'Toàn màn hình giảng dạy'}
+        >
+          {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+        </button>
+
+        {/* ⋯ Menu tiện ích cho màn hình nhỏ (điện thoại / máy tính bảng) */}
+        <div className="relative lg:hidden shrink-0">
           <button
-            onClick={toggleFullscreen}
-            className="btn-3d btn-3d-sm btn-3d-light hidden sm:inline-flex items-center justify-center p-1.5 shrink-0"
-            title={isFullscreen ? 'Thu nhỏ cửa sổ' : 'Toàn màn hình giảng dạy'}
+            onClick={() => setIsMoreMenuOpen(v => !v)}
+            className="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center"
+            title="Tiện ích: Google Drive, Ổ D/E, CDKEY, Đăng ký, Quản trị, Trợ lý AI"
+            aria-label="Mở menu tiện ích"
           >
-            {isFullscreen ? <Minimize2 className="w-3.5 h-3.5 text-slate-700" /> : <Maximize2 className="w-3.5 h-3.5 text-slate-700" />}
+            <MoreHorizontal className="w-5 h-5" />
           </button>
+          {isMoreMenuOpen && (
+            <>
+              <div className="fixed inset-0 z-40" onClick={() => setIsMoreMenuOpen(false)} />
+              <div className="absolute right-0 top-full mt-2 w-64 bg-white rounded-2xl shadow-xl border border-slate-200 p-1.5 z-50 animate-in fade-in zoom-in-95 duration-100">
+                {[
+                  { icon: <Cloud className="w-4 h-4" />, label: driveLabel, cls: 'text-cyan-800 bg-cyan-50', onClick: () => setIsGoogleDriveModalOpen(true) },
+                  { icon: <HardDrive className="w-4 h-4" />, label: 'Nơi lưu dữ liệu (Ổ D / E, USB)', cls: 'text-blue-800 bg-blue-50', onClick: () => setIsDataStorageModalOpen(true) },
+                  { icon: <KeyRound className="w-4 h-4" />, label: isCdKeyActivated ? 'Bản quyền PRO' : 'Kích hoạt CDKEY', cls: 'text-amber-900 bg-amber-50', onClick: () => setIsCdKeyModalOpen(true) },
+                  { icon: <Sparkles className="w-4 h-4" />, label: 'Đăng ký sử dụng', cls: 'text-rose-700 bg-rose-50', onClick: () => setIsRegistrationModalOpen(true) },
+                  { icon: <ShieldCheck className="w-4 h-4" />, label: adminLabel, cls: 'text-indigo-700 bg-indigo-50', onClick: openAdmin },
+                  { icon: <Sparkles className="w-4 h-4" />, label: 'Trợ lý AI', cls: 'text-violet-700 bg-violet-50', onClick: () => onNavigate('ai') },
+                  { icon: isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />, label: isFullscreen ? 'Thu nhỏ cửa sổ' : 'Toàn màn hình', cls: 'text-slate-700 bg-slate-100', onClick: toggleFullscreen }
+                ].map(item => (
+                  <button
+                    key={item.label}
+                    onClick={() => { setIsMoreMenuOpen(false); item.onClick(); }}
+                    className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl hover:bg-slate-50 text-left text-xs font-bold text-slate-800"
+                  >
+                    <span className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${item.cls}`}>{item.icon}</span>
+                    <span>{item.label}</span>
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
         </div>
 
         {/* Teacher / User Account Pill with Dropdown - Cố định an toàn không bao giờ bị đè tràn */}

@@ -156,7 +156,7 @@ export const DesktopRoleSetupModal: React.FC<DesktopRoleSetupModalProps> = ({ is
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/60 backdrop-blur-sm animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-sky-900/20 backdrop-blur-xs animate-in fade-in duration-200">
       <div 
         className="w-full max-w-2xl bg-white rounded-3xl shadow-2xl border-2 border-sky-200 overflow-hidden flex flex-col max-h-[92vh] animate-in zoom-in-95 duration-200 select-none"
         onClick={(e) => e.stopPropagation()}
@@ -176,14 +176,14 @@ export const DesktopRoleSetupModal: React.FC<DesktopRoleSetupModalProps> = ({ is
                   CSDL_LHHP.exe
                 </span>
               </div>
-              <p className="text-xs text-sky-100 font-medium mt-0.5">
+              <p className="text-xs text-white font-medium mt-0.5">
                 Cấu hình phân quyền và định danh file dữ liệu cho máy tính này
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-xl text-white/80 hover:text-white hover:bg-white/20 transition-colors"
+            className="p-1.5 rounded-xl text-white/90 hover:text-white hover:bg-white/20 transition-colors"
           >
             <X className="w-5 h-5" />
           </button>

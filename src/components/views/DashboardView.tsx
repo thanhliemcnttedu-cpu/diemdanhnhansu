@@ -253,7 +253,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             {isManagementAccount ? (
               <button
                 onClick={() => onNavigate('reports')}
-                className="px-3.5 py-1.5 bg-gradient-to-r from-indigo-900 to-indigo-700 hover:from-indigo-950 hover:to-indigo-800 text-white rounded-xl font-black text-xs flex items-center justify-center gap-1.5 shadow-sm shadow-indigo-900/30 hover-zoom-btn uppercase cursor-pointer"
+                className="px-3.5 py-1.5 bg-gradient-to-r from-indigo-500 to-indigo-700 hover:from-indigo-800 hover:to-indigo-800 text-white rounded-xl font-black text-xs flex items-center justify-center gap-1.5 shadow-sm shadow-indigo-900/30 hover-zoom-btn uppercase cursor-pointer"
               >
                 <ShieldCheck className="w-4 h-4 text-amber-300" />
                 <span>BÁO CÁO REALTIME</span>
@@ -278,7 +278,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
                 <button
                   onClick={() => onNavigate('wheel')}
-                  className="px-2.5 py-1.5 sm:py-1 bg-sky-500 hover:bg-sky-600 text-white rounded-lg font-black text-[10.5px] flex items-center justify-center gap-1 shadow-2xs hover-zoom-btn uppercase cursor-pointer"
+                  className="px-2.5 py-1.5 sm:py-1 bg-sky-600 hover:bg-sky-700 text-white rounded-lg font-black text-[10.5px] flex items-center justify-center gap-1 shadow-2xs hover-zoom-btn uppercase cursor-pointer"
                 >
                   <Sparkles className="w-3 h-3" />
                   <span>VÒNG QUAY</span>
@@ -318,9 +318,9 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             >
               {loadingQuote ? 'ĐANG TẢI...' : 'LẤY CẢM HỨNG AI'}
             </button>
-            <span className="text-slate-300 hidden md:inline">|</span>
+            <span className="text-slate-500 hidden md:inline">|</span>
             <span className="text-slate-600 hidden md:inline font-bold uppercase">
-              TÁC GIẢ: <strong className="text-indigo-800 font-black">{APP_AUTHOR_INFO.name}</strong> • ZALO: {APP_AUTHOR_INFO.zalo}
+              TÁC GIẢ: <strong className="text-indigo-800 font-black">{APP_AUTHOR_INFO.name}</strong> • ZALO: <a href={APP_AUTHOR_INFO.zaloUrl} className="text-blue-700 underline decoration-dotted underline-offset-2 hover:text-blue-800" title="Bấm để hiện mã QR Zalo">{APP_AUTHOR_INFO.zalo}</a>
             </span>
           </div>
         </div>
@@ -375,91 +375,82 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         <DriveAttendanceStatsPanel />
       )}
 
-      {/* 3. 4 Metric KPI Cards - Compact layout */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-2.5">
-        {/* Card 1: Sĩ số */}
-        <div 
-          onClick={() => onNavigate(isManagementAccount ? 'classes' : 'students')}
-          className="bg-white rounded-xl p-2.5 px-3 border border-slate-200/80 shadow-2xs hover-zoom-card cursor-pointer group flex flex-col justify-between"
-        >
-          <div className="flex items-center justify-between mb-1">
-            <div className="w-7 h-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center font-black group-hover:bg-blue-600 group-hover:text-white transition-colors">
-              <Users className="w-3.5 h-3.5" />
+      {/* 3. 4 thẻ số liệu dạng thẻ màu hiện đại (số to, chữ trắng rõ, có thanh tiến độ) */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
+        {[
+          {
+            key: 'students',
+            onClick: () => onNavigate(isManagementAccount ? 'classes' : 'students'),
+            gradient: 'from-sky-600 to-blue-700',
+            icon: <Users className="w-5 h-5" />,
+            link: 'Chi tiết',
+            label: 'Sĩ số học sinh',
+            value: String(displayTotalStudents),
+            unit: isManagementAccount ? `HS • ${homeroomClasses.length} lớp` : `HS ${activeClass ? `• Lớp ${activeClass.name}` : ''}`,
+            progress: null as number | null
+          },
+          {
+            key: 'attendance',
+            onClick: () => onNavigate(isManagementAccount ? 'reports' : 'attendance'),
+            gradient: 'from-emerald-700 to-teal-700',
+            icon: <CheckSquare className="w-5 h-5" />,
+            link: isManagementAccount ? 'Báo cáo' : 'Điểm danh',
+            label: 'Hiện diện hôm nay',
+            value: `${displayPresentCount}/${displayTotalStudents}`,
+            unit: `${displayAttendanceRate}%`,
+            progress: Number(displayAttendanceRate) || 0
+          },
+          {
+            key: 'coins',
+            onClick: () => onNavigate(isManagementAccount ? 'reports' : 'rewards'),
+            gradient: 'from-rose-600 to-pink-700',
+            icon: <Award className="w-5 h-5" />,
+            link: isManagementAccount ? 'Báo cáo' : 'Đổi quà',
+            label: 'Tổng xu thi đua',
+            value: String(displayTotalCoins),
+            unit: isManagementAccount ? 'xu toàn trường' : 'xu cả lớp',
+            progress: null
+          },
+          {
+            key: 'avg',
+            onClick: () => onNavigate('reports'),
+            gradient: 'from-violet-600 to-indigo-700',
+            icon: <TrendingUp className="w-5 h-5" />,
+            link: 'Báo cáo',
+            label: 'Trung bình / học sinh',
+            value: String(displayAvgCoins),
+            unit: 'xu / em',
+            progress: null
+          }
+        ].map(card => (
+          <div
+            key={card.key}
+            onClick={card.onClick}
+            className={`relative overflow-hidden rounded-2xl p-3 sm:p-3.5 bg-gradient-to-br ${card.gradient} text-white shadow-md hover-zoom-card cursor-pointer group flex flex-col justify-between min-h-[108px]`}
+          >
+            {/* decorative bubbles */}
+            <span className="pointer-events-none absolute -right-6 -top-6 w-24 h-24 rounded-full bg-white/10" />
+            <span className="pointer-events-none absolute right-6 -bottom-8 w-20 h-20 rounded-full bg-white/10" />
+            <div className="relative flex items-center justify-between">
+              <div className="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center">{card.icon}</div>
+              <span className="text-[10px] font-black uppercase flex items-center gap-0.5 bg-white/20 rounded-full px-2 py-0.5 group-hover:bg-white/30 transition-colors">
+                {card.link} <ArrowUpRight className="w-3 h-3" />
+              </span>
             </div>
-            <span className="text-[10px] font-black text-blue-600 flex items-center gap-0.5 group-hover:translate-x-0.5 transition-transform uppercase">
-              CHI TIẾT <ArrowUpRight className="w-2.5 h-2.5" />
-            </span>
-          </div>
-          <div>
-            <div className="text-[9.5px] font-black text-slate-500 uppercase tracking-wider">SĨ SỐ HỌC SINH</div>
-            <div className="text-base sm:text-lg font-black text-indigo-950 tracking-tight font-mono leading-tight">
-              {displayTotalStudents} <span className="text-[10px] font-bold text-slate-500 uppercase">{isManagementAccount ? `HS (TOÀN TRƯỜNG • ${homeroomClasses.length} LỚP)` : `HS (${activeClass ? `LỚP ${activeClass.name}` : 'CHƯA CÓ'})`}</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Card 2: Hiện diện hôm nay */}
-        <div 
-          onClick={() => onNavigate(isManagementAccount ? 'reports' : 'attendance')}
-          className="bg-white rounded-xl p-2.5 px-3 border border-slate-200/80 shadow-2xs hover-zoom-card cursor-pointer group flex flex-col justify-between"
-        >
-          <div className="flex items-center justify-between mb-1">
-            <div className="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center font-black group-hover:bg-emerald-600 group-hover:text-white transition-colors">
-              <CheckSquare className="w-3.5 h-3.5" />
-            </div>
-            <span className="text-[10px] font-black text-emerald-600 flex items-center gap-0.5 group-hover:translate-x-0.5 transition-transform uppercase">
-              {isManagementAccount ? 'BÁO CÁO' : 'ĐIỂM DANH'} <ArrowUpRight className="w-2.5 h-2.5" />
-            </span>
-          </div>
-          <div>
-            <div className="text-[9.5px] font-black text-slate-500 uppercase tracking-wider">HIỆN DIỆN HÔM NAY</div>
-            <div className="text-base sm:text-lg font-black text-emerald-600 tracking-tight font-mono leading-tight">
-              {displayPresentCount}/{displayTotalStudents} <span className="text-[10px] font-bold text-slate-500 uppercase">({displayAttendanceRate}%)</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Card 3: Tổng xu thi đua */}
-        <div 
-          onClick={() => onNavigate(isManagementAccount ? 'reports' : 'rewards')}
-          className="bg-white rounded-xl p-2.5 px-3 border border-slate-200/80 shadow-2xs hover-zoom-card cursor-pointer group flex flex-col justify-between"
-        >
-          <div className="flex items-center justify-between mb-1">
-            <div className="w-7 h-7 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center font-black group-hover:bg-rose-600 group-hover:text-white transition-colors">
-              <Award className="w-3.5 h-3.5" />
-            </div>
-            <span className="text-[10px] font-black text-rose-600 flex items-center gap-0.5 group-hover:translate-x-0.5 transition-transform uppercase">
-              {isManagementAccount ? 'BÁO CÁO' : 'ĐỔI QUÀ'} <ArrowUpRight className="w-2.5 h-2.5" />
-            </span>
-          </div>
-          <div>
-            <div className="text-[9.5px] font-black text-slate-500 uppercase tracking-wider">TỔNG XU THI ĐUA</div>
-            <div className="text-base sm:text-lg font-black text-rose-600 tracking-tight font-mono leading-tight">
-              {displayTotalCoins} <span className="text-[10px] font-bold text-slate-500 uppercase">{isManagementAccount ? 'XU TOÀN TRƯỜNG' : 'XU CẢ LỚP'}</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Card 4: Trung bình / học sinh */}
-        <div 
-          onClick={() => onNavigate('reports')}
-          className="bg-white rounded-xl p-2.5 px-3 border border-slate-200/80 shadow-2xs hover-zoom-card cursor-pointer group flex flex-col justify-between"
-        >
-          <div className="flex items-center justify-between mb-1">
-            <div className="w-7 h-7 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center font-black group-hover:bg-purple-600 group-hover:text-white transition-colors">
-              <TrendingUp className="w-3.5 h-3.5" />
-            </div>
-            <span className="text-[10px] font-black text-purple-600 flex items-center gap-0.5 group-hover:translate-x-0.5 transition-transform uppercase">
-              BÁO CÁO <ArrowUpRight className="w-2.5 h-2.5" />
-            </span>
-          </div>
-          <div>
-            <div className="text-[9.5px] font-black text-slate-500 uppercase tracking-wider">TRUNG BÌNH / HỌC SINH</div>
-            <div className="text-base sm:text-lg font-black text-purple-600 tracking-tight font-mono leading-tight">
-              {displayAvgCoins} <span className="text-[10px] font-bold text-slate-500 uppercase">XU / EM</span>
+            <div className="relative mt-2">
+              <div className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-white/90">{card.label}</div>
+              <div className="flex items-baseline gap-1.5 flex-wrap">
+                <span className="text-2xl sm:text-3xl font-black tracking-tight font-mono leading-none">{card.value}</span>
+                <span className="text-[10px] sm:text-[11px] font-bold text-white/90 truncate">{card.unit}</span>
+              </div>
+              {card.progress !== null && (
+                <div className="mt-1.5 h-1.5 rounded-full bg-white/25 overflow-hidden">
+                  <div className="h-full rounded-full bg-white" style={{ width: `${Math.max(0, Math.min(100, card.progress))}%` }} />
+                </div>
+              )}
             </div>
           </div>
-        </div>
+        ))}
       </div>
 
       {/* 4. TOP THI ĐUA NHẬN XU THEO LỚP (Hiển thị khi có nhiều lớp học - Yêu cầu 1) */}
@@ -467,7 +458,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         <div className="bg-gradient-to-r from-amber-50/70 via-orange-50/60 to-yellow-50/70 rounded-3xl p-5 border border-amber-200/80 shadow-xs hover-zoom-card space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-amber-400 to-yellow-500 text-white flex items-center justify-center font-black shadow-xs">
+              <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-amber-600 to-yellow-600 text-white flex items-center justify-center font-black shadow-xs">
                 <Trophy className="w-5 h-5" />
               </div>
               <div>
@@ -683,7 +674,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                     onClick={() => setSelectedRankingClassId(cls.id)}
                     className={`px-2.5 py-1 rounded-xl text-xs font-bold transition-all shrink-0 hover-zoom-btn ${
                       selectedRankingClassId === cls.id
-                        ? 'bg-amber-500 text-white font-black shadow-xs'
+                        ? 'bg-amber-600 text-white font-black shadow-xs'
                         : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                     }`}
                   >
@@ -793,7 +784,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               <div className="space-y-0.5">
                 <div className="text-xs font-black text-indigo-950 uppercase flex flex-wrap items-center gap-2">
                   <span>{isManagementAccount ? 'TÀI KHOẢN:' : 'TÊN GIÁO VIÊN:'} <strong className="text-indigo-600">{greetingUserName}</strong></span>
-                  <span className="text-slate-300 hidden sm:inline">•</span>
+                  <span className="text-slate-500 hidden sm:inline">•</span>
                   <span>ĐƠN VỊ CÔNG TÁC: <strong className="text-emerald-700">{displaySchoolName}</strong></span>
                 </div>
                 <div className="text-[11px] text-slate-500 font-bold uppercase">

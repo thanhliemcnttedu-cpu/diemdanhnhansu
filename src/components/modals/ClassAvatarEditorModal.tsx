@@ -265,7 +265,7 @@ export const ClassAvatarEditorModal: React.FC<ClassAvatarEditorModalProps> = ({
 
   return (
     <div 
-      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 backdrop-blur-xs p-3 md:p-6 animate-in fade-in duration-150 overflow-y-auto"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-sky-900/20 backdrop-blur-xs p-3 md:p-6 animate-in fade-in duration-150 overflow-y-auto"
       onMouseUp={handleMouseUp}
       onTouchEnd={handleTouchEnd}
     >
@@ -305,7 +305,7 @@ export const ClassAvatarEditorModal: React.FC<ClassAvatarEditorModalProps> = ({
           <div className="flex flex-col items-center">
             <div 
               ref={previewBoxRef}
-              className="relative w-full max-w-lg aspect-[16/8] rounded-2xl md:rounded-3xl overflow-hidden shadow-xl border-4 bg-slate-950 cursor-grab active:cursor-grabbing select-none transition-shadow"
+              className="relative w-full max-w-lg aspect-[16/8] rounded-2xl md:rounded-3xl overflow-hidden shadow-xl border-4 bg-white cursor-grab active:cursor-grabbing select-none transition-shadow"
               style={{ borderColor: colorTheme }}
               onMouseDown={handleMouseDown}
               onMouseMove={handleMouseMove}
@@ -328,11 +328,11 @@ export const ClassAvatarEditorModal: React.FC<ClassAvatarEditorModalProps> = ({
               {/* Lưới căn chỉnh 1/3 (Rule of Thirds) & Khung hướng dẫn */}
               <div className="absolute inset-0 pointer-events-none">
                 {/* 2 đường kẻ ngang */}
-                <div className="absolute left-0 right-0 top-1/3 border-b border-white/20 border-dashed" />
-                <div className="absolute left-0 right-0 top-2/3 border-b border-white/20 border-dashed" />
+                <div className="absolute left-0 right-0 top-1/3 border-b border-slate-200 border-dashed" />
+                <div className="absolute left-0 right-0 top-2/3 border-b border-slate-200 border-dashed" />
                 {/* 2 đường kẻ dọc */}
-                <div className="absolute top-0 bottom-0 left-1/3 border-r border-white/20 border-dashed" />
-                <div className="absolute top-0 bottom-0 left-2/3 border-r border-white/20 border-dashed" />
+                <div className="absolute top-0 bottom-0 left-1/3 border-r border-slate-200 border-dashed" />
+                <div className="absolute top-0 bottom-0 left-2/3 border-r border-slate-200 border-dashed" />
                 {/* 4 góc canh nét */}
                 <div className="absolute top-2 left-2 w-4 h-4 border-t-2 border-l-2 border-amber-300 rounded-tl-sm" />
                 <div className="absolute top-2 right-2 w-4 h-4 border-t-2 border-r-2 border-amber-300 rounded-tr-sm" />
@@ -347,7 +347,7 @@ export const ClassAvatarEditorModal: React.FC<ClassAvatarEditorModalProps> = ({
               </div>
 
               {/* Top Banner info */}
-              <div className="absolute top-2.5 left-2.5 bg-black/65 text-amber-300 text-[10px] font-black uppercase px-2 py-0.5 rounded-lg pointer-events-none backdrop-blur-xs flex items-center gap-1">
+              <div className="absolute top-2.5 left-2.5 bg-black/65 text-amber-700 text-[10px] font-black uppercase px-2 py-0.5 rounded-lg pointer-events-none backdrop-blur-xs flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                 <span>TỈ LỆ BANNER 2:1 (FULL HD)</span>
               </div>

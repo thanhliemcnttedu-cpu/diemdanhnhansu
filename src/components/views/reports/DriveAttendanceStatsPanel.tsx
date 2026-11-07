@@ -245,7 +245,7 @@ export const DriveAttendanceStatsPanel: React.FC = () => {
               <span className="text-[10px] font-bold text-slate-500">Chuyên cần</span>
             </div>
             <div className="flex items-baseline gap-1.5">
-              <span className={`text-xl font-black font-mono ${p.attendanceRate === null ? 'text-slate-300' : p.attendanceRate >= 95 ? 'text-emerald-700' : 'text-amber-600'}`}>
+              <span className={`text-xl font-black font-mono ${p.attendanceRate === null ? 'text-slate-500' : p.attendanceRate >= 95 ? 'text-emerald-700' : 'text-amber-600'}`}>
                 {p.attendanceRate === null ? '—' : `${p.attendanceRate}%`}
               </span>
               <span className="text-[10px] font-bold text-slate-500">
@@ -257,7 +257,7 @@ export const DriveAttendanceStatsPanel: React.FC = () => {
               <span className="text-[10px] font-bold text-slate-500">Ăn bán trú</span>
             </div>
             <div className="flex items-baseline gap-1.5">
-              <span className={`text-xl font-black font-mono ${p.boardingRate === null ? 'text-slate-300' : 'text-orange-600'}`}>
+              <span className={`text-xl font-black font-mono ${p.boardingRate === null ? 'text-slate-500' : 'text-orange-600'}`}>
                 {p.boardingRate === null ? '—' : `${p.boardingRate}%`}
               </span>
               <span className="text-[10px] font-bold text-slate-500">

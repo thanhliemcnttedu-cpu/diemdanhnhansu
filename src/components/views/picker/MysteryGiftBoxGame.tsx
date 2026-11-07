@@ -16,6 +16,7 @@ import confetti from 'canvas-confetti';
 import { QuestionBankModal } from '../../modals/QuestionBankModal';
 import { loadQuizBank, saveQuizBank } from '../../../utils/quizParser';
 
+import { handleAvatarImgError } from '../../../utils/avatarConfig';
 interface GiftBoxItem {
   id: number;
   label: string;
@@ -201,7 +202,7 @@ export const MysteryGiftBoxGame: React.FC = () => {
             type="button"
             onClick={() => setCallMode('coins')}
             className={`px-2 sm:px-3 py-1.5 rounded-xl text-[11px] sm:text-xs font-black transition-all cursor-pointer uppercase text-center ${
-              callMode === 'coins' ? 'bg-amber-500 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'
+              callMode === 'coins' ? 'bg-amber-600 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'
             }`}
           >
             <span className="hidden sm:inline">2. Gọi + Tặng Xu</span>
@@ -236,7 +237,7 @@ export const MysteryGiftBoxGame: React.FC = () => {
       </div>
 
       {/* 2. MAIN GIFT BOXES STAGE */}
-      <div className="bg-gradient-to-b from-slate-900 via-indigo-950 to-slate-900 rounded-3xl p-5 md:p-8 shadow-2xl border border-indigo-900/60 select-none relative overflow-hidden">
+      <div className="bg-gradient-to-b from-sky-600 via-indigo-600 to-indigo-600 rounded-3xl p-5 md:p-8 shadow-2xl border border-indigo-900/60 select-none relative overflow-hidden">
         {/* Decorative sparkles */}
         <div className="absolute top-4 left-6 text-amber-300 opacity-60 animate-ping">✨</div>
         <div className="absolute top-10 right-10 text-pink-300 opacity-50 animate-pulse">⭐</div>
@@ -256,7 +257,7 @@ export const MysteryGiftBoxGame: React.FC = () => {
                     ? 'scale-110 z-20 shadow-[0_0_50px_rgba(251,191,36,0.8)] ring-4 ring-amber-300 bg-amber-400/20' 
                     : isHighlighted 
                     ? 'scale-105 shadow-xl ring-2 ring-white/80 bg-white/10' 
-                    : 'bg-white/5 hover:bg-white/10 opacity-80'
+                    : 'bg-white/5 hover:bg-white/10'
                 }`}
               >
                 {/* 3D Box Visual */}
@@ -276,9 +277,9 @@ export const MysteryGiftBoxGame: React.FC = () => {
                   {isWinningBox && winner && (
                     <div className="absolute inset-0 rounded-2xl overflow-hidden border-2 border-amber-300 bg-white z-10 animate-in zoom-in-50">
                       <img 
-                        src={winner.avatar} 
+                        src={winner.avatar} onError={(e) => handleAvatarImgError(e, winner?.gender, winner?.name)} 
                         alt={winner.name} 
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-cover object-center"
                       />
                     </div>
                   )}
@@ -291,7 +292,7 @@ export const MysteryGiftBoxGame: React.FC = () => {
                 </div>
 
                 <div className="mt-2.5 text-center">
-                  <div className="text-[11px] font-black text-white truncate max-w-[110px]">
+                  <div className="text-[11px] font-black text-white truncate max-w-[110px] drop-shadow">
                     {isWinningBox && winner ? winner.name : box.label}
                   </div>
                 </div>
@@ -305,7 +306,7 @@ export const MysteryGiftBoxGame: React.FC = () => {
           <button
             onClick={startOpenGift}
             disabled={isOpening || activeList.length === 0}
-            className="w-full py-4 px-6 bg-gradient-to-r from-rose-500 via-amber-500 to-indigo-600 hover:from-rose-600 hover:to-indigo-700 text-white font-black text-sm md:text-base rounded-2xl shadow-lg shadow-rose-500/30 flex items-center justify-center gap-2.5 transition-all hover-zoom-btn disabled:opacity-50 uppercase cursor-pointer"
+            className="w-full py-4 px-6 bg-gradient-to-r from-rose-500 via-amber-600 to-indigo-600 hover:from-rose-600 hover:to-indigo-700 text-white font-black text-sm md:text-base rounded-2xl shadow-lg shadow-rose-500/30 flex items-center justify-center gap-2.5 transition-all hover-zoom-btn disabled:opacity-50 uppercase cursor-pointer"
           >
             <Gift className={`w-5 h-5 ${isOpening ? 'animate-spin' : ''}`} />
             <span>{isOpening ? `🎁 ĐANG MỞ HỘP QUÀ BÍ MẬT (${spinDuration}S)...` : `🎁 BẤM MỞ HỘP QUÀ BÍ MẬT (${spinDuration} GIÂY)`}</span>
@@ -320,9 +321,9 @@ export const MysteryGiftBoxGame: React.FC = () => {
             <div className="flex items-center gap-4 text-center sm:text-left">
               <div className="relative shrink-0">
                 <img 
-                  src={winner.avatar} 
+                  src={winner.avatar} onError={(e) => handleAvatarImgError(e, winner?.gender, winner?.name)} 
                   alt={winner.name} 
-                  className="w-16 h-16 md:w-20 md:h-20 rounded-full aspect-square object-cover border-4 border-rose-400 bg-white shadow-lg"
+                  className="w-16 h-16 md:w-20 md:h-20 rounded-full aspect-square object-cover object-center border-4 border-rose-400 bg-white shadow-lg"
                 />
                 <span className="absolute -bottom-1 -right-1 px-2 py-0.5 bg-rose-600 text-white font-black text-[10px] rounded-full">
                   #{winner.stt}

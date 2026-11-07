@@ -393,16 +393,16 @@ export const NoiseMeterView: React.FC = () => {
 
       {/* 20-SECOND HIGH-IMPACT ATTENTION ALERT OVERLAY (User Request: phóng to thu nhỏ nhanh trong 20s) */}
       {activeAttentionAlert && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-sky-900/20 backdrop-blur-xs animate-in fade-in duration-200">
           <div 
             className={`w-full max-w-4xl p-8 sm:p-12 rounded-3xl shadow-2xl border-4 text-center relative overflow-hidden transition-all duration-300 ${
               activeAttentionAlert.theme === 'rose'
                 ? 'bg-gradient-to-b from-rose-600 via-red-600 to-rose-700 border-rose-300 text-white shadow-rose-900/50'
                 : activeAttentionAlert.theme === 'orange'
-                ? 'bg-gradient-to-b from-orange-500 via-amber-600 to-red-600 border-amber-300 text-white shadow-orange-900/50'
+                ? 'bg-gradient-to-b from-orange-600 via-amber-600 to-red-600 border-amber-300 text-white shadow-orange-900/50'
                 : activeAttentionAlert.theme === 'amber'
                 ? 'bg-gradient-to-b from-amber-400 via-yellow-500 to-amber-600 border-yellow-200 text-slate-950 shadow-amber-900/50'
-                : 'bg-gradient-to-b from-emerald-500 via-teal-600 to-emerald-700 border-emerald-300 text-white shadow-emerald-900/50'
+                : 'bg-gradient-to-b from-emerald-600 via-teal-600 to-emerald-700 border-emerald-300 text-white shadow-emerald-900/50'
             }`}
           >
             {/* Top Bar with 20s Countdown Timer Badge & Close Button */}
@@ -447,7 +447,7 @@ export const NoiseMeterView: React.FC = () => {
 
             {/* Special Clapping Hands Graphic for "TUYỆT VỜI" */}
             {activeAttentionAlert.type === 'great' && (
-              <div className="mt-6 flex items-center justify-center gap-3 text-3xl sm:text-5xl font-black text-amber-200">
+              <div className="mt-6 flex items-center justify-center gap-3 text-3xl sm:text-5xl font-black text-white">
                 <span className="animate-clap-bounce">👏</span>
                 <span className="text-xl sm:text-2xl uppercase tracking-wider text-white bg-black/20 px-4 py-1.5 rounded-full">
                   ★ TIẾNG VỖ TAY KHEN NGỢI CẢ LỚP ★
@@ -460,7 +460,7 @@ export const NoiseMeterView: React.FC = () => {
             <div className="mt-8 pt-4">
               <div className="w-full bg-black/20 rounded-full h-3 overflow-hidden p-0.5 border border-white/20">
                 <div 
-                  className="bg-amber-300 h-full rounded-full transition-all duration-1000 ease-linear shadow-xs"
+                  className="bg-amber-600 h-full rounded-full transition-all duration-1000 ease-linear shadow-xs"
                   style={{ width: `${(attentionSecondsLeft / 20) * 100}%` }}
                 />
               </div>

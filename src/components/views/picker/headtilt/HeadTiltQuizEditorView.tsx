@@ -413,7 +413,7 @@ export const HeadTiltQuizEditorView: React.FC<HeadTiltQuizEditorViewProps> = ({
               <button
                 type="button"
                 onClick={handleAddQuestion}
-                className="px-3 py-1.5 rounded-xl bg-slate-700 hover:bg-slate-800 text-white text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer shadow-sm"
+                className="px-3 py-1.5 rounded-xl bg-slate-200 hover:bg-slate-200 text-slate-800 text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer shadow-sm"
               >
                 <Plus className="w-3.5 h-3.5" />
                 Nhập thủ công
@@ -489,7 +489,7 @@ export const HeadTiltQuizEditorView: React.FC<HeadTiltQuizEditorViewProps> = ({
                     }`}>
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-2">
-                          <span className="w-6 h-6 rounded-full bg-sky-500 text-white font-black text-xs flex items-center justify-center">
+                          <span className="w-6 h-6 rounded-full bg-sky-600 text-white font-black text-xs flex items-center justify-center">
                             A
                           </span>
                           <span className="text-xs font-black text-slate-700">
@@ -526,7 +526,7 @@ export const HeadTiltQuizEditorView: React.FC<HeadTiltQuizEditorViewProps> = ({
                     }`}>
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-2">
-                          <span className="w-6 h-6 rounded-full bg-orange-500 text-white font-black text-xs flex items-center justify-center">
+                          <span className="w-6 h-6 rounded-full bg-orange-600 text-white font-black text-xs flex items-center justify-center">
                             B
                           </span>
                           <span className="text-xs font-black text-slate-700">
