@@ -1,0 +1,6 @@
+{
+  "allowRegistration": true,
+  "autoSyncIntervalMs": 15000,
+  "autoPushGithub": false,
+  "autoPullGithub": false
+}

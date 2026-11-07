@@ -1,0 +1,57 @@
+{
+  "$schema": "https://raw.githubusercontent.com/electron-userland/electron-builder/master/packages/app-builder-lib/scheme.json",
+  "appId": "com.lhhp.lophochanhphuc",
+  "productName": "LỚP HỌC HẠNH PHÚC",
+  "copyright": "Copyright © 2026 Nguyễn Thanh Liêm - Lớp Học Hạnh Phúc",
+  "directories": {
+    "output": "release",
+    "buildResources": "build"
+  },
+  "files": [
+    "dist/**/*",
+    "dist-server/**/*",
+    "electron/**/*",
+    "server/**/*",
+    "data/**/*",
+    "!data/backups/**/*",
+    "public/**/*",
+    "build/**/*",
+    "server.js",
+    "package.json"
+  ],
+  "asar": true,
+  "asarUnpack": [
+    "server.js",
+    "dist/**/*",
+    "dist-server/**/*",
+    "data/**/*",
+    "!data/backups/**/*"
+  ],
+  "win": {
+    "target": [
+      {
+        "target": "nsis",
+        "arch": ["x64"]
+      }
+    ],
+    "icon": "build/icon.ico",
+    "artifactName": "CSDL_LHHP.exe"
+  },
+  "nsis": {
+    "oneClick": false,
+    "perMachine": false,
+    "allowToChangeInstallationDirectory": true,
+    "allowElevation": true,
+    "createDesktopShortcut": "always",
+    "createStartMenuShortcut": true,
+    "shortcutName": "LỚP HỌC HẠNH PHÚC",
+    "include": "build/installer.nsh",
+    "installerIcon": "build/icon.ico",
+    "uninstallerIcon": "build/icon.ico",
+    "installerHeaderIcon": "build/icon.ico",
+    "uninstallDisplayName": "Gỡ cài đặt Lớp Học Hạnh Phúc",
+    "runAfterFinish": true,
+    "deleteAppDataOnUninstall": false,
+    "warningsAsErrors": false
+  }
+}

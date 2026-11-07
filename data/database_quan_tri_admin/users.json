@@ -1,0 +1,15 @@
+[
+  {
+    "id": "user-adminquantri",
+    "username": "adminquantri",
+    "password": "Tanuyen@2026",
+    "fullName": "Quản trị viên Hệ thống Cấp cao",
+    "role": "admin",
+    "tenantType": "school",
+    "email": "adminquantri@lophoc.edu.vn",
+    "phone": "",
+    "schoolName": "Hệ thống Quản trị Lớp học Hạnh phúc",
+    "createdAt": 1794018451727,
+    "status": "active"
+  }
+]

@@ -1,0 +1,44 @@
+node_modules/
+build/
+dist/
+coverage/
+.DS_Store
+*.log
+.env*
+!.env.example
+.agent/
+data/backups/
+
+# ============================================================
+# 🧪 LOCAL SUPABASE SIMULATOR - CHỈ DÙNG KHI LOCALHOST:3000
+# TUYỆT ĐỐI KHÔNG push lên GitHub hoặc deploy lên production
+# ============================================================
+data/database_local_supabase_sim/tables/
+data/database_local_supabase_sim/snapshots/*
+!data/database_local_supabase_sim/snapshots/.gitkeep
+data/database_local_supabase_sim/sim_config.json
+# README.md của sim được track để mọi người biết mục đích thư mục
+# Nhưng dữ liệu thực bên trong thì KHÔNG được track
+
+# Always track static media assets
+!public/certificates/
+!public/certificates/**/*
+!public/avatars/
+!public/avatars/**/*
+
+# Build outputs (rebuilt by npm run build / build:server / package:win)
+/server.js
+dist-server/
+release/
+
+# Local AI tooling state
+.claude-flow/
+.swarm/
+
+# Copies of public/ produced locally (served from public/ instead)
+/assets/
+/avatars/
+/certificates/
+
+# Local machine storage path (never commit)
+data/storage_location.json

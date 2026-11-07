@@ -1,0 +1,108 @@
+# ERRORS.md - Nhật ký lỗi & bài học
+
+## [2026-10-15 07:30] - Auto-save của Admin ghi đè dữ liệu cũ lên chỉnh sửa mới của GVCN
+
+- **Type**: Logic
+- **Severity**: Critical
+- **File**: `src/context/ClassroomContext.tsx` (auto-save effect), `server/database.ts:syncAdminClassroomData`
+- **Agent**: meo meo (@orchestrator)
+- **Root Cause**: Mỗi khi state của tài khoản `admin`/`adminquantri` thay đổi (kể cả chỉ chọn lớp khác — `activeClassId` nằm trong deps), client gửi **toàn bộ** snapshot lớp + học sinh lên `/api/admin/sync-all`. Server merge snapshot (có thể đã cũ) đè lên dữ liệu của mọi GVCN → ảnh lớp, thông tin lớp, tên/ảnh học sinh, điểm thi đua GVCN vừa sửa bị quay về bản cũ.
+- **Error Message**:
+  ```
+  repro_overwrite.mjs → GVCN student edit survived: false / GVCN class edit survived: false
+  ```
+- **Fix Applied**: Admin chỉ gửi delta (bản ghi admin thực sự sửa so với baseline nhận từ server). Server chấp nhận delta chỉ có học sinh. Supabase merge theo id thay vì thay cả mảng.
+- **Prevention**: Không bao giờ đẩy full snapshot từ tài khoản tổng hợp (read-mostly) xuống dữ liệu nguồn của giáo viên; luôn dùng delta / merge theo id.
+- **Status**: Fixed
+
+---
+
+## [2026-10-15 07:30] - Upsert Supabase của GVCN bị timeout 1.5s → không phát sóng realtime
+
+- **Type**: Integration
+- **Severity**: High
+- **File**: `src/services/databaseService.ts:saveUserData`
+- **Agent**: meo meo (@orchestrator)
+- **Root Cause**: `Promise.race` với timeout 1.5s; payload có ảnh (base64) thường > 1.5s → coi như lỗi → bỏ qua broadcast `user_data_updated`. Trên Vercel (không có Express SSE) BGH/Quản trị không nhận được thông báo tức thì.
+- **Error Message**:
+  ```
+  (silent) error: Supabase timeout
+  ```
+- **Fix Applied**: Chờ upsert thật hoàn tất (vẫn chạy nền, không chặn UI) rồi mới broadcast.
+- **Prevention**: Không dùng timeout cứng để quyết định thành công/thất bại cho tác vụ nền.
+- **Status**: Fixed
+
+## [2026-10-22 13:30] - Lỗi khởi chạy ứng dụng Desktop EXE: spawn C:\Windows\system32\cmd.exe ENOENT
+
+- **Type**: Runtime / Integration
+- **Severity**: High
+- **File**: `electron/main.cjs:startBackendServer`, `package.json`, `electron-builder.json`
+- **Agent**: meo meo (@orchestrator)
+- **Root Cause**: Khi đóng gói file `.exe` cài đặt qua electron-builder, ứng dụng không compile `server.ts` sang `server.js` (chỉ chạy `vite build` frontend). Khi app khởi chạy trên máy tính người dùng, Electron không tìm thấy `server.js` nên nhảy vào nhánh dev fallback `spawn('npx', ['tsx', 'server.ts'], { shell: true })`. Trên máy client phổ thông không có Node.js/npx, đồng thời `spawn` không đăng ký sự kiện `serverProcess.on('error')` và Electron thiếu global uncaught exception guard, dẫn đến Uncaught Exception làm văng hộp thoại đỏ `Error: spawn C:\Windows\system32\cmd.exe ENOENT`.
+- **Error Message**:
+  ```
+  A JavaScript error occurred in the main process
+  Uncaught Exception:
+  Error: spawn C:\Windows\system32\cmd.exe ENOENT
+      at ChildProcess._handle.onexit (node:internal/child_process:316:19)
+      at onErrorNT (node:internal/child_process:554:16)
+      at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
+  ```
+- **Fix Applied**: 
+  1. Thêm script `scripts/build_server.js` (`npm run build:server`) sử dụng Vite SSR bundle toàn bộ `server.ts` + các module con thành `server.js` và `dist-server/server.js` độc lập.
+  2. Trong `server.ts`: chuyển `vite` sang dynamic import trong dev mode, loại bỏ phụ thuộc vào devDependencies khi chạy production.
+  3. Cập nhật `electron-builder.json`: cấu hình `asarUnpack: ["server.js", "data/**/*"]` đảm bảo file server và database JSON được unpack vật lý ra ổ cứng, cho phép đọc ghi dữ liệu cục bộ không bị hạn chế read-only.
+  4. Cập nhật `electron/main.cjs`: sử dụng `utilityProcess.fork` (API chính thức của Electron) thay thế spawn shell; bắt toàn bộ sự kiện `error` trên process con; thêm `process.on('uncaughtException')` ngăn chặn mọi hộp thoại popup crash. Tuyệt đối không spawn npx/cmd trong môi trường `app.isPackaged`.
+- **Prevention**: Mọi ứng dụng desktop đóng gói phải tự chủ hoàn toàn backend (bundle trước), không bao giờ phụ thuộc vào runtime ngoại lai (Node/npx/cmd) của máy người dùng cuối.
+- **Status**: Fixed
+
+## [2026-10-22 13:50] - Lỗi trắng màn hình (White Screen) sau khi khởi chạy ứng dụng Desktop đóng gói
+
+- **Type**: Integration / Build
+- **Severity**: High
+- **File**: `scripts/build_server.js`, `vite.config.ts`, `electron-builder.json`, `electron/main.cjs`
+- **Agent**: meo meo (@orchestrator)
+- **Root Cause**:
+  1. `server.js` khi được build ban đầu vẫn để `external: true` với `node_modules` (express, @supabase/supabase-js...), trong khi `server.js` được unpack ra ngoài file `app.asar`, dẫn đến khi khởi chạy `server.js` bị crash ngay lập tức do không tìm thấy `node_modules` bên ngoài asar.
+  2. Thư mục `dist/` (frontend) bị đóng gói bên trong file nhị phân `app.asar`, trong khi `server.js` chạy ngoài asar không thể nạp file tĩnh từ đường dẫn thông thường, khiến route GET `*` trả về 404/trắng trang.
+  3. `vite.config.ts` thiếu `base: './'` khiến các asset trong `index.html` được trỏ tuyệt đối (`/assets/...`), gây hỏng khi nạp qua giao thức `file://` hoặc khi server tĩnh chưa sẵn sàng.
+- **Fix Applied**:
+  1. Cập nhật `scripts/build_server.js` cấu hình `ssr.noExternal: true` và `inlineDynamicImports: true` để tạo ra một file `server.js` Standalone duy nhất (~3.5MB), tích hợp 100% Express và các dependency, hoàn toàn không phụ thuộc `node_modules`.
+  2. Thêm `base: './'` vào `vite.config.ts` để mọi assets trong `index.html` đều dùng đường dẫn tương đối.
+  3. Cập nhật `electron-builder.json`: đưa `dist/**/*` và `dist-server/**/*` vào `asarUnpack` để tài nguyên giao diện được giải nén vật lý cạnh `server.js`.
+## [2026-10-22 15:00] - Khởi động lâu, mất logo và thiếu dữ liệu trường mẫu khi chạy độc lập
+
+- **Type**: Performance / Integration / Data
+- **Severity**: High
+- **File**: `electron/main.cjs`, `src/components/modals/AuthModal.tsx`, `src/components/modals/RegistrationModal.tsx`, `src/services/databaseService.ts`, `src/data/initialData.ts`
+- **Agent**: meo meo (@orchestrator)
+- **Root Cause**:
+  1. **Khởi động lâu**: `electron/main.cjs` gọi `await startBackendServer()` trước `createWindow()`. Server poll port 3000 trong 20s, khiến người dùng phải đợi hàng chục giây mới thấy cửa sổ.
+  2. **Mất logo**: `<img src="/assets/school_db_logo.png" />` dùng đường dẫn tuyệt đối bắt đầu bằng `/`. Khi chạy qua giao thức `file://` của Desktop, trình duyệt tìm `file:///assets/...` (ổ C:\) dẫn đến lỗi 404 và `onError` ẩn ảnh đi, chỉ còn vòng tròn trắng.
+  3. **Không có dữ liệu trường mẫu**: Khi chạy `file://` độc lập không có HTTP `localhost:3000`, các lệnh gọi `fetch('/api/...')` thất bại. Tầng LocalStorage của máy mới cài đặt hoàn toàn trống rỗng, `INITIAL_CLASSES` rỗng, `FALLBACK_SCHOOLS` rỗng, dẫn đến không có dữ liệu trường học hay học sinh nào.
+  4. **Thiếu IPC ghi đè file và Google Drive**: Không có cơ chế IPC Node.js để ghi file trực tiếp vào ổ đĩa và gọi Google Apps Script vượt CORS khi không có backend server.
+- **Fix Applied**:
+  1. Trong `electron/main.cjs`: Gọi `createWindow()` NGAY LẬP TỨC trong `app.whenReady()` và nạp thẳng file cục bộ `dist/index.html` trong 0.2s - 0.3s; khởi động backend ngầm phía sau mà không block UI.
+  2. Trong `AuthModal.tsx` và `RegistrationModal.tsx`: Import logo trực tiếp từ `src/assets/school_db_logo.png` để Vite bundle thành relative hash asset `./assets/school_db_logo-[hash].png` chuẩn 100%.
+  3. (Dữ liệu trường mẫu đã được gỡ bỏ khỏi mã nguồn khi đưa vào sử dụng thực tế.)
+  4. Thêm helper `getApiBaseUrl()` trỏ tới `http://127.0.0.1:3000` khi chạy `file://`.
+  5. Bổ sung các IPC handler trong `electron/main.cjs` và `electron/preload.cjs`: `save-role-file` (ghi đè file ổ đĩa máy tính), `read-role-file`, `proxy-drive-sync` (gửi payload lên Google Apps Script bằng Node.js HTTPS vượt CORS và redirect 302). Tích hợp vào `dataStorageService.ts` và `googleDriveService.ts`.
+  6. Đóng gói lại thành công file cài đặt setup `release/CSDL_LHHP.exe` (252.5 MB).
+- **Prevention**: Luôn áp dụng kiến trúc Local-First Hybrid: Giao diện nạp tức thì từ file tĩnh, tích hợp sẵn dữ liệu hạt giống gốc, sử dụng IPC Node.js cho các tác vụ file/mạng độc lập với web server.
+- **Status**: Fixed
+
+---
+
+
+---
+
+## [2026-11-06 10:00] - Thống kê Drive cho BGH sai (luôn 100%) và đẩy dữ liệu 5 giây/lần từ mọi tài khoản
+
+- **Type**: Logic / Integration
+- **Severity**: High
+- **File**: `src/services/googleDriveService.ts` (generateAppsScriptCode, startAutoSyncLoop5s, getConfig), `scripts/google_apps_script.js`
+- **Agent**: Claude Code
+- **Root Cause**: (1) Mã Apps Script sinh trong app đọc trường `content.stats.presentCount` không tồn tại → chuyên cần luôn 100%, bán trú 0, bỏ qua ngày, đếm cả `bgh.json`. Có 2 bản script khác nhau. (2) Vòng 5 giây đẩy toàn bộ dữ liệu của mọi tài khoản (kể cả BGH/Quản trị) → vượt hạn mức Apps Script. (3) Cấu hình Drive chỉ lưu localStorage từng máy. (4) Ngày báo cáo dùng `toISOString()` (UTC) → trước 7h sáng lấy nhầm hôm qua. (5) Đi muộn bị tính là vắng ở dashboard BGH.
+- **Fix Applied**: Script V3 một nguồn duy nhất (app import `?raw`), tệp báo cáo gọn `bc_gvcn_*.json`, action `aggregateRange`; vòng 5 giây chỉ đẩy lại khi lần trước lỗi; cấu hình Drive dùng chung qua `/api/drive/shared-config` + biến `VITE_DRIVE_*`; `toLocalDateKey`; thống nhất late = có mặt.
+- **Prevention**: Không duy trì 2 bản mã Apps Script; mọi ngày báo cáo dùng giờ địa phương; không đẩy định kỳ vô điều kiện.
+- **Status**: Fixed (chưa kiểm thử trên Apps Script thật — đã kiểm bằng Drive giả lập)

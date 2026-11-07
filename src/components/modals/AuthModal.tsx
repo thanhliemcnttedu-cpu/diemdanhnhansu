@@ -1,0 +1,896 @@
+import React, { useState, useEffect } from 'react';
+import { 
+  X, Lock, User, Eye, EyeOff, 
+  CheckCircle2, AlertCircle, LogIn, Sparkles,
+  School, ShieldCheck, UserCheck, Crown, Users,
+  ArrowRight, Phone, Globe, ChevronDown, ChevronUp,
+  Cloud, HardDrive, KeyRound, RefreshCw, Award,
+  Volume2, Dices, CalendarCheck, Check
+} from 'lucide-react';
+import { UserAccount, LoginRoleScope, SchoolEntity } from '../../types';
+import { useClassroom } from '../../context/ClassroomContext';
+import { databaseService } from '../../services/databaseService';
+import { googleDriveService } from '../../services/googleDriveService';
+import { schoolDriveDbService } from '../../services/schoolDriveDbService';
+import schoolDbLogo from '../../assets/school_db_logo.png';
+
+interface AuthModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  currentUser: UserAccount | null;
+  onLogin: (username: string, password: string, selectedRoleScope?: LoginRoleScope, selectedSchoolName?: string) => Promise<{ success: boolean; message?: string }>;
+  onLogout: () => void;
+}
+
+export const AuthModal: React.FC<AuthModalProps> = ({
+  isOpen,
+  onClose,
+  currentUser,
+  onLogin,
+  onLogout: _onLogout
+}) => {
+  const {
+    setIsRegistrationModalOpen,
+    setIsGoogleDriveModalOpen,
+    isGoogleDriveModalOpen,
+    setIsDataStorageModalOpen,
+    setIsCdKeyModalOpen,
+    isCdKeyActivated
+  } = useClassroom();
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
+  const [rightPanelTab, setRightPanelTab] = useState<'roles' | 'features'>('roles');
+
+  // 🎯 5 VAI TRÒ ĐĂNG NHẬP THEO YÊU CẦU
+  const [selectedRoleScope, setSelectedRoleScope] = useState<LoginRoleScope>('school_teacher');
+  const [schools, setSchools] = useState<SchoolEntity[]>([]);
+  const [selectedSchoolName, setSelectedSchoolName] = useState<string>('TRƯỜNG HỌC HẠNH PHÚC');
+
+  const [isPullingDrive, setIsPullingDrive] = useState(false);
+
+  // 🏫 THƯ MỤC DÙNG CHUNG CỦA NHÀ TRƯỜNG (Google Drive) — bắt buộc trước khi đăng nhập vai trò trường
+  const [driveConfigured, setDriveConfigured] = useState<boolean>(() => schoolDriveDbService.isConfigured());
+  // Dùng kết quả lần đọc trước (nếu có) để không khóa nhấp nháy các vai trò trong lúc đang tải
+  const [driveInitialized, setDriveInitialized] = useState<boolean>(() => {
+    try {
+      return schoolDriveDbService.isConfigured() && Boolean(JSON.parse(localStorage.getItem('lhhp_drive_schools_cache') || 'null')?.initialized);
+    } catch (_) {
+      return false;
+    }
+  });
+  const [driveChecking, setDriveChecking] = useState(false);
+  const [driveNotice, setDriveNotice] = useState('');
+  const [folderLinkInput, setFolderLinkInput] = useState('');
+  const [scriptLinkInput, setScriptLinkInput] = useState('');
+  const [showDriveForm, setShowDriveForm] = useState(false);
+  const onlyAdminAllowed = !driveConfigured || !driveInitialized;
+
+  const refreshDriveSchools = async () => {
+    const configured = schoolDriveDbService.isConfigured();
+    setDriveConfigured(configured);
+    if (!configured) {
+      setDriveInitialized(false);
+      return;
+    }
+    setDriveChecking(true);
+    const res = await schoolDriveDbService.listSchools();
+    setDriveChecking(false);
+    if (res.success) {
+      setDriveInitialized(res.initialized);
+      setDriveNotice(res.initialized ? '' : 'Thư mục dùng chung chưa có cơ sở dữ liệu trường. Quản trị đăng nhập để khởi tạo trường và cấp tài khoản.');
+      setSchools(res.schools);
+      if (res.schools.length > 0 && !res.schools.some(s => s.name === selectedSchoolName)) {
+        setSelectedSchoolName(res.schools[0].name);
+      }
+    } else {
+      setDriveInitialized(false);
+      setDriveNotice(res.message === 'NOT_CONFIGURED' ? '' : `Chưa đọc được CSDL trường trên Drive: ${res.message || ''}`);
+    }
+  };
+
+  // 🔐 Xác thực 2 ô: (1) link thư mục dùng chung, (2) link mã script — kiểm tra thật rồi mới lưu
+  const handleApplyConnection = async () => {
+    setErrorMessage('');
+    setSuccessMessage('');
+    // Cho phép dán cả tin nhắn kết nối vào bất kỳ ô nào: tự tách link thư mục và link script
+    const parsed = googleDriveService.parseConnectionText(`${folderLinkInput}\n${scriptLinkInput}`);
+    const folderId = parsed.folderId || googleDriveService.extractFolderIdFromUrl(folderLinkInput.trim());
+    const scriptUrl = parsed.scriptUrl || googleDriveService.normalizeScriptUrl(scriptLinkInput.trim());
+    if (!folderId) {
+      setErrorMessage('Ô 1 chưa đúng: hãy dán link thư mục Google Drive dùng chung (https://drive.google.com/drive/folders/...).');
+      return;
+    }
+    const isLocalDev = /^(localhost|127\.0\.0\.1)$/.test(window.location.hostname);
+    const scriptOk = /^https:\/\/script\.google\.com\/macros\/s\/[^/]+\/exec$/.test(scriptUrl || '')
+      || (isLocalDev && /^http:\/\/localhost:\d+\//.test(scriptLinkInput.trim())); // Apps Script giả lập khi phát triển
+    if (!scriptOk) {
+      setErrorMessage('Ô 2 chưa đúng: hãy dán link mã script (https://script.google.com/macros/s/.../exec).');
+      return;
+    }
+
+    const previous = googleDriveService.getConfig();
+    googleDriveService.saveConfig({
+      folderId,
+      folderUrl: `https://drive.google.com/drive/folders/${folderId}`,
+      scriptUrl,
+      syncMethod: 'appscript',
+      autoSyncEnabled: true
+    });
+    setDriveChecking(true);
+    const res = await schoolDriveDbService.listSchools();
+    setDriveChecking(false);
+
+    if (!res.success || res.message === 'offline-cache') {
+      // Sai thông tin / chưa triển khai đúng: khôi phục cấu hình cũ, không lưu
+      googleDriveService.saveConfig({
+        folderId: previous.folderId || '',
+        folderUrl: previous.folderUrl || '',
+        scriptUrl: previous.scriptUrl || ''
+      });
+      const raw = String(res.message || '');
+      const reason = /failed to fetch|networkerror|load failed|abort/i.test(raw)
+        ? 'không truy cập được link mã script (kiểm tra lại Ô 2 hoặc kết nối mạng)'
+        : /không hợp lệ|chưa hỗ trợ/i.test(raw)
+          ? 'mã script đang là bản cũ, cần triển khai bản V4'
+          : /thư mục/i.test(raw)
+            ? 'không mở được thư mục (kiểm tra lại Ô 1 và quyền chia sẻ thư mục)'
+            : (raw || 'kiểm tra lại 2 đường link');
+      setErrorMessage(`❌ Chưa kết nối được: ${reason}. Apps Script cần triển khai bản V4 với quyền "Bất kỳ ai".`);
+      return;
+    }
+
+    schoolDriveDbService.ensureCacheOwnership();
+    setFolderLinkInput('');
+    setScriptLinkInput('');
+    setShowDriveForm(false);
+    await refreshDriveSchools();
+    setSuccessMessage(res.initialized
+      ? `✅ Đã kết nối cơ sở dữ liệu nhà trường (${res.schools.length} trường). Chọn vai trò, trường và đăng nhập.`
+      : '✅ Đã kết nối thư mục dùng chung. Nhà trường chưa khởi tạo cơ sở dữ liệu — Quản trị đăng nhập để khởi tạo trường và cấp tài khoản.');
+  };
+
+  useEffect(() => {
+    if (onlyAdminAllowed && selectedRoleScope !== 'admin') {
+      setSelectedRoleScope('admin');
+    }
+    if (!onlyAdminAllowed && selectedRoleScope === 'admin' && !username) {
+      setSelectedRoleScope('school_teacher');
+    }
+  }, [onlyAdminAllowed]);
+
+  const refreshSchoolList = async () => {
+    if (schoolDriveDbService.isConfigured()) {
+      await refreshDriveSchools();
+      return;
+    }
+    try {
+      const list = await databaseService.getSchools();
+      if (Array.isArray(list) && list.length > 0) {
+        setSchools(list);
+        if (!selectedSchoolName || !list.some(s => s.name === selectedSchoolName)) {
+          setSelectedSchoolName(list[0].name);
+        }
+      }
+    } catch (_) {}
+  };
+
+  const handleQuickPullFromDrive = async () => {
+    // Bản web: danh sách trường lấy từ CSDL nhà trường trên Drive (không kéo tệp phân cấp cũ)
+    if (schoolDriveDbService.isConfigured()) {
+      setIsPullingDrive(true);
+      await refreshDriveSchools();
+      setIsPullingDrive(false);
+      return;
+    }
+    setIsPullingDrive(true);
+    setErrorMessage('');
+    setSuccessMessage('');
+    try {
+      const res = await googleDriveService.pullHierarchyDataFromDrive();
+      if (res.success) {
+        setSuccessMessage(`✅ ${res.message}`);
+        await refreshSchoolList();
+      } else {
+        setErrorMessage(res.message || 'Chưa tìm thấy dữ liệu trên Google Drive. Thầy/Cô hãy bấm vào mục "Google Drive" ở dưới để dán link Cầu nối!');
+      }
+    } catch (err: any) {
+      setErrorMessage(err?.message || 'Lỗi khi kéo dữ liệu từ Google Drive.');
+    } finally {
+      setIsPullingDrive(false);
+    }
+  };
+
+  useEffect(() => {
+    if (isOpen && !isGoogleDriveModalOpen) {
+      refreshSchoolList();
+    }
+  }, [isOpen, isGoogleDriveModalOpen]);
+
+  // Lắng nghe thay đổi khi modal khác (như GoogleDriveSyncModal) nạp trường mới
+  useEffect(() => {
+    const handleStorageChange = () => {
+      refreshSchoolList();
+    };
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
+
+  if (!isOpen) return null;
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMessage('');
+    setSuccessMessage('');
+    if (!username.trim() || !password.trim()) {
+      setErrorMessage('Vui lòng nhập tên đăng nhập và mật khẩu.');
+      return;
+    }
+
+    if (onlyAdminAllowed && selectedRoleScope !== 'admin') {
+      setErrorMessage(!driveConfigured
+        ? 'Máy này chưa kết nối thư mục dùng chung của nhà trường. Hãy dán link thư mục (Ô 1) và link mã script (Ô 2) do Quản trị cung cấp rồi bấm Xác thực, hoặc đăng nhập vai trò Quản trị để cấu hình.'
+        : 'Nhà trường chưa khởi tạo cơ sở dữ liệu. Hiện chỉ tài khoản Quản trị đăng nhập được.');
+      return;
+    }
+
+    const isSchoolRole = selectedRoleScope === 'school_teacher' || selectedRoleScope === 'school_admin';
+    if (isSchoolRole && !selectedSchoolName.trim()) {
+      setErrorMessage('Vui lòng chọn trường học trực thuộc của bạn.');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const res = await onLogin(
+        username.trim(), 
+        password, 
+        selectedRoleScope, 
+        isSchoolRole ? selectedSchoolName : undefined
+      );
+      if (res.success) {
+        setSuccessMessage('Đăng nhập thành công! Đang tải dữ liệu...');
+        setTimeout(() => {
+          onClose();
+        }, 600);
+      } else {
+        setErrorMessage(res.message || 'Bạn đã nhập sai tài khoản mật khẩu.');
+      }
+    } catch (err: any) {
+      setErrorMessage(err?.message || 'Có lỗi xảy ra khi đăng nhập.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const roleOptions: Array<{
+    id: LoginRoleScope;
+    title: string;
+    sub: string;
+    icon: React.ReactNode;
+    color: string;
+    activeBorder: string;
+    activeBg: string;
+    dotColor: string;
+  }> = [
+    {
+      id: 'personal_teacher',
+      title: 'Vai trò Cá Nhân',
+      sub: 'Giáo viên tỉnh thành lẻ / tự do, quản lý bởi Quản trị Cá nhân',
+      icon: <UserCheck className="w-5 h-5" />,
+      color: 'text-emerald-700',
+      activeBorder: 'border-emerald-400',
+      activeBg: 'bg-emerald-50/80',
+      dotColor: 'bg-emerald-500'
+    },
+    {
+      id: 'school_teacher',
+      title: 'Vai trò Giáo viên thuộc Nhà trường',
+      sub: 'Giáo viên chính khóa / bộ môn thuộc trường học trên hệ thống',
+      icon: <School className="w-5 h-5" />,
+      color: 'text-blue-700',
+      activeBorder: 'border-blue-400',
+      activeBg: 'bg-blue-50/80',
+      dotColor: 'bg-blue-500'
+    },
+    {
+      id: 'school_admin',
+      title: 'Vai trò Quản trị Nhà Trường',
+      sub: 'Quản lý toàn diện GV, lớp, HS trường, tải/nạp JSON & dọn năm học mới',
+      icon: <ShieldCheck className="w-5 h-5" />,
+      color: 'text-amber-700',
+      activeBorder: 'border-amber-400',
+      activeBg: 'bg-amber-50/80',
+      dotColor: 'bg-amber-500'
+    },
+    {
+      id: 'guest_admin',
+      title: 'Vai Trò Quản trị Tài khoản Cá Nhân',
+      sub: 'Quản lý các thầy cô giáo viên cá nhân, tải/nạp JSON & dọn năm học mới',
+      icon: <Users className="w-5 h-5" />,
+      color: 'text-purple-700',
+      activeBorder: 'border-purple-400',
+      activeBg: 'bg-purple-50/80',
+      dotColor: 'bg-purple-500'
+    },
+    {
+      id: 'admin',
+      title: 'Tài khoản quản trị Cao nhất (adminquantri)',
+      sub: 'Quyền quản trị tối cao nhất: quản lý cây thư mục CSDL trường & toàn bộ tài khoản',
+      icon: <Crown className="w-5 h-5" />,
+      color: 'text-rose-700',
+      activeBorder: 'border-rose-400',
+      activeBg: 'bg-rose-50/80',
+      dotColor: 'bg-rose-500'
+    }
+  ];
+
+
+
+  return (
+    <div 
+      className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4"
+      style={{ background: 'linear-gradient(135deg, #1e3a5f 0%, #2d5a87 30%, #3d7ab5 60%, #4a90c4 100%)' }}
+    >
+      {/* Background pattern overlay */}
+      <div className="absolute inset-0 opacity-10" style={{
+        backgroundImage: `radial-gradient(circle at 25% 25%, rgba(255,255,255,0.15) 0%, transparent 50%),
+                          radial-gradient(circle at 75% 75%, rgba(255,255,255,0.1) 0%, transparent 50%)`,
+      }} />
+
+      {/* Main container */}
+      <div 
+        className="relative w-full max-w-6xl flex flex-col max-h-[97vh] animate-in fade-in zoom-in-95 duration-300"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* ─────────── TOP HEADER BAR ─────────── */}
+        <div className="flex items-center justify-between px-3 sm:px-4 pb-2 shrink-0">
+          <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+            {/* Logo */}
+            <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full border-[3px] border-white/40 overflow-hidden shadow-2xl bg-white shrink-0 flex items-center justify-center p-0.5">
+              <img 
+                src={schoolDbLogo} 
+                alt="Logo Hệ Quản Trị CSDL Trường Học" 
+                className="w-full h-full object-contain"
+              />
+            </div>
+            {/* Title */}
+            <div className="min-w-0">
+              <h1 className="text-base sm:text-lg md:text-xl lg:text-xl font-black text-white tracking-tight drop-shadow-lg leading-tight whitespace-nowrap" style={{
+                textShadow: '0 2px 12px rgba(0,0,0,0.4), 0 0 40px rgba(255,255,255,0.1)'
+              }}>
+                HỆ THỐNG QUẢN TRỊ CSDL LỚP HỌC HẠNH PHÚC
+              </h1>
+              <p className="text-[10px] sm:text-xs text-blue-100/80 font-medium mt-0.5 hidden sm:block">
+                SCHOOL DATABASE MANAGEMENT SYSTEM • Phiên bản chuyên nghiệp
+              </p>
+            </div>
+          </div>
+          
+          {/* Nút Đăng ký & CDKEY (gọn trên cùng hàng tiêu đề để không phải cuộn) */}
+          <div className="flex flex-wrap items-center justify-end gap-2 shrink-0 ml-2">
+            <button
+              type="button"
+              onClick={() => setIsRegistrationModalOpen(true)}
+              className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-full font-black text-[10px] sm:text-[11px] uppercase tracking-wide shadow-lg transition-all hover:scale-[1.03] active:scale-[0.98] flex items-center gap-1.5 cursor-pointer"
+              style={{ background: 'linear-gradient(135deg, #dc2626 0%, #e11d48 50%, #b91c1c 100%)', color: 'white', boxShadow: '0 6px 20px rgba(220, 38, 38, 0.35)' }}
+              title="Đăng ký mua tài khoản giáo viên mới"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+              <span className="hidden sm:inline">ĐĂNG KÝ TÀI KHOẢN MỚI</span>
+              <span className="sm:hidden">ĐĂNG KÝ</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsCdKeyModalOpen(true)}
+              className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-full font-black text-[10px] sm:text-[11px] uppercase tracking-wide shadow-lg transition-all hover:scale-[1.03] active:scale-[0.98] flex items-center gap-1.5 cursor-pointer ${
+                isCdKeyActivated
+                  ? 'bg-emerald-600 hover:bg-emerald-500 text-white'
+                  : 'bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950'
+              }`}
+              title="Kích hoạt CDKEY (LOP-HOC-HANH-PHUC)"
+            >
+              <KeyRound className="w-3.5 h-3.5" />
+              <span>{isCdKeyActivated ? 'BẢN QUYỀN VĨNH VIỄN' : 'KÍCH HOẠT CDKEY'}</span>
+            </button>
+          </div>
+
+          {/* Close button (only when logged in) */}
+          {currentUser && (
+            <button
+              onClick={onClose}
+              className="p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-all hover:scale-110"
+              title="Đóng cửa sổ"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          )}
+        </div>
+
+        {/* ─────────── MAIN SPLIT PANEL ─────────── */}
+        <div className="flex-1 flex flex-col md:flex-row gap-3 sm:gap-4 px-3 sm:px-4 pb-3 sm:pb-4 overflow-hidden min-h-0">
+          
+          {/* ═══════════ LEFT PANEL - LOGIN FORM & RESCUE ═══════════ */}
+          <div className="md:w-[44%] shrink-0 flex flex-col rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl" style={{
+            background: 'linear-gradient(160deg, #1e3a5f 0%, #2d5a87 40%, #1a2f4a 100%)',
+            boxShadow: '0 25px 50px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1)'
+          }}>
+            <div className="flex-1 p-3 sm:p-4 flex flex-col overflow-y-auto">
+              {/* Error & Success Alerts */}
+              {errorMessage && (
+                <div className="mb-3 p-3 rounded-2xl bg-rose-600/35 border-2 border-rose-400 text-white text-xs sm:text-sm font-black flex items-start gap-2.5 backdrop-blur-md shadow-xl animate-in fade-in slide-in-from-top duration-200">
+                  <AlertCircle className="w-5 h-5 text-rose-300 shrink-0 mt-0.5" />
+                  <div className="flex-1">
+                    <div className="text-[10px] font-black uppercase tracking-wider text-rose-200 mb-0.5">
+                      BẢNG THÔNG BÁO HỆ THỐNG
+                    </div>
+                    <div className="text-white text-xs sm:text-[13px] font-black leading-snug">
+                      {errorMessage}
+                    </div>
+                  </div>
+                  <button 
+                    type="button" 
+                    onClick={() => setErrorMessage('')}
+                    className="text-rose-200 hover:text-white p-0.5 transition-colors cursor-pointer"
+                    title="Đóng thông báo"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
+              {successMessage && (
+                <div className="mb-3 p-3 rounded-2xl bg-emerald-500/25 border-2 border-emerald-400 text-emerald-100 text-xs sm:text-sm font-black flex items-center gap-2.5 backdrop-blur-md shadow-xl">
+                  <CheckCircle2 className="w-5 h-5 text-emerald-300 shrink-0" />
+                  <span>{successMessage}</span>
+                </div>
+              )}
+
+              <form onSubmit={handleSubmit} className="space-y-3.5">
+                {/* 🏫 Bước bắt buộc: thư mục dùng chung của nhà trường trên Google Drive */}
+                {(!driveConfigured || showDriveForm) ? (
+                  <div className="p-3 rounded-xl space-y-2" style={{ background: 'rgba(245, 158, 11, 0.16)', border: '1px solid rgba(245, 158, 11, 0.45)' }}>
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="text-[11px] font-black text-amber-100 uppercase flex items-center gap-1.5">
+                        <Cloud className="w-3.5 h-3.5" />
+                        <span>{driveConfigured ? 'Đổi thư mục dùng chung của nhà trường' : '1. Kết nối thư mục dùng chung của nhà trường'}</span>
+                      </div>
+                      {driveConfigured && (
+                        <button
+                          type="button"
+                          onClick={() => setShowDriveForm(false)}
+                          className="text-[10px] px-2 py-0.5 rounded-md bg-white/15 hover:bg-white/25 text-white font-bold shrink-0 cursor-pointer"
+                        >
+                          Hủy
+                        </button>
+                      )}
+                    </div>
+                    <p className="text-[10.5px] text-amber-50/90 font-medium leading-snug">
+                      Dán 2 đường link do Quản trị nhà trường cung cấp rồi bấm <b>Xác thực</b> (mỗi máy chỉ làm 1 lần).
+                    </p>
+                    <label className="block space-y-1">
+                      <span className="text-[10px] font-black text-amber-100 uppercase">Ô 1 · Link thư mục dùng chung (Google Drive)</span>
+                      <input
+                        type="text"
+                        value={folderLinkInput}
+                        onChange={(e) => setFolderLinkInput(e.target.value)}
+                        placeholder="https://drive.google.com/drive/folders/..."
+                        className="w-full px-3 py-2 rounded-lg text-[11px] font-mono text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-amber-400"
+                      />
+                    </label>
+                    <label className="block space-y-1">
+                      <span className="text-[10px] font-black text-amber-100 uppercase">Ô 2 · Link mã script của nhà trường (Apps Script)</span>
+                      <input
+                        type="text"
+                        value={scriptLinkInput}
+                        onChange={(e) => setScriptLinkInput(e.target.value)}
+                        placeholder="https://script.google.com/macros/s/.../exec"
+                        className="w-full px-3 py-2 rounded-lg text-[11px] font-mono text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-amber-400"
+                      />
+                    </label>
+                    <button
+                      type="button"
+                      onClick={handleApplyConnection}
+                      disabled={!folderLinkInput.trim() || !scriptLinkInput.trim() || driveChecking}
+                      className="w-full py-2 rounded-lg bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white text-[11px] font-black uppercase cursor-pointer flex items-center justify-center gap-1.5"
+                    >
+                      <ShieldCheck className="w-3.5 h-3.5" />
+                      {driveChecking ? 'Đang xác thực với Google Drive...' : 'Xác thực & kết nối'}
+                    </button>
+                    {!driveConfigured && (
+                      <p className="text-[10px] text-amber-50/80 font-medium leading-snug">
+                        Quản trị nhà trường lần đầu: chọn vai trò Quản trị cao nhất và đăng nhập để tạo thư mục, mã script.
+                      </p>
+                    )}
+                  </div>
+                ) : (
+                  <div className="px-3 py-2 rounded-xl flex items-center justify-between gap-2" style={{ background: 'rgba(16, 185, 129, 0.14)', border: '1px solid rgba(16, 185, 129, 0.35)' }}>
+                    <div className="text-[10.5px] font-bold text-emerald-100 flex items-center gap-1.5 min-w-0">
+                      <Cloud className="w-3.5 h-3.5 shrink-0" />
+                      <span className="truncate">
+                        {driveChecking
+                          ? 'Đang đọc cơ sở dữ liệu nhà trường trên Drive...'
+                          : driveInitialized
+                            ? `Đã kết nối thư mục dùng chung • ${schools.length} trường`
+                            : (driveNotice || 'Đã kết nối thư mục dùng chung')}
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowDriveForm(true)}
+                      className="text-[10px] px-2 py-0.5 rounded-md bg-white/15 hover:bg-white/25 text-white font-bold shrink-0 cursor-pointer"
+                    >
+                      Đổi
+                    </button>
+                  </div>
+                )}
+
+                {/* Username Input */}
+                <div>
+                  <label className="block text-[11px] font-black text-blue-100/90 uppercase mb-1.5 tracking-wider">
+                    2. Tên Đăng Nhập
+                  </label>
+                  <div className="relative">
+                    <User className="w-4 h-4 text-blue-300/60 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="text"
+                      value={username}
+                      onChange={(e) => setUsername(e.target.value)}
+                      placeholder="Ví dụ: gvcn_1a1, bgh_hieutruong, adminquantri..."
+                      className="w-full pl-10 pr-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-bold text-white placeholder-blue-300/40 focus:outline-none focus:ring-2 focus:ring-blue-400/50 transition-all"
+                      style={{
+                        background: 'rgba(255,255,255,0.08)',
+                        border: '1px solid rgba(255,255,255,0.12)',
+                        backdropFilter: 'blur(8px)'
+                      }}
+                      required
+                    />
+                  </div>
+                </div>
+
+                {/* Password Input */}
+                <div>
+                  <label className="block text-[11px] font-black text-blue-100/90 uppercase mb-1.5 tracking-wider">
+                    3. Mật Khẩu
+                  </label>
+                  <div className="relative">
+                    <Lock className="w-4 h-4 text-blue-300/60 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="Nhập mật khẩu..."
+                      className="w-full pl-10 pr-11 py-2.5 rounded-xl text-xs sm:text-sm font-bold text-white placeholder-blue-300/40 focus:outline-none focus:ring-2 focus:ring-blue-400/50 transition-all"
+                      style={{
+                        background: 'rgba(255,255,255,0.08)',
+                        border: '1px solid rgba(255,255,255,0.12)',
+                        backdropFilter: 'blur(8px)'
+                      }}
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-blue-300/60 hover:text-blue-200 transition-colors"
+                    >
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+
+                {/* School Selection - for school_teacher and school_admin */}
+                {(selectedRoleScope === 'school_teacher' || selectedRoleScope === 'school_admin') && (
+                  <div className="p-3 rounded-xl animate-in fade-in slide-in-from-top-2 duration-200" style={{
+                    background: 'rgba(59, 130, 246, 0.15)',
+                    border: '1px solid rgba(59, 130, 246, 0.25)'
+                  }}>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="text-[11px] font-black text-blue-200 uppercase flex items-center gap-1.5">
+                        <School className="w-3.5 h-3.5" />
+                        <span>Chọn Tên Trường:</span>
+                      </label>
+                      <button
+                        type="button"
+                        onClick={handleQuickPullFromDrive}
+                        disabled={isPullingDrive}
+                        className="text-[10px] px-2 py-0.5 rounded-md bg-sky-500/30 hover:bg-sky-500/50 text-sky-200 border border-sky-400/30 font-bold flex items-center gap-1 transition-all cursor-pointer"
+                        title="Tự động kéo CSDL trường và tài khoản mới nhất từ Google Drive"
+                      >
+                        <RefreshCw className={`w-2.5 h-2.5 ${isPullingDrive ? 'animate-spin' : ''}`} />
+                        <span>{isPullingDrive ? 'Đang kéo...' : 'Kéo CSDL từ Drive'}</span>
+                      </button>
+                    </div>
+                    {schools.length > 0 ? (
+                      <select
+                        value={selectedSchoolName}
+                        onChange={(e) => setSelectedSchoolName(e.target.value)}
+                        className="w-full px-3 py-2 rounded-lg border text-xs sm:text-sm font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white shadow-xs"
+                        style={{ borderColor: 'rgba(59, 130, 246, 0.3)' }}
+                      >
+                        {schools.map((s) => (
+                          <option key={s.id} value={s.name}>
+                            🏫 {s.name} ({s.code})
+                          </option>
+                        ))}
+                      </select>
+                    ) : (
+                      <div className="space-y-1.5">
+                        <input
+                          type="text"
+                          value={selectedSchoolName}
+                          onChange={(e) => setSelectedSchoolName(e.target.value)}
+                          placeholder="Nhập tên trường học của bạn..."
+                          className="w-full px-3 py-2 rounded-lg border text-xs sm:text-sm font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white shadow-xs"
+                          style={{ borderColor: 'rgba(59, 130, 246, 0.3)' }}
+                        />
+                        <div className="text-[10px] text-blue-200 font-medium">
+                          💡 Nhập tên trường của bạn (hoặc tạo trường trong tài khoản <strong className="text-white">@adminquantri</strong>)
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Login Button */}
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full py-3 px-4 rounded-xl font-black text-xs sm:text-sm uppercase tracking-wider transition-all flex items-center justify-center gap-2.5 disabled:opacity-50 cursor-pointer hover:scale-[1.01] active:scale-[0.99]"
+                  style={{
+                    background: 'linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%)',
+                    color: 'white',
+                    boxShadow: '0 8px 24px rgba(16, 185, 129, 0.35), inset 0 1px 0 rgba(255,255,255,0.2)'
+                  }}
+                >
+                  <ArrowRight className="w-5 h-5" />
+                  {loading ? 'Đang xử lý đăng nhập...' : 'ĐĂNG NHẬP VÀO HỆ THỐNG'}
+                </button>
+              </form>
+
+              {/* ─────────── CỨU HỘ & KHÔI PHỤC DỮ LIỆU (gọn 1 dòng) ─────────── */}
+              <div className="mt-3 pt-2.5 border-t border-white/10 flex items-center gap-2">
+                <span className="text-[10px] font-black uppercase tracking-wide text-amber-300 flex items-center gap-1 shrink-0">
+                  <RefreshCw className="w-3 h-3 text-amber-400" />
+                  Cứu hộ dữ liệu:
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setIsGoogleDriveModalOpen(true)}
+                  className="flex-1 px-2 py-1.5 rounded-lg border border-sky-400/30 bg-sky-600/20 hover:bg-sky-600/40 text-sky-200 hover:text-white text-[10.5px] font-black flex items-center justify-center gap-1 cursor-pointer"
+                  title="Kéo dữ liệu từ thư mục Google Drive dùng chung"
+                >
+                  <Cloud className="w-3.5 h-3.5" /> Google Drive
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsDataStorageModalOpen(true)}
+                  className="flex-1 px-2 py-1.5 rounded-lg border border-emerald-400/30 bg-emerald-600/20 hover:bg-emerald-600/40 text-emerald-200 hover:text-white text-[10.5px] font-black flex items-center justify-center gap-1 cursor-pointer"
+                  title="Chọn tệp JSON an toàn trên ổ D / E hoặc USB"
+                >
+                  <HardDrive className="w-3.5 h-3.5" /> Ổ D / E & USB
+                </button>
+              </div>
+            </div>
+
+            {/* Author Footer (1 dòng) */}
+            <div className="shrink-0 px-3 sm:px-4 py-1.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[10px]" style={{
+              background: 'linear-gradient(to right, rgba(245,158,11,0.15), rgba(234,179,8,0.1))',
+              borderTop: '1px solid rgba(245,158,11,0.2)'
+            }}>
+              <span className="font-black text-white">Tác giả: NGUYỄN THANH LIÊM</span>
+              <span className="font-bold text-blue-200/70">TH Số 1 Tân Uyên</span>
+              <a href="https://zalo.me/0888358363" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-blue-200/80 hover:text-amber-300">
+                <Phone className="w-3 h-3" /><span className="text-amber-300 font-mono font-bold">0888.358.363</span>
+              </a>
+              <a href="https://www.facebook.com/nguyenthanhliemautotech/" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-blue-200/80 hover:text-blue-300">
+                <Globe className="w-3 h-3" /><span className="font-bold">Facebook</span>
+              </a>
+            </div>
+          </div>
+
+          {/* ═══════════ RIGHT PANEL - ROLE SELECTION & 5 PHÂN HỆ TINH HOA (ẢNH 9) ═══════════ */}
+          <div className="flex-1 flex flex-col rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl bg-white" style={{
+            boxShadow: '0 25px 50px rgba(0,0,0,0.15)'
+          }}>
+            {/* Tab switch header */}
+            <div className="shrink-0 flex border-b border-slate-200 bg-slate-50/80 p-1.5 gap-1.5">
+              <button
+                type="button"
+                onClick={() => setRightPanelTab('roles')}
+                className={`flex-1 py-2 px-3 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                  rightPanelTab === 'roles'
+                    ? 'bg-white text-indigo-700 shadow-sm border border-slate-200/80'
+                    : 'text-slate-500 hover:text-slate-800'
+                }`}
+              >
+                <Users className="w-3.5 h-3.5" />
+                <span>1. Chọn Vai Trò (5 Cấp Bậc)</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setRightPanelTab('features')}
+                className={`flex-1 py-2 px-3 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                  rightPanelTab === 'features'
+                    ? 'bg-gradient-to-r from-amber-500 to-rose-500 text-white shadow-sm'
+                    : 'text-slate-500 hover:text-slate-800'
+                }`}
+              >
+                <Sparkles className="w-3.5 h-3.5 text-amber-200" />
+                <span>5 Phân Hệ Tinh Hoa</span>
+              </button>
+            </div>
+
+            <div className="flex-1 p-3 sm:p-4 overflow-y-auto">
+              {rightPanelTab === 'roles' ? (
+                <>
+                  <div className="mb-2 sm:mb-3">
+                    <h2 className="text-xs sm:text-sm font-black text-slate-800 uppercase tracking-wide flex items-center gap-2">
+                      <span className="w-6 h-6 rounded-lg bg-indigo-100 flex items-center justify-center text-indigo-600 text-xs font-black">1</span>
+                      VAI TRÒ TRUY CẬP ĐÃ CHỌN:
+                    </h2>
+                  </div>
+
+                  {/* Role Cards */}
+                  <div className="space-y-1.5 sm:space-y-2">
+                    {roleOptions.map((opt) => {
+                      const isSelected = selectedRoleScope === opt.id;
+                      const isLocked = onlyAdminAllowed && opt.id !== 'admin';
+                      return (
+                        <div
+                          key={opt.id}
+                          onClick={() => {
+                            if (isLocked) {
+                              setErrorMessage(!driveConfigured
+                                ? '🔒 Cần cấu hình thư mục dùng chung của nhà trường trước khi chọn vai trò này.'
+                                : '🔒 Nhà trường chưa khởi tạo cơ sở dữ liệu. Chỉ Quản trị đăng nhập được.');
+                              return;
+                            }
+                            setSelectedRoleScope(opt.id);
+                          }}
+                          title={isLocked ? 'Cần cấu hình thư mục dùng chung của nhà trường trước' : undefined}
+                          className={`group relative p-2 sm:p-2.5 rounded-xl sm:rounded-2xl border-2 transition-all duration-200 cursor-pointer flex items-start gap-2.5 sm:gap-3 ${isLocked ? 'opacity-40 grayscale ' : ''}${
+                            isSelected 
+                              ? `${opt.activeBorder} ${opt.activeBg} shadow-md` 
+                              : 'border-slate-200/80 hover:border-slate-300 bg-white hover:bg-slate-50/50'
+                          }`}
+                          style={isSelected ? {
+                            boxShadow: '0 4px 16px rgba(0,0,0,0.06)'
+                          } : undefined}
+                        >
+                          {/* Radio indicator */}
+                          <div className="mt-0.5 shrink-0">
+                            <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${
+                              isSelected 
+                                ? `${opt.activeBorder} border-current` 
+                                : 'border-slate-300'
+                            }`}>
+                              {isSelected && (
+                                <div className={`w-2.5 h-2.5 rounded-full ${opt.dotColor} animate-in zoom-in duration-150`} />
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Icon */}
+                          <div className={`p-1.5 rounded-xl shrink-0 transition-all ${
+                            isSelected 
+                              ? `${opt.activeBg} ${opt.color}` 
+                              : 'bg-slate-100 text-slate-400 group-hover:text-slate-500'
+                          }`}>
+                            {opt.icon}
+                          </div>
+
+                          {/* Text content */}
+                          <div className="flex-1 min-w-0">
+                            <div className={`text-xs sm:text-sm font-black transition-colors ${
+                              isSelected ? opt.color : 'text-slate-700 group-hover:text-slate-900'
+                            }`}>
+                              {opt.title}
+                            </div>
+                            <div className="text-[10px] sm:text-[11px] text-slate-500 leading-tight mt-0.5">
+                              {opt.sub}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </>
+              ) : (
+                /* 5 PHÂN HỆ TINH HOA (ẢNH 9) */
+                <div className="space-y-2.5 animate-in fade-in duration-200">
+                  <div className="p-3 rounded-2xl bg-gradient-to-r from-blue-500/10 via-indigo-500/10 to-purple-500/10 border border-blue-200">
+                    <h3 className="text-xs font-black text-indigo-900 uppercase tracking-wide flex items-center gap-1.5 mb-1">
+                      <Sparkles className="w-4 h-4 text-amber-500" />
+                      HỆ SINH THÁI 5 PHÂN HỆ LỚP HỌC HẠNH PHÚC
+                    </h3>
+                    <p className="text-[11px] text-slate-600">
+                      Tích hợp hoàn hảo giữa Quản trị nhà trường, Ban giám hiệu và Giáo viên chủ nhiệm & bộ môn.
+                    </p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="p-2.5 rounded-xl border border-blue-200 bg-blue-50/50 flex items-start gap-2.5">
+                      <div className="w-7 h-7 rounded-lg bg-blue-600 text-white flex items-center justify-center font-black text-xs shrink-0">
+                        1
+                      </div>
+                      <div className="flex-1">
+                        <div className="text-xs font-black text-blue-900">Điểm Danh & Bán Trú Thông Minh</div>
+                        <p className="text-[10.5px] text-slate-600 mt-0.5">
+                          Tự động tổng hợp chuyên cần, thống kê học sinh ăn bán trú, liên thông tức thì lên báo cáo Ban Giám Hiệu.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="p-2.5 rounded-xl border border-emerald-200 bg-emerald-50/50 flex items-start gap-2.5">
+                      <div className="w-7 h-7 rounded-lg bg-emerald-600 text-white flex items-center justify-center font-black text-xs shrink-0">
+                        2
+                      </div>
+                      <div className="flex-1">
+                        <div className="text-xs font-black text-emerald-900">Sơ Đồ Lớp Học & Tích Điểm Khen Thưởng</div>
+                        <p className="text-[10.5px] text-slate-600 mt-0.5">
+                          Tùy biến bàn ghế linh hoạt, cộng sao rèn luyện, đổi quà cửa hàng hạnh phúc và in giấy khen vinh danh.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="p-2.5 rounded-xl border border-purple-200 bg-purple-50/50 flex items-start gap-2.5">
+                      <div className="w-7 h-7 rounded-lg bg-purple-600 text-white flex items-center justify-center font-black text-xs shrink-0">
+                        3
+                      </div>
+                      <div className="flex-1">
+                        <div className="text-xs font-black text-purple-900">Bộ Mini-Games Hào Hứng & Bốc Thăm</div>
+                        <p className="text-[10.5px] text-slate-600 mt-0.5">
+                          Vòng quay may mắn, Cuộn thẻ Roulette, Chọn học sinh ngẫu nhiên kèm âm thanh hiệu ứng sinh động.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="p-2.5 rounded-xl border border-rose-200 bg-rose-50/50 flex items-start gap-2.5">
+                      <div className="w-7 h-7 rounded-lg bg-rose-600 text-white flex items-center justify-center font-black text-xs shrink-0">
+                        4
+                      </div>
+                      <div className="flex-1">
+                        <div className="text-xs font-black text-rose-900">Thước Đo Tiếng Ồn & Đồng Hồ Thi Đua</div>
+                        <p className="text-[10.5px] text-slate-600 mt-0.5">
+                          Cảm biến âm thanh Micro đo độ ồn lớp học theo decibel, đồng hồ đếm ngược nhóm và báo chuông thông minh.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="p-2.5 rounded-xl border border-amber-200 bg-amber-50/50 flex items-start gap-2.5">
+                      <div className="w-7 h-7 rounded-lg bg-amber-600 text-white flex items-center justify-center font-black text-xs shrink-0">
+                        5
+                      </div>
+                      <div className="flex-1">
+                        <div className="text-xs font-black text-amber-900">Đồng Bộ Google Drive & CSDL An Toàn Ổ D/E</div>
+                        <p className="text-[10.5px] text-slate-600 mt-0.5">
+                          Dùng chung 1 thư mục Google Drive, lưu file riêng từng lớp (gvcn_*.json), BGH tự động quét và bảo toàn 100% dữ liệu.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Bottom note */}
+            <div className="shrink-0 px-4 sm:px-5 py-2.5 border-t border-slate-100 bg-slate-50/50">
+              <div className="text-[10px] text-slate-500 leading-relaxed flex items-center justify-between">
+                <div>
+                  <span className="font-bold text-slate-700">💾 Cơ chế phân quyền:</span>{' '}
+                  Phân vùng bảo mật giữa Nhà trường và Giáo viên vãng lai.
+                </div>
+                <div className="text-indigo-600 font-bold shrink-0">
+                  Phiên bản 2026 Pro
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};

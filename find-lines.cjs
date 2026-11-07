@@ -1,0 +1,13 @@
+const fs = require('fs');
+const lines = fs.readFileSync('src/components/views/ClassesStudentsView.tsx', 'utf8').split('\n');
+const log = (str) => lines.forEach((l, i) => { if (l.indexOf(str) !== -1) console.log(i + 1, ':', l.trim()); });
+log('} from \'lucide-react\';');
+log('const [isInitSubjectClassesModalOpen');
+log('{/* Card 3: Thống kê nhanh sĩ số từng lớp */}');
+log('{/* 🏫 BỘ LỌC DÀNH CHO ADMIN QUẢN TRỊ CẤP CAO: LỌC XEM CÁC LỚP THEO TRƯỜNG (CHỈ HIỆN KHI ĐÃ CÓ TRƯỜNG/LỚP) */}');
+log('{isCreateClassOpen && (');
+log('{/* Chọn Ảnh đại diện của lớp & Tải từ máy tính (User Request 1) */}');
+log('<div className="grid grid-cols-2 gap-3">');
+log('<label className="block text-xs font-bold text-slate-700 mb-1">Khối lớp</label>');
+log('<div className="flex gap-3 pt-3 border-t border-slate-100">');
+log('</ClassroomProvider>');

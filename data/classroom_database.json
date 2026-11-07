@@ -1,0 +1,30 @@
+{
+  "version": "2.0.0",
+  "appName": "LỚP HỌC HẠNH PHÚC - CƠ SỞ DỮ LIỆU ĐỒNG BỘ GITHUB",
+  "lastSync": "2026-11-07T02:27:31.727Z",
+  "schools": [],
+  "users": [
+    {
+      "id": "user-adminquantri",
+      "username": "adminquantri",
+      "password": "Tanuyen@2026",
+      "fullName": "Quản trị viên Hệ thống Cấp cao",
+      "role": "admin",
+      "tenantType": "school",
+      "email": "adminquantri@lophoc.edu.vn",
+      "phone": "",
+      "schoolName": "Hệ thống Quản trị Lớp học Hạnh phúc",
+      "createdAt": 1794018451727,
+      "status": "active"
+    }
+  ],
+  "userData": {},
+  "auditLogs": [],
+  "registrations": [],
+  "systemSettings": {
+    "allowRegistration": true,
+    "autoSyncIntervalMs": 15000,
+    "autoPushGithub": false,
+    "autoPullGithub": false
+  }
+}

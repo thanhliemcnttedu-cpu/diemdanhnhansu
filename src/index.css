@@ -1,0 +1,450 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: 'Be Vietnam Pro', sans-serif;
+  --font-display: 'Be Vietnam Pro', sans-serif;
+}
+
+@keyframes scan {
+  0% { transform: translateY(0); }
+  50% { transform: translateY(540px); }
+  100% { transform: translateY(0); }
+}
+
+@layer base {
+  *, ::before, ::after {
+    font-family: 'Be Vietnam Pro', sans-serif;
+  }
+
+  html, body {
+    font-family: 'Be Vietnam Pro', sans-serif !important;
+    color: #0f172a;
+    background: linear-gradient(135deg, #f0f7ff 0%, #f8fbff 50%, #edf5fd 100%);
+    background-attachment: fixed;
+  }
+
+  button, input, select, textarea, optgroup {
+    font-family: 'Be Vietnam Pro', sans-serif;
+  }
+
+  /* Yêu cầu 3: Tất cả tiêu đề, đề mục, tên menu, tên chức năng trong toàn bộ ứng dụng hiển thị CHỮ IN HOA */
+  h1, h2, h3, h4, h5, h6, th, dt, legend {
+    text-transform: uppercase;
+  }
+
+  /* Hỗ trợ chữ thường / Title Case cho menu điều hướng */
+  .normal-case,
+  .sidebar-nav-item,
+  .sidebar-nav-item * {
+    text-transform: none !important;
+  }
+}
+
+/* ========================================================================= */
+/* 🌟 HIGH-TECH TACTILE 3D BUTTONS & MODERN BLUE PALETTE (EDTECH 2026)      */
+/* ========================================================================= */
+
+.btn-3d {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+  border-radius: 0.75rem;
+  transition: all 0.16s cubic-bezier(0.16, 1, 0.3, 1);
+  user-select: none;
+  cursor: pointer;
+  white-space: nowrap;
+  border-top: 1px solid rgba(255, 255, 255, 0.45);
+  border-left: 1px solid rgba(255, 255, 255, 0.25);
+  border-right: 1px solid rgba(0, 0, 0, 0.1);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45), 
+              0 3px 0 0 var(--btn-3d-edge, #1d4ed8), 
+              0 4px 8px -1px rgba(15, 23, 42, 0.18);
+}
+.btn-3d:hover {
+  filter: brightness(1.05);
+  transform: translateY(-1px);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55), 
+              0 4px 0 0 var(--btn-3d-edge, #1d4ed8), 
+              0 6px 14px -2px rgba(15, 23, 42, 0.24);
+}
+.btn-3d:active {
+  transform: translateY(2px);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 
+              0 1px 0 0 var(--btn-3d-edge, #1d4ed8), 
+              0 2px 4px -1px rgba(15, 23, 42, 0.15);
+}
+
+/* Compact 3D Size for Toolbars & TopBar */
+.btn-3d-sm {
+  border-radius: 0.65rem;
+  padding: 0.32rem 0.65rem;
+  font-size: 0.6875rem; /* ~11px */
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45), 
+              0 2.5px 0 0 var(--btn-3d-edge, #1d4ed8), 
+              0 3px 6px -1px rgba(15, 23, 42, 0.16);
+}
+.btn-3d-sm:hover {
+  transform: translateY(-0.8px);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55), 
+              0 3.2px 0 0 var(--btn-3d-edge, #1d4ed8), 
+              0 4px 10px -2px rgba(15, 23, 42, 0.22);
+}
+.btn-3d-sm:active {
+  transform: translateY(1.8px);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 
+              0 0.8px 0 0 var(--btn-3d-edge, #1d4ed8), 
+              0 1px 2px 0 rgba(15, 23, 42, 0.12);
+}
+
+/* 3D Color Themes - High-Tech Bright Blue Palette */
+.btn-3d-blue {
+  --btn-3d-edge: #1e40af;
+  background: linear-gradient(180deg, #3b82f6 0%, #2563eb 55%, #1d4ed8 100%);
+  color: #ffffff;
+  text-shadow: 0 1px 2px rgba(15, 23, 42, 0.35);
+}
+
+.btn-3d-cyan {
+  --btn-3d-edge: #0e7490;
+  background: linear-gradient(180deg, #06b6d4 0%, #0891b2 55%, #0e7490 100%);
+  color: #ffffff;
+  text-shadow: 0 1px 2px rgba(15, 23, 42, 0.35);
+}
+
+.btn-3d-sky {
+  --btn-3d-edge: #0284c7;
+  background: linear-gradient(180deg, #38bdf8 0%, #0ea5e9 55%, #0284c7 100%);
+  color: #ffffff;
+  text-shadow: 0 1px 2px rgba(15, 23, 42, 0.35);
+}
+
+.btn-3d-emerald {
+  --btn-3d-edge: #047857;
+  background: linear-gradient(180deg, #10b981 0%, #059669 55%, #047857 100%);
+  color: #ffffff;
+  text-shadow: 0 1px 2px rgba(15, 23, 42, 0.35);
+}
+
+.btn-3d-amber {
+  --btn-3d-edge: #b45309;
+  background: linear-gradient(180deg, #f59e0b 0%, #d97706 55%, #b45309 100%);
+  color: #ffffff;
+  text-shadow: 0 1px 2px rgba(15, 23, 42, 0.35);
+}
+
+.btn-3d-indigo {
+  --btn-3d-edge: #3730a3;
+  background: linear-gradient(180deg, #6366f1 0%, #4f46e5 55%, #4338ca 100%);
+  color: #ffffff;
+  text-shadow: 0 1px 2px rgba(15, 23, 42, 0.35);
+}
+
+.btn-3d-rose {
+  --btn-3d-edge: #be123c;
+  background: linear-gradient(180deg, #f43f5e 0%, #e11d48 55%, #be123c 100%);
+  color: #ffffff;
+  text-shadow: 0 1px 2px rgba(15, 23, 42, 0.35);
+}
+
+.btn-3d-light {
+  --btn-3d-edge: #93c5fd;
+  background: linear-gradient(180deg, #ffffff 0%, #eff6ff 100%);
+  color: #1e40af;
+  border-top: 1px solid #ffffff;
+  border-bottom: 1px solid #bfdbfe;
+  box-shadow: inset 0 1px 0 #ffffff, 
+              0 2.5px 0 0 #93c5fd, 
+              0 3px 6px -1px rgba(37, 99, 235, 0.16);
+}
+.btn-3d-light:hover {
+  background: linear-gradient(180deg, #ffffff 0%, #dbeafe 100%);
+  color: #1d4ed8;
+}
+.btn-3d-light:active {
+  transform: translateY(1.8px);
+  box-shadow: inset 0 1px 0 #ffffff, 
+              0 0.8px 0 0 #93c5fd;
+}
+
+.btn-3d-dark {
+  --btn-3d-edge: #0f172a;
+  background: linear-gradient(180deg, #334155 0%, #1e293b 60%, #0f172a 100%);
+  color: #ffffff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+/* Hiệu ứng nổi bồng bềnh mượt mà khi rê chuột vào menu sidebar */
+.sidebar-float-item {
+  transition: transform 0.24s cubic-bezier(0.16, 1, 0.3, 1), 
+              box-shadow 0.24s cubic-bezier(0.16, 1, 0.3, 1), 
+              background-color 0.2s ease, 
+              border-color 0.2s ease, 
+              color 0.15s ease;
+}
+.sidebar-float-item:hover:not(.sidebar-active) {
+  transform: translateY(-2.5px);
+  box-shadow: 0 10px 22px -4px rgba(15, 23, 42, 0.09), 0 4px 8px -2px rgba(15, 23, 42, 0.04);
+}
+.sidebar-float-item:active:not(.sidebar-active) {
+  transform: translateY(-0.5px);
+}
+
+/* Tối ưu tỉ lệ hiển thị cân đối cho màn hình máy tính laptop phổ thông (1366x768px) */
+@media screen and (min-width: 1024px) and (max-height: 850px) {
+  html {
+    font-size: 13.5px;
+  }
+}
+@media screen and (min-width: 1024px) and (max-height: 750px) {
+  html {
+    font-size: 12.5px;
+  }
+}
+
+/* 3D Classroom Spatial Perspectives */
+.perspective-classroom {
+  perspective: 1200px;
+}
+
+.preserve-3d {
+  transform-style: preserve-3d;
+}
+
+.classroom-3d-stage {
+  transform: rotateX(24deg) rotateZ(0deg) scale(0.96);
+  transform-origin: 50% 20%;
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.desk-3d-shadow {
+  box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.08), 0 4px 10px -2px rgba(15, 23, 42, 0.04);
+}
+
+/* Dynamic Interactive Hover Zoom-To Effects */
+.hover-zoom-card {
+  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.28s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease;
+}
+.hover-zoom-card:hover {
+  transform: translateY(-5px) scale(1.025);
+  box-shadow: 0 20px 35px -10px rgba(99, 102, 241, 0.2), 0 8px 16px -4px rgba(15, 23, 42, 0.06);
+  border-color: rgba(99, 102, 241, 0.5);
+  z-index: 10;
+}
+
+.hover-zoom-btn {
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.22s cubic-bezier(0.16, 1, 0.3, 1), filter 0.2s ease;
+  cursor: pointer;
+}
+.hover-zoom-btn:hover {
+  transform: translateY(-2.5px) scale(1.055);
+  box-shadow: 0 10px 24px -4px rgba(37, 99, 235, 0.38);
+  filter: brightness(1.03);
+}
+.hover-zoom-btn:active {
+  transform: translateY(0) scale(0.97);
+}
+
+.hover-zoom-desk {
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease;
+}
+.hover-zoom-desk:hover {
+  transform: translateY(-6px) scale(1.07);
+  box-shadow: 0 20px 35px -6px rgba(59, 130, 246, 0.3), 0 8px 16px -3px rgba(15, 23, 42, 0.1);
+  border-color: #2563eb;
+  z-index: 30;
+}
+
+.hover-zoom-badge {
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.hover-zoom-badge:hover {
+  transform: scale(1.12);
+}
+
+.hover-zoom-interactive {
+  transition: transform 0.24s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.24s cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: pointer;
+}
+.hover-zoom-interactive:hover {
+  transform: translateY(-3px) scale(1.035);
+  box-shadow: 0 12px 25px -5px rgba(15, 23, 42, 0.12);
+}
+
+.hover-zoom-glow {
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.hover-zoom-glow:hover {
+  transform: translateY(-3px) scale(1.04);
+  box-shadow: 0 0 25px rgba(59, 130, 246, 0.45);
+}
+
+/* Custom crisp scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Robust A4 Print Rules for Timetable, Student List & Reports */
+#app-print-portal {
+  display: none;
+}
+
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 8mm;
+  }
+  @page landscape-mode {
+    size: A4 landscape;
+    margin: 6mm;
+  }
+
+  html, body {
+    height: auto !important;
+    overflow: visible !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+    font-size: 11pt !important;
+  }
+
+  body.app-is-printing > #root {
+    display: none !important;
+  }
+
+  body.app-is-printing > #app-print-portal {
+    display: block !important;
+    position: static !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+    visibility: visible !important;
+  }
+
+  body.app-is-printing > #app-print-portal * {
+    visibility: visible !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Fallback in case class is omitted */
+  body:not(.app-is-printing) #printable-timetable,
+  body:not(.app-is-printing) #printable-student-list {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100% !important;
+    background: white !important;
+    visibility: visible !important;
+  }
+
+  .no-print,
+  button,
+  nav,
+  aside,
+  header {
+    display: none !important;
+  }
+}
+
+/* High-Impact Attention Grabbing Zoom Pulse (20s Noise Alert - phóng to thu nhỏ nhanh trong 20s) */
+@keyframes rapidPulseZoom {
+  0% {
+    transform: scale(0.84);
+    filter: drop-shadow(0 0 12px rgba(255, 255, 255, 0.5));
+  }
+  50% {
+    transform: scale(1.24);
+    filter: drop-shadow(0 0 40px rgba(255, 255, 255, 0.95));
+  }
+  100% {
+    transform: scale(0.84);
+    filter: drop-shadow(0 0 12px rgba(255, 255, 255, 0.5));
+  }
+}
+
+.animate-rapid-pulse-zoom {
+  animation: rapidPulseZoom 0.45s cubic-bezier(0.2, 0.9, 0.3, 1) infinite;
+}
+
+@keyframes clapBounce {
+  0%, 100% {
+    transform: scale(1) rotate(0deg);
+  }
+  25% {
+    transform: scale(1.35) rotate(-18deg);
+  }
+  50% {
+    transform: scale(0.9) rotate(0deg);
+  }
+  75% {
+    transform: scale(1.35) rotate(18deg);
+  }
+}
+
+.animate-clap-bounce {
+  animation: clapBounce 0.35s ease-in-out infinite;
+}
+
+/* Flashing Red Alert for Countdown Timer Expired ("HẾT GIỜ") */
+@keyframes flashRedAlert {
+  0%, 100% {
+    background-color: #dc2626; /* red-600 */
+    color: #ffffff;
+    box-shadow: 0 0 25px rgba(220, 38, 38, 0.7);
+  }
+  50% {
+    background-color: #991b1b; /* red-800 */
+    color: #ffffff;
+    box-shadow: 0 0 50px rgba(239, 68, 68, 0.95);
+  }
+}
+
+.animate-flash-red {
+  animation: flashRedAlert 0.45s ease-in-out infinite;
+}
+
+/* Touch & Mobile/Tablet Ergonomics & Desktop Resolution Scaling */
+@layer utilities {
+  .touch-pan-y-smooth {
+    touch-action: pan-y;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
+  }
+  
+  .tap-highlight-transparent {
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+/* Smooth fluid transitions for responsive layouts */
+main {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Ensure images and avatars do not break layout on small mobile screens */
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* iOS Safe Area Support */
+.safe-area-pb {
+  padding-bottom: max(0.5rem, env(safe-area-inset-bottom, 0.5rem));
+}
+

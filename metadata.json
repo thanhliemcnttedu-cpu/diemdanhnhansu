@@ -1,0 +1,10 @@
+{
+  "name": "Remix ADMIN 20h50 LỚP HỌC HẠNH PHÚC",
+  "description": "Hệ thống quản lý lớp học hạnh phúc: tích điểm xu thi đua, vòng quay may mắn, cuộn phim gọi tên, sơ đồ lớp 3D, điểm danh, đồng hồ đếm ngược, cảnh báo chống ồn và đổi quà tặng.",
+  "requestFramePermissions": [
+    "microphone"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

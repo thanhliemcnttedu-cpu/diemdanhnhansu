@@ -1,0 +1,32 @@
+{
+  "partition": "quan_tri_admin",
+  "title": "Cơ Sở Dữ Liệu Quản Trị Tối Cao Hệ Thống",
+  "lastSync": "2026-11-07T02:27:31.727Z",
+  "users": [
+    {
+      "id": "user-adminquantri",
+      "username": "adminquantri",
+      "password": "Tanuyen@2026",
+      "fullName": "Quản trị viên Hệ thống Cấp cao",
+      "role": "admin",
+      "tenantType": "school",
+      "email": "adminquantri@lophoc.edu.vn",
+      "phone": "",
+      "schoolName": "Hệ thống Quản trị Lớp học Hạnh phúc",
+      "createdAt": 1794018451727,
+      "status": "active"
+    }
+  ],
+  "systemSettings": {
+    "allowRegistration": true,
+    "autoSyncIntervalMs": 15000,
+    "autoPushGithub": false,
+    "autoPullGithub": false
+  },
+  "auditLogs": [],
+  "masterSummary": {
+    "totalUsers": 1,
+    "totalSchools": 0,
+    "totalClassesConfigured": 0
+  }
+}
