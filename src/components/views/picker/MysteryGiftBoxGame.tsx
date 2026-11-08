@@ -17,6 +17,7 @@ import { QuestionBankModal } from '../../modals/QuestionBankModal';
 import { loadQuizBank, saveQuizBank } from '../../../utils/quizParser';
 
 import { handleAvatarImgError } from '../../../utils/avatarConfig';
+import { CalledStudentModal } from './CalledStudentModal';
 interface GiftBoxItem {
   id: number;
   label: string;
@@ -51,6 +52,8 @@ export const MysteryGiftBoxGame: React.FC = () => {
   const [winner, setWinner] = useState<Student | null>(null);
   const [rewardXu, setRewardXu] = useState(2);
   const [hasAwarded, setHasAwarded] = useState(false);
+  // Hộp chúc mừng kiểu Ống kính
+  const [showWinnerPopup, setShowWinnerPopup] = useState(false);
 
   // Question challenge state (For mode 3: Gọi tên + Trả lời câu hỏi)
   const [currentQuestion, setCurrentQuestion] = useState<QuestionItem | null>(null);
@@ -73,6 +76,7 @@ export const MysteryGiftBoxGame: React.FC = () => {
     setIsOpening(true);
     setIsBoxOpened(false);
     setWinner(null);
+    setShowWinnerPopup(false);
     setHasAwarded(false);
     setSelectedOption(null);
     setShowTeacherKey(false);
@@ -114,6 +118,7 @@ export const MysteryGiftBoxGame: React.FC = () => {
           setIsBoxOpened(true);
           setIsOpening(false);
           setWinner(targetWinner);
+          setShowWinnerPopup(true);
           playFanfareSound();
           confetti({ particleCount: 95, spread: 85, origin: { y: 0.55 } });
 
@@ -315,7 +320,23 @@ export const MysteryGiftBoxGame: React.FC = () => {
       </div>
 
       {/* 3. WINNER DISPLAY & 3 CALL MODES */}
-      {winner && (
+      <CalledStudentModal
+        open={showWinnerPopup && Boolean(winner)}
+        student={winner}
+        title="Mở hộp quà bí mật!"
+        icon={<Gift className="w-5 h-5 text-amber-200 shrink-0" />}
+        badge="QUÀ BÍ MẬT"
+        message={winner ? <>Hộp quà bí mật đã gọi tên <strong className="text-slate-900">{winner.name}</strong>. Chúc mừng em!</> : undefined}
+        onAward={callMode === 'quiz' ? undefined : (pts) => handleAwardCoins(pts)}
+        awarded={hasAwarded}
+        secondaryAction={callMode === 'quiz' && currentQuestion ? { label: 'Trả lời câu hỏi', icon: <Sparkles className="w-4 h-4" />, onClick: () => setShowWinnerPopup(false) } : undefined}
+        onClose={() => {
+          setShowWinnerPopup(false);
+          if (callMode !== 'quiz') { setWinner(null); setCurrentQuestion(null); }
+        }}
+      />
+      {/* Thẻ dưới khu chơi: chỉ dùng cho chế độ câu hỏi */}
+      {winner && (callMode as string) === 'quiz' && (
         <div className="bg-gradient-to-r from-rose-50 via-amber-50 to-indigo-50 border-2 border-rose-300 rounded-3xl p-5 md:p-6 shadow-md space-y-4 animate-in fade-in zoom-in-95 hover-zoom-card">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-4 text-center sm:text-left">

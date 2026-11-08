@@ -18,6 +18,7 @@ import { QuestionBankModal } from '../../modals/QuestionBankModal';
 import { loadQuizBank, saveQuizBank } from '../../../utils/quizParser';
 
 import { handleAvatarImgError } from '../../../utils/avatarConfig';
+import { CalledStudentModal } from './CalledStudentModal';
 export const RocketMissionGame: React.FC = () => {
   const { currentClassStudents, awardPoints, quizBank, updateQuizBank } = useClassroom();
 
@@ -31,6 +32,8 @@ export const RocketMissionGame: React.FC = () => {
   const [winner, setWinner] = useState<Student | null>(null);
   const [rewardXu, setRewardXu] = useState(2);
   const [hasAwarded, setHasAwarded] = useState(false);
+  // Hộp chúc mừng kiểu Ống kính
+  const [showWinnerPopup, setShowWinnerPopup] = useState(false);
 
   // Question challenge state (For mode 3: Gọi tên + Trả lời câu hỏi)
   const [currentQuestion, setCurrentQuestion] = useState<QuestionItem | null>(null);
@@ -114,6 +117,7 @@ export const RocketMissionGame: React.FC = () => {
 
     setIsLaunching(true);
     setWinner(null);
+    setShowWinnerPopup(false);
     setHasAwarded(false);
     setSelectedOption(null);
     setShowTeacherKey(false);
@@ -149,6 +153,7 @@ export const RocketMissionGame: React.FC = () => {
         const finalWinnerIdx = activeList.findIndex(s => s.id === targetWinner.id);
         setCurrentPlanetIndex(finalWinnerIdx >= 0 ? finalWinnerIdx : 0);
         setWinner(targetWinner);
+        setShowWinnerPopup(true);
         setIsLaunching(false);
         triggerCorrectCelebration();
 
@@ -328,7 +333,23 @@ export const RocketMissionGame: React.FC = () => {
       </div>
 
       {/* 3. WINNER BANNER & 3 CALL MODES ACTION */}
-      {winner && (
+      <CalledStudentModal
+        open={showWinnerPopup && Boolean(winner)}
+        student={winner}
+        title="Phi thuyền đáp xuống thành công!"
+        icon={<Rocket className="w-5 h-5 text-amber-200 shrink-0" />}
+        badge="KHÁM PHÁ"
+        message={winner ? <>Phi thuyền đã đáp xuống hành tinh của <strong className="text-slate-900">{winner.name}</strong>. Chúc mừng em!</> : undefined}
+        onAward={callMode === 'quiz' ? undefined : (pts) => handleAwardCoins(pts)}
+        awarded={hasAwarded}
+        secondaryAction={callMode === 'quiz' && currentQuestion ? { label: 'Trả lời câu hỏi', icon: <Sparkles className="w-4 h-4" />, onClick: () => setShowWinnerPopup(false) } : undefined}
+        onClose={() => {
+          setShowWinnerPopup(false);
+          if (callMode !== 'quiz') { setWinner(null); setCurrentQuestion(null); }
+        }}
+      />
+      {/* Thẻ dưới khu chơi: chỉ dùng cho chế độ câu hỏi */}
+      {winner && (callMode as string) === 'quiz' && (
         <div className="bg-gradient-to-r from-indigo-50 via-purple-50 to-amber-50 border-2 border-indigo-300 rounded-3xl p-5 md:p-6 shadow-md space-y-4 animate-in fade-in zoom-in-95 hover-zoom-card">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-4 text-center sm:text-left">

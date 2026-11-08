@@ -16,6 +16,7 @@ import {
 import confetti from 'canvas-confetti';
 
 import { handleAvatarImgError } from '../../utils/avatarConfig';
+import { CalledStudentModal } from './picker/CalledStudentModal';
 const SLICE_COLORS = [
   '#3B82F6', '#10B981', '#F59E0B', '#EF4444', 
   '#8B5CF6', '#06B6D4', '#EC4899', '#14B8A6',
@@ -35,6 +36,8 @@ export const LuckyWheelView: React.FC = () => {
   const [currentRotation, setCurrentRotation] = useState(0);
   const [winnerStudent, setWinnerStudent] = useState<Student | null>(null);
   const [winnerGroup, setWinnerGroup] = useState<string | null>(null);
+  // Hộp chúc mừng kiểu Ống kính (cá nhân)
+  const [showWinnerPopup, setShowWinnerPopup] = useState(false);
   
   // History of spins in this session
   const [spinHistory, setSpinHistory] = useState<Array<{ name: string; time: string; type: string }>>([]);
@@ -194,7 +197,7 @@ export const LuckyWheelView: React.FC = () => {
 
         if (spinMode === 'individual') {
           const st = currentClassStudents.find(s => s.name === selected.name);
-          if (st) setWinnerStudent(st);
+          if (st) { setWinnerStudent(st); setShowWinnerPopup(true); }
           setSpinHistory(prev => [{ name: selected.name, time: timeStr, type: 'Cá nhân' }, ...prev]);
         } else {
           setWinnerGroup(selected.name);
@@ -337,8 +340,26 @@ export const LuckyWheelView: React.FC = () => {
             </label>
           </div>
 
-          {/* Winner Showcase Card */}
-          {(winnerStudent || winnerGroup) && (
+          <CalledStudentModal
+            open={showWinnerPopup && Boolean(winnerStudent)}
+            student={winnerStudent}
+            title="Vòng quay may mắn gọi tên!"
+            icon={<Trophy className="w-5 h-5 text-amber-200 shrink-0" />}
+            badge="MAY MẮN"
+            message={winnerStudent ? <>Vòng quay đã dừng ở tên <strong className="text-slate-900">{winnerStudent.name}</strong>. Chúc mừng em được gọi tên!</> : undefined}
+            onAward={(pts) => {
+              if (!winnerStudent || hasAwardedWinner) return;
+              awardPoints([winnerStudent.id], pts, 'Khen thưởng qua Vòng quay May mắn');
+              setRewardXu(pts);
+              setHasAwardedWinner(true);
+              playCoinSound();
+            }}
+            awarded={hasAwardedWinner}
+            onClose={() => { setShowWinnerPopup(false); setWinnerStudent(null); }}
+          />
+
+          {/* Winner Showcase Card (tập thể / tổ) */}
+          {winnerGroup && (
             <div className="bg-gradient-to-br from-violet-600 to-indigo-600 text-white rounded-2xl p-5 shadow-md animate-in zoom-in-95 duration-200 space-y-4">
               <div className="flex items-center gap-2 text-white text-xs font-black uppercase tracking-wider">
                 <Trophy className="w-4 h-4 text-amber-300" />

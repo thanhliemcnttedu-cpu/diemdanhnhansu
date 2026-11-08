@@ -17,6 +17,7 @@ import {
 import confetti from 'canvas-confetti';
 
 import { handleAvatarImgError } from '../../../utils/avatarConfig';
+import { CalledStudentModal } from './CalledStudentModal';
 // Duck color palettes with cute 3D glossy gradients
 const DUCK_THEMES = [
   { id: 'yellow', name: 'Vàng Hoàng Kim', bodyGrad: ['#fef08a', '#facc15', '#ca8a04'], beak: '#ea580c', cap: '#3b82f6', glow: 'rgba(250, 204, 21, 0.7)' },
@@ -1067,244 +1068,42 @@ export const DuckRaceGame: React.FC = () => {
       {/* ========================================================================= */}
       {/* 4. MÀN HÌNH POP-UP RUNG LỚN: VINH DANH QUÁN QUÂN & TUNG HOA RƠI LẢ TẢ   */}
       {/* ========================================================================= */}
+      {/* Hoa rơi phía trên hộp chúc mừng (không chặn chuột) */}
       {showGrandVictoryModal && raceWinner && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-sky-900/20 backdrop-blur-xs animate-in fade-in duration-300">
-          {/* Falling Flowers Shower Canvas */}
-          <canvas
-            ref={flowerCanvasRef}
-            className="absolute inset-0 pointer-events-none z-10 w-full h-full"
-          />
-
-          {/* Golden spotlight glow */}
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(251,191,36,0.3)_0%,transparent_65%)] pointer-events-none z-0 animate-pulse" />
-
-          {/* Main Victory Card */}
-          <div className="relative z-20 w-full max-w-lg animate-in zoom-in-90 duration-400">
-            {/* Close button */}
-            <button
-              onClick={() => setShowGrandVictoryModal(false)}
-              className="absolute -top-3 -right-3 z-30 w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-800 flex items-center justify-center transition-colors cursor-pointer border-2 border-slate-200 shadow-xl"
-            >
-              <X className="w-4 h-4" />
-            </button>
-
-            {/* TOP BANNER */}
-            <div className="bg-gradient-to-r from-yellow-400 via-amber-400 to-orange-400 rounded-t-[2rem] px-6 py-3 flex items-center justify-center gap-2 shadow-lg">
-              <span className="text-2xl animate-bounce">🏆</span>
-              <span className="text-sm sm:text-base font-black text-amber-950 uppercase tracking-widest text-center">
-                QUÁN QUÂN VÔ ĐỊCH HỒ BƠI
-              </span>
-              <span className="text-2xl animate-bounce" style={{ animationDelay: '0.3s' }}>🏆</span>
-            </div>
-
-            {/* MAIN BODY - dark navy premium */}
-            <div
-              className="relative rounded-b-[2rem] px-6 pb-5 text-center text-white"
-              style={{ background: 'linear-gradient(160deg, #3b82f6 0%, #2563eb 35%, #4f46e5 65%, #7c3aed 100%)', paddingTop: '8px' }}
-            >
-              {/* Bokeh orbs */}
-              <div className="absolute top-4 left-6 w-24 h-24 rounded-full bg-amber-400/10 blur-2xl pointer-events-none" />
-              <div className="absolute bottom-10 right-4 w-28 h-28 rounded-full bg-purple-500/15 blur-2xl pointer-events-none" />
-              <div className="absolute top-20 right-8 w-16 h-16 rounded-full bg-sky-400/10 blur-xl pointer-events-none" />
-
-              {/* AVATAR SECTION - clean circular frame with concentric rings */}
-              <div className="relative flex flex-col items-center pt-8 pb-3">
-
-                {/* Crown - poised majestically on top of the avatar frame */}
-                <div
-                  className="absolute -top-3 left-1/2 -translate-x-1/2 text-5xl animate-bounce select-none pointer-events-none z-20"
-                  style={{ filter: 'drop-shadow(0 0 14px rgba(251,191,36,1))' }}
-                >👑</div>
-
-                {/* Side decorations */}
-                <div className="absolute left-6 top-1/2 -translate-y-1/2 text-3xl animate-pulse pointer-events-none select-none" style={{ animationDelay: '0s' }}>🏆</div>
-                <div className="absolute right-6 top-1/2 -translate-y-1/2 text-3xl animate-pulse pointer-events-none select-none" style={{ animationDelay: '0.6s' }}>⭐</div>
-
-                {/* Avatar container with centered concentric rings */}
-                <div className="relative flex items-center justify-center" style={{ width: 172, height: 172 }}>
-                  {/* 1. Spinning rainbow conic ring */}
-                  <div
-                    className="absolute rounded-full"
-                    style={{
-                      width: 170,
-                      height: 170,
-                      background: 'conic-gradient(from 0deg, #fde047, #fb923c, #ef4444, #a855f7, #3b82f6, #22d3ee, #4ade80, #fde047)',
-                      animation: 'spin 2.5s linear infinite',
-                      zIndex: 1
-                    }}
-                  />
-
-                  {/* 2. Dark gap ring between spinning ring and gold frame */}
-                  <div
-                    className="absolute rounded-full"
-                    style={{
-                      width: 160,
-                      height: 160,
-                      background: '#2563eb',
-                      zIndex: 2
-                    }}
-                  />
-
-                  {/* 3. Gold outer border ring */}
-                  <div
-                    className="absolute rounded-full"
-                    style={{
-                      width: 154,
-                      height: 154,
-                      background: 'linear-gradient(145deg, #fde68a, #f59e0b, #d97706)',
-                      boxShadow: '0 0 30px rgba(251,191,36,0.9), 0 0 60px rgba(251,191,36,0.35)',
-                      zIndex: 3
-                    }}
-                  />
-
-                  {/* 4. Perfectly Circular White Ring & Avatar Clipper (Guaranteed No Overflow) */}
-                  <div
-                    style={{
-                      width: 142,
-                      height: 142,
-                      borderRadius: '50%',
-                      overflow: 'hidden',
-                      position: 'relative',
-                      zIndex: 4,
-                      backgroundColor: '#ffffff',
-                      border: '3px solid #ffffff',
-                      boxShadow: 'inset 0 0 10px rgba(0,0,0,0.15)'
-                    }}
-                  >
-                    <img
-                      src={raceWinner.avatar} onError={(e) => handleAvatarImgError(e, raceWinner?.gender, raceWinner?.name)}
-                      alt={raceWinner.name}
-                      style={{
-                        width: '100%',
-                        height: '100%',
-                        maxWidth: '100%',
-                        maxHeight: '100%',
-                        objectFit: 'cover',
-                        objectPosition: 'center 20%',
-                        borderRadius: '50%',
-                        display: 'block',
-                        ...(raceWinner.avatarPosition || (raceWinner.avatarScale && raceWinner.avatarScale !== 1)
-                          ? {
-                              transform: `translate(${raceWinner.avatarPosition?.x || 0}px, ${raceWinner.avatarPosition?.y || 0}px) scale(${raceWinner.avatarScale || 1})`,
-                              transformOrigin: 'center center'
-                            }
-                          : {})
-                      }}
-                    />
-                  </div>
-                </div>
-
-                {/* STT badge - below avatar, in normal flow */}
-                <div
-                  className="mt-3 px-4 py-1 rounded-full font-black text-xs border-2 border-white shadow-lg whitespace-nowrap z-10"
-                  style={{ background: 'linear-gradient(90deg,#f59e0b,#fde047)', color: '#1c1917' }}
-                >
-                  STT #{raceWinner.stt}
-                </div>
-              </div>
-
-              {/* NAME & CONGRATS */}
-              <div className="space-y-1">
-                <h2
-                  className="font-black uppercase tracking-wide leading-tight"
-                  style={{
-                    fontSize: 'clamp(1.7rem, 6vw, 2.6rem)',
-                    background: 'linear-gradient(90deg,#fde047,#fbbf24,#fde047)',
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
-                    filter: 'drop-shadow(0 2px 8px rgba(251,191,36,0.7))'
-                  }}
-                >
-                  {raceWinner.name}
-                </h2>
-                <p className="font-extrabold text-sm uppercase tracking-widest animate-pulse" style={{ color: '#fcd34d' }}>
-                  🎉 XUẤT SẮC VỀ ĐÍCH VÔ ĐỊCH! 🎉
-                </p>
-                <p className="text-slate-400 text-xs mt-1">
-                  {raceWinner.group} &bull; Lớp {activeClass?.name || '4A1'} &bull; Thành tích:&nbsp;
-                  <span className="font-black text-amber-300">{raceDuration} giây</span>
-                </p>
-              </div>
-
-              {/* PODIUM TOP 3 */}
-              {podium.length > 0 && (
-                <div className="mt-5 flex items-end justify-center gap-2">
-                  {podium[1] && (
-                    <div className="flex flex-col items-center gap-1">
-                      <img src={podium[1].avatar} alt={podium[1].name} className="w-10 h-10 rounded-full object-cover border-2 border-slate-400 shadow-md" />
-                      <span className="text-[12px] text-slate-300 font-black truncate max-w-[56px]">{podium[1].name.split(' ').pop()}</span>
-                      <div className="w-14 h-10 rounded-t-lg flex items-center justify-center text-white font-black text-sm" style={{ background: 'linear-gradient(180deg,#9ca3af,#6b7280)' }}>🥈</div>
-                    </div>
-                  )}
-                  {podium[0] && (
-                    <div className="flex flex-col items-center gap-1">
-                      <img src={podium[0].avatar} alt={podium[0].name} className="w-12 h-12 rounded-full object-cover border-2 border-amber-300 shadow-lg" />
-                      <span className="text-[12px] font-black truncate max-w-[64px] text-amber-300">{podium[0].name.split(' ').pop()}</span>
-                      <div className="w-16 h-14 rounded-t-lg flex items-center justify-center font-black text-base shadow-lg" style={{ background: 'linear-gradient(180deg,#fbbf24,#d97706)' }}>🥇</div>
-                    </div>
-                  )}
-                  {podium[2] && (
-                    <div className="flex flex-col items-center gap-1">
-                      <img src={podium[2].avatar} alt={podium[2].name} className="w-10 h-10 rounded-full object-cover border-2 border-orange-400 shadow-md" />
-                      <span className="text-[12px] text-orange-300 font-black truncate max-w-[56px]">{podium[2].name.split(' ').pop()}</span>
-                      <div className="w-14 h-8 rounded-t-lg flex items-center justify-center text-white font-black text-sm" style={{ background: 'linear-gradient(180deg,#f97316,#c2410c)' }}>🥉</div>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* REWARD ROW */}
-              <div className="mt-5 pt-4 border-t border-white/10 space-y-3">
-                <div className="flex items-center justify-center gap-2">
-                  <span className="text-xs font-bold text-slate-400">Thưởng xu:</span>
-                  <div className="flex items-center gap-1 p-1 rounded-xl border border-white/10 bg-white/5">
-                    {[1, 2, 5].map((val) => (
-                      <button
-                        key={val}
-                        disabled={hasAwardedDuck}
-                        onClick={() => setRewardXu(val)}
-                        className={`px-4 py-1.5 rounded-lg text-sm font-black transition-all cursor-pointer disabled:opacity-50 ${
-                          rewardXu === val
-                            ? 'scale-105 shadow-md text-amber-950'
-                            : 'text-white/90 hover:bg-white/10'
-                        }`}
-                        style={rewardXu === val ? { background: 'linear-gradient(180deg,#fde047,#f59e0b)' } : {}}
-                      >
-                        +{val} 🪙
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="flex flex-col sm:flex-row items-center justify-center gap-2">
-                  <button
-                    onClick={handleAwardPoints}
-                    disabled={hasAwardedDuck}
-                    className="w-full sm:w-auto px-7 py-3 rounded-2xl font-black text-sm flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-60"
-                    style={{
-                      background: hasAwardedDuck ? 'rgba(255,255,255,0.1)' : 'linear-gradient(135deg,#fde047,#f59e0b)',
-                      color: hasAwardedDuck ? '#fff' : '#1c1917',
-                      boxShadow: hasAwardedDuck ? 'none' : '0 6px 24px rgba(251,191,36,0.5)'
-                    }}
-                  >
-                    <Award className="w-5 h-5" />
-                    <span>{hasAwardedDuck ? '✅ Đã tặng xu!' : `Tặng +${rewardXu} Xu Thưởng`}</span>
-                  </button>
-
-                  <button
-                    onClick={() => { setShowGrandVictoryModal(false); handleStartCountdown(); }}
-                    className="w-full sm:w-auto px-6 py-3 rounded-2xl font-black text-sm flex items-center justify-center gap-2 transition-all cursor-pointer hover:bg-white/15 text-white border border-white/20"
-                    style={{ background: 'rgba(255,255,255,0.08)' }}
-                  >
-                    <RotateCcw className="w-4 h-4" />
-                    <span>Đua vòng mới</span>
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+        <canvas ref={flowerCanvasRef} className="fixed inset-0 pointer-events-none z-[60] w-full h-full" />
       )}
+      <CalledStudentModal
+        open={showGrandVictoryModal && Boolean(raceWinner)}
+        student={raceWinner}
+        title="Quán quân đua vịt hồ bơi!"
+        icon={<Trophy className="w-5 h-5 text-amber-200 shrink-0" />}
+        badge="QUÁN QUÂN"
+        classNameLabel={activeClass?.name ? `Lớp ${activeClass.name}` : undefined}
+        message={raceWinner ? <>Xin chúc mừng <strong className="text-slate-900">{raceWinner.name}</strong> đã xuất sắc về đích vô địch với thành tích <strong className="text-amber-800">{raceDuration} giây</strong>!</> : undefined}
+        extra={podium.length > 1 ? (
+          <div className="flex items-end justify-center gap-2">
+            {[podium[1], podium[0], podium[2]].map((st, i) => st ? (
+              <div key={st.id} className="flex flex-col items-center gap-1">
+                <img src={st.avatar} alt={st.name} onError={(e) => handleAvatarImgError(e, st.gender, st.name)} className={`${i === 1 ? 'w-11 h-11 border-amber-400' : 'w-9 h-9 border-slate-300'} rounded-full object-cover border-2 shadow-sm`} />
+                <span className="text-xs font-bold text-slate-700 truncate max-w-[64px]">{st.name.split(' ').pop()}</span>
+                <div className={`${i === 1 ? 'w-14 h-9 bg-amber-100 border-amber-300' : i === 0 ? 'w-12 h-7 bg-slate-100 border-slate-300' : 'w-12 h-5 bg-orange-100 border-orange-300'} rounded-t-lg border flex items-center justify-center text-sm`}>{i === 1 ? '🥇' : i === 0 ? '🥈' : '🥉'}</div>
+              </div>
+            ) : null)}
+          </div>
+        ) : undefined}
+        onAward={(pts) => {
+          if (!raceWinner || hasAwardedDuck) return;
+          awardPoints([raceWinner.id], pts, `Vô địch giải đua vịt hồ bơi (${raceDuration}s)`);
+          setRewardXu(pts);
+          setHasAwardedDuck(true);
+          playCoinSound();
+          confetti({ particleCount: 60, spread: 70 });
+        }}
+        awarded={hasAwardedDuck}
+        secondaryAction={{ label: 'Đua vòng mới', icon: <RotateCcw className="w-4 h-4" />, onClick: () => { setShowGrandVictoryModal(false); handleStartCountdown(); } }}
+        continueLabel="Đóng"
+        onClose={() => setShowGrandVictoryModal(false)}
+      />
     </div>
   );
 };

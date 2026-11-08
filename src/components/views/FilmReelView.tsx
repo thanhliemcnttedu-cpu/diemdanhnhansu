@@ -19,6 +19,7 @@ import { QuestionBankModal } from '../modals/QuestionBankModal';
 import { loadQuizBank, saveQuizBank } from '../../utils/quizParser';
 
 import { handleAvatarImgError } from '../../utils/avatarConfig';
+import { CalledStudentModal } from './picker/CalledStudentModal';
 const FRAME_WIDTH = 155; // Width of each 35mm film frame
 const FRAME_GAP = 14; // Gap between frames
 const TOTAL_FRAME_SPACE = FRAME_WIDTH + FRAME_GAP; // 169px
@@ -37,6 +38,8 @@ export const FilmReelView: React.FC = () => {
   const [winner, setWinner] = useState<Student | null>(null);
   const [rewardXu, setRewardXu] = useState(2);
   const [hasAwarded, setHasAwarded] = useState(false);
+  // Hộp chúc mừng kiểu Ống kính hiện trên màn hình khi phim dừng
+  const [showWinnerPopup, setShowWinnerPopup] = useState(false);
 
   // Settings & History
   const [autoExclude, setAutoExclude] = useState(true);
@@ -126,6 +129,7 @@ export const FilmReelView: React.FC = () => {
 
     setIsRolling(true);
     setWinner(null);
+    setShowWinnerPopup(false);
     setHasAwarded(false);
     setSelectedOption(null);
     setShowTeacherKey(false);
@@ -193,6 +197,7 @@ export const FilmReelView: React.FC = () => {
         setTranslateX(finalOffset);
         setIsRolling(false);
         setWinner(selectedWinner);
+        setShowWinnerPopup(true);
         playFanfareSound();
         confetti({ particleCount: 95, spread: 85, origin: { y: 0.6 } });
 
@@ -703,8 +708,36 @@ export const FilmReelView: React.FC = () => {
             </div>
           </div>
 
-          {/* Winner Celebration Card (Hiển thị khi phim dừng) */}
-          {winner && (() => {
+          {/* Hộp chúc mừng học sinh được gọi (giống Ống kính) */}
+          <CalledStudentModal
+            open={showWinnerPopup && Boolean(winner)}
+            student={winner ? (currentClassStudents.find(s => s.id === winner.id) || winner) : null}
+            title="Cuộn phim gọi tên!"
+            icon={<Film className="w-5 h-5 text-amber-200 shrink-0" />}
+            badge="35MM"
+            classNameLabel={currentClass?.name ? `Lớp ${currentClass.name}` : undefined}
+            message={winner ? <>Cuộn phim đã dừng đúng khung hình của <strong className="text-slate-900">{winner.name}</strong>. Chúc mừng em được gọi tên!</> : undefined}
+            onAward={callMode === 'quiz' ? undefined : (pts, reason) => handleAward(pts, `Thưởng gọi tên qua Cuộn Phim 35mm – ${reason}`)}
+            awarded={hasAwarded}
+            secondaryAction={callMode === 'quiz' ? {
+              label: 'Bốc câu hỏi',
+              icon: <HelpCircle className="w-4 h-4" />,
+              onClick: () => { setShowWinnerPopup(false); handleOpenRandomQuestion(); }
+            } : undefined}
+            continueLabel={callMode === 'quiz' ? 'Để sau' : 'Tiếp tục gọi em khác'}
+            onClose={() => {
+              setShowWinnerPopup(false);
+              if (callMode !== 'quiz') {
+                setWinner(null);
+                setHasAwarded(false);
+                setCurrentQuestion(null);
+                setOralStatus('pending');
+              }
+            }}
+          />
+
+          {/* Thẻ câu hỏi dưới cuộn phim: chỉ dùng cho chế độ Gọi tên + Trả lời câu hỏi */}
+          {winner && (callMode as string) === 'quiz' && (() => {
             const currentWinner = currentClassStudents.find(s => s.id === winner.id) || winner;
             const classNameDisplay = currentClass?.name ? `(${currentClass.name})` : '';
             return (

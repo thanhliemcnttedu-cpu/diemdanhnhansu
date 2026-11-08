@@ -14,6 +14,7 @@ import {
   playCameraShutterSound
 } from '../../../utils/audio';
 import { handleAvatarImgError } from '../../../utils/avatarConfig';
+import { CalledStudentModal } from './CalledStudentModal';
 
 interface DynamicPhoto {
   id: string;
@@ -81,6 +82,10 @@ export const LuckyLensGame: React.FC<LuckyLensGameProps> = ({
   const animFrameRef = useRef<number | null>(null);
   const scanStartTimeRef = useRef<number>(0);
   const targetWinnerRef = useRef<Student | null>(null);
+  // 🎯 Vòng cam nhảy ngẫu nhiên trong lúc quay; học sinh trúng chỉ được bốc ở pha khóa mục tiêu cuối cùng
+  const scanPoolRef = useRef<Student[]>([]);
+  const lastHopTimeRef = useRef(0);
+  const LOCK_PROGRESS = 0.86;
   const [stageDimensions, setStageDimensions] = useState<{ width: number; height: number }>({ width: 900, height: 560 });
 
   // Filtered pool
@@ -239,6 +244,27 @@ export const LuckyLensGame: React.FC<LuckyLensGameProps> = ({
         // --- 2. ACTIVE SCANNING: HIGH-SPEED VORTEX & SHUFFLE & DECELERATION ---
         const elapsed = Date.now() - scanStartTimeRef.current;
         const progress = Math.min(1, elapsed / totalDurationMs);
+
+        if (progress < LOCK_PROGRESS) {
+          // Vòng cam nhảy liên tục sang học sinh khác: nhanh lúc đầu, chậm dần khi gần khóa
+          const hopInterval = 80 + Math.pow(progress / LOCK_PROGRESS, 2) * 320;
+          if (time - lastHopTimeRef.current > hopInterval && scanPoolRef.current.length > 0) {
+            lastHopTimeRef.current = time;
+            const pool = scanPoolRef.current;
+            setFocusedStudent(prev => {
+              if (pool.length === 1) return pool[0];
+              let next = pool[Math.floor(Math.random() * pool.length)];
+              if (prev && next.id === prev.id) next = pool[(pool.indexOf(next) + 1) % pool.length];
+              return next;
+            });
+          }
+        } else if (!targetWinnerRef.current && scanPoolRef.current.length > 0) {
+          // Pha khóa mục tiêu: lúc này mới bốc ngẫu nhiên học sinh trúng
+          const pool = scanPoolRef.current;
+          const finalPick = pool[Math.floor(Math.random() * pool.length)];
+          targetWinnerRef.current = finalPick;
+          setFocusedStudent(finalPick);
+        }
         const winnerStudent = targetWinnerRef.current;
 
         // Dynamic Speed Curve:
@@ -289,9 +315,9 @@ export const LuckyLensGame: React.FC<LuckyLensGameProps> = ({
           // Swirl angle
           p.angle += angularVelocity * (p.ringIndex % 2 === 0 ? 1 : -1.1);
 
-          if (isWinner && progress >= 0.65) {
+          if (isWinner && progress >= LOCK_PROGRESS) {
             // WINNER PHOTO: Smoothly pull directly into the center crosshair (cx, cy)!
-            const winProgress = (progress - 0.65) / 0.35;
+            const winProgress = (progress - LOCK_PROGRESS) / (1 - LOCK_PROGRESS);
             p.currentRadius = (1 - winProgress) * p.baseRadius;
             p.x = cx + Math.cos(p.angle) * p.currentRadius;
             p.y = cy + Math.sin(p.angle) * (p.currentRadius * 0.72);
@@ -300,8 +326,8 @@ export const LuckyLensGame: React.FC<LuckyLensGameProps> = ({
             p.rotation = (1 - winProgress) * p.rotation;
           } else {
             // OTHER PHOTOS: Swirl with vortex breathing, then push outwards and fade slightly
-            if (progress >= 0.75) {
-              const fadeOut = (progress - 0.75) / 0.25;
+            if (progress >= LOCK_PROGRESS) {
+              const fadeOut = (progress - LOCK_PROGRESS) / (1 - LOCK_PROGRESS);
               p.currentRadius = p.baseRadius + fadeOut * 70;
               p.opacity = Math.max(0.25, 1 - fadeOut * 0.75);
               p.scale = Math.max(0.75, 1 - fadeOut * 0.25);
@@ -348,10 +374,11 @@ export const LuckyLensGame: React.FC<LuckyLensGameProps> = ({
     setFlashActive(false);
     setHasAwardedCoins(false);
 
-    // Pick winning student up front & store in ref
-    const winningStudent = pool[Math.floor(Math.random() * pool.length)];
-    targetWinnerRef.current = winningStudent;
-    setFocusedStudent(winningStudent);
+    // KHÔNG chọn trước: học sinh trúng được bốc ngẫu nhiên ở pha khóa mục tiêu (cuối lượt quay)
+    targetWinnerRef.current = null;
+    scanPoolRef.current = pool;
+    lastHopTimeRef.current = 0;
+    setFocusedStudent(pool[Math.floor(Math.random() * pool.length)]);
     scanStartTimeRef.current = Date.now();
 
     const totalDurationMs = shutterDuration * 1000;
@@ -366,6 +393,8 @@ export const LuckyLensGame: React.FC<LuckyLensGameProps> = ({
 
       // Reveal winner & Trigger MASSIVE FIREWORKS!
       setTimeout(() => {
+        const winningStudent = targetWinnerRef.current || pool[Math.floor(Math.random() * pool.length)];
+        targetWinnerRef.current = winningStudent;
         setWinner(winningStudent);
         setIsScanning(false);
         setFlashActive(false);
@@ -614,7 +643,7 @@ export const LuckyLensGame: React.FC<LuckyLensGameProps> = ({
         {/* --- DYNAMIC FLOATING STUDENT PHOTO CARDS --- */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           {photosRef.current.map(p => {
-            const isTarget = isScanning && targetWinnerRef.current?.id === p.student.id;
+            const isTarget = isScanning && focusedStudent?.id === p.student.id;
 
             return (
               <div
@@ -771,110 +800,17 @@ export const LuckyLensGame: React.FC<LuckyLensGameProps> = ({
       {/* ========================================================================= */}
       {/* --- POLAROID WINNER SPOTLIGHT MODAL (BỨC ẢNH VÀNG CỦA TIẾT HỌC) ---     */}
       {/* ========================================================================= */}
-      {winner && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-sky-900/20 backdrop-blur-xs p-4 animate-in fade-in duration-200">
-          <div className="bg-white rounded-3xl shadow-2xl border-4 border-amber-400 max-w-lg w-full overflow-hidden animate-in zoom-in-95 duration-200 relative">
-            
-            {/* Header */}
-            <div className="px-6 py-3.5 bg-gradient-to-r from-amber-700 via-orange-700 to-rose-600 text-white flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Camera className="w-5 h-5 text-amber-200 animate-bounce" />
-                <h3 className="text-sm font-black uppercase tracking-tight">
-                  Bắt Trọn Ống Kính May Mắn!
-                </h3>
-              </div>
-              <button
-                type="button"
-                onClick={handleCloseWinner}
-                className="w-7 h-7 rounded-xl bg-white/20 hover:bg-white/30 text-white flex items-center justify-center transition-colors"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            {/* Polaroid Body */}
-            <div className="p-6 text-center space-y-4">
-              
-              {/* 3D Polaroid Card */}
-              <div className="mx-auto w-64 p-3.5 pb-5 bg-white rounded-2xl shadow-2xl border border-slate-200 ring-4 ring-amber-200 transform -rotate-2 hover:rotate-0 transition-transform duration-300">
-                {/* Photo frame */}
-                <div className="w-full aspect-square rounded-xl overflow-hidden bg-white border-2 border-slate-200 shadow-inner relative">
-                  <img
-                    src={winner.avatar}
-                    alt={winner.name}
-                    className="w-full h-full object-cover object-center"
-                    onError={(e) => handleAvatarImgError(e, winner.gender, winner.name)}
-                  />
-                  <div className="absolute top-2 right-2 px-2 py-0.5 rounded-full bg-amber-400 text-amber-950 text-[12px] font-black uppercase shadow-xs">
-                    POLAROID 4K
-                  </div>
-                </div>
-
-                {/* Polaroid Signature footer */}
-                <div className="mt-3 text-center">
-                  <h4 className="text-lg font-black text-slate-900 tracking-tight">
-                    {winner.name}
-                  </h4>
-                  <p className="text-xs font-bold text-slate-500">
-                    STT: #{winner.stt} • {winner.group || 'Tổ 1'} • {winner.gender || 'Nam'}
-                  </p>
-                </div>
-              </div>
-
-              {/* Congratulations text */}
-              <p className="text-xs text-slate-600 font-medium max-w-sm mx-auto">
-                Xin chúc mừng <strong className="text-slate-900">{winner.name}</strong> đã được ống kính máy ảnh bắt trọn gương mặt tỏa sáng trong tiết học!
-              </p>
-
-              {/* Award Action Buttons */}
-              <div className="flex flex-wrap items-center justify-center gap-2 pt-1">
-                <button
-                  type="button"
-                  disabled={hasAwardedCoins}
-                  onClick={() => handleAwardWinner(2, 'Ống kính may mắn')}
-                  className="px-4 py-2 bg-gradient-to-r from-amber-700 to-orange-700 hover:from-amber-800 hover:to-orange-800 text-white rounded-xl text-xs font-black shadow-md shadow-amber-500/20 transition-all hover-zoom-btn flex items-center gap-1.5 disabled:opacity-50 uppercase"
-                >
-                  <Coins className="w-3.5 h-3.5" />
-                  <span>+2 Xu Thưởng</span>
-                </button>
-
-                <button
-                  type="button"
-                  disabled={hasAwardedCoins}
-                  onClick={() => handleAwardWinner(3, 'Ống kính may mắn xuất sắc')}
-                  className="px-4 py-2 bg-gradient-to-r from-emerald-700 to-teal-700 hover:from-emerald-800 hover:to-teal-800 text-white rounded-xl text-xs font-black shadow-md shadow-emerald-500/20 transition-all hover-zoom-btn flex items-center gap-1.5 disabled:opacity-50 uppercase"
-                >
-                  <Sparkles className="w-3.5 h-3.5" />
-                  <span>+3 Xu Khen Thưởng</span>
-                </button>
-
-                <button
-                  type="button"
-                  disabled={hasAwardedCoins}
-                  onClick={() => handleAwardWinner(5, 'Ngôi sao ống kính may mắn')}
-                  className="px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white rounded-xl text-xs font-black shadow-md shadow-purple-600/20 transition-all hover-zoom-btn flex items-center gap-1.5 disabled:opacity-50 uppercase"
-                >
-                  <Trophy className="w-3.5 h-3.5" />
-                  <span>+5 Xu Ngôi Sao</span>
-                </button>
-              </div>
-
-              {/* Close & Continue Button */}
-              <div className="pt-2">
-                <button
-                  type="button"
-                  onClick={handleCloseWinner}
-                  className="w-full py-3 bg-white hover:bg-slate-200 text-slate-800 rounded-2xl text-xs font-black shadow-lg transition-colors uppercase"
-                >
-                  Tiếp Tục Chụp Em Khác
-                </button>
-              </div>
-
-            </div>
-
-          </div>
-        </div>
-      )}
+      <CalledStudentModal
+        open={Boolean(winner)}
+        student={winner}
+        title="Bắt trọn ống kính may mắn!"
+        badge="POLAROID 4K"
+        message={winner ? <>Xin chúc mừng <strong className="text-slate-900">{winner.name}</strong> đã được ống kính máy ảnh bắt trọn gương mặt tỏa sáng trong tiết học!</> : undefined}
+        onAward={(pts) => handleAwardWinner(pts, pts >= 5 ? 'Ngôi sao ống kính may mắn' : pts >= 3 ? 'Ống kính may mắn xuất sắc' : 'Ống kính may mắn')}
+        awarded={hasAwardedCoins}
+        continueLabel="Tiếp tục chụp em khác"
+        onClose={handleCloseWinner}
+      />
 
 
 
