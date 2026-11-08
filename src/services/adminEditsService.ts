@@ -38,6 +38,11 @@ let pending: AdminEditEntries = {};
 let flushTimer: ReturnType<typeof setTimeout> | null = null;
 let flushChain: Promise<void> = Promise.resolve();
 let cache: { at: number; entries: AdminEditEntries } | null = null;
+// Dọn tệp: điều chỉnh mà mọi GVCN liên quan đã nhận thì xóa khỏi tệp (giữ tệp luôn nhỏ)
+let lastAppliedByClass: Record<string, AppliedAdminEdits> = {};
+let pruneRequested = false;
+let lastPruneAt = 0;
+const PRUNE_INTERVAL_MS = 5 * 60 * 1000;
 
 const keyOf = (kind: string, id: string) => `${kind}:${id}`;
 export const canonicalClassName = (name?: string) =>
@@ -183,15 +188,24 @@ export const adminEditsService = {
   /** Ghi các điều chỉnh đang chờ lên Drive (đọc – gộp – ghi). Lỗi thì giữ lại để thử lại. */
   async flush(): Promise<void> {
     const batch = pending;
-    if (Object.keys(batch).length === 0) return;
+    const doPrune = pruneRequested;
+    if (Object.keys(batch).length === 0 && !doPrune) return;
     pending = {};
+    pruneRequested = false;
     try {
       const remote = await fetchFile();
       const merged: AdminEditEntries = { ...remote };
       for (const [k, e] of Object.entries(batch)) merged[k] = combine(merged[k], e);
       const cutoff = Date.now() - RETENTION_MS;
-      for (const [k, e] of Object.entries(merged)) if (!e || e.at < cutoff) delete merged[k];
+      let removed = 0;
+      for (const [k, e] of Object.entries(merged)) {
+        if (!e || e.at < cutoff) { delete merged[k]; removed++; continue; }
+        // đã nằm trong dữ liệu của GVCN (và không phải điều chỉnh vừa ghi trong lượt này)
+        if (!batch[k] && this.isConsumed(e, lastAppliedByClass)) { delete merged[k]; removed++; }
+      }
+      if (Object.keys(batch).length === 0 && removed === 0) return; // chỉ dọn nhưng không có gì để dọn
       await postFile(merged);
+      if (doPrune) lastPruneAt = Date.now();
       cache = { at: Date.now(), entries: merged };
     } catch (err) {
       for (const [k, e] of Object.entries(batch)) pending[k] = combine(pending[k], e);
@@ -213,6 +227,20 @@ export const adminEditsService = {
     const out = { ...cache!.entries };
     for (const [k, e] of Object.entries(pending)) out[k] = combine(out[k], e);
     return out;
+  },
+
+  /**
+   * Màn tổng hợp báo trạng thái "GVCN đã nhận" của từng lớp. Nếu trong tệp có điều chỉnh đã được nhận hết,
+   * hẹn một lượt dọn tệp (tối đa 5 phút/lần, chỉ tài khoản quản lý mới ghi).
+   */
+  noteConsumption(appliedByClass: Record<string, AppliedAdminEdits>, entries: AdminEditEntry[]) {
+    lastAppliedByClass = appliedByClass || {};
+    if (!this.isActive() || Date.now() - lastPruneAt < PRUNE_INTERVAL_MS) return;
+    if (entries.some(e => this.isConsumed(e, lastAppliedByClass))) {
+      pruneRequested = true;
+      lastPruneAt = Date.now();
+      scheduleFlush(3000);
+    }
   },
 
   /** Điều chỉnh đã nằm trong dữ liệu của (các) GVCN liên quan chưa. */
@@ -292,5 +320,61 @@ export const adminEditsService = {
       }
     }
     return { classes: nextClasses, students: nextStudents, newlyApplied, changed };
+  }
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 🏛️ DANH MỤC PHÂN HIỆU – ĐIỂM TRƯỜNG TRÊN DRIVE (phanhieu_truong.json)
+// Bản web không có máy chủ/Supabase → lưu danh mục phân hiệu vào 1 tệp nhỏ dùng chung để mọi máy
+// Quản trị / BGH thấy giống nhau. Cấu trúc: { version: 1, schools: { "<tên trường thường>": { schoolName, branches, updatedAt, by } } }
+// ─────────────────────────────────────────────────────────────────────────────
+export const SCHOOL_BRANCHES_FILE = 'phanhieu_truong.json';
+let branchesCache: { at: number; schools: Record<string, any> } | null = null;
+
+async function fetchBranchesFile(): Promise<Record<string, any>> {
+  const t = driveTarget();
+  if (!t) return {};
+  const res = await fetch(
+    `${t.url}${t.url.includes('?') ? '&' : '?'}action=getLatest&strict=1&folderId=${encodeURIComponent(t.folderId)}&fileName=${encodeURIComponent(SCHOOL_BRANCHES_FILE)}`
+  );
+  const json = await res.json();
+  if (json && json.schools && typeof json.schools === 'object') return json.schools;
+  if (json && json.success === false && /chưa có tệp/i.test(String(json.message || ''))) return {};
+  throw new Error(json?.message || 'Không đọc được danh mục phân hiệu trên Drive.');
+}
+
+export const schoolBranchesDrive = {
+  isAvailable(): boolean {
+    const apiAvailable = typeof window !== 'undefined' ? (window as any).__lhhpApiAvailable : undefined;
+    return apiAvailable !== true && Boolean(driveTarget());
+  },
+
+  /** undefined = Drive chưa có danh mục cho trường này (dùng nguồn khác); mảng = danh mục chung. */
+  async load(schoolName: string, maxAgeMs = 30000): Promise<any[] | undefined> {
+    if (!this.isAvailable()) return undefined;
+    const key = (schoolName || '').trim().toLowerCase();
+    if (!key) return undefined;
+    if (!branchesCache || Date.now() - branchesCache.at > maxAgeMs) {
+      branchesCache = { at: Date.now(), schools: await fetchBranchesFile() };
+    }
+    const rec = branchesCache.schools[key];
+    return rec && Array.isArray(rec.branches) ? rec.branches : undefined;
+  },
+
+  async save(schoolName: string, branches: any[]): Promise<void> {
+    if (!this.isAvailable() || !isManagementUser(sessionUser())) return;
+    const key = (schoolName || '').trim().toLowerCase();
+    const t = driveTarget();
+    if (!key || !t) return;
+    const schools = await fetchBranchesFile();
+    schools[key] = { schoolName: schoolName.trim(), branches, updatedAt: Date.now(), by: sessionUser()?.username || '' };
+    const res = await fetch(t.url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ action: 'saveClassData', folderId: t.folderId, fileName: SCHOOL_BRANCHES_FILE, data: { version: 1, schools } })
+    });
+    const json = await res.json().catch(() => null);
+    if (!json || json.success === false) throw new Error(json?.message || 'Không lưu được danh mục phân hiệu lên Drive.');
+    branchesCache = { at: Date.now(), schools };
   }
 };

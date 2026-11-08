@@ -414,6 +414,33 @@ export const googleDriveService = {
         }
       }
 
+      // 📦 Tài khoản quản lý (Quản trị tối cao / Quản trị trường / BGH): dữ liệu lớp – học sinh – điểm danh đã nằm
+      // trong tệp gvcn_*.json của từng GVCN → tệp riêng (adminquantri.json, quantrinhatruong.json, bgh.json) chỉ giữ
+      // thông tin/cấu hình của chính tài khoản, không chép lại toàn bộ lớp (tránh phình to hàng chục MB).
+      const uname0 = (currentUser.username || '').toLowerCase();
+      const isManagementPush = Boolean(
+        uname0 === 'adminquantri' || currentUser.role === 'admin' || currentUser.role === 'school_admin' ||
+        currentUser.role === 'bgh' || currentUser.isBgh || currentUser.isSchoolAdmin
+      );
+      if (isManagementPush) {
+        const slim: any = {
+          ...userData,
+          classes: [],
+          students: [],
+          attendanceRecords: [],
+          boardingRecords: [],
+          transactions: [],
+          redemptions: [],
+          seatingAssignments: {}
+        };
+        (standardJson as any).fullClassroomData = slim;
+        (standardJson as any).students = [];
+        (standardJson as any).dailyRecords = {};
+        (standardJson as any).systemClasses = [];
+        if (standardJson.metadata) (standardJson.metadata as any).totalStudents = 0;
+        (standardJson as any).scope = 'management_settings_only';
+      }
+
       // Lưu 1 bản rolling daily backup cục bộ
       dataAdapter.createDailyRollingBackup(currentUser.username, userData).catch(() => {});
 
@@ -502,39 +529,8 @@ export const googleDriveService = {
         });
         this.notifyStatusListeners({ status: 'success', lastSyncTime: nowStr });
 
-        // 🏛️ TỰ ĐỘNG ĐẨY FILE CSDL RIÊNG THEO MÃ ID TRƯỜNG (School ID / School Code)
-        if (Array.isArray(standardJson.systemSchools) && standardJson.systemSchools.length > 0) {
-          for (const sch of standardJson.systemSchools) {
-            if (sch && sch.code) {
-              const schCode = sch.code.trim().toLowerCase();
-              const schFileName = `csdl_truong_${schCode}.json`;
-              const matchedUsers = Array.isArray(standardJson.systemUsers)
-                ? standardJson.systemUsers.filter((u: any) =>
-                    (u.schoolCode && u.schoolCode.toLowerCase() === schCode) ||
-                    (u.schoolId && u.schoolId === sch.id) ||
-                    (u.schoolName && sch.name && u.schoolName.toLowerCase() === sch.name.toLowerCase())
-                  )
-                : [];
-              this.sendPushPayload(scriptUrl, folderId || '', schFileName, {
-                action: 'saveClassData',
-                folderId: folderId || '',
-                fileName: schFileName,
-                data: {
-                  version: '2.0',
-                  format: 'lop_hoc_hanh_phuc_backup',
-                  scope: 'school_database_id_sync',
-                  exportedAt: new Date().toISOString(),
-                  schoolId: sch.id,
-                  schoolCode: sch.code,
-                  schoolName: sch.name,
-                  systemSchools: [sch],
-                  systemUsers: matchedUsers,
-                  systemClasses: standardJson.systemClasses || []
-                }
-              }).catch(() => {});
-            }
-          }
-        }
+        // (Đã bỏ tệp kiểu cũ csdl_truong_<mã trường>.json: CSDL V4 duy nhất là csdl_truong.json,
+        //  dữ liệu lớp nằm trong gvcn_*.json — tránh trùng lặp và nhầm lẫn trên Drive.)
 
         return {
           success: true,

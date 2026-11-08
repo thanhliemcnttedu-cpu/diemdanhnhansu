@@ -5,7 +5,7 @@ import { ACCOUNT_IDENTITY_MAP, getOfficialDisplayName } from '../utils/accountId
 import { dataStorageService } from './dataStorageService';
 import { googleDriveService } from './googleDriveService';
 import { schoolDriveDbService } from './schoolDriveDbService';
-import { adminEditsService } from './adminEditsService';
+import { adminEditsService, schoolBranchesDrive } from './adminEditsService';
 import { DEFAULT_SUBJECT_TEACHER_CONFIG } from '../data/initialData';
 
 export function getApiBaseUrl(): string {
@@ -2294,6 +2294,7 @@ export const databaseService = {
           const byName = cname ? canonicalToIdMap.get(getCanonicalKey(cname)) : undefined;
           return byName || aliased;
         };
+        adminEditsService.noteConsumption(appliedByClass, editList);
         for (const e of editList) {
           if (adminEditsService.isConsumed(e, appliedByClass)) continue;
           if (e.kind === 'class') {
@@ -2911,6 +2912,17 @@ export const databaseService = {
       }
     }
 
+    // 1b. ☁️ Bản web (Drive dùng chung): danh mục phân hiệu chung cho mọi máy Quản trị / BGH
+    try {
+      const fromDrive = await schoolBranchesDrive.load(cleanSchool);
+      if (Array.isArray(fromDrive)) {
+        try { localStorage.setItem(cacheKey, JSON.stringify(fromDrive)); } catch (_) {}
+        return fromDrive;
+      }
+    } catch (err) {
+      console.warn('Drive getSchoolBranches error:', err);
+    }
+
     // 2. LocalStorage Fallback
     try {
       const cached = localStorage.getItem(cacheKey);
@@ -2936,6 +2948,13 @@ export const databaseService = {
       localStorage.setItem(cacheKey, JSON.stringify(branches));
       isSuccess = true;
     } catch (_) {}
+
+    // 1b. ☁️ Bản web (Drive dùng chung): ghi danh mục phân hiệu vào phanhieu_truong.json
+    try {
+      await schoolBranchesDrive.save(cleanSchool, branches);
+    } catch (err) {
+      console.warn('Drive saveSchoolBranches error:', err);
+    }
 
     // 2. Supabase Cloud Database Upsert
     const supabase = getBrowserSupabase();
