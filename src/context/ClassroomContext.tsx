@@ -1265,6 +1265,7 @@ export const ClassroomProvider: React.FC<{ children: React.ReactNode }> = ({ chi
           }
         } else {
           let savedData = await databaseService.loadUserData(currentUser.username);
+          if (savedData) savedData = await mergeDriveClassForTeacher(currentUser, savedData);
 
           // (Đã bỏ "alias" gvcn1a1 <-> gvcn_1a1: không nạp dữ liệu của tài khoản khác)
 
@@ -1880,8 +1881,9 @@ export const ClassroomProvider: React.FC<{ children: React.ReactNode }> = ({ chi
           setActiveClassId(cleanScopedClasses[0].id);
         }
       } else {
-        const targetData = await databaseService.loadUserData(newUser.username);
-        if (targetData) {
+        let targetData = await databaseService.loadUserData(newUser.username);
+        if (targetData) targetData = await mergeDriveClassForTeacher(newUser, targetData);
+        if (targetData && Array.isArray(targetData.classes) && targetData.classes.length > 0) {
           applyUserClassroomData(targetData);
         } else {
           let localCache: UserClassroomData | null = null;
@@ -1890,8 +1892,8 @@ export const ClassroomProvider: React.FC<{ children: React.ReactNode }> = ({ chi
             if (raw) localCache = JSON.parse(raw);
           } catch (_) {}
 
-          if (localCache) {
-            applyUserClassroomData(localCache);
+          if (localCache && Array.isArray(localCache.classes) && localCache.classes.length > 0) {
+            applyUserClassroomData(await mergeDriveClassForTeacher(newUser, localCache));
           } else if (schoolDriveDbService.isConfigured()) {
             // 🏫 Bản web (CSDL trên Drive): KHÔNG sinh học sinh mẫu (tránh sai số liệu báo cáo BGH).
             // Khôi phục dữ liệu lớp của giáo viên từ thư mục dùng chung nếu đã có (đăng nhập máy mới).
@@ -2180,6 +2182,22 @@ export const ClassroomProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     .sort((a, b) => a.stt - b.stt);
 
   // BGH & Quản trị nhà trường check helper
+  /**
+   * 🛡️ GVCN trên bản Drive: luôn GỘP THÊM dữ liệu lớp trên Drive vào dữ liệu đang có trên máy khi đăng nhập.
+   * Tránh trường hợp bộ nhớ máy trống / cũ che mất học sinh trên Drive rồi bị tự lưu đè lên tệp lớp thật.
+   * (Gộp kiểu cộng thêm — không xoá gì của máy.)
+   */
+  async function mergeDriveClassForTeacher(user: UserAccount, data: UserClassroomData): Promise<UserClassroomData> {
+    try {
+      if (user.role !== 'homeroom' || !schoolDriveDbService.isConfigured()) return data;
+      const fileName = googleDriveService.getFileNameForUser(user, user.assignedClassName, data.teacherRole);
+      const pulled = await googleDriveService.pullClassData(data, fileName, user);
+      return pulled.success && pulled.mergedData ? pulled.mergedData : data;
+    } catch (_) {
+      return data;
+    }
+  }
+
   const checkBghPermission = () => {
     if (isSuperAdmin) return true; // Supreme Privileges: Toàn quyền can thiệp CSDL
     if (isSchoolAdminOrBgh) {

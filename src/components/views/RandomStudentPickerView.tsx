@@ -41,7 +41,7 @@ export const RandomStudentPickerView: React.FC<RandomStudentPickerViewProps> = (
       <div className="bg-white rounded-3xl p-4 md:p-5 border border-slate-200/90 shadow-xs flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2.5">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-amber-600 to-rose-500 text-white flex items-center justify-center font-black shadow-md shadow-amber-500/20">
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-amber-700 to-rose-600 text-white flex items-center justify-center font-black shadow-md shadow-amber-500/20">
               <Sparkles className="w-5 h-5 text-white" />
             </div>
             <div>
@@ -114,7 +114,7 @@ export const RandomStudentPickerView: React.FC<RandomStudentPickerViewProps> = (
             onClick={() => setActiveGame('mystery_box')}
             className={`px-3 py-2 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 transition-all hover-zoom-btn uppercase cursor-pointer ${
               activeGame === 'mystery_box'
-                ? 'bg-rose-500 text-white shadow-md shadow-rose-500/30'
+                ? 'bg-rose-600 text-white shadow-md shadow-rose-500/30'
                 : 'text-slate-600 hover:text-slate-900'
             }`}
           >
@@ -146,7 +146,7 @@ export const RandomStudentPickerView: React.FC<RandomStudentPickerViewProps> = (
           >
             <span>👧</span>
             <span>QUIZ NGHIÊNG ĐẦU</span>
-            <span className="px-1.5 py-0.2 bg-amber-400 text-purple-950 rounded-md text-[9px] font-black">AI</span>
+            <span className="px-1.5 py-0.2 bg-amber-400 text-purple-950 rounded-md text-[12px] font-black">AI</span>
           </button>
 
           {/* Tab 7: Ống Kính May Mắn (HOT) */}
@@ -154,13 +154,13 @@ export const RandomStudentPickerView: React.FC<RandomStudentPickerViewProps> = (
             onClick={() => setActiveGame('lucky_lens')}
             className={`px-3 py-2 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 transition-all hover-zoom-btn uppercase cursor-pointer ${
               activeGame === 'lucky_lens'
-                ? 'bg-gradient-to-r from-cyan-600 to-blue-600 text-white shadow-md shadow-cyan-600/30'
+                ? 'bg-gradient-to-r from-cyan-700 to-blue-600 text-white shadow-md shadow-cyan-600/30'
                 : 'text-cyan-700 hover:text-cyan-900 bg-cyan-50'
             }`}
           >
             <span>📸</span>
             <span>ỐNG KÍNH</span>
-            <span className="px-1.5 py-0.2 bg-cyan-400 text-slate-950 rounded-md text-[9px] font-black">HOT</span>
+            <span className="px-1.5 py-0.2 bg-cyan-400 text-slate-950 rounded-md text-[12px] font-black">HOT</span>
           </button>
         </div>
       </div>

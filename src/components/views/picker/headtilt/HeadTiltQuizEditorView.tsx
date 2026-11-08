@@ -266,7 +266,7 @@ export const HeadTiltQuizEditorView: React.FC<HeadTiltQuizEditorViewProps> = ({
           {/* Tên bài học */}
           <div>
             <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase">
-              Tên bài học <span className="text-rose-500">*</span>
+              Tên bài học <span className="text-rose-600">*</span>
             </label>
             <input
               type="text"
@@ -288,7 +288,7 @@ export const HeadTiltQuizEditorView: React.FC<HeadTiltQuizEditorViewProps> = ({
               />
               <div>
                 <span className="text-xs font-bold text-slate-800">Xáo trộn thứ tự câu hỏi</span>
-                <p className="text-[11px] text-slate-500">Mỗi lần chơi, các câu hiện theo thứ tự ngẫu nhiên khác nhau.</p>
+                <p className="text-[12px] text-slate-500">Mỗi lần chơi, các câu hiện theo thứ tự ngẫu nhiên khác nhau.</p>
               </div>
             </label>
 
@@ -301,7 +301,7 @@ export const HeadTiltQuizEditorView: React.FC<HeadTiltQuizEditorViewProps> = ({
               />
               <div>
                 <span className="text-xs font-bold text-slate-800">Đảo đáp án khi vào chơi</span>
-                <p className="text-[11px] text-slate-500">Hoán đổi vị trí A/B ngẫu nhiên mỗi câu — không ảnh hưởng đến đáp án đúng.</p>
+                <p className="text-[12px] text-slate-500">Hoán đổi vị trí A/B ngẫu nhiên mỗi câu — không ảnh hưởng đến đáp án đúng.</p>
               </div>
             </label>
 
@@ -314,7 +314,7 @@ export const HeadTiltQuizEditorView: React.FC<HeadTiltQuizEditorViewProps> = ({
               />
               <div>
                 <span className="text-xs font-bold text-slate-800">Dùng camera (nghiêng đầu chọn đáp án)</span>
-                <p className="text-[11px] text-slate-500">Bật: học sinh nghiêng đầu trước camera. Tắt: bấm tay vào đáp án, không cần camera.</p>
+                <p className="text-[12px] text-slate-500">Bật: học sinh nghiêng đầu trước camera. Tắt: bấm tay vào đáp án, không cần camera.</p>
               </div>
             </label>
 
@@ -327,7 +327,7 @@ export const HeadTiltQuizEditorView: React.FC<HeadTiltQuizEditorViewProps> = ({
               />
               <div>
                 <span className="text-xs font-bold text-slate-800">Giọng đọc AI (Text-to-Speech)</span>
-                <p className="text-[11px] text-slate-500">Tự động đọc câu hỏi bằng AI nếu câu hỏi không có file audio đính kèm.</p>
+                <p className="text-[12px] text-slate-500">Tự động đọc câu hỏi bằng AI nếu câu hỏi không có file audio đính kèm.</p>
               </div>
             </label>
           </div>
@@ -349,7 +349,7 @@ export const HeadTiltQuizEditorView: React.FC<HeadTiltQuizEditorViewProps> = ({
                 onChange={e => setTiltSensitivity(Number(e.target.value))}
                 className="w-full accent-indigo-600 cursor-pointer"
               />
-              <p className="text-[11px] text-slate-500 mt-1">
+              <p className="text-[12px] text-slate-500 mt-1">
                 Góc nghiêng để hệ thống nhận diện việc chọn đáp án. Giá trị càng nhỏ càng nhạy (mặc định 20°).
               </p>
             </div>
@@ -369,7 +369,7 @@ export const HeadTiltQuizEditorView: React.FC<HeadTiltQuizEditorViewProps> = ({
                 onChange={e => setAutoNextDelay(Number(e.target.value))}
                 className="w-full accent-indigo-600 cursor-pointer"
               />
-              <p className="text-[11px] text-slate-500 mt-1">
+              <p className="text-[12px] text-slate-500 mt-1">
                 Sau khi trả lời, hệ thống tự động chuyển sang câu tiếp theo sau thời gian này (mặc định 3 giây).
               </p>
             </div>
@@ -404,7 +404,7 @@ export const HeadTiltQuizEditorView: React.FC<HeadTiltQuizEditorViewProps> = ({
               <button
                 type="button"
                 onClick={handleImportSampleExcel}
-                className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer shadow-sm"
+                className="px-3 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer shadow-sm"
               >
                 <FileSpreadsheet className="w-3.5 h-3.5" />
                 Nhập từ Excel
@@ -489,7 +489,7 @@ export const HeadTiltQuizEditorView: React.FC<HeadTiltQuizEditorViewProps> = ({
                     }`}>
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-2">
-                          <span className="w-6 h-6 rounded-full bg-sky-600 text-white font-black text-xs flex items-center justify-center">
+                          <span className="w-6 h-6 rounded-full bg-sky-700 text-white font-black text-xs flex items-center justify-center">
                             A
                           </span>
                           <span className="text-xs font-black text-slate-700">
@@ -502,7 +502,7 @@ export const HeadTiltQuizEditorView: React.FC<HeadTiltQuizEditorViewProps> = ({
                             name={`correct-${q.id}`}
                             checked={q.correctAnswer === 'A'}
                             onChange={() => handleUpdateQuestion(index, { correctAnswer: 'A' })}
-                            className="text-emerald-600 focus:ring-emerald-500 cursor-pointer"
+                            className="text-emerald-700 focus:ring-emerald-500 cursor-pointer"
                           />
                           <span className={q.correctAnswer === 'A' ? 'text-emerald-700 font-black' : 'text-slate-500'}>
                             Đáp án đúng
@@ -526,7 +526,7 @@ export const HeadTiltQuizEditorView: React.FC<HeadTiltQuizEditorViewProps> = ({
                     }`}>
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-2">
-                          <span className="w-6 h-6 rounded-full bg-orange-600 text-white font-black text-xs flex items-center justify-center">
+                          <span className="w-6 h-6 rounded-full bg-orange-700 text-white font-black text-xs flex items-center justify-center">
                             B
                           </span>
                           <span className="text-xs font-black text-slate-700">
@@ -539,7 +539,7 @@ export const HeadTiltQuizEditorView: React.FC<HeadTiltQuizEditorViewProps> = ({
                             name={`correct-${q.id}`}
                             checked={q.correctAnswer === 'B'}
                             onChange={() => handleUpdateQuestion(index, { correctAnswer: 'B' })}
-                            className="text-emerald-600 focus:ring-emerald-500 cursor-pointer"
+                            className="text-emerald-700 focus:ring-emerald-500 cursor-pointer"
                           />
                           <span className={q.correctAnswer === 'B' ? 'text-emerald-700 font-black' : 'text-slate-500'}>
                             Đáp án đúng

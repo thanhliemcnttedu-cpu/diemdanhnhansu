@@ -91,7 +91,7 @@ export const AutoAssignAvatarModal: React.FC<AutoAssignAvatarModalProps> = ({
           {/* Status Overview Card */}
           <div className="grid grid-cols-2 gap-2.5">
             <div className="p-3 bg-indigo-50 border border-indigo-200 rounded-2xl">
-              <span className="text-[10px] font-black uppercase text-indigo-700 block">Chưa Có Avatar</span>
+              <span className="text-[12px] font-black uppercase text-indigo-700 block">Chưa Có Avatar</span>
               <div className="flex items-baseline gap-1 mt-0.5">
                 <span className="text-2xl font-black text-indigo-900">{studentsWithoutAvatarCount}</span>
                 <span className="text-xs text-indigo-600 font-medium">/ {totalStudents} HS</span>
@@ -99,10 +99,10 @@ export const AutoAssignAvatarModal: React.FC<AutoAssignAvatarModalProps> = ({
             </div>
 
             <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-2xl">
-              <span className="text-[10px] font-black uppercase text-emerald-700 block">Đã Có Avatar</span>
+              <span className="text-[12px] font-black uppercase text-emerald-700 block">Đã Có Avatar</span>
               <div className="flex items-baseline gap-1 mt-0.5">
                 <span className="text-2xl font-black text-emerald-900">{studentsWithAvatar}</span>
-                <span className="text-xs text-emerald-600 font-medium">/ {totalStudents} HS</span>
+                <span className="text-xs text-emerald-700 font-medium">/ {totalStudents} HS</span>
               </div>
             </div>
           </div>
@@ -117,7 +117,7 @@ export const AutoAssignAvatarModal: React.FC<AutoAssignAvatarModalProps> = ({
                 type="button"
                 onClick={handleRefreshPool}
                 disabled={isRefreshing}
-                className="inline-flex items-center gap-1 text-[11px] font-bold text-indigo-600 hover:text-indigo-800 disabled:opacity-50"
+                className="inline-flex items-center gap-1 text-[12px] font-bold text-indigo-600 hover:text-indigo-800 disabled:opacity-50"
                 title="Quét lại thư mục public/avatars/ để nhận diện ảnh mới thả vào"
               >
                 <RefreshCw className={`w-3 h-3 ${isRefreshing ? 'animate-spin' : ''}`} />
@@ -141,11 +141,11 @@ export const AutoAssignAvatarModal: React.FC<AutoAssignAvatarModalProps> = ({
                     <span className="text-xl">🎨</span>
                     <strong className="text-xs font-black uppercase text-slate-800">Avatar Mặc Định</strong>
                   </div>
-                  <p className="text-[11px] text-slate-600 leading-snug">
+                  <p className="text-[12px] text-slate-600 leading-snug">
                     Ảnh hoạt hình / vector, tự động chia theo Nam & Nữ.
                   </p>
                 </div>
-                <div className="mt-2.5 pt-2 border-t border-slate-200/60 flex items-center justify-between text-[10px] font-bold text-indigo-700">
+                <div className="mt-2.5 pt-2 border-t border-slate-200/60 flex items-center justify-between text-[12px] font-bold text-indigo-700">
                   <span>Kho: {poolSummary.default.total} ảnh</span>
                   <span>Nam: {poolSummary.default.boysCount} • Nữ: {poolSummary.default.girlsCount}</span>
                 </div>
@@ -171,11 +171,11 @@ export const AutoAssignAvatarModal: React.FC<AutoAssignAvatarModalProps> = ({
                     <span className="text-xl">📸</span>
                     <strong className="text-xs font-black uppercase text-slate-800">Avatar Ảnh Thật</strong>
                   </div>
-                  <p className="text-[11px] text-slate-600 leading-snug">
+                  <p className="text-[12px] text-slate-600 leading-snug">
                     Ảnh thẻ chân dung học sinh sắc nét, sống động như thật.
                   </p>
                 </div>
-                <div className="mt-2.5 pt-2 border-t border-slate-200/60 flex items-center justify-between text-[10px] font-bold text-purple-700">
+                <div className="mt-2.5 pt-2 border-t border-slate-200/60 flex items-center justify-between text-[12px] font-bold text-purple-700">
                   <span>Kho: {poolSummary.real_demo.total} ảnh</span>
                   <span>Nam: {poolSummary.real_demo.boysCount} • Nữ: {poolSummary.real_demo.girlsCount}</span>
                 </div>
@@ -207,7 +207,7 @@ export const AutoAssignAvatarModal: React.FC<AutoAssignAvatarModalProps> = ({
                   <span className="text-xs font-black text-slate-800 block">
                     Chỉ gán cho học sinh CHƯA CÓ avatar (Khuyên dùng)
                   </span>
-                  <span className="text-[11px] text-slate-500 block leading-relaxed font-medium">
+                  <span className="text-[12px] text-slate-500 block leading-relaxed font-medium">
                     Giữ nguyên toàn bộ ảnh đại diện mà thầy/cô đã tải lên hoặc chụp trước đó cho {studentsWithAvatar} học sinh.
                   </span>
                 </div>
@@ -225,7 +225,7 @@ export const AutoAssignAvatarModal: React.FC<AutoAssignAvatarModalProps> = ({
                   <span className="text-xs font-black text-purple-900 block">
                     Gán lại toàn bộ lớp (Ghi đè tất cả {totalStudents} học sinh)
                   </span>
-                  <span className="text-[11px] text-slate-500 block leading-relaxed font-medium">
+                  <span className="text-[12px] text-slate-500 block leading-relaxed font-medium">
                     Thay thế toàn bộ ảnh hiện tại bằng bộ ảnh mới theo giới tính Nam/Nữ đồng bộ.
                   </span>
                 </div>
@@ -234,7 +234,7 @@ export const AutoAssignAvatarModal: React.FC<AutoAssignAvatarModalProps> = ({
           </div>
 
           {/* Developer Folder Hint */}
-          <div className="p-3 bg-amber-50/80 border border-amber-200 rounded-2xl text-[11px] text-amber-950 flex items-start gap-2">
+          <div className="p-3 bg-amber-50/80 border border-amber-200 rounded-2xl text-[12px] text-amber-950 flex items-start gap-2">
             <span className="text-base shrink-0">💡</span>
             <div className="leading-relaxed">
               <strong>Tự động nhận diện thời gian thực:</strong> Thầy/Cô chỉ cần chép thêm ảnh mới vào thư mục <code>public/avatars/{selectedType}/boys/</code> hoặc <code>girls/</code>. Nhấn nút <em>"Quét thư mục"</em> để hệ thống tự động cập nhật ngay mà không cần sửa code!

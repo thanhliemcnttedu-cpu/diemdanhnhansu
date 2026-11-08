@@ -924,14 +924,14 @@ export const ComprehensiveStatisticsView: React.FC = () => {
     <div className="space-y-6">
       {/* 1. 30-DAY BACKUP WARNING BANNER (User Request: Sau 30 ngày hiển thị cảnh báo sao lưu JSON) */}
       {showBackupAlert && (
-        <div className="bg-gradient-to-r from-orange-600 via-rose-600 to-orange-600 text-white rounded-3xl p-4 md:p-5 shadow-lg border border-amber-300 flex flex-col md:flex-row md:items-center justify-between gap-4 animate-in fade-in duration-200">
+        <div className="bg-gradient-to-r from-orange-700 via-rose-600 to-orange-700 text-white rounded-3xl p-4 md:p-5 shadow-lg border border-amber-300 flex flex-col md:flex-row md:items-center justify-between gap-4 animate-in fade-in duration-200">
           <div className="flex items-center gap-3.5">
             <div className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-md text-white flex items-center justify-center font-black shrink-0 shadow-inner">
               <ShieldAlert className="w-7 h-7 text-amber-100" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="px-2.5 py-0.5 rounded-full bg-white text-rose-800 text-[10px] font-black uppercase tracking-wider">
+                <span className="px-2.5 py-0.5 rounded-full bg-white text-rose-800 text-[12px] font-black uppercase tracking-wider">
                   CẢNH BÁO QUAN TRỌNG
                 </span>
                 <span className="text-xs font-bold text-white">
@@ -980,7 +980,7 @@ export const ComprehensiveStatisticsView: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setShowSafeTransitionModal(true)}
-                className="px-2.5 py-0.5 rounded-full bg-emerald-100 hover:bg-emerald-200 text-emerald-800 border border-emerald-300 text-[10px] font-black uppercase flex items-center gap-1 cursor-pointer transition-colors"
+                className="px-2.5 py-0.5 rounded-full bg-emerald-100 hover:bg-emerald-200 text-emerald-800 border border-emerald-300 text-[12px] font-black uppercase flex items-center gap-1 cursor-pointer transition-colors"
                 title="Bấm để xem chính sách an toàn bảo toàn 100% dữ liệu khi sang tháng mới"
               >
                 <ShieldCheck className="w-3 h-3 text-emerald-600" />
@@ -1019,7 +1019,7 @@ export const ComprehensiveStatisticsView: React.FC = () => {
         {/* Tổng số lớp */}
         <div className="bg-white rounded-3xl border border-slate-200/90 p-4 shadow-xs hover-zoom-card space-y-1.5">
           <div className="flex items-center justify-between">
-            <span className="text-[10px] font-black uppercase text-slate-500">TỔNG SỐ LỚP</span>
+            <span className="text-[12px] font-black uppercase text-slate-500">TỔNG SỐ LỚP</span>
             <div className="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold">
               <School className="w-4 h-4" />
             </div>
@@ -1027,7 +1027,7 @@ export const ComprehensiveStatisticsView: React.FC = () => {
           <div className="text-2xl font-black font-mono text-slate-900">
             {totalClasses} <span className="text-xs font-bold text-slate-500">lớp</span>
           </div>
-          <div className="text-[10px] text-slate-500 font-bold uppercase truncate">
+          <div className="text-[12px] text-slate-500 font-bold uppercase truncate">
             {gradeBreakdown.map(g => `${g.gradeName}: ${g.classCount}`).join(' • ')}
           </div>
         </div>
@@ -1035,7 +1035,7 @@ export const ComprehensiveStatisticsView: React.FC = () => {
         {/* Tổng số học sinh */}
         <div className="bg-white rounded-3xl border border-slate-200/90 p-4 shadow-xs hover-zoom-card space-y-1.5">
           <div className="flex items-center justify-between">
-            <span className="text-[10px] font-black uppercase text-slate-500">TỔNG SỐ HỌC SINH</span>
+            <span className="text-[12px] font-black uppercase text-slate-500">TỔNG SỐ HỌC SINH</span>
             <div className="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold">
               <Users className="w-4 h-4" />
             </div>
@@ -1043,7 +1043,7 @@ export const ComprehensiveStatisticsView: React.FC = () => {
           <div className="text-2xl font-black font-mono text-indigo-950">
             {totalStudents} <span className="text-xs font-bold text-slate-500">học sinh</span>
           </div>
-          <div className="text-[10px] text-indigo-700 font-bold uppercase truncate">
+          <div className="text-[12px] text-indigo-700 font-bold uppercase truncate">
             TB: {totalClasses > 0 ? Math.round(totalStudents / totalClasses) : 0} em / lớp
           </div>
         </div>
@@ -1051,7 +1051,7 @@ export const ComprehensiveStatisticsView: React.FC = () => {
         {/* Cơ cấu Nam / Nữ */}
         <div className="bg-white rounded-3xl border border-slate-200/90 p-4 shadow-xs hover-zoom-card space-y-1.5">
           <div className="flex items-center justify-between">
-            <span className="text-[10px] font-black uppercase text-slate-500">CƠ CẤU GIỚI TÍNH</span>
+            <span className="text-[12px] font-black uppercase text-slate-500">CƠ CẤU GIỚI TÍNH</span>
             <div className="w-8 h-8 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center font-bold">
               <span>🚻</span>
             </div>
@@ -1069,7 +1069,7 @@ export const ComprehensiveStatisticsView: React.FC = () => {
         {/* Chuyên cần */}
         <div className="bg-white rounded-3xl border border-slate-200/90 p-4 shadow-xs hover-zoom-card space-y-1.5">
           <div className="flex items-center justify-between">
-            <span className="text-[10px] font-black uppercase text-emerald-700">CHUYÊN CẦN ({timeframe === 'day' ? 'HÔM NAY' : timeframe === 'week' ? 'TUẦN NÀY' : 'CẢ THÁNG'})</span>
+            <span className="text-[12px] font-black uppercase text-emerald-700">CHUYÊN CẦN ({timeframe === 'day' ? 'HÔM NAY' : timeframe === 'week' ? 'TUẦN NÀY' : 'CẢ THÁNG'})</span>
             <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center font-bold">
               <UserCheck className="w-4 h-4" />
             </div>
@@ -1077,7 +1077,7 @@ export const ComprehensiveStatisticsView: React.FC = () => {
           <div className="text-2xl font-black font-mono text-emerald-800">
             {activeTimeframeStats.attRate}%
           </div>
-          <div className="text-[10px] text-emerald-700 font-bold truncate">
+          <div className="text-[12px] text-emerald-700 font-bold truncate">
             {activeTimeframeStats.present} có mặt • {activeTimeframeStats.totalAbsent} vắng
           </div>
         </div>
@@ -1085,7 +1085,7 @@ export const ComprehensiveStatisticsView: React.FC = () => {
         {/* Ăn bán trú */}
         <div className="bg-white rounded-3xl border border-slate-200/90 p-4 shadow-xs hover-zoom-card space-y-1.5">
           <div className="flex items-center justify-between">
-            <span className="text-[10px] font-black uppercase text-indigo-700">ĂN BÁN TRÚ ({timeframe === 'day' ? 'HÔM NAY' : timeframe === 'week' ? 'TUẦN NÀY' : 'CẢ THÁNG'})</span>
+            <span className="text-[12px] font-black uppercase text-indigo-700">ĂN BÁN TRÚ ({timeframe === 'day' ? 'HÔM NAY' : timeframe === 'week' ? 'TUẦN NÀY' : 'CẢ THÁNG'})</span>
             <div className="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-700 flex items-center justify-center font-bold">
               <span>🍱</span>
             </div>
@@ -1093,7 +1093,7 @@ export const ComprehensiveStatisticsView: React.FC = () => {
           <div className="text-2xl font-black font-mono text-indigo-900">
             {activeTimeframeStats.bRate}%
           </div>
-          <div className="text-[10px] text-indigo-700 font-bold truncate">
+          <div className="text-[12px] text-indigo-700 font-bold truncate">
             {activeTimeframeStats.eating} suất ăn đăng ký
           </div>
         </div>
@@ -1200,7 +1200,7 @@ export const ComprehensiveStatisticsView: React.FC = () => {
           {timeframe === 'month' && (
             <div className="flex flex-wrap items-center gap-2 bg-purple-50 px-3 py-1.5 rounded-2xl border border-purple-200 text-xs">
               <span className="font-black text-purple-900">{currentMonthRange.monthLabel}</span>
-              <span className="text-[10px] text-purple-700 font-bold bg-white px-2 py-0.5 rounded-full border border-purple-200">
+              <span className="text-[12px] text-purple-700 font-bold bg-white px-2 py-0.5 rounded-full border border-purple-200">
                 Bảo toàn 100% học sinh & xu
               </span>
             </div>
@@ -1218,7 +1218,7 @@ export const ComprehensiveStatisticsView: React.FC = () => {
                 <option value="hk2">Học kì II (16/01 - 31/05)</option>
                 <option value="year">Cả Năm Học (05/09 - 31/05)</option>
               </select>
-              <span className="text-[10px] text-amber-800 font-bold bg-amber-100/70 px-2 py-0.5 rounded-full border border-amber-300">
+              <span className="text-[12px] text-amber-800 font-bold bg-amber-100/70 px-2 py-0.5 rounded-full border border-amber-300">
                 {currentSemesterRange.start} đến {currentSemesterRange.end}
               </span>
             </div>
@@ -1226,7 +1226,7 @@ export const ComprehensiveStatisticsView: React.FC = () => {
 
           {/* Scope Selector: Toàn trường vs Lớp cụ thể */}
           <div className="flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-2xl border border-slate-200 w-full sm:w-auto">
-            <span className="text-[11px] font-bold text-slate-500 uppercase">Phạm vi:</span>
+            <span className="text-[12px] font-bold text-slate-500 uppercase">Phạm vi:</span>
             <select
               value={selectedClassId}
               onChange={(e) => setSelectedClassId(e.target.value)}
@@ -1248,7 +1248,7 @@ export const ComprehensiveStatisticsView: React.FC = () => {
             title="Trí tuệ nhân tạo AI tự động phân tích ma trận dữ liệu (12 cột bảng & cụm biểu đồ đa chiều) để thiết lập Khổ Ngang Chuẩn A4 (Landscape 297mm x 210mm) hoàn hảo nhất"
           >
             <Sparkles className="w-3.5 h-3.5 text-amber-500 animate-pulse shrink-0" />
-            <span className="text-[10px] sm:text-[10.5px] font-black uppercase tracking-tight whitespace-nowrap">
+            <span className="text-[12px] sm:text-[12px] font-black uppercase tracking-tight whitespace-nowrap">
               AI BỐ CỤC: KHỔ NGANG A4 (12 CỘT & BIỂU ĐỒ)
             </span>
           </div>
@@ -1257,7 +1257,7 @@ export const ComprehensiveStatisticsView: React.FC = () => {
           <button
             onClick={handleExportPng}
             disabled={isExporting}
-            className="px-3 sm:px-3.5 py-2 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 disabled:opacity-50 text-white rounded-xl text-xs font-black flex items-center justify-center gap-1.5 shadow-sm transition-all hover-zoom-btn uppercase cursor-pointer"
+            className="px-3 sm:px-3.5 py-2 bg-gradient-to-r from-teal-700 to-emerald-700 hover:from-teal-800 hover:to-emerald-800 disabled:opacity-50 text-white rounded-xl text-xs font-black flex items-center justify-center gap-1.5 shadow-sm transition-all hover-zoom-btn uppercase cursor-pointer"
             title={`Xuất trọn bộ ảnh PNG Khổ Ngang Chuẩn A4 (${totalPrintPages} Ảnh) gồm Biểu đồ tròn, Báo cáo tổng hợp, Bảng ${classes.length} lớp GVCN (ngắt trang) & Tiến bộ học sinh`}
           >
             <ImageIcon className="w-3.5 h-3.5 text-emerald-100" />
@@ -1296,20 +1296,20 @@ export const ComprehensiveStatisticsView: React.FC = () => {
         {/* Document Header (For Prints, PDF & PNG) */}
         <div className="flex flex-col sm:flex-row justify-between items-start border-b border-slate-200 pb-3.5 gap-3">
           <div>
-            <div className="font-bold uppercase text-[11px] text-slate-600">
+            <div className="font-bold uppercase text-[12px] text-slate-600">
               {officialSchoolName}
             </div>
             <div className="font-black text-sm sm:text-base text-slate-900 uppercase">
               BÁO CÁO THỐNG KÊ TỔNG HỢP {selectedClassId === 'all' ? 'TOÀN TRƯỜNG' : `LỚP ${classes.find(c => c.id === selectedClassId)?.name}`}
             </div>
-            <div className="text-[11px] text-slate-500">
-              Năm học: {teacherProfile.academicYear || '2026 - 2027'} • Người lập: <strong>{officialReporterName}</strong> <span className="text-[10px] text-indigo-600 font-bold uppercase">({officialRoleTitle})</span>
+            <div className="text-[12px] text-slate-500">
+              Năm học: {teacherProfile.academicYear || '2026 - 2027'} • Người lập: <strong>{officialReporterName}</strong> <span className="text-[12px] text-indigo-600 font-bold uppercase">({officialRoleTitle})</span>
             </div>
           </div>
 
-          <div className="text-left sm:text-right text-[11px] text-slate-500">
+          <div className="text-left sm:text-right text-[12px] text-slate-500">
             <div className="font-bold uppercase text-slate-700">CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</div>
-            <div className="italic text-[10px]">Độc lập - Tự do - Hạnh phúc</div>
+            <div className="italic text-[12px]">Độc lập - Tự do - Hạnh phúc</div>
             <div className="mt-1 font-semibold">
               Kỳ báo cáo: {timeframe === 'day' ? `Ngày ${selectedDate}` : timeframe === 'week' ? `Tuần (${currentWeekRange.start} - ${currentWeekRange.end})` : timeframe === 'month' ? currentMonthRange.monthLabel : currentSemesterRange.label}
             </div>
@@ -1320,34 +1320,34 @@ export const ComprehensiveStatisticsView: React.FC = () => {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5">
           <div className="bg-slate-50/80 p-2.5 rounded-xl border border-slate-200 flex items-center justify-between">
             <div>
-              <div className="text-[9px] font-black text-slate-500 uppercase">SĨ SỐ {selectedClassId === 'all' ? 'TOÀN TRƯỜNG' : 'LỚP'}</div>
-              <div className="text-base font-black text-indigo-950 font-mono">{totalStudents} <span className="text-[10px] font-bold text-slate-500 uppercase">HS</span></div>
+              <div className="text-[12px] font-black text-slate-500 uppercase">SĨ SỐ {selectedClassId === 'all' ? 'TOÀN TRƯỜNG' : 'LỚP'}</div>
+              <div className="text-base font-black text-indigo-950 font-mono">{totalStudents} <span className="text-[12px] font-bold text-slate-500 uppercase">HS</span></div>
             </div>
-            <div className="text-[10px] text-indigo-600 font-bold uppercase">{selectedClassId === 'all' ? `${classes.length} Lớp GVCN` : '1 Lớp'}</div>
+            <div className="text-[12px] text-indigo-600 font-bold uppercase">{selectedClassId === 'all' ? `${classes.length} Lớp GVCN` : '1 Lớp'}</div>
           </div>
 
           <div className="bg-emerald-50/70 p-2.5 rounded-xl border border-emerald-200 flex items-center justify-between">
             <div>
-              <div className="text-[9px] font-black text-emerald-800 uppercase">CHUYÊN CẦN ({todayStr})</div>
+              <div className="text-[12px] font-black text-emerald-800 uppercase">CHUYÊN CẦN ({todayStr})</div>
               <div className="text-base font-black text-emerald-700 font-mono">{todayStats.attRate}%</div>
             </div>
-            <div className="text-[10px] text-emerald-600 font-bold font-mono">{todayStats.present}/{totalStudents} HS</div>
+            <div className="text-[12px] text-emerald-700 font-bold font-mono">{todayStats.present}/{totalStudents} HS</div>
           </div>
 
           <div className="bg-indigo-50/70 p-2.5 rounded-xl border border-indigo-200 flex items-center justify-between">
             <div>
-              <div className="text-[9px] font-black text-indigo-800 uppercase">ĂN BÁN TRÚ HÔM NAY</div>
+              <div className="text-[12px] font-black text-indigo-800 uppercase">ĂN BÁN TRÚ HÔM NAY</div>
               <div className="text-base font-black text-indigo-700 font-mono">{todayStats.bRate}%</div>
             </div>
-            <div className="text-[10px] text-indigo-600 font-bold font-mono">{todayStats.eating} suất</div>
+            <div className="text-[12px] text-indigo-600 font-bold font-mono">{todayStats.eating} suất</div>
           </div>
 
           <div className="bg-amber-50/70 p-2.5 rounded-xl border border-amber-200 flex items-center justify-between">
             <div>
-              <div className="text-[9px] font-black text-amber-800 uppercase">TỔNG XU THI ĐUA</div>
-              <div className="text-base font-black text-amber-600 font-mono">{totalCoins} <span className="text-[10px] font-bold text-slate-500 uppercase">xu</span></div>
+              <div className="text-[12px] font-black text-amber-800 uppercase">TỔNG XU THI ĐUA</div>
+              <div className="text-base font-black text-amber-700 font-mono">{totalCoins} <span className="text-[12px] font-bold text-slate-500 uppercase">xu</span></div>
             </div>
-            <div className="text-[10px] text-amber-700 font-bold uppercase">{selectedClassId === 'all' ? 'Toàn trường' : 'Cả lớp'}</div>
+            <div className="text-[12px] text-amber-700 font-bold uppercase">{selectedClassId === 'all' ? 'Toàn trường' : 'Cả lớp'}</div>
           </div>
         </div>
 
@@ -1357,18 +1357,18 @@ export const ComprehensiveStatisticsView: React.FC = () => {
             <h3 className="text-xs font-black uppercase text-slate-800 tracking-wide flex items-center gap-1.5">
               <span>I. BẢNG CHI TIẾT CHUYÊN CẦN & BÁN TRÚ (HÔM NAY • HÔM QUA • THEO TUẦN • THEO THÁNG • THEO HỌC KÌ)</span>
             </h3>
-            <span className="text-[10px] text-slate-500 font-bold uppercase">
+            <span className="text-[12px] text-slate-500 font-bold uppercase">
               Có mặt • Có phép • Không phép • Nghỉ ốm • Lý do khác • Suất ăn bán trú
             </span>
           </div>
 
           {/* Gợi ý cuộn ngang trên điện thoại */}
-          <div className="sm:hidden flex items-center gap-1.5 text-[10px] text-indigo-700 bg-indigo-50 border border-indigo-200 px-2.5 py-1 rounded-xl font-bold w-fit mb-2">
+          <div className="sm:hidden flex items-center gap-1.5 text-[12px] text-indigo-700 bg-indigo-50 border border-indigo-200 px-2.5 py-1 rounded-xl font-bold w-fit mb-2">
             <span>⇄ Vuốt ngang để xem đủ 10 cột báo cáo</span>
           </div>
 
           <div className="overflow-x-auto border border-slate-300 rounded-2xl scrollbar-thin">
-            <table className="min-w-[680px] w-full text-[11px] text-center border-collapse">
+            <table className="min-w-[680px] w-full text-[12px] text-center border-collapse">
               <thead className="bg-slate-100 font-black text-slate-800 border-b border-slate-300">
                 <tr>
                   <th className="p-2 border-r border-slate-300 text-left whitespace-nowrap">Kỳ Thống Kê</th>
@@ -1388,7 +1388,7 @@ export const ComprehensiveStatisticsView: React.FC = () => {
                 <tr className={timeframe === 'day' && selectedDate === todayStr ? 'bg-amber-50/70 font-bold' : ''}>
                   <td className="p-2 text-left font-black text-slate-900 border-r border-slate-300 flex items-center justify-between">
                     <span>HÔM NAY ({todayStr})</span>
-                    {selectedDate === todayStr && <span className="text-[9px] bg-indigo-600 text-white px-1.5 py-0.2 rounded font-bold">Đang xem</span>}
+                    {selectedDate === todayStr && <span className="text-[12px] bg-indigo-600 text-white px-1.5 py-0.2 rounded font-bold">Đang xem</span>}
                   </td>
                   <td className="p-2 border-r border-slate-300">{todayStats.sessions}</td>
                   <td className="p-2 border-r border-slate-300 text-emerald-700 font-bold">{todayStats.present}</td>
@@ -1405,7 +1405,7 @@ export const ComprehensiveStatisticsView: React.FC = () => {
                 <tr className={timeframe === 'day' && selectedDate === yesterdayOfTodayStr ? 'bg-amber-50/70 font-bold' : ''}>
                   <td className="p-2 text-left font-black text-slate-900 border-r border-slate-300 flex items-center justify-between">
                     <span>HÔM QUA ({yesterdayOfTodayStr})</span>
-                    {selectedDate === yesterdayOfTodayStr && <span className="text-[9px] bg-indigo-600 text-white px-1.5 py-0.2 rounded font-bold">Đang xem</span>}
+                    {selectedDate === yesterdayOfTodayStr && <span className="text-[12px] bg-indigo-600 text-white px-1.5 py-0.2 rounded font-bold">Đang xem</span>}
                   </td>
                   <td className="p-2 border-r border-slate-300">{yesterdayStats.sessions}</td>
                   <td className="p-2 border-r border-slate-300 text-emerald-700 font-bold">{yesterdayStats.present}</td>
@@ -1423,7 +1423,7 @@ export const ComprehensiveStatisticsView: React.FC = () => {
                   <tr className="bg-amber-50/70 font-bold">
                     <td className="p-2 text-left font-black text-indigo-900 border-r border-slate-300 flex items-center justify-between">
                       <span>NGÀY ĐANG CHỌN ({selectedDate})</span>
-                      <span className="text-[9px] bg-indigo-600 text-white px-1.5 py-0.2 rounded font-bold">Đang xem</span>
+                      <span className="text-[12px] bg-indigo-600 text-white px-1.5 py-0.2 rounded font-bold">Đang xem</span>
                     </td>
                     <td className="p-2 border-r border-slate-300">{selectedDayStats.sessions}</td>
                     <td className="p-2 border-r border-slate-300 text-emerald-700 font-bold">{selectedDayStats.present}</td>
@@ -1441,7 +1441,7 @@ export const ComprehensiveStatisticsView: React.FC = () => {
                 <tr className={timeframe === 'week' ? 'bg-blue-50/60 font-bold' : ''}>
                   <td className="p-2 text-left font-black text-slate-900 border-r border-slate-300 flex items-center justify-between">
                     <span>THEO TUẦN ({currentWeekRange.start} đến {currentWeekRange.end})</span>
-                    {timeframe === 'week' && <span className="text-[9px] bg-blue-600 text-white px-1.5 py-0.2 rounded font-bold">Đang xem</span>}
+                    {timeframe === 'week' && <span className="text-[12px] bg-blue-600 text-white px-1.5 py-0.2 rounded font-bold">Đang xem</span>}
                   </td>
                   <td className="p-2 border-r border-slate-300">{weekStats.sessions}</td>
                   <td className="p-2 border-r border-slate-300 text-emerald-700 font-bold">{weekStats.present}</td>
@@ -1458,7 +1458,7 @@ export const ComprehensiveStatisticsView: React.FC = () => {
                 <tr className={timeframe === 'month' ? 'bg-purple-50/60 font-bold' : ''}>
                   <td className="p-2 text-left font-black text-slate-900 border-r border-slate-300 flex items-center justify-between">
                     <span>THEO THÁNG ({currentMonthRange.monthLabel})</span>
-                    {timeframe === 'month' && <span className="text-[9px] bg-purple-600 text-white px-1.5 py-0.2 rounded font-bold">Đang xem</span>}
+                    {timeframe === 'month' && <span className="text-[12px] bg-purple-600 text-white px-1.5 py-0.2 rounded font-bold">Đang xem</span>}
                   </td>
                   <td className="p-2 border-r border-slate-300">{monthStats.sessions}</td>
                   <td className="p-2 border-r border-slate-300 text-emerald-700 font-bold">{monthStats.present}</td>
@@ -1475,7 +1475,7 @@ export const ComprehensiveStatisticsView: React.FC = () => {
                 <tr className={timeframe === 'semester' ? 'bg-amber-50/70 font-bold' : ''}>
                   <td className="p-2 text-left font-black text-slate-900 border-r border-slate-300 flex items-center justify-between">
                     <span>THEO HỌC KÌ ({currentSemesterRange.label})</span>
-                    {timeframe === 'semester' && <span className="text-[9px] bg-amber-600 text-white px-1.5 py-0.2 rounded font-bold">Đang xem</span>}
+                    {timeframe === 'semester' && <span className="text-[12px] bg-amber-700 text-white px-1.5 py-0.2 rounded font-bold">Đang xem</span>}
                   </td>
                   <td className="p-2 border-r border-slate-300">{semesterStats.sessions}</td>
                   <td className="p-2 border-r border-slate-300 text-emerald-700 font-bold">{semesterStats.present}</td>
@@ -1500,7 +1500,7 @@ export const ComprehensiveStatisticsView: React.FC = () => {
                 <Sparkles className="w-4 h-4 text-amber-500" />
                 <span>II. BIỂU ĐỒ TRỰC QUAN (TRÒN • CỘT • ĐƯỜNG - TÙY CHỌN DỮ LIỆU HIỂN THỊ)</span>
               </h3>
-              <p className="text-[11px] text-slate-500 font-medium mt-0.5">
+              <p className="text-[12px] text-slate-500 font-medium mt-0.5">
                 Chuyển đổi kiểu biểu đồ và bật/tắt các chỉ số bạn muốn xem trong biểu đồ báo cáo
               </p>
             </div>
@@ -1509,7 +1509,7 @@ export const ComprehensiveStatisticsView: React.FC = () => {
             <div className="flex flex-wrap items-center gap-2.5">
               {/* Dataset Selector */}
               <div className="flex items-center gap-1.5 bg-white px-2.5 py-1 rounded-xl border border-slate-200">
-                <span className="text-[11px] font-bold text-slate-500">Nhóm:</span>
+                <span className="text-[12px] font-bold text-slate-500">Nhóm:</span>
                 <select
                   value={chartDataset}
                   onChange={(e) => {
@@ -1570,7 +1570,7 @@ export const ComprehensiveStatisticsView: React.FC = () => {
 
           {/* Interactive Checkbox Filter Strip: Cho phép chọn dữ liệu muốn hiển thị */}
           <div className="flex flex-wrap items-center gap-1.5 pt-1">
-            <span className="text-[11px] font-bold text-slate-500 mr-1 flex items-center gap-1">
+            <span className="text-[12px] font-bold text-slate-500 mr-1 flex items-center gap-1">
               <Filter className="w-3 h-3 text-slate-400" />
               <span>Hiển thị:</span>
             </span>
@@ -1582,7 +1582,7 @@ export const ComprehensiveStatisticsView: React.FC = () => {
                   key={item.key}
                   type="button"
                   onClick={() => toggleDataKeyVisibility(item.key)}
-                  className={`px-2.5 py-1 rounded-lg text-[11px] font-bold flex items-center gap-1.5 transition-all cursor-pointer border ${
+                  className={`px-2.5 py-1 rounded-lg text-[12px] font-bold flex items-center gap-1.5 transition-all cursor-pointer border ${
                     !isHidden 
                       ? 'bg-white text-slate-800 border-slate-300 shadow-2xs' 
                       : 'bg-slate-100 text-slate-400 border-slate-200 line-through opacity-60'
@@ -1594,7 +1594,7 @@ export const ComprehensiveStatisticsView: React.FC = () => {
                     style={{ backgroundColor: isHidden ? '#94A3B8' : item.color }} 
                   />
                   <span>{item.label}</span>
-                  <span className="font-mono text-[10px] opacity-75">({item.value})</span>
+                  <span className="font-mono text-[12px] opacity-75">({item.value})</span>
                 </button>
               );
             })}
@@ -1603,7 +1603,7 @@ export const ComprehensiveStatisticsView: React.FC = () => {
               <button
                 type="button"
                 onClick={showAllDataKeys}
-                className="px-2 py-0.5 text-[10px] font-bold text-indigo-700 hover:underline cursor-pointer ml-1"
+                className="px-2 py-0.5 text-[12px] font-bold text-indigo-700 hover:underline cursor-pointer ml-1"
               >
                 Hiện lại tất cả
               </button>
@@ -1626,7 +1626,7 @@ export const ComprehensiveStatisticsView: React.FC = () => {
                         const barHeightPct = maxChartVal > 0 ? Math.max(12, Math.round((item.value / maxChartVal) * 100)) : 10;
                         return (
                           <div key={idx} className="flex flex-col items-center h-full justify-end group">
-                            <span className="text-[11px] font-mono font-black text-slate-900 mb-1 group-hover:scale-110 transition-transform">
+                            <span className="text-[12px] font-mono font-black text-slate-900 mb-1 group-hover:scale-110 transition-transform">
                               {item.value}
                             </span>
                             <div 
@@ -1636,10 +1636,10 @@ export const ComprehensiveStatisticsView: React.FC = () => {
                                 backgroundColor: item.color 
                               }}
                             />
-                            <span className="text-[10px] font-bold text-slate-700 mt-2 truncate w-full text-center" title={item.label}>
+                            <span className="text-[12px] font-bold text-slate-700 mt-2 truncate w-full text-center" title={item.label}>
                               {item.label}
                             </span>
-                            <span className="text-[9px] text-slate-400 font-semibold truncate">
+                            <span className="text-[12px] text-slate-400 font-semibold truncate">
                               {item.sub}
                             </span>
                           </div>
@@ -1682,7 +1682,7 @@ export const ComprehensiveStatisticsView: React.FC = () => {
                       </svg>
                       <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
                         <span className="text-xl font-black font-mono text-slate-900">{totalChartVal}</span>
-                        <span className="text-[9px] font-bold text-slate-500 uppercase">Tổng cộng</span>
+                        <span className="text-[12px] font-bold text-slate-500 uppercase">Tổng cộng</span>
                       </div>
                     </div>
 
@@ -1694,8 +1694,8 @@ export const ComprehensiveStatisticsView: React.FC = () => {
                           <div key={idx} className="flex items-center gap-2 p-2 bg-white rounded-xl border border-slate-200 shadow-2xs">
                             <span className="w-3.5 h-3.5 rounded-md shrink-0" style={{ backgroundColor: item.color }} />
                             <div className="min-w-0 flex-1">
-                              <div className="font-bold text-slate-800 text-[11px] truncate">{item.label}</div>
-                              <div className="text-[10px] text-slate-500 font-semibold">{item.value} ({pct}%) • {item.sub}</div>
+                              <div className="font-bold text-slate-800 text-[12px] truncate">{item.label}</div>
+                              <div className="text-[12px] text-slate-500 font-semibold">{item.value} ({pct}%) • {item.sub}</div>
                             </div>
                           </div>
                         );
@@ -1760,7 +1760,7 @@ export const ComprehensiveStatisticsView: React.FC = () => {
                       </svg>
                     </div>
 
-                    <div className="flex justify-between items-center text-[10px] text-slate-500 font-bold px-1 pt-1">
+                    <div className="flex justify-between items-center text-[12px] text-slate-500 font-bold px-1 pt-1">
                       {activeChartData.map((item, i) => (
                         <span key={i} className="truncate max-w-[80px] text-center" title={item.label}>
                           {item.label}
@@ -1777,7 +1777,7 @@ export const ComprehensiveStatisticsView: React.FC = () => {
           <div className="bg-gradient-to-r from-indigo-50 to-purple-50 p-3 sm:p-4 rounded-2xl border border-indigo-200/90 flex items-start gap-3 text-xs text-indigo-950 font-medium">
             <Sparkles className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
             <div>
-              <span className="font-black text-indigo-900 uppercase text-[11px] block mb-0.5">
+              <span className="font-black text-indigo-900 uppercase text-[12px] block mb-0.5">
                 🤖 NHẬN ĐỊNH SƯ PHẠM & ĐÁNH GIÁ CHẤT LƯỢNG GIÁO DỤC (AI):
               </span>
               <span>
@@ -1793,13 +1793,13 @@ export const ComprehensiveStatisticsView: React.FC = () => {
         <div className="grid grid-cols-2 pt-6 text-center text-xs border-t border-slate-200">
           <div>
             <div className="font-black uppercase text-slate-800">NGƯỜI LẬP BÁO CÁO</div>
-            <div className="text-[10px] text-slate-500 italic">(Ký và ghi rõ họ tên)</div>
+            <div className="text-[12px] text-slate-500 italic">(Ký và ghi rõ họ tên)</div>
             <div className="h-14" />
             <div className="font-black text-slate-900">{officialReporterName}</div>
           </div>
           <div>
             <div className="font-black uppercase text-slate-800">HIỆU TRƯỞNG / BAN GIÁM HIỆU</div>
-            <div className="text-[10px] text-slate-500 italic">(Ký tên và đóng dấu)</div>
+            <div className="text-[12px] text-slate-500 italic">(Ký tên và đóng dấu)</div>
             <div className="h-14" />
             <div className="font-black text-slate-900">Ban Giám Hiệu</div>
           </div>
@@ -1818,17 +1818,17 @@ export const ComprehensiveStatisticsView: React.FC = () => {
             {/* Header Trang Lớp 1 */}
             <div className="flex flex-col sm:flex-row justify-between items-start border-b border-slate-200 pb-3 gap-2">
               <div>
-                <div className="font-bold uppercase text-[10px] text-slate-600">
+                <div className="font-bold uppercase text-[12px] text-slate-600">
                   {officialSchoolName} • BÁO CÁO THỐNG KÊ CHI TIẾT CÁC LỚP HỌC (TRANG 2{classPagesCount > 1 ? ` - PHẦN 1` : ''})
                 </div>
                 <div className="font-black text-sm text-slate-900 uppercase">
                   BẢNG TỔNG HỢP SĨ SỐ, NAM/NỮ, CHUYÊN CẦN & BÁN TRÚ {classes.length} LỚP GIÁO VIÊN CHỦ NHIỆM {classPagesCount > 1 ? `(PHẦN 1)` : ''}
                 </div>
-                <div className="text-[10px] text-slate-500">
+                <div className="text-[12px] text-slate-500">
                   Danh sách từ lớp 1 đến {classPage1Rows.length} (Tổng cộng: {classes.length} lớp GVCN)
                 </div>
               </div>
-              <div className="text-right text-[10px] text-slate-500 font-semibold">
+              <div className="text-right text-[12px] text-slate-500 font-semibold">
                 Kỳ báo cáo: {timeframe === 'day' ? `Ngày ${selectedDate}` : timeframe === 'week' ? `Tuần (${currentWeekRange.start} - ${currentWeekRange.end})` : timeframe === 'month' ? currentMonthRange.monthLabel : currentSemesterRange.label}
               </div>
             </div>
@@ -1838,13 +1838,13 @@ export const ComprehensiveStatisticsView: React.FC = () => {
                 <h3 className="text-xs font-black uppercase text-slate-800 tracking-wide flex items-center gap-1.5">
                   <span>III. BẢNG TỔNG HỢP SĨ SỐ, NAM/NỮ & GIÁO VIÊN CHỦ NHIỆM TỪNG LỚP/TỪNG KHỐI</span>
                 </h3>
-                <span className="text-[10px] text-slate-500 font-bold uppercase">
+                <span className="text-[12px] text-slate-500 font-bold uppercase">
                   {classPage1Rows.length} Lớp (Phần 1)
                 </span>
               </div>
 
               <div className="overflow-x-auto border border-slate-300 rounded-2xl">
-                <table className="w-full text-[11px] text-center border-collapse">
+                <table className="w-full text-[12px] text-center border-collapse">
                   <thead className="bg-slate-100 font-black text-slate-800 border-b border-slate-300">
                     <tr>
                       <th className="p-2 border-r border-slate-300 w-10">STT</th>
@@ -1902,13 +1902,13 @@ export const ComprehensiveStatisticsView: React.FC = () => {
               <div className="grid grid-cols-2 pt-6 text-center text-xs border-t border-slate-200">
                 <div>
                   <div className="font-black uppercase text-slate-800">NGƯỜI LẬP BIỂU</div>
-                  <div className="text-[10px] text-slate-500 italic">(Ký và ghi rõ họ tên)</div>
+                  <div className="text-[12px] text-slate-500 italic">(Ký và ghi rõ họ tên)</div>
                   <div className="h-12" />
                   <div className="font-black text-slate-900">{officialReporterName}</div>
                 </div>
                 <div>
                   <div className="font-black uppercase text-slate-800">BAN GIÁM HIỆU DUYỆT</div>
-                  <div className="text-[10px] text-slate-500 italic">(Ký tên và đóng dấu)</div>
+                  <div className="text-[12px] text-slate-500 italic">(Ký tên và đóng dấu)</div>
                   <div className="h-12" />
                   <div className="font-black text-slate-900">Ban Giám Hiệu</div>
                 </div>
@@ -1925,17 +1925,17 @@ export const ComprehensiveStatisticsView: React.FC = () => {
             >
               <div className="flex flex-col sm:flex-row justify-between items-start border-b border-slate-200 pb-3 gap-2">
                 <div>
-                  <div className="font-bold uppercase text-[10px] text-slate-600">
+                  <div className="font-bold uppercase text-[12px] text-slate-600">
                     {officialSchoolName} • BÁO CÁO THỐNG KÊ CHI TIẾT CÁC LỚP HỌC (TRANG 3 - PHẦN 2)
                   </div>
                   <div className="font-black text-sm text-slate-900 uppercase">
                     BẢNG TỔNG HỢP SĨ SỐ, NAM/NỮ, CHUYÊN CẦN & BÁN TRÚ {classes.length} LỚP GIÁO VIÊN CHỦ NHIỆM (PHẦN 2)
                   </div>
-                  <div className="text-[10px] text-slate-500">
+                  <div className="text-[12px] text-slate-500">
                     Danh sách từ lớp {CLASSES_PER_A4_PAGE + 1} đến {CLASSES_PER_A4_PAGE + classPage2Rows.length} (Tổng cộng: {classes.length} lớp GVCN)
                   </div>
                 </div>
-                <div className="text-right text-[10px] text-slate-500 font-semibold">
+                <div className="text-right text-[12px] text-slate-500 font-semibold">
                   Kỳ báo cáo: {timeframe === 'day' ? `Ngày ${selectedDate}` : timeframe === 'week' ? `Tuần (${currentWeekRange.start} - ${currentWeekRange.end})` : timeframe === 'month' ? currentMonthRange.monthLabel : currentSemesterRange.label}
                 </div>
               </div>
@@ -1945,13 +1945,13 @@ export const ComprehensiveStatisticsView: React.FC = () => {
                   <h3 className="text-xs font-black uppercase text-slate-800 tracking-wide flex items-center gap-1.5">
                     <span>III. BẢNG TỔNG HỢP SĨ SỐ, NAM/NỮ & GIÁO VIÊN CHỦ NHIỆM (PHẦN 2)</span>
                   </h3>
-                  <span className="text-[10px] text-slate-500 font-bold uppercase">
+                  <span className="text-[12px] text-slate-500 font-bold uppercase">
                     {classPage2Rows.length} Lớp (Phần 2)
                   </span>
                 </div>
 
                 <div className="overflow-x-auto border border-slate-300 rounded-2xl">
-                  <table className="w-full text-[11px] text-center border-collapse">
+                  <table className="w-full text-[12px] text-center border-collapse">
                     <thead className="bg-slate-100 font-black text-slate-800 border-b border-slate-300">
                       <tr>
                         <th className="p-2 border-r border-slate-300 w-10">STT</th>
@@ -2009,13 +2009,13 @@ export const ComprehensiveStatisticsView: React.FC = () => {
                 <div className="grid grid-cols-2 pt-6 text-center text-xs border-t border-slate-200">
                   <div>
                     <div className="font-black uppercase text-slate-800">NGƯỜI LẬP BIỂU</div>
-                    <div className="text-[10px] text-slate-500 italic">(Ký và ghi rõ họ tên)</div>
+                    <div className="text-[12px] text-slate-500 italic">(Ký và ghi rõ họ tên)</div>
                     <div className="h-12" />
                     <div className="font-black text-slate-900">{officialReporterName}</div>
                   </div>
                   <div>
                     <div className="font-black uppercase text-slate-800">BAN GIÁM HIỆU DUYỆT</div>
-                    <div className="text-[10px] text-slate-500 italic">(Ký tên và đóng dấu)</div>
+                    <div className="text-[12px] text-slate-500 italic">(Ký tên và đóng dấu)</div>
                     <div className="h-12" />
                     <div className="font-black text-slate-900">Ban Giám Hiệu</div>
                   </div>
@@ -2033,17 +2033,17 @@ export const ComprehensiveStatisticsView: React.FC = () => {
             >
               <div className="flex flex-col sm:flex-row justify-between items-start border-b border-slate-200 pb-3 gap-2">
                 <div>
-                  <div className="font-bold uppercase text-[10px] text-slate-600">
+                  <div className="font-bold uppercase text-[12px] text-slate-600">
                     {officialSchoolName} • BÁO CÁO THỐNG KÊ CHI TIẾT CÁC LỚP HỌC (TRANG 4 - PHẦN 3)
                   </div>
                   <div className="font-black text-sm text-slate-900 uppercase">
                     BẢNG TỔNG HỢP SĨ SỐ, NAM/NỮ, CHUYÊN CẦN & BÁN TRÚ {classes.length} LỚP GIÁO VIÊN CHỦ NHIỆM (PHẦN 3 & TỔNG CỘNG)
                   </div>
-                  <div className="text-[10px] text-slate-500">
+                  <div className="text-[12px] text-slate-500">
                     Danh sách từ lớp {CLASSES_PER_A4_PAGE * 2 + 1} đến {CLASSES_PER_A4_PAGE * 2 + classPage3Rows.length} (Tổng cộng: {classes.length} lớp GVCN)
                   </div>
                 </div>
-                <div className="text-right text-[10px] text-slate-500 font-semibold">
+                <div className="text-right text-[12px] text-slate-500 font-semibold">
                   Kỳ báo cáo: {timeframe === 'day' ? `Ngày ${selectedDate}` : timeframe === 'week' ? `Tuần (${currentWeekRange.start} - ${currentWeekRange.end})` : timeframe === 'month' ? currentMonthRange.monthLabel : currentSemesterRange.label}
                 </div>
               </div>
@@ -2053,13 +2053,13 @@ export const ComprehensiveStatisticsView: React.FC = () => {
                   <h3 className="text-xs font-black uppercase text-slate-800 tracking-wide flex items-center gap-1.5">
                     <span>III. BẢNG TỔNG HỢP SĨ SỐ, NAM/NỮ & GIÁO VIÊN CHỦ NHIỆM (PHẦN 3 & TỔNG CỘNG)</span>
                   </h3>
-                  <span className="text-[10px] text-slate-500 font-bold uppercase">
+                  <span className="text-[12px] text-slate-500 font-bold uppercase">
                     {classPage3Rows.length} Lớp (Phần 3)
                   </span>
                 </div>
 
                 <div className="overflow-x-auto border border-slate-300 rounded-2xl">
-                  <table className="w-full text-[11px] text-center border-collapse">
+                  <table className="w-full text-[12px] text-center border-collapse">
                     <thead className="bg-slate-100 font-black text-slate-800 border-b border-slate-300">
                       <tr>
                         <th className="p-2 border-r border-slate-300 w-10">STT</th>
@@ -2114,13 +2114,13 @@ export const ComprehensiveStatisticsView: React.FC = () => {
               <div className="grid grid-cols-2 pt-6 text-center text-xs border-t border-slate-200">
                 <div>
                   <div className="font-black uppercase text-slate-800">NGƯỜI LẬP BIỂU</div>
-                  <div className="text-[10px] text-slate-500 italic">(Ký và ghi rõ họ tên)</div>
+                  <div className="text-[12px] text-slate-500 italic">(Ký và ghi rõ họ tên)</div>
                   <div className="h-12" />
                   <div className="font-black text-slate-900">{officialReporterName}</div>
                 </div>
                 <div>
                   <div className="font-black uppercase text-slate-800">BAN GIÁM HIỆU DUYỆT</div>
-                  <div className="text-[10px] text-slate-500 italic">(Ký tên và đóng dấu)</div>
+                  <div className="text-[12px] text-slate-500 italic">(Ký tên và đóng dấu)</div>
                   <div className="h-12" />
                   <div className="font-black text-slate-900">Ban Giám Hiệu</div>
                 </div>
@@ -2138,7 +2138,7 @@ export const ComprehensiveStatisticsView: React.FC = () => {
               <TrendingUp className="w-4 h-4 text-emerald-600" />
               <span>IV. BẢNG THEO DÕI & SO SÁNH TIẾN BỘ HỌC SINH ({timeframe === 'semester' ? 'THEO HỌC KÌ' : timeframe === 'month' ? 'THEO THÁNG' : 'THEO TUẦN'})</span>
             </h3>
-            <p className="text-[11px] text-slate-500 font-medium">
+            <p className="text-[12px] text-slate-500 font-medium">
               So sánh mức tăng trưởng điểm xu thi đua, tỷ lệ chuyên cần và danh hiệu tiến bộ giữa kỳ này so với kỳ trước ({studentProgressData.length} học sinh)
             </p>
           </div>
@@ -2189,24 +2189,24 @@ export const ComprehensiveStatisticsView: React.FC = () => {
         {/* Header Trang Tiến bộ 1 */}
         <div className="flex flex-col sm:flex-row justify-between items-start border-b border-slate-200 pb-3 gap-2">
           <div>
-            <div className="font-bold uppercase text-[10px] text-slate-600">
+            <div className="font-bold uppercase text-[12px] text-slate-600">
               {officialSchoolName} • BÁO CÁO THEO DÕI & SO SÁNH TIẾN BỘ HỌC SINH (TRANG {selectedClassId === 'all' ? (classPagesCount + 2) : 2})
             </div>
             <div className="font-black text-sm text-slate-900 uppercase">
               IV. BẢNG THEO DÕI & SO SÁNH TIẾN BỘ HỌC SINH ({timeframe === 'semester' ? 'THEO HỌC KÌ' : timeframe === 'month' ? 'THEO THÁNG' : 'THEO TUẦN'}) - PHẦN 1
             </div>
-            <div className="text-[10px] text-slate-500">
+            <div className="text-[12px] text-slate-500">
               Danh sách từ STT 1 đến {progressPage1Students.length} (Tổng cộng: {studentProgressData.length} học sinh)
             </div>
           </div>
-          <div className="text-right text-[10px] text-slate-500 font-semibold">
+          <div className="text-right text-[12px] text-slate-500 font-semibold">
             Kỳ báo cáo: {timeframe === 'day' ? `Ngày ${selectedDate}` : timeframe === 'week' ? `Tuần (${currentWeekRange.start} - ${currentWeekRange.end})` : timeframe === 'month' ? currentMonthRange.monthLabel : currentSemesterRange.label}
           </div>
         </div>
 
         {/* Bảng 11 cột Phần 1 */}
         <div className="overflow-x-auto border border-slate-300 rounded-2xl">
-          <table className="w-full text-[11px] text-center border-collapse">
+          <table className="w-full text-[12px] text-center border-collapse">
             <thead className="bg-slate-100 font-black text-slate-800 border-b border-slate-300">
               <tr>
                 <th className="p-2 border-r border-slate-300 w-10">STT</th>
@@ -2235,7 +2235,7 @@ export const ComprehensiveStatisticsView: React.FC = () => {
                   <td className="p-1.5 border-r border-slate-300 font-mono text-slate-500">+{s.prevPointsGained}</td>
                   <td className="p-1.5 border-r border-slate-300 font-mono font-black">
                     {s.deltaPoints > 0 ? (
-                      <span className="text-emerald-600 flex items-center justify-center gap-0.5">
+                      <span className="text-emerald-700 flex items-center justify-center gap-0.5">
                         <ArrowUpRight className="w-3.5 h-3.5" /> +{s.deltaPoints}
                       </span>
                     ) : s.deltaPoints < 0 ? (
@@ -2248,7 +2248,7 @@ export const ComprehensiveStatisticsView: React.FC = () => {
                   </td>
                   <td className="p-1.5 border-r border-slate-300 font-mono font-bold text-emerald-800 bg-emerald-50/60">{s.attRate}%</td>
                   <td className="p-1.5">
-                    <span className={`px-2 py-0.5 rounded-full text-[10px] border ${s.progressColor}`}>
+                    <span className={`px-2 py-0.5 rounded-full text-[12px] border ${s.progressColor}`}>
                       {s.progressBadge}
                     </span>
                   </td>
@@ -2262,13 +2262,13 @@ export const ComprehensiveStatisticsView: React.FC = () => {
         <div className="grid grid-cols-2 pt-6 text-center text-xs border-t border-slate-200">
           <div>
             <div className="font-black uppercase text-slate-800">NGƯỜI LẬP BIỂU</div>
-            <div className="text-[10px] text-slate-500 italic">(Ký và ghi rõ họ tên)</div>
+            <div className="text-[12px] text-slate-500 italic">(Ký và ghi rõ họ tên)</div>
             <div className="h-12" />
             <div className="font-black text-slate-900">{officialReporterName}</div>
           </div>
           <div>
             <div className="font-black uppercase text-slate-800">BAN GIÁM HIỆU DUYỆT</div>
-            <div className="text-[10px] text-slate-500 italic">(Ký tên và đóng dấu)</div>
+            <div className="text-[12px] text-slate-500 italic">(Ký tên và đóng dấu)</div>
             <div className="h-12" />
             <div className="font-black text-slate-900">Ban Giám Hiệu</div>
           </div>
@@ -2285,24 +2285,24 @@ export const ComprehensiveStatisticsView: React.FC = () => {
           {/* Header Trang Tiến bộ 2 */}
           <div className="flex flex-col sm:flex-row justify-between items-start border-b border-slate-200 pb-3 gap-2">
             <div>
-              <div className="font-bold uppercase text-[10px] text-slate-600">
+              <div className="font-bold uppercase text-[12px] text-slate-600">
                 {officialSchoolName} • BÁO CÁO THEO DÕI & SO SÁNH TIẾN BỘ HỌC SINH (TRANG {selectedClassId === 'all' ? (classPagesCount + 3) : 3})
               </div>
               <div className="font-black text-sm text-slate-900 uppercase">
                 IV. BẢNG THEO DÕI & SO SÁNH TIẾN BỘ HỌC SINH ({timeframe === 'semester' ? 'THEO HỌC KÌ' : timeframe === 'month' ? 'THEO THÁNG' : 'THEO TUẦN'}) - PHẦN 2 (TIẾP THEO)
               </div>
-              <div className="text-[10px] text-slate-500">
+              <div className="text-[12px] text-slate-500">
                 Danh sách từ STT {STUDENTS_PER_A4_PAGE + 1} đến {STUDENTS_PER_A4_PAGE + progressPage2Students.length} (Tổng cộng: {studentProgressData.length} học sinh)
               </div>
             </div>
-            <div className="text-right text-[10px] text-slate-500 font-semibold">
+            <div className="text-right text-[12px] text-slate-500 font-semibold">
               Kỳ báo cáo: {timeframe === 'day' ? `Ngày ${selectedDate}` : timeframe === 'week' ? `Tuần (${currentWeekRange.start} - ${currentWeekRange.end})` : timeframe === 'month' ? currentMonthRange.monthLabel : currentSemesterRange.label}
             </div>
           </div>
 
           {/* Bảng 11 cột Phần 2 */}
           <div className="overflow-x-auto border border-slate-300 rounded-2xl">
-            <table className="w-full text-[11px] text-center border-collapse">
+            <table className="w-full text-[12px] text-center border-collapse">
               <thead className="bg-slate-100 font-black text-slate-800 border-b border-slate-300">
                 <tr>
                   <th className="p-2 border-r border-slate-300 w-10">STT</th>
@@ -2331,7 +2331,7 @@ export const ComprehensiveStatisticsView: React.FC = () => {
                     <td className="p-1.5 border-r border-slate-300 font-mono text-slate-500">+{s.prevPointsGained}</td>
                     <td className="p-1.5 border-r border-slate-300 font-mono font-black">
                       {s.deltaPoints > 0 ? (
-                        <span className="text-emerald-600 flex items-center justify-center gap-0.5">
+                        <span className="text-emerald-700 flex items-center justify-center gap-0.5">
                           <ArrowUpRight className="w-3.5 h-3.5" /> +{s.deltaPoints}
                         </span>
                       ) : s.deltaPoints < 0 ? (
@@ -2344,7 +2344,7 @@ export const ComprehensiveStatisticsView: React.FC = () => {
                     </td>
                     <td className="p-1.5 border-r border-slate-300 font-mono font-bold text-emerald-800 bg-emerald-50/60">{s.attRate}%</td>
                     <td className="p-1.5">
-                      <span className={`px-2 py-0.5 rounded-full text-[10px] border ${s.progressColor}`}>
+                      <span className={`px-2 py-0.5 rounded-full text-[12px] border ${s.progressColor}`}>
                         {s.progressBadge}
                       </span>
                     </td>
@@ -2358,13 +2358,13 @@ export const ComprehensiveStatisticsView: React.FC = () => {
           <div className="grid grid-cols-2 pt-6 text-center text-xs border-t border-slate-200">
             <div>
               <div className="font-black uppercase text-slate-800">NGƯỜI LẬP BIỂU</div>
-              <div className="text-[10px] text-slate-500 italic">(Ký và ghi rõ họ tên)</div>
+              <div className="text-[12px] text-slate-500 italic">(Ký và ghi rõ họ tên)</div>
               <div className="h-12" />
               <div className="font-black text-slate-900">{officialReporterName}</div>
             </div>
             <div>
               <div className="font-black uppercase text-slate-800">BAN GIÁM HIỆU DUYỆT</div>
-              <div className="text-[10px] text-slate-500 italic">(Ký tên và đóng dấu)</div>
+              <div className="text-[12px] text-slate-500 italic">(Ký tên và đóng dấu)</div>
               <div className="h-12" />
               <div className="font-black text-slate-900">Ban Giám Hiệu</div>
             </div>

@@ -959,20 +959,20 @@ export const AdminRealtimeDashboardView: React.FC = () => {
   return (
     <div className="space-y-4 animate-in fade-in duration-200">
       {/* 1. Header Banner & Realtime Connection Status */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-sky-600 via-indigo-600 to-blue-600 p-4 sm:p-5 text-white border border-indigo-500/30 shadow-xl">
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-sky-700 via-indigo-600 to-blue-600 p-4 sm:p-5 text-white border border-indigo-500/30 shadow-xl">
         <div className="absolute top-0 right-0 -mt-8 -mr-8 w-48 h-48 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute bottom-0 left-1/3 -mb-8 w-40 h-40 bg-blue-500/10 rounded-full blur-2xl pointer-events-none" />
 
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 relative z-10">
           <div>
             <div className="flex flex-wrap items-center gap-2 mb-1.5">
-              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-400/30 text-[10.5px] font-black uppercase tracking-wider">
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-400/30 text-[12px] font-black uppercase tracking-wider">
                 <ShieldCheck className="w-3 h-3 text-indigo-400" />
                 <span>BAN GIÁM HIỆU & QUẢN TRỊ VIÊN</span>
               </span>
 
               {/* Anti-Duplication Protocol Badge */}
-              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-blue-500/20 text-blue-300 border border-blue-400/30 text-[10.5px] font-black uppercase tracking-wider">
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-blue-500/20 text-blue-300 border border-blue-400/30 text-[12px] font-black uppercase tracking-wider">
                 <CheckCircle2 className="w-3 h-3 text-emerald-400" />
                 <span>CHỐNG TRÙNG LẶP: {homeroomClasses.length} LỚP GVCN</span>
                 {excludedSubjectClassesCount > 0 && (
@@ -983,21 +983,21 @@ export const AdminRealtimeDashboardView: React.FC = () => {
               </span>
 
               {/* Realtime Live Pulse Badge */}
-              <div className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10.5px] font-black transition-all ${
+              <div className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[12px] font-black transition-all ${
                 isPulseActive 
                   ? 'bg-emerald-500/30 text-emerald-300 border border-emerald-400 shadow-sm shadow-emerald-500/50 scale-105'
-                  : 'bg-emerald-600/60 text-white border border-emerald-500/30'
+                  : 'bg-emerald-700/60 text-white border border-emerald-500/30'
               }`}>
                 <span className="relative flex h-2 w-2">
-                  <span className={`animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-600 opacity-75 ${isPulseActive ? 'duration-500' : ''}`} />
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-600" />
+                  <span className={`animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-700 opacity-75 ${isPulseActive ? 'duration-500' : ''}`} />
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-700" />
                 </span>
                 <Wifi className="w-3 h-3" />
                 <span>LIÊN THÔNG REALTIME</span>
               </div>
 
               {lastEventTime && (
-                <span className="text-[10px] text-slate-400 flex items-center gap-1">
+                <span className="text-[12px] text-slate-400 flex items-center gap-1">
                   <Clock className="w-2.5 h-2.5 text-slate-400" />
                   <span>Vừa nhận: <strong className="text-emerald-400">{lastEventTime}</strong></span>
                 </span>
@@ -1025,7 +1025,7 @@ export const AdminRealtimeDashboardView: React.FC = () => {
               title={soundEnabled ? 'Đang bật chuông thông báo Realtime' : 'Đã tắt chuông thông báo'}
             >
               {soundEnabled ? <Volume2 className="w-3.5 h-3.5 text-amber-600" /> : <VolumeX className="w-3.5 h-3.5" />}
-              <span className="hidden sm:inline text-[11px] font-bold">{soundEnabled ? 'Bật chuông' : 'Tắt chuông'}</span>
+              <span className="hidden sm:inline text-[12px] font-bold">{soundEnabled ? 'Bật chuông' : 'Tắt chuông'}</span>
             </button>
 
             <button
@@ -1041,7 +1041,7 @@ export const AdminRealtimeDashboardView: React.FC = () => {
             <button
               onClick={handleDriveSync}
               disabled={isDriveSyncing}
-              className="px-3 py-2 bg-gradient-to-r from-sky-600 to-cyan-600 hover:from-sky-700 hover:to-cyan-700 text-white rounded-xl text-xs font-black flex items-center gap-1.5 shadow-md transition-all hover:scale-102 cursor-pointer disabled:opacity-50"
+              className="px-3 py-2 bg-gradient-to-r from-sky-700 to-cyan-700 hover:from-sky-800 hover:to-cyan-800 text-white rounded-xl text-xs font-black flex items-center gap-1.5 shadow-md transition-all hover:scale-102 cursor-pointer disabled:opacity-50"
               title="Kéo và cập nhật số liệu mới nhất từ tất cả các lớp học trên Google Drive dùng chung"
             >
               <Cloud className={`w-3.5 h-3.5 ${isDriveSyncing ? 'animate-bounce text-amber-300' : 'text-sky-200'}`} />
@@ -1049,7 +1049,7 @@ export const AdminRealtimeDashboardView: React.FC = () => {
             </button>
 
             {driveSyncMessage && (
-              <span className="px-2.5 py-1 rounded-xl bg-amber-400 text-slate-900 text-[11px] font-black animate-in fade-in duration-200 flex items-center gap-1 shadow-xs">
+              <span className="px-2.5 py-1 rounded-xl bg-amber-400 text-slate-900 text-[12px] font-black animate-in fade-in duration-200 flex items-center gap-1 shadow-xs">
                 <span>⚡</span>
                 <span>{driveSyncMessage}</span>
               </span>
@@ -1057,7 +1057,7 @@ export const AdminRealtimeDashboardView: React.FC = () => {
 
             <button
               onClick={handleExportExcel}
-              className="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black flex items-center gap-1.5 shadow-md transition-all hover:scale-102 cursor-pointer"
+              className="px-3 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-black flex items-center gap-1.5 shadow-md transition-all hover:scale-102 cursor-pointer"
             >
               <Download className="w-3.5 h-3.5" />
               <span>Xuất Excel ({timeframe === 'day' ? 'Ngày' : timeframe === 'week' ? 'Tuần' : 'Tháng'})</span>
@@ -1080,11 +1080,11 @@ export const AdminRealtimeDashboardView: React.FC = () => {
                 <h3 className="text-xs sm:text-sm font-black text-indigo-950 uppercase tracking-tight">
                   KHUNG THỜI GIAN BÁO CÁO TỔNG HỢP
                 </h3>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-indigo-50 text-indigo-700 border border-indigo-200">
+                <span className="px-2 py-0.5 rounded-full text-[12px] font-black bg-indigo-50 text-indigo-700 border border-indigo-200">
                   {dateRange.shortLabel}
                 </span>
               </div>
-              <p className="text-[11px] text-slate-500">
+              <p className="text-[12px] text-slate-500">
                 Lựa chọn xem tổng hợp toàn trường và từng lớp theo Ngày cụ thể, theo Tuần hoặc trọn vẹn cả Tháng
               </p>
             </div>
@@ -1136,7 +1136,7 @@ export const AdminRealtimeDashboardView: React.FC = () => {
             {/* Chế độ THEO NGÀY */}
             {timeframe === 'day' && (
               <>
-                <span className="text-[11px] font-bold text-slate-700">Ngày giám sát:</span>
+                <span className="text-[12px] font-bold text-slate-700">Ngày giám sát:</span>
                 <div className="flex items-center gap-1">
                   <button
                     onClick={handlePrevDay}
@@ -1164,7 +1164,7 @@ export const AdminRealtimeDashboardView: React.FC = () => {
                   {selectedDate !== todayStr && (
                     <button
                       onClick={() => setSelectedDate(todayStr)}
-                      className="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-[11px] font-black shadow-2xs cursor-pointer"
+                      className="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-[12px] font-black shadow-2xs cursor-pointer"
                     >
                       Hôm nay
                     </button>
@@ -1175,7 +1175,7 @@ export const AdminRealtimeDashboardView: React.FC = () => {
                       d.setDate(d.getDate() - 1);
                       setSelectedDate(toLocalDateString(d));
                     }}
-                    className="px-2.5 py-1 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 rounded-lg text-[11px] font-bold shadow-2xs cursor-pointer"
+                    className="px-2.5 py-1 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 rounded-lg text-[12px] font-bold shadow-2xs cursor-pointer"
                   >
                     Hôm qua
                   </button>
@@ -1186,7 +1186,7 @@ export const AdminRealtimeDashboardView: React.FC = () => {
             {/* Chế độ THEO TUẦN */}
             {timeframe === 'week' && (
               <>
-                <span className="text-[11px] font-bold text-slate-700">Chọn tuần cần xem:</span>
+                <span className="text-[12px] font-bold text-slate-700">Chọn tuần cần xem:</span>
                 <div className="flex items-center gap-1">
                   <button
                     onClick={handlePrevWeek}
@@ -1214,7 +1214,7 @@ export const AdminRealtimeDashboardView: React.FC = () => {
                 {selectedWeekDate !== todayStr && (
                   <button
                     onClick={() => setSelectedWeekDate(todayStr)}
-                    className="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-[11px] font-black shadow-2xs cursor-pointer ml-1"
+                    className="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-[12px] font-black shadow-2xs cursor-pointer ml-1"
                   >
                     Tuần này
                   </button>
@@ -1225,7 +1225,7 @@ export const AdminRealtimeDashboardView: React.FC = () => {
             {/* Chế độ THEO THÁNG */}
             {timeframe === 'month' && (
               <>
-                <span className="text-[11px] font-bold text-slate-700">Chọn tháng báo cáo:</span>
+                <span className="text-[12px] font-bold text-slate-700">Chọn tháng báo cáo:</span>
                 <div className="flex items-center gap-1">
                   <button
                     onClick={handlePrevMonth}
@@ -1252,7 +1252,7 @@ export const AdminRealtimeDashboardView: React.FC = () => {
                 {selectedMonth !== currentMonthStr && (
                   <button
                     onClick={() => setSelectedMonth(currentMonthStr)}
-                    className="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-[11px] font-black shadow-2xs cursor-pointer ml-1"
+                    className="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-[12px] font-black shadow-2xs cursor-pointer ml-1"
                   >
                     Tháng này
                   </button>
@@ -1263,7 +1263,7 @@ export const AdminRealtimeDashboardView: React.FC = () => {
 
           {/* Dòng tóm tắt khung thời gian */}
           <div className="flex items-center gap-2 text-xs">
-            <span className="text-[11px] text-slate-500 font-medium">Khoảng tính toán:</span>
+            <span className="text-[12px] text-slate-500 font-medium">Khoảng tính toán:</span>
             <span className="font-black text-indigo-900 bg-white px-2.5 py-1 rounded-lg border border-indigo-200 font-mono shadow-2xs">
               {dateRange.label}
             </span>
@@ -1274,7 +1274,7 @@ export const AdminRealtimeDashboardView: React.FC = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-1">
           {/* Cấp 1: Phân hiệu */}
           <div className="space-y-1">
-            <label className="text-[11px] font-black text-slate-700 flex items-center gap-1.5">
+            <label className="text-[12px] font-black text-slate-700 flex items-center gap-1.5">
               <Building2 className="w-3.5 h-3.5 text-indigo-600" />
               <span>CẤP 1: CHỌN PHÂN HIỆU</span>
             </label>
@@ -1297,7 +1297,7 @@ export const AdminRealtimeDashboardView: React.FC = () => {
 
           {/* Cấp 2: Điểm trường */}
           <div className="space-y-1">
-            <label className="text-[11px] font-black text-slate-700 flex items-center gap-1.5">
+            <label className="text-[12px] font-black text-slate-700 flex items-center gap-1.5">
               <MapPin className="w-3.5 h-3.5 text-rose-600" />
               <span>CẤP 2: CHỌN ĐIỂM TRƯỜNG</span>
             </label>
@@ -1320,7 +1320,7 @@ export const AdminRealtimeDashboardView: React.FC = () => {
 
           {/* Cấp 3: Khối học */}
           <div className="space-y-1">
-            <label className="text-[11px] font-black text-slate-700 flex items-center gap-1.5">
+            <label className="text-[12px] font-black text-slate-700 flex items-center gap-1.5">
               <GraduationCap className="w-3.5 h-3.5 text-amber-600" />
               <span>CẤP 3: CHỌN KHỐI HỌC</span>
             </label>
@@ -1340,25 +1340,25 @@ export const AdminRealtimeDashboardView: React.FC = () => {
 
           {/* Thông tin phạm vi áp dụng & Nút Reset */}
           <div className="space-y-1">
-            <label className="text-[11px] font-black text-slate-700 flex items-center gap-1.5">
+            <label className="text-[12px] font-black text-slate-700 flex items-center gap-1.5">
               <School className="w-3.5 h-3.5 text-emerald-600" />
               <span>PHẠM VI ĐANG THEO DÕI</span>
             </label>
             <div className="flex items-center justify-between p-1.5 px-3 bg-gradient-to-r from-indigo-50 to-blue-50 border border-indigo-200 rounded-xl min-h-[38px]">
               <div className="truncate mr-1">
-                <span className="text-[11px] font-black text-indigo-950 block truncate">
+                <span className="text-[12px] font-black text-indigo-950 block truncate">
                   {selectedBranch === 'all' ? 'TOÀN TRƯỜNG' : selectedBranch}
                   {selectedCampus !== 'all' && ` • ${selectedCampus}`}
                   {selectedGrade !== 'all' && ` • ${selectedGrade}`}
                 </span>
-                <span className="text-[10px] text-indigo-700 font-bold">
+                <span className="text-[12px] text-indigo-700 font-bold">
                   {filteredClasses.length} lớp • {totalStudents} HS • Tự xếp ABC
                 </span>
               </div>
               {(selectedBranch !== 'all' || selectedCampus !== 'all' || selectedGrade !== 'all') && (
                 <button
                   onClick={handleFilterAll}
-                  className="px-2 py-1 bg-white hover:bg-indigo-100 text-indigo-700 border border-indigo-300 rounded-lg text-[10px] font-black shadow-xs shrink-0 cursor-pointer"
+                  className="px-2 py-1 bg-white hover:bg-indigo-100 text-indigo-700 border border-indigo-300 rounded-lg text-[12px] font-black shadow-xs shrink-0 cursor-pointer"
                   title="Đặt lại về Toàn trường"
                 >
                   Toàn trường
@@ -1377,7 +1377,7 @@ export const AdminRealtimeDashboardView: React.FC = () => {
         {/* Card 1: Tổng Sĩ Số */}
         <div className="bg-white rounded-2xl p-3.5 sm:p-4 border border-indigo-100 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-black text-slate-600 uppercase">TỔNG SĨ SỐ</span>
+            <span className="text-[12px] font-black text-slate-600 uppercase">TỔNG SĨ SỐ</span>
             <div className="w-8 h-8 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center">
               <Users className="w-4 h-4" />
             </div>
@@ -1386,13 +1386,13 @@ export const AdminRealtimeDashboardView: React.FC = () => {
             <div className="text-2xl sm:text-3xl font-black text-indigo-950 font-mono">
               {totalStudents}
             </div>
-            <div className="flex items-center gap-2 mt-1 text-[11px] font-bold text-slate-600">
+            <div className="flex items-center gap-2 mt-1 text-[12px] font-bold text-slate-600">
               <span className="text-blue-700">👦 {totalBoys} Nam</span>
               <span>•</span>
               <span className="text-pink-600">👧 {totalGirls} Nữ</span>
             </div>
           </div>
-          <div className="mt-2 pt-2 border-t border-slate-100 text-[10px] text-slate-500 font-bold flex items-center justify-between">
+          <div className="mt-2 pt-2 border-t border-slate-100 text-[12px] text-slate-500 font-bold flex items-center justify-between">
             <span>{filteredClasses.length} lớp học trực thuộc</span>
             <span className="text-indigo-600 font-black">{selectedBranch === 'all' ? '100% trường' : 'Theo phân hệ'}</span>
           </div>
@@ -1401,7 +1401,7 @@ export const AdminRealtimeDashboardView: React.FC = () => {
         {/* Card 2: Chuyên Cần & Điểm Danh (Đổi tên & số liệu động theo timeframe) */}
         <div className="bg-white rounded-2xl p-3.5 sm:p-4 border border-emerald-100 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-black text-emerald-800 uppercase">
+            <span className="text-[12px] font-black text-emerald-800 uppercase">
               {timeframe === 'day' 
                 ? (selectedDate === todayStr ? 'CHUYÊN CẦN HÔM NAY' : `CHUYÊN CẦN (${formatDateVN(selectedDate)})`)
                 : timeframe === 'week' 
@@ -1423,7 +1423,7 @@ export const AdminRealtimeDashboardView: React.FC = () => {
                   : `(${periodAttendance.present} lượt / ${periodAttendance.daysCount} ngày)`}
               </span>
             </div>
-            <div className="flex items-center gap-1.5 mt-1 text-[11px] font-bold text-slate-600">
+            <div className="flex items-center gap-1.5 mt-1 text-[12px] font-bold text-slate-600">
               {timeframe === 'day' ? (
                 <>
                   <span className="text-emerald-700">✓ Có mặt: {periodAttendance.present}</span>
@@ -1439,9 +1439,9 @@ export const AdminRealtimeDashboardView: React.FC = () => {
               )}
             </div>
           </div>
-          <div className="mt-2 pt-2 border-t border-emerald-100 text-[10px] text-slate-500 font-bold flex items-center justify-between">
+          <div className="mt-2 pt-2 border-t border-emerald-100 text-[12px] text-slate-500 font-bold flex items-center justify-between">
             <span>Phép: {periodAttendance.excused + periodAttendance.sick} • K.Phép: {periodAttendance.unexcused}</span>
-            <span className={`font-black ${periodAttendance.rate >= 95 ? 'text-emerald-600' : 'text-amber-600'}`}>
+            <span className={`font-black ${periodAttendance.rate >= 95 ? 'text-emerald-700' : 'text-amber-700'}`}>
               {periodAttendance.rate >= 95 ? 'Đạt chuẩn' : 'Cần lưu ý'}
             </span>
           </div>
@@ -1450,7 +1450,7 @@ export const AdminRealtimeDashboardView: React.FC = () => {
         {/* Card 3: Ăn Bán Trú (Đổi tên & số liệu động theo timeframe) */}
         <div className="bg-white rounded-2xl p-3.5 sm:p-4 border border-amber-100 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-black text-amber-800 uppercase">
+            <span className="text-[12px] font-black text-amber-800 uppercase">
               {timeframe === 'day' 
                 ? (selectedDate === todayStr ? 'ĂN BÁN TRÚ HÔM NAY' : `ĂN BÁN TRÚ (${formatDateVN(selectedDate)})`)
                 : timeframe === 'week' 
@@ -1470,7 +1470,7 @@ export const AdminRealtimeDashboardView: React.FC = () => {
                 suất ăn ({periodBoarding.rate}%)
               </span>
             </div>
-            <div className="flex items-center gap-1.5 mt-1 text-[11px] font-bold text-slate-600">
+            <div className="flex items-center gap-1.5 mt-1 text-[12px] font-bold text-slate-600">
               {timeframe === 'day' ? (
                 <>
                   <span className="text-amber-700">Ăn trưa: {periodBoarding.eating}</span>
@@ -1486,7 +1486,7 @@ export const AdminRealtimeDashboardView: React.FC = () => {
               )}
             </div>
           </div>
-          <div className="mt-2 pt-2 border-t border-amber-100 text-[10px] text-slate-500 font-bold flex items-center justify-between">
+          <div className="mt-2 pt-2 border-t border-amber-100 text-[12px] text-slate-500 font-bold flex items-center justify-between">
             <span>Cắt suất: {periodBoarding.absentMeal} lượt</span>
             <span className="text-amber-700 font-black">Nhà bếp đã chốt</span>
           </div>
@@ -1495,7 +1495,7 @@ export const AdminRealtimeDashboardView: React.FC = () => {
         {/* Card 4: Xu Thi Đua Lớp Học */}
         <div className="bg-white rounded-2xl p-3.5 sm:p-4 border border-purple-100 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-black text-purple-800 uppercase">THI ĐUA TÍCH ĐIỂM</span>
+            <span className="text-[12px] font-black text-purple-800 uppercase">THI ĐUA TÍCH ĐIỂM</span>
             <div className="w-8 h-8 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center">
               <Coins className="w-4 h-4" />
             </div>
@@ -1504,12 +1504,12 @@ export const AdminRealtimeDashboardView: React.FC = () => {
             <div className="text-2xl sm:text-3xl font-black text-purple-950 font-mono">
               {totalCoins} <span className="text-sm font-bold text-amber-700">🪙</span>
             </div>
-            <div className="flex items-center gap-1 mt-1 text-[11px] font-bold text-purple-700">
+            <div className="flex items-center gap-1 mt-1 text-[12px] font-bold text-purple-700">
               <span>Trung bình:</span>
               <strong className="text-purple-900 font-black">{avgCoins} xu / học sinh</strong>
             </div>
           </div>
-          <div className="mt-2 pt-2 border-t border-purple-100 text-[10px] text-slate-500 font-bold flex items-center justify-between">
+          <div className="mt-2 pt-2 border-t border-purple-100 text-[12px] text-slate-500 font-bold flex items-center justify-between">
             <span>Thi đua hạnh phúc</span>
             <span className="text-purple-600 font-black">Xếp hạng realtime</span>
           </div>
@@ -1525,7 +1525,7 @@ export const AdminRealtimeDashboardView: React.FC = () => {
               <CheckSquare className="w-4 h-4 text-emerald-600" />
               <span>CƠ CẤU CHUYÊN CẦN ({dateRange.shortLabel})</span>
             </h4>
-            <span className="text-[10.5px] font-bold bg-emerald-50 text-emerald-800 px-2 py-0.5 rounded-full border border-emerald-200">
+            <span className="text-[12px] font-bold bg-emerald-50 text-emerald-800 px-2 py-0.5 rounded-full border border-emerald-200">
               Tỷ lệ: {periodAttendance.rate}%
             </span>
           </div>
@@ -1559,7 +1559,7 @@ export const AdminRealtimeDashboardView: React.FC = () => {
                 <span className="text-2xl font-black text-slate-800 font-mono">
                   {periodAttendance.rate}%
                 </span>
-                <span className="text-[10px] font-bold text-slate-500 uppercase">Có mặt</span>
+                <span className="text-[12px] font-bold text-slate-500 uppercase">Có mặt</span>
               </div>
             </div>
 
@@ -1603,7 +1603,7 @@ export const AdminRealtimeDashboardView: React.FC = () => {
               <Utensils className="w-4 h-4 text-amber-600" />
               <span>CƠ CẤU BÁN TRÚ ({dateRange.shortLabel})</span>
             </h4>
-            <span className="text-[10.5px] font-bold bg-amber-50 text-amber-800 px-2 py-0.5 rounded-full border border-amber-200">
+            <span className="text-[12px] font-bold bg-amber-50 text-amber-800 px-2 py-0.5 rounded-full border border-amber-200">
               {periodBoarding.eating} suất ăn ({periodBoarding.rate}%)
             </span>
           </div>
@@ -1637,7 +1637,7 @@ export const AdminRealtimeDashboardView: React.FC = () => {
                 <span className="text-2xl font-black text-slate-800 font-mono">
                   {periodBoarding.eating}
                 </span>
-                <span className="text-[10px] font-bold text-slate-500 uppercase">Suất ăn</span>
+                <span className="text-[12px] font-bold text-slate-500 uppercase">Suất ăn</span>
               </div>
             </div>
 
@@ -1684,7 +1684,7 @@ export const AdminRealtimeDashboardView: React.FC = () => {
               <Award className="w-4 h-4 text-amber-500" />
               <span>BẢNG XẾP HẠNG & THEO DÕI THỜI GIAN THỰC TỪNG LỚP ({filteredClasses.length} LỚP • {dateRange.label.toUpperCase()})</span>
             </h3>
-            <p className="text-[11px] text-slate-500">
+            <p className="text-[12px] text-slate-500">
               Dữ liệu được cập nhật tự động khi bất kỳ GVCN nào điểm danh, báo ăn hoặc cộng điểm
             </p>
           </div>
@@ -1693,7 +1693,7 @@ export const AdminRealtimeDashboardView: React.FC = () => {
             {/* Nút chuyển chế độ sắp xếp */}
             <button
               onClick={() => setClassSortBy(prev => prev === 'abc' ? 'coins' : 'abc')}
-              className={`px-2.5 py-1.5 rounded-xl text-[11px] font-black flex items-center gap-1.5 transition-all cursor-pointer border shadow-2xs ${
+              className={`px-2.5 py-1.5 rounded-xl text-[12px] font-black flex items-center gap-1.5 transition-all cursor-pointer border shadow-2xs ${
                 classSortBy === 'abc'
                   ? 'bg-indigo-600 text-white border-indigo-700 shadow-indigo-200'
                   : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'
@@ -1708,7 +1708,7 @@ export const AdminRealtimeDashboardView: React.FC = () => {
 
         {/* Thanh công cụ Bộ lọc Trực tiếp ngay tại Bảng (Toàn trường • Phân hiệu • Điểm trường • Khối) */}
         <div className="p-2.5 sm:p-3 bg-slate-50/90 border-b border-slate-200 flex flex-wrap items-center gap-2 text-xs">
-          <span className="text-[11px] font-black text-slate-600 flex items-center gap-1 mr-1">
+          <span className="text-[12px] font-black text-slate-600 flex items-center gap-1 mr-1">
             <Filter className="w-3.5 h-3.5 text-indigo-600" />
             <span>LỌC XEM:</span>
           </span>
@@ -1772,15 +1772,15 @@ export const AdminRealtimeDashboardView: React.FC = () => {
 
           {/* 4. Bộ nút lọc theo Khối */}
           <div className="flex items-center gap-1 bg-white p-1 rounded-xl border border-slate-300">
-            <span className="text-[10.5px] font-bold text-slate-500 px-1.5 flex items-center gap-1">
+            <span className="text-[12px] font-bold text-slate-500 px-1.5 flex items-center gap-1">
               <GraduationCap className="w-3 h-3 text-amber-600" />
               <span>Khối:</span>
             </span>
             <button
               onClick={() => handleSelectGrade('all')}
-              className={`px-2 py-0.5 rounded-lg text-[11px] font-black transition-all cursor-pointer ${
+              className={`px-2 py-0.5 rounded-lg text-[12px] font-black transition-all cursor-pointer ${
                 selectedGrade === 'all'
-                  ? 'bg-amber-600 text-white shadow-2xs'
+                  ? 'bg-amber-700 text-white shadow-2xs'
                   : 'text-slate-600 hover:bg-slate-100'
               }`}
             >
@@ -1793,9 +1793,9 @@ export const AdminRealtimeDashboardView: React.FC = () => {
                 <button
                   key={grade}
                   onClick={() => handleSelectGrade(grade)}
-                  className={`px-2 py-0.5 rounded-lg text-[11px] font-black transition-all cursor-pointer ${
+                  className={`px-2 py-0.5 rounded-lg text-[12px] font-black transition-all cursor-pointer ${
                     isSelected
-                      ? 'bg-amber-600 text-white shadow-2xs'
+                      ? 'bg-amber-700 text-white shadow-2xs'
                       : 'text-slate-600 hover:bg-slate-100'
                   }`}
                   title={grade}
@@ -1807,7 +1807,7 @@ export const AdminRealtimeDashboardView: React.FC = () => {
           </div>
 
           {/* Badge thông báo tự động sắp xếp ABC */}
-          <span className="ml-auto text-[10.5px] font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 px-2 py-1 rounded-lg flex items-center gap-1">
+          <span className="ml-auto text-[12px] font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 px-2 py-1 rounded-lg flex items-center gap-1">
             <ArrowDownAZ className="w-3 h-3 text-indigo-600" />
             <span>Tự động sắp xếp ABC</span>
           </span>
@@ -1815,7 +1815,7 @@ export const AdminRealtimeDashboardView: React.FC = () => {
 
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
-            <thead className="bg-slate-50/80 text-[11px] font-black text-slate-600 uppercase border-b border-slate-200">
+            <thead className="bg-slate-50/80 text-[12px] font-black text-slate-600 uppercase border-b border-slate-200">
               <tr>
                 <th className="py-2.5 px-3 w-14 text-center">{classSortBy === 'abc' ? 'STT' : 'Hạng'}</th>
                 <th className="py-2.5 px-3">Lớp & Khối</th>
@@ -1843,11 +1843,11 @@ export const AdminRealtimeDashboardView: React.FC = () => {
                       <span className={`inline-flex items-center justify-center w-6 h-6 rounded-lg text-xs font-black ${
                         classSortBy === 'coins'
                           ? (idx === 0 
-                              ? 'bg-amber-600 text-white shadow-xs' 
+                              ? 'bg-amber-700 text-white shadow-xs' 
                               : idx === 1 
                               ? 'bg-slate-300 text-slate-800' 
                               : idx === 2 
-                              ? 'bg-amber-600 text-white' 
+                              ? 'bg-amber-700 text-white' 
                               : 'text-slate-500')
                           : 'bg-indigo-50 text-indigo-700 font-bold border border-indigo-100'
                       }`}>
@@ -1866,7 +1866,7 @@ export const AdminRealtimeDashboardView: React.FC = () => {
                           <strong className="text-indigo-950 font-black text-xs block">
                             Lớp {cls.name}
                           </strong>
-                          <span className="text-[10px] text-slate-500 font-bold">{cls.grade}</span>
+                          <span className="text-[12px] text-slate-500 font-bold">{cls.grade}</span>
                         </div>
                       </div>
                     </td>
@@ -1875,16 +1875,16 @@ export const AdminRealtimeDashboardView: React.FC = () => {
                     <td className="py-2.5 px-3">
                       <div className="space-y-0.5">
                         {cls.branch ? (
-                          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-purple-700 bg-purple-50 px-1.5 py-0.5 rounded border border-purple-200">
+                          <span className="inline-flex items-center gap-1 text-[12px] font-bold text-purple-700 bg-purple-50 px-1.5 py-0.5 rounded border border-purple-200">
                             🏛️ {cls.branch}
                           </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200">
+                          <span className="inline-flex items-center gap-1 text-[12px] font-semibold text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200">
                             Chưa cấu hình (Null)
                           </span>
                         )}
                         {cls.campus && (
-                          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-sky-700 bg-sky-50 px-1.5 py-0.5 rounded border border-sky-200 block w-fit">
+                          <span className="inline-flex items-center gap-1 text-[12px] font-bold text-sky-700 bg-sky-50 px-1.5 py-0.5 rounded border border-sky-200 block w-fit">
                             📍 {cls.campus}
                           </span>
                         )}
@@ -1907,7 +1907,7 @@ export const AdminRealtimeDashboardView: React.FC = () => {
                     <td className="py-2.5 px-3 text-center">
                       {timeframe === 'day' ? (
                         cls.hasAttendanceData ? (
-                          <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-black font-mono ${
+                          <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[12px] font-black font-mono ${
                             cls.attendanceRate >= 95 
                               ? 'bg-emerald-100 text-emerald-800' 
                               : 'bg-amber-100 text-amber-800'
@@ -1915,26 +1915,26 @@ export const AdminRealtimeDashboardView: React.FC = () => {
                             {cls.attendanceRate}% ({cls.present})
                           </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10.5px] font-bold text-slate-400 bg-slate-100">
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[12px] font-bold text-slate-400 bg-slate-100">
                             Chưa điểm danh
                           </span>
                         )
                       ) : (
                         cls.hasAttendanceData ? (
                           <div className="space-y-0.5">
-                            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-black font-mono ${
+                            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[12px] font-black font-mono ${
                               cls.attendanceRate >= 95 
                                 ? 'bg-emerald-100 text-emerald-800' 
                                 : 'bg-amber-100 text-amber-800'
                             }`}>
                               {cls.attendanceRate}%
                             </span>
-                            <span className="text-[10px] text-slate-500 font-bold block">
+                            <span className="text-[12px] text-slate-500 font-bold block">
                               {cls.present} lượt ({cls.attendanceDaysCount} buổi)
                             </span>
                           </div>
                         ) : (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10.5px] font-bold text-slate-400 bg-slate-100">
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[12px] font-bold text-slate-400 bg-slate-100">
                             Chưa có dữ liệu
                           </span>
                         )
@@ -1949,7 +1949,7 @@ export const AdminRealtimeDashboardView: React.FC = () => {
                         <div>
                           <span>{cls.eatingCount} suất</span>
                           {cls.mealDaysCount > 0 && (
-                            <span className="text-[10px] text-amber-700/80 font-normal block font-sans">
+                            <span className="text-[12px] text-amber-700/80 font-normal block font-sans">
                               TB {cls.avgEatingPerDay}/ngày ({cls.mealDaysCount} ngày)
                             </span>
                           )}
@@ -1959,7 +1959,7 @@ export const AdminRealtimeDashboardView: React.FC = () => {
 
                     {/* Tổng xu */}
                     <td className="py-2.5 px-3 text-right font-mono font-black text-indigo-950">
-                      {cls.coins} <span className="text-amber-700 text-[11px]">🪙</span>
+                      {cls.coins} <span className="text-amber-700 text-[12px]">🪙</span>
                     </td>
 
                     {/* Điểm TB */}

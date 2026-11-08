@@ -301,7 +301,7 @@ export const LuckyWheelView: React.FC = () => {
               <span className="text-xs font-black text-slate-800 uppercase">
                 CẤU HÌNH VÒNG QUAY MAY MẮN
               </span>
-              <span className="px-2 py-0.5 rounded-full bg-violet-100 text-violet-800 text-[10px] font-black uppercase">
+              <span className="px-2 py-0.5 rounded-full bg-violet-100 text-violet-800 text-[12px] font-black uppercase">
                 {activeItems.length} đối tượng
               </span>
             </div>
@@ -317,7 +317,7 @@ export const LuckyWheelView: React.FC = () => {
                     type="button"
                     onClick={() => setRewardXu(pts)}
                     className={`px-2.5 py-1 rounded-lg text-xs font-black transition-all cursor-pointer ${
-                      rewardXu === pts ? 'bg-amber-600 text-white shadow-xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                      rewardXu === pts ? 'bg-amber-700 text-white shadow-xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                     }`}
                   >
                     +{pts} xu
@@ -339,7 +339,7 @@ export const LuckyWheelView: React.FC = () => {
 
           {/* Winner Showcase Card */}
           {(winnerStudent || winnerGroup) && (
-            <div className="bg-gradient-to-br from-violet-500 to-indigo-600 text-white rounded-2xl p-5 shadow-md animate-in zoom-in-95 duration-200 space-y-4">
+            <div className="bg-gradient-to-br from-violet-600 to-indigo-600 text-white rounded-2xl p-5 shadow-md animate-in zoom-in-95 duration-200 space-y-4">
               <div className="flex items-center gap-2 text-white text-xs font-black uppercase tracking-wider">
                 <Trophy className="w-4 h-4 text-amber-300" />
                 <span>CHÚC MỪNG NGƯỜI CHIẾN THẮNG!</span>
@@ -436,7 +436,7 @@ export const LuckyWheelView: React.FC = () => {
                     className="flex items-center justify-between p-2 rounded-lg bg-slate-50 border border-slate-100 text-xs"
                   >
                     <div className="font-semibold text-slate-800">{item.name}</div>
-                    <div className="text-[11px] font-mono text-slate-400">{item.time}</div>
+                    <div className="text-[12px] font-mono text-slate-400">{item.time}</div>
                   </div>
                 ))}
               </div>

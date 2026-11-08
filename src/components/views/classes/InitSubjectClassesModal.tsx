@@ -267,13 +267,13 @@ export const InitSubjectClassesModal: React.FC<InitSubjectClassesModalProps> = (
       <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-4xl max-h-[92vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
         
         {/* Modal Header */}
-        <div className="bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 px-6 py-5 text-white flex items-center justify-between shadow-md relative">
+        <div className="bg-gradient-to-r from-emerald-700 via-teal-700 to-cyan-700 px-6 py-5 text-white flex items-center justify-between shadow-md relative">
           <div className="flex items-center gap-3.5">
             <div className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/30 shadow-inner">
               <School className="w-6 h-6 text-amber-300" />
             </div>
             <div>
-              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-400 text-amber-950 text-[10px] font-black uppercase tracking-wider mb-1">
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-400 text-amber-950 text-[12px] font-black uppercase tracking-wider mb-1">
                 <Sparkles className="w-3 h-3" />
                 GIÁO VIÊN BỘ MÔN {subjectTeacherConfig.subjectName || 'TIN HỌC'}
               </div>
@@ -371,7 +371,7 @@ export const InitSubjectClassesModal: React.FC<InitSubjectClassesModalProps> = (
                     <Sparkles className="w-4 h-4 text-amber-500" />
                     <span>NẠP NHANH CÁC LỚP BỘ MÔN THEO MẪU</span>
                   </span>
-                  <p className="text-[11px] text-emerald-800 mt-0.5 font-medium">
+                  <p className="text-[12px] text-emerald-800 mt-0.5 font-medium">
                     Chọn nhanh danh sách lớp có sẵn theo Thời khóa biểu hoặc tự tạo theo khối tùy ý
                   </p>
                 </div>
@@ -414,11 +414,11 @@ export const InitSubjectClassesModal: React.FC<InitSubjectClassesModalProps> = (
                         onClick={() => toggleGrade(gradeNum)}
                         className={`px-4 py-2.5 rounded-2xl font-black text-xs sm:text-sm transition-all flex items-center gap-2 border-2 ${
                           isSelected
-                            ? 'bg-emerald-600 border-emerald-600 text-white shadow-md shadow-emerald-600/20 scale-105'
+                            ? 'bg-emerald-700 border-emerald-600 text-white shadow-md shadow-emerald-600/20 scale-105'
                             : 'bg-white border-slate-200 text-slate-700 hover:border-slate-300 hover:bg-slate-50'
                         }`}
                       >
-                        <span className="w-4 h-4 rounded-full flex items-center justify-center text-[10px] bg-white/20">
+                        <span className="w-4 h-4 rounded-full flex items-center justify-center text-[12px] bg-white/20">
                           {isSelected ? '✓' : ''}
                         </span>
                         <span>Khối {gradeNum}</span>
@@ -447,7 +447,7 @@ export const InitSubjectClassesModal: React.FC<InitSubjectClassesModalProps> = (
                       ({selectedGrades.length * classesPerGrade} lớp tổng cộng)
                     </span>
                   </div>
-                  <p className="text-[11px] text-slate-500 mt-2 font-medium">
+                  <p className="text-[12px] text-slate-500 mt-2 font-medium">
                     Ví dụ: 4 lớp mỗi khối sẽ sinh các lớp A1, A2, A3, A4
                   </p>
                 </div>
@@ -467,7 +467,7 @@ export const InitSubjectClassesModal: React.FC<InitSubjectClassesModalProps> = (
                     />
                     <span className="text-xs text-slate-600 font-bold">học sinh / lớp</span>
                   </div>
-                  <p className="text-[11px] text-slate-500 mt-2 font-medium">
+                  <p className="text-[12px] text-slate-500 mt-2 font-medium">
                     Tự động tạo danh sách học sinh theo đúng sĩ số này
                   </p>
                 </div>
@@ -482,7 +482,7 @@ export const InitSubjectClassesModal: React.FC<InitSubjectClassesModalProps> = (
                       onClick={() => setNamingSuffix('A')}
                       className={`flex-1 py-2 px-3 rounded-xl font-black text-xs border ${
                         namingSuffix === 'A'
-                          ? 'bg-emerald-600 text-white border-emerald-600'
+                          ? 'bg-emerald-700 text-white border-emerald-600'
                           : 'bg-white text-slate-700 border-slate-200'
                       }`}
                     >
@@ -493,7 +493,7 @@ export const InitSubjectClassesModal: React.FC<InitSubjectClassesModalProps> = (
                       onClick={() => setNamingSuffix('number')}
                       className={`flex-1 py-2 px-3 rounded-xl font-black text-xs border ${
                         namingSuffix === 'number'
-                          ? 'bg-emerald-600 text-white border-emerald-600'
+                          ? 'bg-emerald-700 text-white border-emerald-600'
                           : 'bg-white text-slate-700 border-slate-200'
                       }`}
                     >
@@ -532,7 +532,7 @@ export const InitSubjectClassesModal: React.FC<InitSubjectClassesModalProps> = (
                   <button
                     type="button"
                     onClick={handleGenerateQuickList}
-                    className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs sm:text-sm transition-all shadow-md shadow-emerald-600/20 uppercase flex items-center gap-2"
+                    className="px-5 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-black text-xs sm:text-sm transition-all shadow-md shadow-emerald-600/20 uppercase flex items-center gap-2"
                   >
                     <CheckCircle2 className="w-4 h-4 text-emerald-200" />
                     <span>Tạo danh sách xem trước</span>
@@ -551,7 +551,7 @@ export const InitSubjectClassesModal: React.FC<InitSubjectClassesModalProps> = (
                     <Users className="w-4 h-4 text-emerald-600" />
                     <span>DANH SÁCH LỚP DẠY BỘ MÔN ({classItems.length} LỚP – {totalStudentsToGenerate} HỌC SINH)</span>
                   </h4>
-                  <p className="text-[11px] text-slate-500 mt-0.5">
+                  <p className="text-[12px] text-slate-500 mt-0.5">
                     Bạn có thể chỉnh sửa trực tiếp tên lớp, khối, sĩ số học sinh và phòng học của từng lớp bên dưới
                   </p>
                 </div>
@@ -609,7 +609,7 @@ export const InitSubjectClassesModal: React.FC<InitSubjectClassesModalProps> = (
                   <button
                     type="button"
                     onClick={handleApplyBulkStudentCount}
-                    className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-black text-xs transition-all shadow-xs uppercase flex items-center gap-1 hover-zoom-btn"
+                    className="px-3 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl font-black text-xs transition-all shadow-xs uppercase flex items-center gap-1 hover-zoom-btn"
                   >
                     <Check className="w-3.5 h-3.5" />
                     <span>Áp dụng toàn bộ</span>
@@ -770,7 +770,7 @@ export const InitSubjectClassesModal: React.FC<InitSubjectClassesModalProps> = (
                     name="replace_mode"
                     checked={!replaceExisting}
                     onChange={() => setReplaceExisting(false)}
-                    className="text-emerald-600 focus:ring-emerald-500 w-4 h-4"
+                    className="text-emerald-700 focus:ring-emerald-500 w-4 h-4"
                   />
                   <span>Thêm nối tiếp vào danh sách lớp hiện có (Giữ lại {classes.length} lớp cũ)</span>
                 </label>
@@ -787,7 +787,7 @@ export const InitSubjectClassesModal: React.FC<InitSubjectClassesModalProps> = (
                 </label>
               </div>
 
-              <div className="flex items-center gap-4 font-black uppercase text-[11px] text-slate-700">
+              <div className="flex items-center gap-4 font-black uppercase text-[12px] text-slate-700">
                 <span className="bg-emerald-100 text-emerald-900 px-2.5 py-1 rounded-lg">
                   {classItems.length} Lớp học
                 </span>
@@ -815,7 +815,7 @@ export const InitSubjectClassesModal: React.FC<InitSubjectClassesModalProps> = (
               type="button"
               onClick={handleConfirmSubmit}
               disabled={classItems.length === 0}
-              className="px-6 py-3 rounded-2xl bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 hover:from-emerald-700 hover:to-cyan-700 text-white font-black text-xs sm:text-sm uppercase tracking-wide flex items-center gap-2.5 shadow-lg shadow-emerald-600/30 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:pointer-events-none"
+              className="px-6 py-3 rounded-2xl bg-gradient-to-r from-emerald-700 via-teal-700 to-cyan-700 hover:from-emerald-800 hover:to-cyan-800 text-white font-black text-xs sm:text-sm uppercase tracking-wide flex items-center gap-2.5 shadow-lg shadow-emerald-600/30 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:pointer-events-none"
             >
               <Sparkles className="w-5 h-5 text-amber-300 animate-pulse" />
               <span>XÁC NHẬN KHỞI TẠO LỚP DẠY BỘ MÔN</span>

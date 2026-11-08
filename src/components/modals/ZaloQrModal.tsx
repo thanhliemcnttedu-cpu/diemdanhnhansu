@@ -62,7 +62,7 @@ export const ZaloQrModal: React.FC = () => {
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="bg-gradient-to-r from-blue-600 to-sky-600 px-5 pt-4 pb-10 text-white">
+        <div className="bg-gradient-to-r from-blue-600 to-sky-700 px-5 pt-4 pb-10 text-white">
           <button
             type="button"
             onClick={() => setOpen(false)}
@@ -74,7 +74,7 @@ export const ZaloQrModal: React.FC = () => {
           <div className="flex items-center gap-2 text-xs font-black uppercase tracking-wider">
             <ScanLine className="w-4 h-4" /> Liên hệ tác giả qua Zalo
           </div>
-          <p className="text-[11px] text-white/90 mt-1 leading-snug">Mở Zalo trên điện thoại → biểu tượng quét mã → hướng camera vào mã bên dưới.</p>
+          <p className="text-[12px] text-white/90 mt-1 leading-snug">Mở Zalo trên điện thoại → biểu tượng quét mã → hướng camera vào mã bên dưới.</p>
         </div>
 
         {/* QR card */}
@@ -91,7 +91,7 @@ export const ZaloQrModal: React.FC = () => {
         <div className="px-5 pt-3 pb-5 space-y-3">
           <div className="text-center">
             <div className="text-sm font-black text-slate-900">{APP_AUTHOR_INFO.name}</div>
-            <div className="text-[11px] text-slate-600 font-semibold">{APP_AUTHOR_INFO.schoolName}</div>
+            <div className="text-[12px] text-slate-600 font-semibold">{APP_AUTHOR_INFO.schoolName}</div>
             <div className="mt-1 inline-flex items-center gap-1.5 text-blue-700 font-mono font-black text-base">
               <Phone className="w-4 h-4" /> {APP_AUTHOR_INFO.zalo}
             </div>

@@ -33,7 +33,7 @@ export const CallStudentsView: React.FC<{ initialGame?: CallGameType }> = ({ ini
       {/* Top Header Card */}
       <div className="bg-white/95 backdrop-blur-md rounded-3xl border border-slate-200/90 p-4 md:p-5 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4 hover-zoom-card">
         <div className="flex items-center gap-3">
-          <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-amber-600 via-orange-600 to-yellow-600 text-white flex items-center justify-center font-black shadow-md shadow-amber-500/25 shrink-0">
+          <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-amber-700 via-orange-700 to-yellow-700 text-white flex items-center justify-center font-black shadow-md shadow-amber-500/25 shrink-0">
             <Trophy className="w-6 h-6 animate-pulse" />
           </div>
           <div>
@@ -41,7 +41,7 @@ export const CallStudentsView: React.FC<{ initialGame?: CallGameType }> = ({ ini
               <h2 className="text-base md:text-lg font-black text-slate-900 tracking-tight">
                 Gọi Tên Học Sinh • Các Trò Chơi Ngẫu Nhiên Sôi Động
               </h2>
-              <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 text-[10px] font-black uppercase">
+              <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 text-[12px] font-black uppercase">
                 {activeClass?.name || '4A1'}
               </span>
             </div>
@@ -76,23 +76,23 @@ export const CallStudentsView: React.FC<{ initialGame?: CallGameType }> = ({ ini
           <button
             onClick={() => setActiveGame('duck_race')}
             className={`px-3 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 hover-zoom-btn ${
-              activeGame === 'duck_race' ? 'bg-amber-600 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'
+              activeGame === 'duck_race' ? 'bg-amber-700 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'
             }`}
           >
             <span>🦆</span>
             <span>Đua Vịt</span>
-            <span className="px-1 py-0.2 bg-amber-400 text-amber-950 text-[9px] rounded font-black">HOT</span>
+            <span className="px-1 py-0.2 bg-amber-400 text-amber-950 text-[12px] rounded font-black">HOT</span>
           </button>
 
           <button
             onClick={() => setActiveGame('lucky_lens')}
             className={`px-3 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 hover-zoom-btn ${
-              activeGame === 'lucky_lens' ? 'bg-cyan-600 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'
+              activeGame === 'lucky_lens' ? 'bg-cyan-700 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'
             }`}
           >
             <span>📸</span>
             <span>Ống Kính</span>
-            <span className="px-1 py-0.2 bg-cyan-400 text-slate-950 text-[9px] rounded font-black">MỚI</span>
+            <span className="px-1 py-0.2 bg-cyan-400 text-slate-950 text-[12px] rounded font-black">MỚI</span>
           </button>
         </div>
       </div>
@@ -298,7 +298,7 @@ const DuckRaceGame: React.FC<{ students: Student[]; onAward: (ids: string[], pts
           <button
             onClick={startRace}
             disabled={isRacing || racers.length === 0}
-            className="px-6 py-2.5 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white rounded-2xl text-xs font-black shadow-md shadow-amber-500/30 transition-all hover-zoom-btn flex items-center gap-2 disabled:opacity-50"
+            className="px-6 py-2.5 bg-gradient-to-r from-amber-700 to-orange-700 hover:from-amber-800 hover:to-orange-800 text-white rounded-2xl text-xs font-black shadow-md shadow-amber-500/30 transition-all hover-zoom-btn flex items-center gap-2 disabled:opacity-50"
           >
             <Play className="w-4 h-4 fill-white" />
             <span>{isRacing ? 'Đang đua bứt phá...' : 'BẮT ĐẦU ĐUA VỊT'}</span>
@@ -313,7 +313,7 @@ const DuckRaceGame: React.FC<{ students: Student[]; onAward: (ids: string[], pts
           <span className="font-extrabold text-sky-950">Bình luận viên:</span>
           <span className="font-bold text-sky-700 italic">{raceCommentary}</span>
         </div>
-        <span className="text-[11px] font-mono font-bold text-slate-500 hidden sm:inline">
+        <span className="text-[12px] font-mono font-bold text-slate-500 hidden sm:inline">
           {racers.length} Vịt đua tranh tài
         </span>
       </div>
@@ -325,12 +325,12 @@ const DuckRaceGame: React.FC<{ students: Student[]; onAward: (ids: string[], pts
         
         {/* Start Line */}
         <div className="absolute left-8 top-0 bottom-0 w-2 border-r-2 border-dashed border-white/60 pointer-events-none z-10 flex flex-col justify-around py-2">
-          <span className="text-[10px] font-black uppercase text-white/90 transform -rotate-90 origin-left">XUẤT PHÁT</span>
+          <span className="text-[12px] font-black uppercase text-white/90 transform -rotate-90 origin-left">XUẤT PHÁT</span>
         </div>
 
         {/* Finish Line (Checkered Ribbon) */}
         <div className="absolute right-12 top-0 bottom-0 w-8 bg-[repeating-conic-gradient(#000000_0%_25%,#ffffff_0%_50%)] [background-size:12px_12px] opacity-85 z-10 shadow-lg pointer-events-none flex items-center justify-center">
-          <span className="bg-amber-400 text-amber-950 text-[10px] font-black px-1.5 py-4 rounded-md transform -rotate-90 whitespace-nowrap shadow-md uppercase">
+          <span className="bg-amber-400 text-amber-950 text-[12px] font-black px-1.5 py-4 rounded-md transform -rotate-90 whitespace-nowrap shadow-md uppercase">
             ĐÍCH
           </span>
         </div>
@@ -347,7 +347,7 @@ const DuckRaceGame: React.FC<{ students: Student[]; onAward: (ids: string[], pts
                 className="relative h-11 bg-white/15 backdrop-blur-xs rounded-2xl border border-white/20 flex items-center px-2"
               >
                 {/* Lane Number */}
-                <span className="w-5 h-5 rounded-full bg-white/30 text-white text-[10px] font-black flex items-center justify-center shrink-0">
+                <span className="w-5 h-5 rounded-full bg-white/30 text-white text-[12px] font-black flex items-center justify-center shrink-0">
                   {idx + 1}
                 </span>
 
@@ -380,10 +380,10 @@ const DuckRaceGame: React.FC<{ students: Student[]; onAward: (ids: string[], pts
 
                   {/* Name Tag */}
                   <div className="bg-white/95 backdrop-blur-xs px-2 py-0.5 rounded-lg border border-slate-200 shadow-xs flex items-center gap-1 whitespace-nowrap">
-                    <span className="text-[11px] font-black text-slate-800">
+                    <span className="text-[12px] font-black text-slate-800">
                       {racer.student.name}
                     </span>
-                    <span className="text-[10px] text-indigo-600 font-bold">
+                    <span className="text-[12px] text-indigo-600 font-bold">
                       #{racer.student.stt}
                     </span>
                   </div>
@@ -422,7 +422,7 @@ const DuckRaceGame: React.FC<{ students: Student[]; onAward: (ids: string[], pts
                       onError={(e) => handleAvatarImgError(e, winner.gender, winner.name)}
                     />
                   </div>
-                  <span className="absolute -top-3 -right-2 bg-amber-600 text-white text-xs font-black px-2 py-0.5 rounded-full shadow-md">
+                  <span className="absolute -top-3 -right-2 bg-amber-700 text-white text-xs font-black px-2 py-0.5 rounded-full shadow-md">
                     HẠNG 1 🏆
                   </span>
                 </div>
@@ -444,7 +444,7 @@ const DuckRaceGame: React.FC<{ students: Student[]; onAward: (ids: string[], pts
                       <img src={runnerUp.avatar} alt={runnerUp.name} className="w-8 h-8 rounded-xl object-cover object-center bg-white" onError={(e) => handleAvatarImgError(e, runnerUp.gender, runnerUp.name)} />
                       <div className="truncate text-xs">
                         <div className="font-black text-slate-800 truncate">{runnerUp.name}</div>
-                        <div className="text-[10px] text-slate-400 font-bold">Hạng 2</div>
+                        <div className="text-[12px] text-slate-400 font-bold">Hạng 2</div>
                       </div>
                     </div>
                   )}
@@ -455,7 +455,7 @@ const DuckRaceGame: React.FC<{ students: Student[]; onAward: (ids: string[], pts
                       <img src={thirdPlace.avatar} alt={thirdPlace.name} className="w-8 h-8 rounded-xl object-cover object-center bg-white" onError={(e) => handleAvatarImgError(e, thirdPlace.gender, thirdPlace.name)} />
                       <div className="truncate text-xs">
                         <div className="font-black text-slate-800 truncate">{thirdPlace.name}</div>
-                        <div className="text-[10px] text-slate-400 font-bold">Hạng 3</div>
+                        <div className="text-[12px] text-slate-400 font-bold">Hạng 3</div>
                       </div>
                     </div>
                   )}
@@ -470,7 +470,7 @@ const DuckRaceGame: React.FC<{ students: Student[]; onAward: (ids: string[], pts
                     playCoinSound();
                     setShowPodium(false);
                   }}
-                  className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-black shadow-md shadow-amber-500/25 hover-zoom-btn"
+                  className="px-4 py-2 bg-amber-700 hover:bg-amber-800 text-white rounded-xl text-xs font-black shadow-md shadow-amber-500/25 hover-zoom-btn"
                 >
                   +5 Xu Quán Quân
                 </button>
@@ -640,9 +640,9 @@ const PhotoCardsGame: React.FC<{ students: Student[]; onAward: (ids: string[], p
                   </div>
                   <div className="w-full truncate px-1">
                     <div className="text-xs font-black text-slate-900 truncate">{st.name}</div>
-                    <div className="text-[10px] text-indigo-600 font-bold">#{st.stt} • {st.group || 'Tổ 1'}</div>
+                    <div className="text-[12px] text-indigo-600 font-bold">#{st.stt} • {st.group || 'Tổ 1'}</div>
                   </div>
-                  <span className="px-2 py-0.5 bg-amber-100 text-amber-900 text-[10px] font-black rounded-lg">
+                  <span className="px-2 py-0.5 bg-amber-100 text-amber-900 text-[12px] font-black rounded-lg">
                     🪙 {st.points} xu
                   </span>
                 </div>
@@ -652,7 +652,7 @@ const PhotoCardsGame: React.FC<{ students: Student[]; onAward: (ids: string[], p
                   <div className="w-12 h-12 rounded-2xl bg-white/20 border border-white/40 flex items-center justify-center shadow-inner mb-2">
                     <span className="text-2xl animate-pulse">❓</span>
                   </div>
-                  <span className="text-[11px] font-black tracking-wider text-indigo-600 uppercase">
+                  <span className="text-[12px] font-black tracking-wider text-indigo-600 uppercase">
                     THẺ SỐ {st.stt}
                   </span>
                 </div>
@@ -668,7 +668,7 @@ const PhotoCardsGame: React.FC<{ students: Student[]; onAward: (ids: string[], p
           <div className="flex items-center gap-3">
             <img src={selectedWinner.avatar} alt={selectedWinner.name} className="w-14 h-14 rounded-2xl object-cover object-center border-2 border-amber-400 bg-white shadow-md shrink-0" onError={(e) => handleAvatarImgError(e, selectedWinner.gender, selectedWinner.name)} />
             <div>
-              <span className="text-[10px] font-black uppercase text-amber-700">HỌC SINH ĐƯỢC CHỌN QUA THẺ ẢNH</span>
+              <span className="text-[12px] font-black uppercase text-amber-700">HỌC SINH ĐƯỢC CHỌN QUA THẺ ẢNH</span>
               <h4 className="text-base font-black text-slate-900">{selectedWinner.name}</h4>
               <p className="text-xs text-slate-500 font-semibold">STT: #{selectedWinner.stt} • {selectedWinner.group || 'Tổ 1'}</p>
             </div>
@@ -681,7 +681,7 @@ const PhotoCardsGame: React.FC<{ students: Student[]; onAward: (ids: string[], p
                 playCoinSound();
                 setSelectedWinner(null);
               }}
-              className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-black shadow-xs hover-zoom-btn"
+              className="px-4 py-2 bg-amber-700 hover:bg-amber-800 text-white rounded-xl text-xs font-black shadow-xs hover-zoom-btn"
             >
               +3 Xu Khen Thưởng
             </button>

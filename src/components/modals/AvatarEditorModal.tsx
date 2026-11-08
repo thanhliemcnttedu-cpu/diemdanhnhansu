@@ -390,7 +390,7 @@ export const AvatarEditorModal: React.FC<AvatarEditorModalProps> = ({
                 {cameraError ? (
                   <div className="absolute inset-0 flex flex-col items-center justify-center p-4 bg-white text-center text-slate-800 z-20 gap-2">
                     <CameraOff className="w-8 h-8 text-rose-600" />
-                    <p className="text-[11px] text-rose-700 font-medium leading-relaxed">{cameraError}</p>
+                    <p className="text-[12px] text-rose-700 font-medium leading-relaxed">{cameraError}</p>
                     <button
                       type="button"
                       onClick={() => startCameraStream()}
@@ -413,7 +413,7 @@ export const AvatarEditorModal: React.FC<AvatarEditorModalProps> = ({
                 <div className="absolute inset-0 pointer-events-none rounded-full border-2 border-dashed border-rose-400/90 shadow-[0_0_0_9999px_rgba(15,23,42,0.35)]" />
 
                 {/* Live Indicator Badge */}
-                <div className="absolute top-2.5 left-2.5 bg-rose-600 text-white text-[9px] font-black px-2 py-0.5 rounded-full flex items-center gap-1 shadow-md uppercase">
+                <div className="absolute top-2.5 left-2.5 bg-rose-600 text-white text-[12px] font-black px-2 py-0.5 rounded-full flex items-center gap-1 shadow-md uppercase">
                   <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
                   <span>Live</span>
                 </div>
@@ -434,7 +434,7 @@ export const AvatarEditorModal: React.FC<AvatarEditorModalProps> = ({
                     type="button"
                     disabled={cameraLoading || !!cameraError}
                     onClick={handleCapturePhoto}
-                    className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-[11px] font-black text-white bg-gradient-to-r from-rose-500 to-red-600 hover:from-rose-600 hover:to-red-700 shadow-md transition-all hover-zoom-btn disabled:opacity-50 uppercase"
+                    className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-[12px] font-black text-white bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-700 hover:to-red-700 shadow-md transition-all hover-zoom-btn disabled:opacity-50 uppercase"
                   >
                     <Camera className="w-3.5 h-3.5" />
                     <span>CHỤP ẢNH</span>
@@ -442,7 +442,7 @@ export const AvatarEditorModal: React.FC<AvatarEditorModalProps> = ({
                   <button
                     type="button"
                     onClick={stopCameraStream}
-                    className="px-2.5 py-1.5 rounded-xl text-[11px] font-bold text-slate-800 bg-slate-100/80 hover:bg-slate-100 border border-slate-200 transition-colors uppercase hover-zoom-btn"
+                    className="px-2.5 py-1.5 rounded-xl text-[12px] font-bold text-slate-800 bg-slate-100/80 hover:bg-slate-100 border border-slate-200 transition-colors uppercase hover-zoom-btn"
                   >
                     HỦY
                   </button>
@@ -504,14 +504,14 @@ export const AvatarEditorModal: React.FC<AvatarEditorModalProps> = ({
 
                 {/* Flip Indicator Badge */}
                 {flipX && (
-                  <div className="absolute top-2.5 left-2.5 bg-purple-600/90 text-white text-[9.5px] font-black px-2 py-0.5 rounded-full flex items-center gap-1 shadow-md uppercase backdrop-blur-xs">
+                  <div className="absolute top-2.5 left-2.5 bg-purple-600/90 text-white text-[12px] font-black px-2 py-0.5 rounded-full flex items-center gap-1 shadow-md uppercase backdrop-blur-xs">
                     <FlipHorizontal className="w-3 h-3" />
                     <span>Đã lật ảnh</span>
                   </div>
                 )}
 
                 {/* Floating Helper Pill */}
-                <div className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-white/80 text-slate-800 text-[9.5px] font-bold px-2.5 py-0.5 rounded-full pointer-events-none flex items-center gap-1.5 backdrop-blur-xs whitespace-nowrap shadow-md">
+                <div className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-white/80 text-slate-800 text-[12px] font-bold px-2.5 py-0.5 rounded-full pointer-events-none flex items-center gap-1.5 backdrop-blur-xs whitespace-nowrap shadow-md">
                   <Move className="w-3 h-3 text-amber-600" />
                   <span>Kéo để căn chỉnh • Cuộn chuột để zoom</span>
                 </div>
@@ -523,7 +523,7 @@ export const AvatarEditorModal: React.FC<AvatarEditorModalProps> = ({
               <button
                 type="button"
                 onClick={handleFit}
-                className="px-1.5 py-1.5 rounded-xl bg-slate-100 hover:bg-indigo-50 hover:text-indigo-700 text-slate-700 text-[10px] font-black transition-all border border-slate-200 hover:border-indigo-300 uppercase shadow-2xs hover-zoom-btn text-center"
+                className="px-1.5 py-1.5 rounded-xl bg-slate-100 hover:bg-indigo-50 hover:text-indigo-700 text-slate-700 text-[12px] font-black transition-all border border-slate-200 hover:border-indigo-300 uppercase shadow-2xs hover-zoom-btn text-center"
                 title="Vừa khít trọn vẹn toàn bộ bức ảnh"
               >
                 VỪA KHÍT
@@ -531,7 +531,7 @@ export const AvatarEditorModal: React.FC<AvatarEditorModalProps> = ({
               <button
                 type="button"
                 onClick={handleCover}
-                className="px-1.5 py-1.5 rounded-xl bg-slate-100 hover:bg-indigo-50 hover:text-indigo-700 text-slate-700 text-[10px] font-black transition-all border border-slate-200 hover:border-indigo-300 uppercase shadow-2xs hover-zoom-btn text-center"
+                className="px-1.5 py-1.5 rounded-xl bg-slate-100 hover:bg-indigo-50 hover:text-indigo-700 text-slate-700 text-[12px] font-black transition-all border border-slate-200 hover:border-indigo-300 uppercase shadow-2xs hover-zoom-btn text-center"
                 title="Phủ đầy toàn bộ khung ảnh"
               >
                 PHỦ ĐẦY
@@ -539,7 +539,7 @@ export const AvatarEditorModal: React.FC<AvatarEditorModalProps> = ({
               <button
                 type="button"
                 onClick={handleCloseUp}
-                className="px-1.5 py-1.5 rounded-xl bg-slate-100 hover:bg-indigo-50 hover:text-indigo-700 text-slate-700 text-[10px] font-black transition-all border border-slate-200 hover:border-indigo-300 uppercase shadow-2xs hover-zoom-btn text-center"
+                className="px-1.5 py-1.5 rounded-xl bg-slate-100 hover:bg-indigo-50 hover:text-indigo-700 text-slate-700 text-[12px] font-black transition-all border border-slate-200 hover:border-indigo-300 uppercase shadow-2xs hover-zoom-btn text-center"
                 title="Cận cảnh 150%"
               >
                 150%
@@ -547,7 +547,7 @@ export const AvatarEditorModal: React.FC<AvatarEditorModalProps> = ({
               <button
                 type="button"
                 onClick={handleReset}
-                className="px-1.5 py-1.5 rounded-xl bg-slate-100 hover:bg-indigo-50 hover:text-indigo-700 text-slate-700 text-[10px] font-black transition-all border border-slate-200 hover:border-indigo-300 uppercase shadow-2xs hover-zoom-btn flex items-center justify-center gap-1 text-center"
+                className="px-1.5 py-1.5 rounded-xl bg-slate-100 hover:bg-indigo-50 hover:text-indigo-700 text-slate-700 text-[12px] font-black transition-all border border-slate-200 hover:border-indigo-300 uppercase shadow-2xs hover-zoom-btn flex items-center justify-center gap-1 text-center"
                 title="Đặt lại vị trí căn giữa"
               >
                 <RotateCcw className="w-3 h-3" />
@@ -557,7 +557,7 @@ export const AvatarEditorModal: React.FC<AvatarEditorModalProps> = ({
               <button
                 type="button"
                 onClick={handleToggleFlip}
-                className={`px-1.5 py-1.5 rounded-xl text-[10px] font-black transition-all border uppercase shadow-2xs hover-zoom-btn flex items-center justify-center gap-1 text-center ${
+                className={`px-1.5 py-1.5 rounded-xl text-[12px] font-black transition-all border uppercase shadow-2xs hover-zoom-btn flex items-center justify-center gap-1 text-center ${
                   flipX
                     ? 'bg-purple-600 text-white border-purple-600 shadow-purple-500/20'
                     : 'bg-purple-50 hover:bg-purple-100 text-purple-700 border-purple-200'
@@ -600,7 +600,7 @@ export const AvatarEditorModal: React.FC<AvatarEditorModalProps> = ({
                   <ZoomIn className="w-3.5 h-3.5" />
                 </button>
 
-                <span className="text-[11px] font-mono font-black text-indigo-700 w-11 text-right shrink-0">
+                <span className="text-[12px] font-mono font-black text-indigo-700 w-11 text-right shrink-0">
                   {Math.round(scale * 100)}%
                 </span>
               </div>
@@ -619,7 +619,7 @@ export const AvatarEditorModal: React.FC<AvatarEditorModalProps> = ({
                 <h4 className="text-xs font-black uppercase tracking-wider text-slate-800">
                   Nguồn Ảnh Đại Diện
                 </h4>
-                <p className="text-[11px] text-slate-500 font-medium">
+                <p className="text-[12px] text-slate-500 font-medium">
                   Chọn ảnh từ máy tính hoặc chụp ảnh trực tiếp
                 </p>
               </div>
@@ -652,7 +652,7 @@ export const AvatarEditorModal: React.FC<AvatarEditorModalProps> = ({
                   <strong className="text-xs font-black uppercase text-slate-800 group-hover:text-indigo-700 block transition-colors">
                     CHỌN ẢNH TỪ MÁY TÍNH
                   </strong>
-                  <span className="text-[11px] text-slate-500 block leading-snug font-medium mt-0.5">
+                  <span className="text-[12px] text-slate-500 block leading-snug font-medium mt-0.5">
                     Tải ảnh thẻ, ảnh chân dung sẵn có (JPG, PNG, WebP)
                   </span>
                 </div>
@@ -671,7 +671,7 @@ export const AvatarEditorModal: React.FC<AvatarEditorModalProps> = ({
                   <strong className="text-xs font-black uppercase text-slate-800 group-hover:text-rose-700 block transition-colors">
                     CHỤP TRỰC TIẾP TỪ WEBCAM
                   </strong>
-                  <span className="text-[11px] text-slate-500 block leading-snug font-medium mt-0.5">
+                  <span className="text-[12px] text-slate-500 block leading-snug font-medium mt-0.5">
                     Bật camera máy tính để chụp ảnh học sinh tức thì
                   </span>
                 </div>
@@ -694,9 +694,9 @@ export const AvatarEditorModal: React.FC<AvatarEditorModalProps> = ({
                   <div className="flex-1 min-w-0">
                     <strong className="text-xs font-black uppercase text-slate-800 group-hover:text-emerald-700 block transition-colors flex items-center gap-1.5">
                       <span>CẮT TỪ ẢNH TẬP THỂ</span>
-                      <span className="px-1.5 py-0.2 rounded-md bg-emerald-100 text-emerald-800 text-[9px] font-black uppercase">MỚI</span>
+                      <span className="px-1.5 py-0.2 rounded-md bg-emerald-100 text-emerald-800 text-[12px] font-black uppercase">MỚI</span>
                     </strong>
-                    <span className="text-[11px] text-slate-500 block leading-snug font-medium mt-0.5">
+                    <span className="text-[12px] text-slate-500 block leading-snug font-medium mt-0.5">
                       Tải ảnh chụp tập thể cả lớp và khoanh chọn khuôn mặt
                     </span>
                   </div>
@@ -705,7 +705,7 @@ export const AvatarEditorModal: React.FC<AvatarEditorModalProps> = ({
             </div>
 
             {/* Compact Info Advice Pill */}
-            <div className="p-3 bg-blue-50/90 border border-blue-200/80 rounded-2xl text-[11px] text-blue-950 flex items-start gap-2.5 shadow-2xs">
+            <div className="p-3 bg-blue-50/90 border border-blue-200/80 rounded-2xl text-[12px] text-blue-950 flex items-start gap-2.5 shadow-2xs">
               <Info className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
               <div className="space-y-0.5 leading-relaxed">
                 <strong className="font-bold block text-blue-900">Mẹo căn chỉnh ảnh đẹp:</strong>

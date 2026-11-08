@@ -112,6 +112,16 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
     return count;
   }, [isManagementAccount, presentCount, attendanceRecords, homeroomStudents]);
 
+  // Hôm nay đã có lớp nào điểm danh chưa (tránh hiện "0/3 0%" như thể cả lớp vắng)
+  const hasAttendanceToday = React.useMemo(() => {
+    const d = new Date();
+    const todayStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    return attendanceRecords.some(att =>
+      att && att.date === todayStr && att.records && Object.keys(att.records).length > 0 &&
+      (isManagementAccount ? homeroomClassIds.has(att.classId) : att.classId === activeClassId)
+    );
+  }, [attendanceRecords, isManagementAccount, homeroomClassIds, activeClassId]);
+
   const displayAttendanceRate = displayTotalStudents > 0 
     ? Math.round((displayPresentCount / displayTotalStudents) * 100) 
     : 100;
@@ -213,21 +223,21 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                     alt={greetingUserName}
                     className="w-10 h-10 sm:w-11 sm:h-11 rounded-lg object-cover ring-2 ring-white shadow-xs bg-white hover-zoom-interactive"
                   />
-                  <span className={`absolute -bottom-1 -right-1 px-1.5 py-0.2 ${roleBadge.bg} text-white font-black text-[8px] rounded-full shadow-xs uppercase tracking-tight whitespace-nowrap`}>
+                  <span className={`absolute -bottom-1 -right-1 px-1.5 py-0.2 ${roleBadge.bg} text-white font-black text-[11px] rounded-full shadow-xs uppercase tracking-tight whitespace-nowrap`}>
                     {roleBadge.text}
                   </span>
                 </div>
 
                 <div className="space-y-0.5 min-w-0">
                   <div className="flex flex-wrap items-center gap-1">
-                    <span className="inline-flex items-center gap-1 px-2 py-0.2 rounded-md bg-white/95 text-[9.5px] font-black text-indigo-700 shadow-2xs border border-indigo-100 uppercase">
+                    <span className="inline-flex items-center gap-1 px-2 py-0.2 rounded-md bg-white/95 text-[12px] font-black text-indigo-700 shadow-2xs border border-indigo-100 uppercase">
                       {isManagementAccount ? 'TÀI KHOẢN: ' : 'GV: '}
                       <strong className="text-indigo-950 font-black">{greetingUserName}</strong>
                     </span>
-                    <span className="inline-flex items-center gap-1 px-2 py-0.2 rounded-md bg-emerald-50 text-[9.5px] font-black text-emerald-800 border border-emerald-200 shadow-2xs uppercase">
+                    <span className="inline-flex items-center gap-1 px-2 py-0.2 rounded-md bg-emerald-50 text-[12px] font-black text-emerald-800 border border-emerald-200 shadow-2xs uppercase">
                       {displaySchoolName}
                     </span>
-                    <span className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded-md bg-amber-50 text-[9.5px] font-black text-amber-800 border border-amber-200 shadow-2xs uppercase">
+                    <span className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded-md bg-amber-50 text-[12px] font-black text-amber-800 border border-amber-200 shadow-2xs uppercase">
                       NH: {teacherProfile.academicYear || activeClass?.academicYear || '2026–2027'}
                     </span>
                   </div>
@@ -236,7 +246,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                     <h1 className="text-xs sm:text-base font-black text-indigo-950 tracking-tight uppercase leading-snug truncate">
                       {getGreeting()}, <span className="text-indigo-600">{greetingUserName}</span>! 👋
                     </h1>
-                    <span className="text-[10px] text-slate-500 font-bold uppercase hidden sm:inline">
+                    <span className="text-[12px] text-slate-600 font-bold uppercase hidden sm:inline">
                       {isManagementAccount ? (
                         <>• TOÀN TRƯỜNG: <strong className="text-indigo-700 font-black">{homeroomClasses.length} LỚP GVCN • {homeroomStudents.length} HỌC SINH</strong></>
                       ) : (
@@ -253,7 +263,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             {isManagementAccount ? (
               <button
                 onClick={() => onNavigate('reports')}
-                className="px-3.5 py-1.5 bg-gradient-to-r from-indigo-500 to-indigo-700 hover:from-indigo-800 hover:to-indigo-800 text-white rounded-xl font-black text-xs flex items-center justify-center gap-1.5 shadow-sm shadow-indigo-900/30 hover-zoom-btn uppercase cursor-pointer"
+                className="px-3.5 py-1.5 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-800 hover:to-indigo-800 text-white rounded-xl font-black text-xs flex items-center justify-center gap-1.5 shadow-sm shadow-indigo-900/30 hover-zoom-btn uppercase cursor-pointer"
               >
                 <ShieldCheck className="w-4 h-4 text-amber-300" />
                 <span>BÁO CÁO REALTIME</span>
@@ -262,7 +272,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               <>
                 <button
                   onClick={() => onNavigate('attendance')}
-                  className="px-2.5 py-1.5 sm:py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-black text-[10.5px] flex items-center justify-center gap-1 shadow-2xs hover-zoom-btn uppercase cursor-pointer"
+                  className="px-2.5 py-1.5 sm:py-1 bg-emerald-700 hover:bg-emerald-800 text-white rounded-lg font-black text-[12px] flex items-center justify-center gap-1 shadow-2xs hover-zoom-btn uppercase cursor-pointer"
                 >
                   <CheckSquare className="w-3 h-3" />
                   <span>ĐIỂM DANH</span>
@@ -270,7 +280,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
                 <button
                   onClick={() => onOpenAddStudent ? onOpenAddStudent() : onNavigate('students')}
-                  className="px-2.5 py-1.5 sm:py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-black text-[10.5px] flex items-center justify-center gap-1 shadow-2xs hover-zoom-btn uppercase cursor-pointer"
+                  className="px-2.5 py-1.5 sm:py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-black text-[12px] flex items-center justify-center gap-1 shadow-2xs hover-zoom-btn uppercase cursor-pointer"
                 >
                   <Plus className="w-3 h-3" />
                   <span>THÊM HỌC SINH</span>
@@ -278,7 +288,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
                 <button
                   onClick={() => onNavigate('wheel')}
-                  className="px-2.5 py-1.5 sm:py-1 bg-sky-600 hover:bg-sky-700 text-white rounded-lg font-black text-[10.5px] flex items-center justify-center gap-1 shadow-2xs hover-zoom-btn uppercase cursor-pointer"
+                  className="px-2.5 py-1.5 sm:py-1 bg-sky-700 hover:bg-sky-800 text-white rounded-lg font-black text-[12px] flex items-center justify-center gap-1 shadow-2xs hover-zoom-btn uppercase cursor-pointer"
                 >
                   <Sparkles className="w-3 h-3" />
                   <span>VÒNG QUAY</span>
@@ -286,7 +296,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
                 <button
                   onClick={() => onNavigate('rewards')}
-                  className="px-2.5 py-1.5 sm:py-1 bg-rose-500 hover:bg-rose-600 text-white rounded-lg font-black text-[10.5px] flex items-center justify-center gap-1 shadow-2xs hover-zoom-btn uppercase cursor-pointer"
+                  className="px-2.5 py-1.5 sm:py-1 bg-rose-600 hover:bg-rose-700 text-white rounded-lg font-black text-[12px] flex items-center justify-center gap-1 shadow-2xs hover-zoom-btn uppercase cursor-pointer"
                 >
                   <Gift className="w-3 h-3" />
                   <span>ĐỔI XU</span>
@@ -294,7 +304,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
                 <button
                   onClick={() => onNavigate('infographic')}
-                  className="col-span-2 sm:col-span-1 px-2.5 py-1.5 sm:py-1 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white rounded-lg font-black text-[10.5px] flex items-center justify-center gap-1 shadow-2xs hover-zoom-btn uppercase cursor-pointer"
+                  className="col-span-2 sm:col-span-1 px-2.5 py-1.5 sm:py-1 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white rounded-lg font-black text-[12px] flex items-center justify-center gap-1 shadow-2xs hover-zoom-btn uppercase cursor-pointer"
                 >
                   <Sparkles className="w-3 h-3 text-amber-300" />
                   <span>INFOGRAPHIC</span>
@@ -305,12 +315,12 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         </div>
 
         {/* AI Daily Inspiration & Author Information - compact row */}
-        <div className="mt-2 pt-1.5 border-t border-indigo-200/50 flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-[10.5px] text-indigo-900">
+        <div className="mt-2 pt-1.5 border-t border-indigo-200/50 flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-[12px] text-indigo-900">
           <div className="flex items-center gap-1.5 italic flex-1 truncate">
             <Brain className="w-3 h-3 text-indigo-600 shrink-0" />
             <span className="truncate">{dailyQuote}</span>
           </div>
-          <div className="flex items-center gap-2 shrink-0 text-[10px]">
+          <div className="flex items-center gap-2 shrink-0 text-[12px]">
             <button
               onClick={fetchAiQuote}
               disabled={loadingQuote}
@@ -336,7 +346,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               <School className="w-3.5 h-3.5" />
             </div>
             <div>
-              <span className="text-[11px] font-black text-indigo-900 block leading-tight">CHỌN LỚP XEM BẢNG TIN:</span>
+              <span className="text-[12px] font-black text-indigo-900 block leading-tight">CHỌN LỚP XEM BẢNG TIN:</span>
             </div>
           </div>
 
@@ -352,7 +362,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                     setSelectedTimetableClassId(cls.id);
                     setSelectedRankingClassId(cls.id);
                   }}
-                  className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all flex items-center gap-1.5 shrink-0 hover-zoom-btn ${
+                  className={`px-2.5 py-1 rounded-lg text-[12px] font-bold transition-all flex items-center gap-1.5 shrink-0 hover-zoom-btn ${
                     isSelected
                       ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-2xs font-black'
                       : 'bg-slate-50 text-slate-700 border border-slate-200 hover:bg-indigo-50'
@@ -360,7 +370,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 >
                   <span className="w-2 h-2 rounded-full ring-1 ring-white/60" style={{ backgroundColor: cls.color || '#3B82F6' }} />
                   <span>Lớp {cls.name}</span>
-                  <span className={`px-1 py-0.1 rounded text-[9.5px] ${isSelected ? 'bg-white/25 text-white' : 'bg-slate-200 text-slate-700'}`}>
+                  <span className={`px-1 py-0.1 rounded text-[12px] ${isSelected ? 'bg-white/25 text-white' : 'bg-slate-200 text-slate-700'}`}>
                     {count} HS
                   </span>
                 </button>
@@ -381,7 +391,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           {
             key: 'students',
             onClick: () => onNavigate(isManagementAccount ? 'classes' : 'students'),
-            gradient: 'from-sky-600 to-blue-700',
+            gradient: 'from-sky-700 to-blue-800',
             icon: <Users className="w-5 h-5" />,
             link: 'Chi tiết',
             label: 'Sĩ số học sinh',
@@ -392,18 +402,18 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           {
             key: 'attendance',
             onClick: () => onNavigate(isManagementAccount ? 'reports' : 'attendance'),
-            gradient: 'from-emerald-700 to-teal-700',
+            gradient: 'from-emerald-700 to-teal-800',
             icon: <CheckSquare className="w-5 h-5" />,
             link: isManagementAccount ? 'Báo cáo' : 'Điểm danh',
             label: 'Hiện diện hôm nay',
-            value: `${displayPresentCount}/${displayTotalStudents}`,
-            unit: `${displayAttendanceRate}%`,
-            progress: Number(displayAttendanceRate) || 0
+            value: displayTotalStudents > 0 && hasAttendanceToday ? `${displayPresentCount}/${displayTotalStudents}` : '—',
+            unit: displayTotalStudents === 0 ? 'chưa có học sinh' : (hasAttendanceToday ? `${displayAttendanceRate}%` : (isManagementAccount ? 'chưa có lớp báo cáo' : 'chưa điểm danh')),
+            progress: displayTotalStudents > 0 && hasAttendanceToday ? (Number(displayAttendanceRate) || 0) : null
           },
           {
             key: 'coins',
             onClick: () => onNavigate(isManagementAccount ? 'reports' : 'rewards'),
-            gradient: 'from-rose-600 to-pink-700',
+            gradient: 'from-rose-700 to-pink-800',
             icon: <Award className="w-5 h-5" />,
             link: isManagementAccount ? 'Báo cáo' : 'Đổi quà',
             label: 'Tổng xu thi đua',
@@ -414,7 +424,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           {
             key: 'avg',
             onClick: () => onNavigate('reports'),
-            gradient: 'from-violet-600 to-indigo-700',
+            gradient: 'from-violet-700 to-indigo-800',
             icon: <TrendingUp className="w-5 h-5" />,
             link: 'Báo cáo',
             label: 'Trung bình / học sinh',
@@ -433,15 +443,15 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             <span className="pointer-events-none absolute right-6 -bottom-8 w-20 h-20 rounded-full bg-white/10" />
             <div className="relative flex items-center justify-between">
               <div className="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center">{card.icon}</div>
-              <span className="text-[10px] font-black uppercase flex items-center gap-0.5 bg-white/20 rounded-full px-2 py-0.5 group-hover:bg-white/30 transition-colors">
+              <span className="text-[12px] font-black uppercase flex items-center gap-0.5 bg-black/20 rounded-full px-2 py-0.5 group-hover:bg-black/30 transition-colors">
                 {card.link} <ArrowUpRight className="w-3 h-3" />
               </span>
             </div>
             <div className="relative mt-2">
-              <div className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-white/90">{card.label}</div>
+              <div className="text-[12px] sm:text-[12px] font-bold uppercase tracking-wider text-white">{card.label}</div>
               <div className="flex items-baseline gap-1.5 flex-wrap">
                 <span className="text-2xl sm:text-3xl font-black tracking-tight font-mono leading-none">{card.value}</span>
-                <span className="text-[10px] sm:text-[11px] font-bold text-white/90 truncate">{card.unit}</span>
+                <span className="text-[12px] sm:text-[12px] font-bold text-white truncate">{card.unit}</span>
               </div>
               {card.progress !== null && (
                 <div className="mt-1.5 h-1.5 rounded-full bg-white/25 overflow-hidden">
@@ -458,7 +468,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         <div className="bg-gradient-to-r from-amber-50/70 via-orange-50/60 to-yellow-50/70 rounded-3xl p-5 border border-amber-200/80 shadow-xs hover-zoom-card space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-amber-600 to-yellow-600 text-white flex items-center justify-center font-black shadow-xs">
+              <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-amber-700 to-yellow-700 text-white flex items-center justify-center font-black shadow-xs">
                 <Trophy className="w-5 h-5" />
               </div>
               <div>
@@ -504,10 +514,10 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                   }`}
                 >
                   <div className="flex items-center justify-between mb-2">
-                    <span className={`px-2.5 py-0.5 rounded-full text-[11px] border ${idx < 3 ? medalStyles[idx] : 'bg-slate-50 text-slate-600 border-slate-200'}`}>
+                    <span className={`px-2.5 py-0.5 rounded-full text-[12px] border ${idx < 3 ? medalStyles[idx] : 'bg-slate-50 text-slate-600 border-slate-200'}`}>
                       {idx < 3 ? medalBadges[idx] : `Hạng ${idx + 1}`}
                     </span>
-                    <span className="text-[11px] font-bold text-slate-500">
+                    <span className="text-[12px] font-bold text-slate-500">
                       {cls.studentCount} học sinh
                     </span>
                   </div>
@@ -523,10 +533,10 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                     </div>
 
                     <div className="text-right">
-                      <div className="text-lg font-black text-amber-600">
+                      <div className="text-lg font-black text-amber-700">
                         🪙 {cls.totalCoins} xu
                       </div>
-                      <div className="text-[10px] text-slate-500 font-semibold">
+                      <div className="text-[12px] text-slate-500 font-semibold">
                         TB: {cls.avgCoins} xu/em
                       </div>
                     </div>
@@ -561,7 +571,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                   <h2 className="text-sm md:text-base font-black text-indigo-950 uppercase">
                     THỜI KHÓA BIỂU HÔM NAY
                   </h2>
-                  <span className="text-[11px] text-indigo-600 font-bold block uppercase">
+                  <span className="text-[12px] text-indigo-600 font-bold block uppercase">
                     CỐ ĐỊNH THEO: <strong>LỚP {selectedTimetableClass?.name}</strong>
                   </span>
                 </div>
@@ -579,7 +589,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             {/* Class switcher buttons for Timetable if multiple classes (Yêu cầu 1) */}
             {classes.length > 1 && (
               <div className="flex items-center gap-1.5 overflow-x-auto pb-1 pt-1 border-b border-slate-100">
-                <span className="text-[11px] font-bold text-slate-400 shrink-0 uppercase">LỚP:</span>
+                <span className="text-[12px] font-bold text-slate-400 shrink-0 uppercase">LỚP:</span>
                 {classes.map(cls => (
                   <button
                     key={cls.id}
@@ -609,7 +619,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                       </span>
                       <div>
                         <div className="text-xs md:text-sm font-black text-indigo-950 uppercase">{slot.subject}</div>
-                        <div className="text-[11px] text-slate-500 font-medium uppercase">
+                        <div className="text-[12px] text-slate-500 font-medium uppercase">
                           {slot.session === 'morning' ? 'BUỔI SÁNG' : 'BUỔI CHIỀU'} · {slot.teacher || teacherProfile.name}
                         </div>
                       </div>
@@ -642,14 +652,14 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold">
+                <div className="w-8 h-8 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center font-bold">
                   <Award className="w-4 h-4" />
                 </div>
                 <div>
                   <h2 className="text-sm md:text-base font-black text-indigo-950 uppercase">
                     TOP THI ĐUA NHẬN XU
                   </h2>
-                  <span className="text-[11px] text-amber-700 font-bold block uppercase">
+                  <span className="text-[12px] text-amber-700 font-bold block uppercase">
                     ĐANG XEM: <strong>LỚP {classes.find(c => c.id === selectedRankingClassId)?.name || activeClass?.name}</strong>
                   </span>
                 </div>
@@ -667,14 +677,14 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             {/* Class switcher buttons for Top Students if multiple classes (Yêu cầu 1) */}
             {classes.length > 1 && (
               <div className="flex items-center gap-1.5 overflow-x-auto pb-1 pt-1 border-b border-slate-100">
-                <span className="text-[11px] font-bold text-slate-400 shrink-0">Lớp:</span>
+                <span className="text-[12px] font-bold text-slate-400 shrink-0">Lớp:</span>
                 {classes.map(cls => (
                   <button
                     key={cls.id}
                     onClick={() => setSelectedRankingClassId(cls.id)}
                     className={`px-2.5 py-1 rounded-xl text-xs font-bold transition-all shrink-0 hover-zoom-btn ${
                       selectedRankingClassId === cls.id
-                        ? 'bg-amber-600 text-white font-black shadow-xs'
+                        ? 'bg-amber-700 text-white font-black shadow-xs'
                         : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                     }`}
                   >
@@ -713,7 +723,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
                         <div>
                           <div className="text-xs md:text-sm font-black text-indigo-950">{st.name}</div>
-                          <div className="text-[11px] text-slate-500 font-medium">
+                          <div className="text-[12px] text-slate-500 font-medium">
                             {st.gender} · {st.group || 'Tổ 1'}
                           </div>
                         </div>
@@ -727,14 +737,14 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                         {/* Quick +1, +5 buttons */}
                         <button
                           onClick={() => handleQuickAddCoin(st.id, st.name, 1)}
-                          className="px-2 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-black text-[11px] rounded-lg border border-emerald-200 hover-zoom-btn"
+                          className="px-2 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-black text-[12px] rounded-lg border border-emerald-200 hover-zoom-btn"
                           title="Cộng +1 xu"
                         >
                           +1
                         </button>
                         <button
                           onClick={() => handleQuickAddCoin(st.id, st.name, 5)}
-                          className="px-2 py-1 bg-blue-50 hover:bg-blue-100 text-blue-800 font-black text-[11px] rounded-lg border border-blue-200 hover-zoom-btn"
+                          className="px-2 py-1 bg-blue-50 hover:bg-blue-100 text-blue-800 font-black text-[12px] rounded-lg border border-blue-200 hover-zoom-btn"
                           title="Cộng +5 xu"
                         >
                           +5
@@ -787,7 +797,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                   <span className="text-slate-500 hidden sm:inline">•</span>
                   <span>ĐƠN VỊ CÔNG TÁC: <strong className="text-emerald-700">{displaySchoolName}</strong></span>
                 </div>
-                <div className="text-[11px] text-slate-500 font-bold uppercase">
+                <div className="text-[12px] text-slate-500 font-bold uppercase">
                   NĂM HỌC: <strong className="text-amber-700">{teacherProfile.academicYear || '2026–2027'}</strong>
                   {isManagementAccount ? (
                     <span className="ml-2 text-indigo-600 font-semibold">• QUẢN LÝ: {classes.length} LỚP • {students.length} HỌC SINH</span>
@@ -802,11 +812,11 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         <div className="w-full md:w-auto flex flex-wrap items-center gap-2.5 pt-3 md:pt-0 border-t md:border-t-0 border-slate-100 text-xs justify-start md:justify-end">
           <div className="text-left md:text-right">
             <div className="flex items-center gap-1.5 md:justify-end">
-              <span className="text-[10px] font-black text-indigo-600 block uppercase">TÁC GIẢ ỨNG DỤNG:</span>
-              <span className="px-1.5 py-0.2 rounded-md bg-indigo-100 text-indigo-800 text-[9px] font-black uppercase">CỐ ĐỊNH</span>
+              <span className="text-[12px] font-black text-indigo-600 block uppercase">TÁC GIẢ ỨNG DỤNG:</span>
+              <span className="px-1.5 py-0.2 rounded-md bg-indigo-100 text-indigo-800 text-[12px] font-black uppercase">CỐ ĐỊNH</span>
             </div>
             <span className="text-xs font-black text-slate-900 uppercase">{APP_AUTHOR_INFO.name}</span>
-            <span className="text-[11px] text-slate-600 block font-bold uppercase">{APP_AUTHOR_INFO.schoolName}</span>
+            <span className="text-[12px] text-slate-600 block font-bold uppercase">{APP_AUTHOR_INFO.schoolName}</span>
           </div>
           <div className="flex items-center gap-1.5 shrink-0">
             <a

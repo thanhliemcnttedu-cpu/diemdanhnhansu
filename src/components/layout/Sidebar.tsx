@@ -216,10 +216,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 <BookOpen className="w-4 h-4 text-amber-950" />
               </div>
               <div className="truncate">
-                <h1 className="text-[11px] font-black text-indigo-900 tracking-tight leading-tight truncate flex items-center gap-1 uppercase">
+                <h1 className="text-[12px] font-black text-indigo-900 tracking-tight leading-tight truncate flex items-center gap-1 uppercase">
                   LỚP HỌC HẠNH PHÚC
                 </h1>
-                <p className="text-[9.5px] text-indigo-600 font-semibold leading-none mt-0.5">
+                <p className="text-[12px] text-indigo-600 font-semibold leading-none mt-0.5">
                   Hệ sinh thái thông minh
                 </p>
               </div>
@@ -258,7 +258,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <div className="p-0.5 bg-slate-100/90 rounded-xl border border-slate-200/80 flex items-center gap-1">
                 <button
                   onClick={() => setTeacherRole('homeroom')}
-                  className={`flex-1 py-1 px-1.5 rounded-lg text-[9.5px] font-black tracking-tight transition-all flex items-center justify-center gap-1 uppercase ${
+                  className={`flex-1 py-1 px-1.5 rounded-lg text-[12px] font-black tracking-tight transition-all flex items-center justify-center gap-1 uppercase ${
                     teacherRole === 'homeroom'
                       ? 'bg-indigo-600 text-white shadow-xs shadow-indigo-600/20'
                       : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
@@ -275,9 +275,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
                       onNavigate('dashboard');
                     }
                   }}
-                  className={`flex-1 py-1 px-1.5 rounded-lg text-[9.5px] font-black tracking-tight transition-all flex items-center justify-center gap-1 uppercase ${
+                  className={`flex-1 py-1 px-1.5 rounded-lg text-[12px] font-black tracking-tight transition-all flex items-center justify-center gap-1 uppercase ${
                     teacherRole === 'subject'
-                      ? 'bg-emerald-600 text-white shadow-xs shadow-emerald-600/20'
+                      ? 'bg-emerald-700 text-white shadow-xs shadow-emerald-600/20'
                       : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
                   }`}
                   title="Chế độ Giáo viên bộ môn: Quản lý lớp dạy bộ môn, TKB bộ môn theo mẫu, chấm sao thi đua"
@@ -288,7 +288,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               </div>
               {teacherRole === 'subject' && (
                 <div className="mt-0.5 text-center">
-                  <span className="inline-block px-1.5 py-0.2 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-[8.5px] font-black uppercase tracking-wider">
+                  <span className="inline-block px-1.5 py-0.2 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-[11px] font-black uppercase tracking-wider">
                     Môn: {subjectTeacherConfig.subjectName}
                   </span>
                 </div>
@@ -304,8 +304,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     onNavigate('dashboard');
                   }
                 }}
-                className={`w-8 h-8 rounded-xl flex items-center justify-center text-[11px] font-black shadow-2xs hover-zoom-btn ${
-                  teacherRole === 'subject' ? 'bg-emerald-600 text-white' : 'bg-indigo-600 text-white'
+                className={`w-8 h-8 rounded-xl flex items-center justify-center text-[12px] font-black shadow-2xs hover-zoom-btn ${
+                  teacherRole === 'subject' ? 'bg-emerald-700 text-white' : 'bg-indigo-600 text-white'
                 }`}
                 title={`Đang là ${teacherRole === 'subject' ? 'GV Bộ môn' : 'GV Chủ nhiệm'}. Nhấn để đổi vai trò.`}
               >
@@ -354,7 +354,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
                     {/* Badges matching screenshot exactly */}
                     {item.badge && (
-                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wide shrink-0 ml-1.5 transition-transform duration-200 group-hover:scale-105 ${
+                      <span className={`px-2 py-0.5 rounded-full text-[12px] font-extrabold uppercase tracking-wide shrink-0 ml-1.5 transition-transform duration-200 group-hover:scale-105 ${
                         isActive 
                           ? 'bg-white/25 text-white backdrop-blur-xs font-bold'
                           : item.badgeType === 'count'
@@ -397,11 +397,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   <ShieldCheck className="w-3.5 h-3.5 text-sky-200" />
                 </div>
                 <div className="text-left">
-                  <div className="text-[11px] font-black uppercase tracking-tight leading-tight text-indigo-950">QUẢN TRỊ ADMIN</div>
-                  <div className="text-[9px] text-rose-600 font-bold leading-tight">Tài khoản & DB Nhà trường</div>
+                  <div className="text-[12px] font-black uppercase tracking-tight leading-tight text-indigo-950">QUẢN TRỊ ADMIN</div>
+                  <div className="text-[12px] text-rose-700 font-bold leading-tight">Tài khoản & DB Nhà trường</div>
                 </div>
               </div>
-              <span className="text-[8.5px] font-black uppercase bg-indigo-600 text-white px-1.5 py-0.5 rounded shadow-2xs">ADMIN</span>
+              <span className="text-[11px] font-black uppercase bg-indigo-600 text-white px-1.5 py-0.5 rounded shadow-2xs">ADMIN</span>
             </button>
           </div>
         )}
@@ -417,10 +417,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   className="w-6 h-6 rounded-full border border-slate-200 object-cover bg-white shrink-0"
                 />
                 <div className="min-w-0">
-                  <div className="text-[10.5px] font-black text-slate-800 truncate leading-tight">
+                  <div className="text-[12px] font-black text-slate-800 truncate leading-tight">
                     {getOfficialDisplayName(currentUser, allUsers) || teacherProfile.name}
                   </div>
-                  <div className="text-[8.5px] font-bold text-slate-400 truncate leading-tight">
+                  <div className="text-[11px] font-bold text-slate-400 truncate leading-tight">
                     {getOfficialRoleTitle(currentUser)}
                   </div>
                 </div>
@@ -448,18 +448,18 @@ export const Sidebar: React.FC<SidebarProps> = ({
             { key: 'cdkey', label: isCdKeyActivated ? 'Bản PRO' : 'CDKEY', title: 'Kích hoạt mã CDKEY bản quyền phần mềm (LOP-HOC-HANH-PHUC)', icon: <KeyRound className="w-4 h-4" />, cls: isCdKeyActivated ? 'bg-emerald-50 text-emerald-800 border-emerald-200 hover:bg-emerald-100' : 'bg-amber-100 text-amber-900 border-amber-300 hover:bg-amber-200', onClick: () => setIsCdKeyModalOpen(true) },
             { key: 'password', label: 'Mật khẩu', title: 'Đổi mật khẩu đăng nhập của tài khoản này', icon: <Lock className="w-4 h-4" />, cls: 'bg-indigo-50 text-indigo-800 border-indigo-200 hover:bg-indigo-100', onClick: () => window.dispatchEvent(new Event(OPEN_CHANGE_PASSWORD_EVENT)) },
             { key: 'register', label: 'Đăng ký', title: 'Đăng ký sử dụng bản quyền phần mềm Lớp Học Hạnh Phúc', icon: <Sparkles className="w-4 h-4" />, cls: 'bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100', onClick: () => setIsRegistrationModalOpen(true) },
-            { key: 'zalo', label: 'Zalo QR', title: 'Mã QR Zalo liên hệ tác giả', icon: <span className="text-[11px] font-black leading-none">Zalo</span>, cls: 'bg-sky-50 text-sky-800 border-sky-200 hover:bg-sky-100', onClick: () => window.dispatchEvent(new Event(OPEN_ZALO_QR_EVENT)) }
+            { key: 'zalo', label: 'Zalo QR', title: 'Mã QR Zalo liên hệ tác giả', icon: <span className="text-[12px] font-black leading-none">Zalo</span>, cls: 'bg-sky-50 text-sky-800 border-sky-200 hover:bg-sky-100', onClick: () => window.dispatchEvent(new Event(OPEN_ZALO_QR_EVENT)) }
           ];
           return !isEffectivelyCollapsed ? (
             <div className="px-2 mb-1.5 shrink-0">
-              <div className="text-[9px] font-black text-slate-500 uppercase tracking-wider px-0.5 mb-1">Tiện ích</div>
+              <div className="text-[12px] font-black text-slate-500 uppercase tracking-wider px-0.5 mb-1">Tiện ích</div>
               <div className="grid grid-cols-3 gap-1.5">
                 {tools.map(t => (
                   <button
                     key={t.key}
                     onClick={runTool(t.onClick)}
                     title={t.title}
-                    className={`h-12 rounded-xl border flex flex-col items-center justify-center gap-0.5 text-[9.5px] font-bold transition-colors ${t.cls}`}
+                    className={`h-12 rounded-xl border flex flex-col items-center justify-center gap-0.5 text-[12px] font-bold transition-colors ${t.cls}`}
                   >
                     {t.icon}
                     <span className="truncate max-w-full px-0.5">{t.label}</span>
@@ -489,40 +489,40 @@ export const Sidebar: React.FC<SidebarProps> = ({
             isMobileDrawer ? 'mb-10' : 'mb-1.5'
           }`}>
             <div className="flex items-center justify-between">
-              <span className="text-[8.5px] font-black text-indigo-700 uppercase tracking-wider">
+              <span className="text-[11px] font-black text-indigo-700 uppercase tracking-wider">
                 TÁC GIẢ ỨNG DỤNG
               </span>
-              <span className="px-1 py-0.2 rounded bg-indigo-100 text-indigo-800 text-[8px] font-black uppercase">
+              <span className="px-1 py-0.2 rounded bg-indigo-100 text-indigo-800 text-[11px] font-black uppercase">
                 CỐ ĐỊNH
               </span>
             </div>
-            <div className="text-[10px] font-black text-indigo-950 mt-0.5 uppercase leading-tight truncate">
+            <div className="text-[12px] font-black text-indigo-950 mt-0.5 uppercase leading-tight truncate">
               {APP_AUTHOR_INFO.name}
             </div>
-            <div className="text-[9px] text-slate-700 font-bold uppercase leading-tight truncate">
+            <div className="text-[12px] text-slate-700 font-bold uppercase leading-tight truncate">
               {APP_AUTHOR_INFO.schoolName}
             </div>
-            <div className="text-[9px] text-blue-700 font-bold mt-1 flex items-center justify-between pt-0.5 border-t border-indigo-100/90">
-              <span className="text-slate-600 font-bold uppercase text-[8.5px]">ZALO HỖ TRỢ:</span>
+            <div className="text-[12px] text-blue-700 font-bold mt-1 flex items-center justify-between pt-0.5 border-t border-indigo-100/90">
+              <span className="text-slate-600 font-bold uppercase text-[11px]">ZALO HỖ TRỢ:</span>
               <a 
                 href={APP_AUTHOR_INFO.zaloUrl} 
                 target="_blank" 
                 rel="noreferrer"
-                className="font-mono bg-white hover:bg-blue-50 px-1.5 py-0.2 rounded text-blue-700 font-black shadow-2xs border border-blue-200 transition-colors text-[9px]"
+                className="font-mono bg-white hover:bg-blue-50 px-1.5 py-0.2 rounded text-blue-700 font-black shadow-2xs border border-blue-200 transition-colors text-[12px]"
               >
                 {APP_AUTHOR_INFO.zalo}
               </a>
             </div>
-            <div className="text-[9px] text-blue-700 font-bold mt-0.5 flex items-center justify-between">
-              <span className="text-slate-600 font-bold uppercase text-[8.5px] flex items-center gap-1">
-                <span className="w-2.5 h-2.5 rounded-full bg-blue-600 text-white flex items-center justify-center text-[7px] font-black">f</span>
+            <div className="text-[12px] text-blue-700 font-bold mt-0.5 flex items-center justify-between">
+              <span className="text-slate-600 font-bold uppercase text-[11px] flex items-center gap-1">
+                <span className="w-2.5 h-2.5 rounded-full bg-blue-600 text-white flex items-center justify-center text-[11px] font-black">f</span>
                 <span>FACEBOOK:</span>
               </span>
               <a 
                 href={APP_AUTHOR_INFO.facebook} 
                 target="_blank" 
                 rel="noreferrer" 
-                className="bg-white hover:bg-blue-50 px-1.5 py-0.2 rounded text-blue-700 font-black shadow-2xs border border-blue-200 transition-colors text-[8.5px] uppercase font-bold"
+                className="bg-white hover:bg-blue-50 px-1.5 py-0.2 rounded text-blue-700 font-black shadow-2xs border border-blue-200 transition-colors text-[11px] uppercase font-bold"
               >
                 XEM TRANG
               </a>

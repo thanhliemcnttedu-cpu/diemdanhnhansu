@@ -165,14 +165,14 @@ export const GameHomeView: React.FC<GameHomeViewProps> = ({
               👧
             </div>
             <div className="flex items-center gap-2">
-              <span className="px-2 py-0.5 rounded-md bg-sky-400 text-slate-950 font-black text-[10px]">
+              <span className="px-2 py-0.5 rounded-md bg-sky-400 text-slate-950 font-black text-[12px]">
                 👈 A
               </span>
-              <span className="px-2 py-0.5 rounded-md bg-orange-600 text-white font-black text-[10px]">
+              <span className="px-2 py-0.5 rounded-md bg-orange-700 text-white font-black text-[12px]">
                 B 👉
               </span>
             </div>
-            <div className="mt-1 flex items-center gap-1 text-[9px] font-bold text-emerald-600">
+            <div className="mt-1 flex items-center gap-1 text-[12px] font-bold text-emerald-700">
               <Camera className="w-2.5 h-2.5" />
               <span>Webcam Live</span>
             </div>
@@ -197,7 +197,7 @@ export const GameHomeView: React.FC<GameHomeViewProps> = ({
             <div className="w-16 h-16 rounded-full bg-white border-2 border-cyan-300 flex items-center justify-center shadow-lg relative z-10 group-hover:scale-110 transition-transform">
               <Camera className="w-8 h-8 text-cyan-600 animate-pulse" />
             </div>
-            <div className="relative z-10 mt-1.5 flex items-center gap-1 px-2 py-0.5 rounded-full bg-rose-600 text-white text-[9px] font-mono font-black uppercase shadow-xs">
+            <div className="relative z-10 mt-1.5 flex items-center gap-1 px-2 py-0.5 rounded-full bg-rose-600 text-white text-[12px] font-mono font-black uppercase shadow-xs">
               <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />
               <span>REC 4K</span>
             </div>
@@ -236,7 +236,7 @@ export const GameHomeView: React.FC<GameHomeViewProps> = ({
             {/* Top Badge (if any) */}
             {game.badge && (
               <div className="absolute top-4 right-4 z-20">
-                <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider shadow-sm ${game.badgeColor || 'bg-indigo-600 text-white'}`}>
+                <span className={`px-2.5 py-0.5 rounded-full text-[12px] font-black uppercase tracking-wider shadow-sm ${game.badgeColor || 'bg-indigo-600 text-white'}`}>
                   {game.badge}
                 </span>
               </div>

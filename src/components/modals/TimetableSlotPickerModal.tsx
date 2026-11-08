@@ -75,7 +75,7 @@ export const TimetableSlotPickerModal: React.FC<TimetableSlotPickerModalProps> =
             </div>
             <div>
               <h3 className="text-sm font-black tracking-tight">Chọn Môn Học Cho Tiết</h3>
-              <p className="text-[11px] text-white font-medium">
+              <p className="text-[12px] text-white font-medium">
                 {dayLabel} • {session === 'morning' ? 'Buổi Sáng' : 'Buổi Chiều'} • Tiết {period}
               </p>
             </div>
@@ -116,7 +116,7 @@ export const TimetableSlotPickerModal: React.FC<TimetableSlotPickerModalProps> =
 
           {/* Quick Preset Buttons */}
           <div className="space-y-2 pt-2 border-t border-slate-100">
-            <span className="text-[11px] font-black text-slate-500 uppercase tracking-wider block">
+            <span className="text-[12px] font-black text-slate-500 uppercase tracking-wider block">
               Danh mục môn học Tiểu học thông dụng:
             </span>
 
@@ -145,7 +145,7 @@ export const TimetableSlotPickerModal: React.FC<TimetableSlotPickerModalProps> =
           {/* Additional class custom subjects if available */}
           {customSubjects.length > 0 && (
             <div className="space-y-2 pt-2 border-t border-slate-100">
-              <span className="text-[11px] font-black text-slate-500 uppercase tracking-wider block">
+              <span className="text-[12px] font-black text-slate-500 uppercase tracking-wider block">
                 Môn học được thiết lập riêng của trường:
               </span>
               <div className="flex flex-wrap gap-2">

@@ -567,7 +567,7 @@ export const GroupPhotoAvatarModal: React.FC<GroupPhotoAvatarModalProps> = ({
       <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-7xl h-[94vh] flex flex-col overflow-hidden">
         
         {/* --- MODAL HEADER --- */}
-        <div className="px-5 py-3.5 bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-700 text-white flex items-center justify-between shrink-0 shadow-md">
+        <div className="px-5 py-3.5 bg-gradient-to-r from-emerald-700 via-teal-700 to-cyan-700 text-white flex items-center justify-between shrink-0 shadow-md">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-2xl bg-white/15 flex items-center justify-center border border-white/20 shadow-xs">
               <Users className="w-5 h-5 text-emerald-200" />
@@ -577,7 +577,7 @@ export const GroupPhotoAvatarModal: React.FC<GroupPhotoAvatarModalProps> = ({
                 <h3 className="text-sm sm:text-base font-black tracking-tight uppercase">
                   Cắt & Ghép Ảnh Đại Diện Từ Ảnh Tập Thể Cả Lớp
                 </h3>
-                <span className="px-2 py-0.5 rounded-full bg-white/20 text-white text-[10px] font-black uppercase">
+                <span className="px-2 py-0.5 rounded-full bg-white/20 text-white text-[12px] font-black uppercase">
                   Lớp: {classNameTitle}
                 </span>
               </div>
@@ -625,7 +625,7 @@ export const GroupPhotoAvatarModal: React.FC<GroupPhotoAvatarModalProps> = ({
           <div className="flex-1 p-6 sm:p-10 flex flex-col items-center justify-center bg-gradient-to-b from-slate-50 via-white to-emerald-50/20 overflow-y-auto">
             <div className="max-w-xl w-full text-center space-y-6">
               
-              <div className="w-20 h-20 mx-auto rounded-3xl bg-gradient-to-tr from-emerald-600 to-teal-600 text-white flex items-center justify-center shadow-xl shadow-emerald-500/20 animate-bounce duration-1000">
+              <div className="w-20 h-20 mx-auto rounded-3xl bg-gradient-to-tr from-emerald-700 to-teal-700 text-white flex items-center justify-center shadow-xl shadow-emerald-500/20 animate-bounce duration-1000">
                 <Camera className="w-10 h-10" />
               </div>
 
@@ -650,7 +650,7 @@ export const GroupPhotoAvatarModal: React.FC<GroupPhotoAvatarModalProps> = ({
                 <p className="text-xs text-slate-500 mt-1">
                   Hỗ trợ định dạng JPG, PNG, WEBP (Khuyến khích ảnh góc rộng, rõ nét gương mặt)
                 </p>
-                <div className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black rounded-xl shadow-md transition-colors uppercase">
+                <div className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-black rounded-xl shadow-md transition-colors uppercase">
                   <Upload className="w-4 h-4" />
                   <span>Chọn Tệp Ảnh Tập Thể</span>
                 </div>
@@ -672,11 +672,11 @@ export const GroupPhotoAvatarModal: React.FC<GroupPhotoAvatarModalProps> = ({
 
               {/* Helpful Tips Card */}
               <div className="p-4 bg-amber-50/80 border border-amber-200/90 rounded-2xl text-left text-xs text-amber-900 space-y-1.5 shadow-xs">
-                <div className="flex items-center gap-1.5 font-black text-amber-950 uppercase text-[11px]">
+                <div className="flex items-center gap-1.5 font-black text-amber-950 uppercase text-[12px]">
                   <HelpCircle className="w-4 h-4 text-amber-600 shrink-0" />
                   <span>Mẹo để ảnh đại diện học sinh đẹp nhất:</span>
                 </div>
-                <ul className="list-disc list-inside space-y-1 text-slate-700 text-[11.5px] leading-relaxed">
+                <ul className="list-disc list-inside space-y-1 text-slate-700 text-[12px] leading-relaxed">
                   <li>Chọn ảnh chụp tập thể rõ mặt, đủ ánh sáng, không bị mờ nhòe.</li>
                   <li>Sau khi tải ảnh lên, bạn có thể <strong>phóng to (Zoom)</strong> vào từng hàng để khoanh mặt các em học sinh ở phía sau thật sắc nét.</li>
                 </ul>
@@ -700,7 +700,7 @@ export const GroupPhotoAvatarModal: React.FC<GroupPhotoAvatarModalProps> = ({
                     onClick={() => setMode('select')}
                     className={`px-3 py-1.5 rounded-lg text-xs font-black flex items-center gap-1.5 transition-all ${
                       mode === 'select'
-                        ? 'bg-emerald-600 text-white shadow-sm'
+                        ? 'bg-emerald-700 text-white shadow-sm'
                         : 'text-slate-300 hover:text-slate-800 hover:bg-slate-200'
                     }`}
                     title="Chế độ khoanh chọn khuôn mặt học sinh"
@@ -730,24 +730,24 @@ export const GroupPhotoAvatarModal: React.FC<GroupPhotoAvatarModalProps> = ({
                     type="button"
                     onClick={handleDetectFaces}
                     disabled={!imageLoaded || isDetecting}
-                    className="px-3 py-1.5 rounded-lg text-xs font-black flex items-center gap-1.5 bg-sky-600 hover:bg-sky-700 disabled:opacity-50 text-white shadow-sm"
+                    className="px-3 py-1.5 rounded-lg text-xs font-black flex items-center gap-1.5 bg-sky-700 hover:bg-sky-800 disabled:opacity-50 text-white shadow-sm"
                     title="Tự động tìm tất cả khuôn mặt trong ảnh tập thể"
                   >
                     {isDetecting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ScanFace className="w-3.5 h-3.5" />}
                     <span>{isDetecting ? `Đang dò ${Math.round(detectProgress * 100)}%` : '🤖 Tự dò khuôn mặt'}</span>
                   </button>
-                  <label className="flex items-center gap-1 text-[11px] font-bold text-amber-700 cursor-pointer select-none" title="Bấm vào khuôn mặt đã dò là gán ngay cho học sinh chưa có ảnh kế tiếp (theo STT)">
+                  <label className="flex items-center gap-1 text-[12px] font-bold text-amber-700 cursor-pointer select-none" title="Bấm vào khuôn mặt đã dò là gán ngay cho học sinh chưa có ảnh kế tiếp (theo STT)">
                     <input type="checkbox" checked={quickAssign} onChange={e => setQuickAssign(e.target.checked)} className="accent-amber-400" />
                     <Zap className="w-3 h-3" /> Gán nhanh
                   </label>
-                  <label className="flex items-center gap-1 text-[11px] font-bold text-emerald-700 cursor-pointer select-none" title="Lưu ngay ảnh đại diện vào hồ sơ học sinh sau mỗi lần gán">
+                  <label className="flex items-center gap-1 text-[12px] font-bold text-emerald-700 cursor-pointer select-none" title="Lưu ngay ảnh đại diện vào hồ sơ học sinh sau mỗi lần gán">
                     <input type="checkbox" checked={autoSave} onChange={e => setAutoSave(e.target.checked)} className="accent-emerald-400" />
                     <Save className="w-3 h-3" /> Tự lưu
                   </label>
                 </div>
 
                 {/* Quick Hint */}
-                <div className="hidden md:flex items-center gap-1.5 text-xs text-white font-medium bg-emerald-600/60 px-3 py-1 rounded-lg border border-emerald-800">
+                <div className="hidden md:flex items-center gap-1.5 text-xs text-white font-medium bg-emerald-700/60 px-3 py-1 rounded-lg border border-emerald-800">
                   <Sparkles className="w-3.5 h-3.5 text-amber-300 shrink-0" />
                   <span>
                     {detectedFaces.length > 0 && quickAssign
@@ -789,7 +789,7 @@ export const GroupPhotoAvatarModal: React.FC<GroupPhotoAvatarModalProps> = ({
                   <button
                     type="button"
                     onClick={handleResetZoom}
-                    className="px-2 py-1 rounded-lg bg-slate-200 hover:bg-slate-600 text-[10px] font-black text-slate-700 transition-colors uppercase"
+                    className="px-2 py-1 rounded-lg bg-slate-200 hover:bg-slate-600 text-[12px] font-black text-slate-700 transition-colors uppercase"
                     title="Vừa khung nhìn"
                   >
                     {Math.round(zoom * 100)}%
@@ -847,7 +847,7 @@ export const GroupPhotoAvatarModal: React.FC<GroupPhotoAvatarModalProps> = ({
                         className="absolute border-2 border-dashed border-sky-300 bg-sky-400/10 hover:bg-sky-400/30 hover:border-white rounded-xl z-10 cursor-pointer"
                         title={quickAssign && nextUnassignedStudent ? `Bấm để gán cho #${nextUnassignedStudent.stt}. ${nextUnassignedStudent.name}` : 'Bấm để chọn khuôn mặt này'}
                       >
-                        <span className="absolute -top-2.5 -left-2.5 w-5 h-5 rounded-full bg-sky-600 text-white text-[10px] font-black flex items-center justify-center border border-white shadow">
+                        <span className="absolute -top-2.5 -left-2.5 w-5 h-5 rounded-full bg-sky-700 text-white text-[12px] font-black flex items-center justify-center border border-white shadow">
                           {idx + 1}
                         </span>
                       </div>
@@ -889,7 +889,7 @@ export const GroupPhotoAvatarModal: React.FC<GroupPhotoAvatarModalProps> = ({
                         <div className="absolute inset-0 rounded-full border border-dashed border-white/60 pointer-events-none" />
 
                         {/* Pin Tag Badge floating above box */}
-                        <div className="absolute -top-6 left-1/2 -translate-x-1/2 px-2 py-0.5 bg-emerald-600 hover:bg-emerald-700 text-white text-[9.5px] font-black rounded-full shadow-md whitespace-nowrap flex items-center gap-1 border border-white/80 pointer-events-auto">
+                        <div className="absolute -top-6 left-1/2 -translate-x-1/2 px-2 py-0.5 bg-emerald-700 hover:bg-emerald-800 text-white text-[12px] font-black rounded-full shadow-md whitespace-nowrap flex items-center gap-1 border border-white/80 pointer-events-auto">
                           <span>#{st.stt}. {st.name}</span>
                           <button
                             type="button"
@@ -931,7 +931,7 @@ export const GroupPhotoAvatarModal: React.FC<GroupPhotoAvatarModalProps> = ({
                       <div className="absolute inset-0 rounded-full border-2 border-dashed border-white pointer-events-none" />
 
                       {/* Floating Indicator */}
-                      <div className="absolute -top-6 left-1/2 -translate-x-1/2 px-2 py-0.5 bg-amber-500 text-slate-900 text-[10px] font-black rounded-full shadow-md whitespace-nowrap pointer-events-none flex items-center gap-1">
+                      <div className="absolute -top-6 left-1/2 -translate-x-1/2 px-2 py-0.5 bg-amber-500 text-slate-900 text-[12px] font-black rounded-full shadow-md whitespace-nowrap pointer-events-none flex items-center gap-1">
                         <Crop className="w-3 h-3" />
                         <span>Khuôn mặt đang chọn</span>
                       </div>
@@ -969,17 +969,17 @@ export const GroupPhotoAvatarModal: React.FC<GroupPhotoAvatarModalProps> = ({
                     />
                   </div>
                   <div>
-                    <div className="text-[11px] font-black text-slate-800 uppercase flex items-center gap-1">
+                    <div className="text-[12px] font-black text-slate-800 uppercase flex items-center gap-1">
                       <Sparkles className="w-3.5 h-3.5 text-amber-500" />
                       <span>Khuôn mặt vừa khoanh</span>
                     </div>
-                    <p className="text-[10px] text-slate-500 mt-0.5">
+                    <p className="text-[12px] text-slate-500 mt-0.5">
                       Bấm vào học sinh bên phải để ghép
                     </p>
                     <button
                       type="button"
                       onClick={() => setActiveBox(null)}
-                      className="text-[10px] font-bold text-red-600 hover:text-red-700 hover:underline mt-0.5 block"
+                      className="text-[12px] font-bold text-red-600 hover:text-red-700 hover:underline mt-0.5 block"
                     >
                       Hủy vùng chọn này
                     </button>
@@ -996,11 +996,11 @@ export const GroupPhotoAvatarModal: React.FC<GroupPhotoAvatarModalProps> = ({
               <div className="p-4 bg-white border-b border-slate-200 shadow-2xs space-y-3">
                 <div className="flex items-center justify-between">
                   <div>
-                    <span className="text-[11px] font-black uppercase text-slate-700 block">
+                    <span className="text-[12px] font-black uppercase text-slate-700 block">
                       Tiến Độ Ghép Ảnh
                     </span>
                     <div className="flex items-baseline gap-1 mt-0.5">
-                      <span className="text-2xl font-black text-emerald-600">{assignedCount}</span>
+                      <span className="text-2xl font-black text-emerald-700">{assignedCount}</span>
                       <span className="text-xs text-slate-500 font-bold">/ {totalCount} học sinh</span>
                     </div>
                   </div>
@@ -1062,7 +1062,7 @@ export const GroupPhotoAvatarModal: React.FC<GroupPhotoAvatarModalProps> = ({
                   <button
                     type="button"
                     onClick={() => setFilterTab('all')}
-                    className={`py-1 rounded-lg text-[10.5px] font-black transition-all ${
+                    className={`py-1 rounded-lg text-[12px] font-black transition-all ${
                       filterTab === 'all'
                         ? 'bg-white text-slate-800 shadow-xs'
                         : 'text-slate-500 hover:text-slate-700'
@@ -1073,9 +1073,9 @@ export const GroupPhotoAvatarModal: React.FC<GroupPhotoAvatarModalProps> = ({
                   <button
                     type="button"
                     onClick={() => setFilterTab('unassigned')}
-                    className={`py-1 rounded-lg text-[10.5px] font-black transition-all ${
+                    className={`py-1 rounded-lg text-[12px] font-black transition-all ${
                       filterTab === 'unassigned'
-                        ? 'bg-amber-600 text-white shadow-xs'
+                        ? 'bg-amber-700 text-white shadow-xs'
                         : 'text-slate-500 hover:text-slate-700'
                     }`}
                   >
@@ -1084,9 +1084,9 @@ export const GroupPhotoAvatarModal: React.FC<GroupPhotoAvatarModalProps> = ({
                   <button
                     type="button"
                     onClick={() => setFilterTab('assigned')}
-                    className={`py-1 rounded-lg text-[10.5px] font-black transition-all ${
+                    className={`py-1 rounded-lg text-[12px] font-black transition-all ${
                       filterTab === 'assigned'
-                        ? 'bg-emerald-600 text-white shadow-xs'
+                        ? 'bg-emerald-700 text-white shadow-xs'
                         : 'text-slate-500 hover:text-slate-700'
                     }`}
                   >
@@ -1145,7 +1145,7 @@ export const GroupPhotoAvatarModal: React.FC<GroupPhotoAvatarModalProps> = ({
                           )}
 
                           {isAssigned && (
-                            <span className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-emerald-600 text-white flex items-center justify-center text-[9px] shadow-xs">
+                            <span className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-emerald-700 text-white flex items-center justify-center text-[12px] shadow-xs">
                               ✓
                             </span>
                           )}
@@ -1154,14 +1154,14 @@ export const GroupPhotoAvatarModal: React.FC<GroupPhotoAvatarModalProps> = ({
                         {/* Student Info */}
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-1.5">
-                            <span className="text-[10px] font-mono font-bold text-slate-400">
+                            <span className="text-[12px] font-mono font-bold text-slate-400">
                               #{student.stt}
                             </span>
                             <strong className="text-xs font-black text-slate-800 truncate">
                               {student.name}
                             </strong>
                           </div>
-                          <div className="flex items-center gap-1.5 text-[10px] text-slate-500 mt-0.5">
+                          <div className="flex items-center gap-1.5 text-[12px] text-slate-500 mt-0.5">
                             <span className={`px-1.5 py-0.2 rounded-md font-bold ${
                               student.gender === 'Nữ' ? 'bg-pink-100 text-pink-700' : 'bg-blue-100 text-blue-700'
                             }`}>
@@ -1206,13 +1206,13 @@ export const GroupPhotoAvatarModal: React.FC<GroupPhotoAvatarModalProps> = ({
                                 e.stopPropagation();
                                 handleAssignFaceToStudent(student);
                               }}
-                              className="px-2.5 py-1.5 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white rounded-xl text-[10.5px] font-black shadow-xs flex items-center gap-1 transition-all hover-zoom-btn uppercase"
+                              className="px-2.5 py-1.5 bg-gradient-to-r from-amber-700 to-orange-700 hover:from-amber-800 hover:to-orange-800 text-white rounded-xl text-[12px] font-black shadow-xs flex items-center gap-1 transition-all hover-zoom-btn uppercase"
                             >
                               <Check className="w-3.5 h-3.5" />
                               <span>Ghép</span>
                             </button>
                           ) : (
-                            <span className="text-[10px] font-bold text-slate-400 italic">
+                            <span className="text-[12px] font-bold text-slate-400 italic">
                               Chưa gán
                             </span>
                           )}
@@ -1232,7 +1232,7 @@ export const GroupPhotoAvatarModal: React.FC<GroupPhotoAvatarModalProps> = ({
         <div className="px-6 py-3.5 bg-white border-t border-slate-200 flex flex-wrap items-center justify-between gap-3 shrink-0 shadow-lg">
           <div className="flex items-center gap-2 text-xs text-slate-600 font-medium">
             <span className="font-black text-slate-800">
-              Đã ghép: <span className="text-emerald-600">{assignedCount}</span> / {totalCount} học sinh
+              Đã ghép: <span className="text-emerald-700">{assignedCount}</span> / {totalCount} học sinh
             </span>
             <span className="text-slate-500">•</span>
             <span className="text-slate-500 hidden sm:inline">
@@ -1256,7 +1256,7 @@ export const GroupPhotoAvatarModal: React.FC<GroupPhotoAvatarModalProps> = ({
               type="button"
               onClick={handleSaveAll}
               disabled={isSaving || assignedCount === 0}
-              className="px-6 py-2 bg-gradient-to-r from-emerald-600 via-teal-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white rounded-xl text-xs font-black flex items-center gap-2 shadow-md shadow-emerald-600/30 transition-all hover-zoom-btn disabled:opacity-50 uppercase cursor-pointer"
+              className="px-6 py-2 bg-gradient-to-r from-emerald-700 via-teal-700 to-green-700 hover:from-emerald-800 hover:to-green-800 text-white rounded-xl text-xs font-black flex items-center gap-2 shadow-md shadow-emerald-600/30 transition-all hover-zoom-btn disabled:opacity-50 uppercase cursor-pointer"
             >
               {isSaving ? (
                 <>

@@ -307,7 +307,7 @@ export const SeatingChartView: React.FC = () => {
   // =========================================================================
   const renderTeacherDesk = (colSpan: string = 'col-span-4') => (
     <div className={`${colSpan} h-full min-h-[90px] bg-[#f8ebd7] rounded-xl border-2 border-[#c5a880] p-2.5 shadow-sm text-center transition-all duration-300 hover-zoom-interactive flex flex-col justify-between`}>
-      <div className="text-[10px] font-black text-[#5c3a1e] uppercase tracking-wider mb-1 flex items-center justify-center gap-1">
+      <div className="text-[12px] font-black text-[#5c3a1e] uppercase tracking-wider mb-1 flex items-center justify-center gap-1">
         <span>⭐ BÀN GIÁO VIÊN ({teacherDeskPos === 'left' ? 'BÊN TRÁI' : teacherDeskPos === 'center' ? 'Ở GIỮA' : 'BÊN PHẢI'})</span>
       </div>
       <div className="flex items-center justify-center gap-2.5">
@@ -323,7 +323,7 @@ export const SeatingChartView: React.FC = () => {
           <div className="text-xs font-black text-slate-900 truncate">
             {activeClass?.teacherName ? `Cô ${activeClass.teacherName.replace(/^Cô\s+/i, '')}` : `Cô ${teacherProfile.name.replace(/^Cô\s+/i, '')}`}
           </div>
-          <div className="text-[10px] text-amber-900 font-bold flex items-center gap-1">
+          <div className="text-[12px] text-amber-900 font-bold flex items-center gap-1">
             <span>📚 Sổ giáo án & Bục giảng</span>
           </div>
         </div>
@@ -336,7 +336,7 @@ export const SeatingChartView: React.FC = () => {
       <div className="text-xs sm:text-sm md:text-base font-black tracking-wide text-white drop-shadow-md uppercase">
         BẢNG LỚP HỌC HẠNH PHÚC
       </div>
-      <div className="text-[10px] text-amber-200 font-bold truncate px-1 mt-1">
+      <div className="text-[12px] text-amber-700 font-bold truncate px-1 mt-1">
         - LỚP {activeClass?.name || '4A1'} • {activeClass?.slogan || 'Chăm ngoan, sáng tạo, tự tin'} -
       </div>
     </div>
@@ -345,11 +345,11 @@ export const SeatingChartView: React.FC = () => {
   const renderDoor = (colSpan: string = 'col-span-2') => (
     <div className={`${colSpan} h-full min-h-[90px] bg-[#e8d2b7] rounded-xl border-2 border-[#b89870] p-2 text-center shadow-sm relative overflow-hidden flex flex-col justify-between hover-zoom-interactive`}>
       <div className="flex items-center justify-between">
-        <span className="text-[9px] font-black text-amber-900 uppercase">CỬA LỚP</span>
-        <span className="px-1 py-0.2 bg-blue-600 text-white rounded text-[8px] font-black">3D</span>
+        <span className="text-[12px] font-black text-amber-900 uppercase">CỬA LỚP</span>
+        <span className="px-1 py-0.2 bg-blue-600 text-white rounded text-[11px] font-black">3D</span>
       </div>
       <div className="text-2xl my-0.5">🚪</div>
-      <span className="text-[8px] font-bold text-amber-800 block">
+      <span className="text-[11px] font-bold text-amber-800 block">
         {doorPos === 'left' ? '← Cửa Ra Vào (Trái)' : 'Cửa Ra Vào (Phải) →'}
       </span>
     </div>
@@ -427,11 +427,11 @@ export const SeatingChartView: React.FC = () => {
             <div>
               <h2 className="text-base sm:text-lg font-black text-slate-900 tracking-tight flex items-center gap-2">
                 <span>Sơ Đồ Lớp Học Không Gian</span>
-                <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
+                <span className="text-[12px] font-bold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
                   {seatingColumns} Dãy Bàn • {totalDesks} Bàn ({totalSeats} Chỗ)
                 </span>
               </h2>
-              <p className="text-[11px] text-slate-500 mt-0.5 font-medium">
+              <p className="text-[12px] text-slate-500 mt-0.5 font-medium">
                 {currentTheme.name} • Đánh số bàn: <strong>{deskNumberingOrder === 'vertical' ? 'THEO DỌC' : 'THEO NGANG'}</strong> • Cập nhật tức thì
               </p>
             </div>
@@ -442,7 +442,7 @@ export const SeatingChartView: React.FC = () => {
         <div className="flex flex-wrap items-center gap-2">
           {/* Quick Numbering Mode Selector */}
           <div className="inline-flex items-center gap-1 bg-slate-100 p-1 rounded-2xl border border-slate-200 shadow-2xs">
-            <span className="text-[10px] font-black text-slate-500 pl-2 pr-1 uppercase">ĐÁNH SỐ:</span>
+            <span className="text-[12px] font-black text-slate-500 pl-2 pr-1 uppercase">ĐÁNH SỐ:</span>
             <button
               onClick={() => setDeskNumberingOrder('vertical')}
               className={`px-2.5 py-1 text-xs font-bold rounded-xl transition-all hover-zoom-btn ${
@@ -545,7 +545,7 @@ export const SeatingChartView: React.FC = () => {
               >
                 <span>{theme.icon}</span>
                 <span>{theme.name.split(' (')[0]}</span>
-                <span className={`text-[10px] px-1.5 py-0.2 rounded-md ${
+                <span className={`text-[12px] px-1.5 py-0.2 rounded-md ${
                   isSelected ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-600'
                 }`}>
                   {theme.type.toUpperCase()}
@@ -581,7 +581,7 @@ export const SeatingChartView: React.FC = () => {
                 <label className="block font-bold text-slate-800">
                   1. Chọn số dãy bàn:
                 </label>
-                <span className="text-[10px] font-black px-1.5 py-0.5 rounded bg-blue-100 text-blue-800">
+                <span className="text-[12px] font-black px-1.5 py-0.5 rounded bg-blue-100 text-blue-800">
                   {seatingColumns} Dãy
                 </span>
               </div>
@@ -601,7 +601,7 @@ export const SeatingChartView: React.FC = () => {
                   </button>
                 ))}
               </div>
-              <p className="text-[11px] text-slate-500">
+              <p className="text-[12px] text-slate-500">
                 Cho phép chọn từ <strong>2 đến 6 dãy bàn</strong> học sinh.
               </p>
             </div>
@@ -612,7 +612,7 @@ export const SeatingChartView: React.FC = () => {
                 <label className="block font-bold text-slate-800">
                   2. Cách đánh số bàn:
                 </label>
-                <span className="text-[10px] font-black px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 uppercase">
+                <span className="text-[12px] font-black px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 uppercase">
                   {deskNumberingOrder === 'vertical' ? 'THEO DỌC' : 'THEO NGANG'}
                 </span>
               </div>
@@ -630,7 +630,7 @@ export const SeatingChartView: React.FC = () => {
                     <span>{deskNumberingOrder === 'vertical' ? '✓' : '○'}</span>
                     <span>THEO DỌC</span>
                   </div>
-                  <div className={`text-[10px] mt-0.5 leading-tight ${deskNumberingOrder === 'vertical' ? 'text-white' : 'text-slate-500'}`}>
+                  <div className={`text-[12px] mt-0.5 leading-tight ${deskNumberingOrder === 'vertical' ? 'text-white' : 'text-slate-500'}`}>
                     Dãy 1: Bàn 1..N, rồi đến Dãy 2, Dãy 3...
                   </div>
                 </button>
@@ -648,12 +648,12 @@ export const SeatingChartView: React.FC = () => {
                     <span>{deskNumberingOrder === 'horizontal' ? '✓' : '○'}</span>
                     <span>THEO NGANG</span>
                   </div>
-                  <div className={`text-[10px] mt-0.5 leading-tight ${deskNumberingOrder === 'horizontal' ? 'text-white' : 'text-slate-500'}`}>
+                  <div className={`text-[12px] mt-0.5 leading-tight ${deskNumberingOrder === 'horizontal' ? 'text-white' : 'text-slate-500'}`}>
                     Hàng 1: Bàn 1, 2... rồi đến Hàng 2, Hàng 3...
                   </div>
                 </button>
               </div>
-              <p className="text-[11px] text-slate-500">
+              <p className="text-[12px] text-slate-500">
                 Sơ đồ sẽ cập nhật ngay lập tức thứ tự đánh số trên các bàn.
               </p>
             </div>
@@ -664,7 +664,7 @@ export const SeatingChartView: React.FC = () => {
                 <label className="block font-bold text-slate-800">
                   3. Vị trí Bàn Giáo viên:
                 </label>
-                <span className="text-[10px] font-black px-1.5 py-0.5 rounded bg-blue-100 text-blue-800">
+                <span className="text-[12px] font-black px-1.5 py-0.5 rounded bg-blue-100 text-blue-800">
                   {teacherDeskPos === 'left' ? 'Bên Trái' : teacherDeskPos === 'center' ? 'Ở Giữa' : 'Bên Phải'}
                 </span>
               </div>
@@ -688,7 +688,7 @@ export const SeatingChartView: React.FC = () => {
                   </button>
                 ))}
               </div>
-              <p className="text-[11px] text-slate-500">
+              <p className="text-[12px] text-slate-500">
                 Bàn giáo viên sẽ nhảy vị trí tương ứng trên bục giảng.
               </p>
             </div>
@@ -699,7 +699,7 @@ export const SeatingChartView: React.FC = () => {
                 <label className="block font-bold text-slate-800">
                   4. Vị trí Cửa ra vào:
                 </label>
-                <span className="text-[10px] font-black px-1.5 py-0.5 rounded bg-amber-100 text-amber-800">
+                <span className="text-[12px] font-black px-1.5 py-0.5 rounded bg-amber-100 text-amber-800">
                   {doorPos === 'left' ? 'Cửa Trái' : 'Cửa Phải'}
                 </span>
               </div>
@@ -714,7 +714,7 @@ export const SeatingChartView: React.FC = () => {
                     onClick={() => setDoorPos(p.id as DoorPosition)}
                     className={`py-1.5 rounded-xl font-bold text-xs transition-all hover-zoom-btn ${
                       doorPos === p.id
-                        ? 'bg-amber-600 text-white shadow-xs font-black'
+                        ? 'bg-amber-700 text-white shadow-xs font-black'
                         : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-100'
                     }`}
                   >
@@ -722,7 +722,7 @@ export const SeatingChartView: React.FC = () => {
                   </button>
                 ))}
               </div>
-              <p className="text-[11px] text-slate-500">
+              <p className="text-[12px] text-slate-500">
                 Cửa lớp học sẽ chuyển sang cánh tương ứng trên phối cảnh.
               </p>
             </div>
@@ -734,7 +734,7 @@ export const SeatingChartView: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => { setTiltAngle(is3D ? 18 : 0); setZoomLevel(1); }}
-                  className="text-[10px] text-blue-600 hover:underline"
+                  className="text-[12px] text-blue-600 hover:underline"
                 >
                   Mặc định (18°)
                 </button>
@@ -750,12 +750,12 @@ export const SeatingChartView: React.FC = () => {
                     onChange={(e) => setTiltAngle(parseInt(e.target.value))}
                     className="w-full accent-blue-600 h-1.5 bg-slate-200 rounded-lg cursor-pointer disabled:opacity-40"
                   />
-                  <div className="flex justify-between text-[10px] text-slate-400 mt-1">
+                  <div className="flex justify-between text-[12px] text-slate-400 mt-1">
                     <span>Nhìn thẳng (0°)</span>
                     <span>Nghiêng 3D ({tiltAngle}°)</span>
                   </div>
                 </div>
-                <div className="flex items-center justify-between sm:justify-end gap-2 text-[11px] text-slate-500">
+                <div className="flex items-center justify-between sm:justify-end gap-2 text-[12px] text-slate-500">
                   <span>Thu phóng:</span>
                   <div className="flex items-center gap-1.5">
                     <button
@@ -787,14 +787,14 @@ export const SeatingChartView: React.FC = () => {
                   <Grid3X3 className="w-4 h-4 text-indigo-600" />
                   <span>CHỌN SỐ BÀN CỦA TỪNG DÃY ({seatingColumns} DÃY BÀN HIỆN TẠI):</span>
                 </span>
-                <p className="text-[11px] text-indigo-800/80 mt-0.5">
+                <p className="text-[12px] text-indigo-800/80 mt-0.5">
                   Mỗi dãy có thể có số bàn khác nhau tùy theo kích thước thực tế của phòng học. Cập nhật sơ đồ ngay lập tức.
                 </p>
               </div>
 
               {/* Quick Batch Presets */}
               <div className="flex items-center gap-1 flex-wrap">
-                <span className="text-[10px] font-bold text-slate-500 mr-1">Áp dụng tất cả:</span>
+                <span className="text-[12px] font-bold text-slate-500 mr-1">Áp dụng tất cả:</span>
                 {[3, 4, 5, 6].map(num => (
                   <button
                     key={num}
@@ -834,7 +834,7 @@ export const SeatingChartView: React.FC = () => {
                       </button>
                       <div className="min-w-[32px] text-center">
                         <span className="font-black text-base text-indigo-600 block leading-none">{count}</span>
-                        <span className="text-[9px] text-slate-400 font-bold uppercase">Bàn</span>
+                        <span className="text-[12px] text-slate-400 font-bold uppercase">Bàn</span>
                       </div>
                       <button
                         type="button"
@@ -846,7 +846,7 @@ export const SeatingChartView: React.FC = () => {
                         +
                       </button>
                     </div>
-                    <div className="text-[10px] font-bold text-amber-700 bg-amber-50 rounded-lg py-0.5 border border-amber-200/60">
+                    <div className="text-[12px] font-bold text-amber-700 bg-amber-50 rounded-lg py-0.5 border border-amber-200/60">
                       {count * 2} chỗ ngồi
                     </div>
                   </div>
@@ -867,7 +867,7 @@ export const SeatingChartView: React.FC = () => {
           className="lg:col-span-9 bg-slate-200/60 border border-slate-300 rounded-3xl p-3 sm:p-6 shadow-inner relative overflow-x-auto min-h-[640px] scrollbar-thin"
         >
           {/* Gợi ý cuộn ngang trên điện thoại */}
-          <div className="sm:hidden flex items-center gap-1.5 text-[10px] text-indigo-700 bg-white/90 border border-indigo-200 px-2.5 py-1 rounded-xl font-bold w-fit mb-2 shadow-xs">
+          <div className="sm:hidden flex items-center gap-1.5 text-[12px] text-indigo-700 bg-white/90 border border-indigo-200 px-2.5 py-1 rounded-xl font-bold w-fit mb-2 shadow-xs">
             <span>⇄ Vuốt ngang để xem đủ các dãy bàn và tên học sinh</span>
           </div>
 
@@ -929,7 +929,7 @@ export const SeatingChartView: React.FC = () => {
                       <div className={`py-1.5 px-2 sm:px-2.5 rounded-xl font-black text-xs shadow-md uppercase tracking-wider flex items-center justify-between gap-1 ${currentTheme.columnBadge}`}>
                         <span className="truncate">Dãy {colIdx + 1}</span>
                         <div className="flex items-center gap-1 shrink-0">
-                          <span className="text-[10px] px-1.5 py-0.2 rounded bg-black/30 font-bold">
+                          <span className="text-[12px] px-1.5 py-0.2 rounded bg-black/30 font-bold">
                             {colDeskCount} bàn
                           </span>
                           <button
@@ -977,7 +977,7 @@ export const SeatingChartView: React.FC = () => {
                               className={`rounded-2xl p-2 sm:p-2.5 border-2 ${currentTheme.deskBorder} ${currentTheme.deskSurface} shadow-md hover:border-blue-500 transition-all card-lift`}
                             >
                               {/* Desk Header Badge */}
-                              <div className="flex items-center justify-between text-[10px] font-black mb-1.5 px-1">
+                              <div className="flex items-center justify-between text-[12px] font-black mb-1.5 px-1">
                                 <span className={`px-2 py-0.5 rounded-md border font-black ${currentTheme.deskHeaderBg}`}>
                                   Bàn {deskNumber}
                                 </span>
@@ -1009,14 +1009,14 @@ export const SeatingChartView: React.FC = () => {
                                         className="w-11 h-11 rounded-full object-cover object-center border-2 border-amber-300 bg-sky-100 shadow-xs" 
                                       />
                                     </div>
-                                    <span className="text-[11px] font-black text-slate-900 line-clamp-2 leading-tight text-center px-0.5">
+                                    <span className="text-[12px] font-black text-slate-900 line-clamp-2 leading-tight text-center px-0.5">
                                       {studentLeft.name}
                                     </span>
                                   </>
                                 ) : (
                                   <div className="py-2.5 text-center text-slate-400">
                                     <Users className="w-4 h-4 mx-auto mb-0.5 opacity-40" />
-                                    <span className="text-[10px] font-semibold">Ghế Trái</span>
+                                    <span className="text-[12px] font-semibold">Ghế Trái</span>
                                   </div>
                                 )}
                               </button>
@@ -1042,14 +1042,14 @@ export const SeatingChartView: React.FC = () => {
                                         className="w-11 h-11 rounded-full object-cover object-center border-2 border-amber-300 bg-sky-100 shadow-xs" 
                                       />
                                     </div>
-                                    <span className="text-[11px] font-black text-slate-900 line-clamp-2 leading-tight text-center px-0.5">
+                                    <span className="text-[12px] font-black text-slate-900 line-clamp-2 leading-tight text-center px-0.5">
                                       {studentRight.name}
                                     </span>
                                   </>
                                 ) : (
                                   <div className="py-2.5 text-center text-slate-400">
                                     <Users className="w-4 h-4 mx-auto mb-0.5 opacity-40" />
-                                    <span className="text-[10px] font-semibold">Ghế Phải</span>
+                                    <span className="text-[12px] font-semibold">Ghế Phải</span>
                                   </div>
                                 )}
                               </button>
@@ -1074,11 +1074,11 @@ export const SeatingChartView: React.FC = () => {
             <div className="pt-3 border-t-2 border-dashed border-slate-300/80 flex flex-wrap items-center justify-between text-xs text-slate-600 font-bold px-2">
               <div className="flex items-center gap-4">
                 <span className="flex items-center gap-1.5">
-                  <span className="w-3.5 h-3.5 rounded-full bg-blue-600 text-white text-[9px] flex items-center justify-center">N</span>
+                  <span className="w-3.5 h-3.5 rounded-full bg-blue-600 text-white text-[12px] flex items-center justify-center">N</span>
                   <span>Nam ({currentClassStudents.filter(s => s.gender === 'Nam').length})</span>
                 </span>
                 <span className="flex items-center gap-1.5">
-                  <span className="w-3.5 h-3.5 rounded-full bg-pink-600 text-white text-[9px] flex items-center justify-center">G</span>
+                  <span className="w-3.5 h-3.5 rounded-full bg-pink-600 text-white text-[12px] flex items-center justify-center">G</span>
                   <span>Nữ ({currentClassStudents.filter(s => s.gender === 'Nữ').length})</span>
                 </span>
                 <span className="flex items-center gap-1.5">
@@ -1089,7 +1089,7 @@ export const SeatingChartView: React.FC = () => {
                   <span>Quy mô: <strong>{seatingColumns} dãy • {totalDesks} bàn</strong> ({totalSeats} chỗ ngồi)</span>
                 </span>
               </div>
-              <div className="text-[11px] text-slate-500">
+              <div className="text-[12px] text-slate-500">
                 Lớp {activeClass?.name} • Năm học {activeClass?.academicYear || teacherProfile.academicYear} • GVCN: {activeClass?.teacherName || teacherProfile.name}
               </div>
             </div>
@@ -1111,7 +1111,7 @@ export const SeatingChartView: React.FC = () => {
               {selectedStudentToSeat && (
                 <button
                   onClick={() => setSelectedStudentToSeat(null)}
-                  className="text-xs text-rose-500 hover:text-rose-700 font-bold"
+                  className="text-xs text-rose-600 hover:text-rose-700 font-bold"
                 >
                   Hủy chọn
                 </button>
@@ -1132,7 +1132,7 @@ export const SeatingChartView: React.FC = () => {
                 <div className="py-8 text-center text-slate-400 space-y-2">
                   <Check className="w-8 h-8 mx-auto text-emerald-500" />
                   <p className="text-xs font-bold text-slate-700">Tất cả học sinh đã có chỗ ngồi!</p>
-                  <p className="text-[11px] text-slate-400">Bạn có thể bấm trực tiếp vào từng chỗ trên sơ đồ để đổi vị trí.</p>
+                  <p className="text-[12px] text-slate-400">Bạn có thể bấm trực tiếp vào từng chỗ trên sơ đồ để đổi vị trí.</p>
                 </div>
               ) : (
                 unseatedStudents.map(student => (
@@ -1152,7 +1152,7 @@ export const SeatingChartView: React.FC = () => {
                     />
                     <div className="min-w-0 flex-1">
                       <div className="text-xs font-bold truncate">{student.name}</div>
-                      <div className={`text-[10px] ${selectedStudentToSeat?.id === student.id ? 'text-white' : 'text-slate-400'}`}>
+                      <div className={`text-[12px] ${selectedStudentToSeat?.id === student.id ? 'text-white' : 'text-slate-400'}`}>
                         #{student.stt} • {student.gender} • {student.group || 'Tổ 1'}
                       </div>
                     </div>

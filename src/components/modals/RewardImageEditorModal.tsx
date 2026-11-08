@@ -425,8 +425,8 @@ export const RewardImageEditorModal: React.FC<RewardImageEditorModalProps> = ({
             </div>
 
             {/* Chọn tỉ lệ khung cắt */}
-            <div className="flex items-center gap-1 text-[11px] font-bold text-slate-600">
-              <span className="text-[10px] text-slate-400 uppercase hidden sm:inline">Khung cắt:</span>
+            <div className="flex items-center gap-1 text-[12px] font-bold text-slate-600">
+              <span className="text-[12px] text-slate-400 uppercase hidden sm:inline">Khung cắt:</span>
               <button
                 type="button"
                 onClick={() => setAspectRatio('4:3')}
@@ -476,7 +476,7 @@ export const RewardImageEditorModal: React.FC<RewardImageEditorModalProps> = ({
                 <Upload className="w-3.5 h-3.5" />
                 <span>CHỌN ẢNH TỪ MÁY TÍNH / ĐIỆN THOẠI</span>
               </button>
-              <span className="text-[11px] text-slate-500">
+              <span className="text-[12px] text-slate-500">
                 Hỗ trợ JPG, PNG, WEBP. Ảnh tự động nén tối ưu dung lượng siêu nhẹ (~40KB).
               </span>
             </div>
@@ -506,7 +506,7 @@ export const RewardImageEditorModal: React.FC<RewardImageEditorModalProps> = ({
                     className="w-12 h-12 object-cover rounded-lg"
                     referrerPolicy="no-referrer"
                   />
-                  <span className="text-[10px] font-bold text-slate-700 text-center line-clamp-1 w-full" title={preset.name}>
+                  <span className="text-[12px] font-bold text-slate-700 text-center line-clamp-1 w-full" title={preset.name}>
                     {preset.name}
                   </span>
                 </button>
@@ -547,8 +547,8 @@ export const RewardImageEditorModal: React.FC<RewardImageEditorModalProps> = ({
           {/* ========================================================================= */}
           <div className="flex flex-col items-center justify-center p-3 bg-white rounded-3xl border border-slate-200 shadow-inner relative overflow-hidden select-none">
             {/* Thanh thông báo hướng dẫn di chuyển */}
-            <div className="absolute top-2 left-3 right-3 flex items-center justify-between text-[10px] text-slate-500 z-10 pointer-events-none">
-              <span className="flex items-center gap-1 text-amber-600 font-bold bg-white/70 px-2 py-0.5 rounded-lg border border-slate-200">
+            <div className="absolute top-2 left-3 right-3 flex items-center justify-between text-[12px] text-slate-500 z-10 pointer-events-none">
+              <span className="flex items-center gap-1 text-amber-700 font-bold bg-white/70 px-2 py-0.5 rounded-lg border border-slate-200">
                 <Move className="w-3 h-3" />
                 <span>GIỮ & KÉO CHUỘT / CHẠM ĐỂ DI CHUYỂN VỊ TRÍ ẢNH</span>
               </span>
@@ -620,7 +620,7 @@ export const RewardImageEditorModal: React.FC<RewardImageEditorModalProps> = ({
             </div>
 
             {/* Thanh điều khiển nhanh góc dưới ảnh */}
-            <div className="flex items-center justify-between w-full max-w-[380px] mt-2 text-[10px] text-slate-500">
+            <div className="flex items-center justify-between w-full max-w-[380px] mt-2 text-[12px] text-slate-500">
               <button
                 type="button"
                 onClick={() => setShowGrid(!showGrid)}
@@ -632,7 +632,7 @@ export const RewardImageEditorModal: React.FC<RewardImageEditorModalProps> = ({
                 <span>{showGrid ? 'Ẩn lưới' : 'Hiện lưới'}</span>
               </button>
 
-              <div className="flex items-center gap-1 font-mono text-[10px]">
+              <div className="flex items-center gap-1 font-mono text-[12px]">
                 <span>Tọa độ: X: {position.x}px • Y: {position.y}px</span>
               </div>
 
@@ -694,14 +694,14 @@ export const RewardImageEditorModal: React.FC<RewardImageEditorModalProps> = ({
                 <button
                   type="button"
                   onClick={() => { setScale(1); setPosition({ x: 0, y: 0 }); }}
-                  className="px-2 py-1.5 rounded-xl bg-white hover:bg-slate-100 border border-slate-200 text-[11px] font-bold text-slate-700 shadow-2xs"
+                  className="px-2 py-1.5 rounded-xl bg-white hover:bg-slate-100 border border-slate-200 text-[12px] font-bold text-slate-700 shadow-2xs"
                 >
                   100%
                 </button>
                 <button
                   type="button"
                   onClick={() => { setScale(1.4); }}
-                  className="px-2 py-1.5 rounded-xl bg-white hover:bg-slate-100 border border-slate-200 text-[11px] font-bold text-slate-700 shadow-2xs"
+                  className="px-2 py-1.5 rounded-xl bg-white hover:bg-slate-100 border border-slate-200 text-[12px] font-bold text-slate-700 shadow-2xs"
                 >
                   Cận cảnh
                 </button>
@@ -751,7 +751,7 @@ export const RewardImageEditorModal: React.FC<RewardImageEditorModalProps> = ({
 
               {/* 3. Tinh chỉnh di chuyển vị trí (Fine Nudge) */}
               <div className="flex items-center gap-1">
-                <span className="text-[11px] font-bold text-slate-500 mr-1">Dịch vị trí:</span>
+                <span className="text-[12px] font-bold text-slate-500 mr-1">Dịch vị trí:</span>
                 <button
                   type="button"
                   onClick={() => handleNudge(-15, 0)}
@@ -787,7 +787,7 @@ export const RewardImageEditorModal: React.FC<RewardImageEditorModalProps> = ({
                 <button
                   type="button"
                   onClick={() => setPosition({ x: 0, y: 0 })}
-                  className="px-2 py-1 rounded-lg bg-white hover:bg-slate-100 border border-slate-200 text-[10px] font-bold text-slate-600 shadow-2xs"
+                  className="px-2 py-1 rounded-lg bg-white hover:bg-slate-100 border border-slate-200 text-[12px] font-bold text-slate-600 shadow-2xs"
                   title="Căn giữa khung"
                 >
                   Giữa
@@ -799,7 +799,7 @@ export const RewardImageEditorModal: React.FC<RewardImageEditorModalProps> = ({
 
         {/* Footer Actions */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pt-3 border-t border-slate-100 shrink-0 bg-white">
-          <div className="text-[10.5px] sm:text-[11px] text-slate-500">
+          <div className="text-[12px] sm:text-[12px] text-slate-500">
             Ảnh sau khi lưu sẽ được cắt chuẩn xác và tối ưu nhẹ, không làm ứng dụng chậm.
           </div>
 

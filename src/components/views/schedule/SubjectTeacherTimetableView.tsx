@@ -268,7 +268,7 @@ export const SubjectTeacherTimetableView: React.FC<{ onNavigate?: (view: any) =>
       )}
 
       {/* Hero Header for Subject Teacher Timetable */}
-      <div className="p-6 md:p-7 rounded-3xl bg-gradient-to-r from-emerald-600 via-teal-600 to-indigo-700 text-white shadow-xl relative overflow-hidden">
+      <div className="p-6 md:p-7 rounded-3xl bg-gradient-to-r from-emerald-700 via-teal-700 to-indigo-700 text-white shadow-xl relative overflow-hidden">
         <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 rounded-full bg-white/10 blur-3xl pointer-events-none" />
         <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
           <div className="space-y-2">
@@ -280,7 +280,7 @@ export const SubjectTeacherTimetableView: React.FC<{ onNavigate?: (view: any) =>
               <span className="px-3 py-1 rounded-xl bg-amber-400 text-amber-950 font-black text-xs uppercase tracking-wider shadow-2xs">
                 MÔN: {subjectTeacherConfig.subjectName}
               </span>
-              <span className="px-3 py-1 rounded-xl bg-emerald-600/80 text-white font-bold text-xs uppercase tracking-wider">
+              <span className="px-3 py-1 rounded-xl bg-emerald-700/80 text-white font-bold text-xs uppercase tracking-wider">
                 {subjectTeacherConfig.scheduleScope === 'semester' ? 'DÙNG CHUNG CẢ HỌC KỲ' : 'THEO THỜI ĐIỂM'}
               </span>
             </div>
@@ -299,15 +299,15 @@ export const SubjectTeacherTimetableView: React.FC<{ onNavigate?: (view: any) =>
           <div className="flex flex-wrap lg:flex-nowrap items-center gap-3">
             <div className="bg-white/15 backdrop-blur-md border border-white/20 px-4 py-3 rounded-2xl text-center min-w-[110px] shadow-sm">
               <div className="text-2xl font-black text-amber-300">{classes.length}</div>
-              <div className="text-[10px] font-bold text-white/90 uppercase mt-0.5">Lớp Phụ Trách</div>
+              <div className="text-[12px] font-bold text-white/90 uppercase mt-0.5">Lớp Phụ Trách</div>
             </div>
             <div className="bg-white/15 backdrop-blur-md border border-white/20 px-4 py-3 rounded-2xl text-center min-w-[110px] shadow-sm">
               <div className="text-2xl font-black text-white">{totalAssignedSlots}</div>
-              <div className="text-[10px] font-bold text-white/90 uppercase mt-0.5">Tiết Dạy / Tuần</div>
+              <div className="text-[12px] font-bold text-white/90 uppercase mt-0.5">Tiết Dạy / Tuần</div>
             </div>
             <div className="bg-white/15 backdrop-blur-md border border-white/20 px-4 py-3 rounded-2xl text-center min-w-[110px] shadow-sm">
               <div className="text-2xl font-black text-white">{students.length}</div>
-              <div className="text-[10px] font-bold text-white/90 uppercase mt-0.5">Tổng Học Sinh</div>
+              <div className="text-[12px] font-bold text-white/90 uppercase mt-0.5">Tổng Học Sinh</div>
             </div>
           </div>
         </div>
@@ -354,7 +354,7 @@ export const SubjectTeacherTimetableView: React.FC<{ onNavigate?: (view: any) =>
             {/* 1. KHỞI TẠO LỚP DẠY BỘ MÔN (Thay thế hoàn toàn 20 lớp bộ môn) */}
             <button
               onClick={() => setIsInitSubjectClassesModalOpen(true)}
-              className="px-3.5 py-2 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-black text-xs transition-all flex items-center gap-1.5 shadow-md shadow-emerald-600/30 hover-zoom-btn uppercase"
+              className="px-3.5 py-2 rounded-2xl bg-gradient-to-r from-emerald-700 to-teal-700 hover:from-emerald-800 hover:to-teal-800 text-white font-black text-xs transition-all flex items-center gap-1.5 shadow-md shadow-emerald-600/30 hover-zoom-btn uppercase"
               title="Tạo nhanh các lớp giảng dạy bộ môn, điền thông tin lớp và số lượng học sinh"
             >
               <School className="w-4 h-4 text-amber-300" />
@@ -412,7 +412,7 @@ export const SubjectTeacherTimetableView: React.FC<{ onNavigate?: (view: any) =>
             onClick={() => setTimetableDisplayMode('standard_document')}
             className={`px-3.5 py-1.5 rounded-lg font-black text-xs transition-all uppercase flex items-center gap-1.5 ${
               timetableDisplayMode === 'standard_document'
-                ? 'bg-emerald-600 text-white shadow-xs'
+                ? 'bg-emerald-700 text-white shadow-xs'
                 : 'text-slate-600 hover:text-slate-900'
             }`}
           >
@@ -525,7 +525,7 @@ export const SubjectTeacherTimetableView: React.FC<{ onNavigate?: (view: any) =>
                                 <div className="font-black text-slate-900 text-sm md:text-base tracking-tight group-hover:text-emerald-700 transition-colors">
                                   {slot.subject} {slot.className}
                                 </div>
-                                <div className="hidden group-hover:flex items-center justify-center gap-1.5 mt-1 text-[10px] text-emerald-700 font-bold">
+                                <div className="hidden group-hover:flex items-center justify-center gap-1.5 mt-1 text-[12px] text-emerald-700 font-bold">
                                   <span 
                                     onClick={(e) => {
                                       e.stopPropagation();
@@ -538,7 +538,7 @@ export const SubjectTeacherTimetableView: React.FC<{ onNavigate?: (view: any) =>
                                 </div>
                               </div>
                             ) : (
-                              <div className="py-2 text-slate-500 group-hover:text-emerald-600 text-[11px] font-bold">
+                              <div className="py-2 text-slate-500 group-hover:text-emerald-700 text-[12px] font-bold">
                                 <span className="opacity-0 group-hover:opacity-100 transition-opacity">+ Xếp lớp</span>
                               </div>
                             )}
@@ -577,7 +577,7 @@ export const SubjectTeacherTimetableView: React.FC<{ onNavigate?: (view: any) =>
                                 <div className="font-black text-slate-900 text-sm md:text-base tracking-tight group-hover:text-emerald-700 transition-colors">
                                   {slot.subject} {slot.className}
                                 </div>
-                                <div className="hidden group-hover:flex items-center justify-center gap-1.5 mt-1 text-[10px] text-emerald-700 font-bold">
+                                <div className="hidden group-hover:flex items-center justify-center gap-1.5 mt-1 text-[12px] text-emerald-700 font-bold">
                                   <span 
                                     onClick={(e) => {
                                       e.stopPropagation();
@@ -590,7 +590,7 @@ export const SubjectTeacherTimetableView: React.FC<{ onNavigate?: (view: any) =>
                                 </div>
                               </div>
                             ) : (
-                              <div className="py-2 text-slate-500 group-hover:text-emerald-600 text-[11px] font-bold">
+                              <div className="py-2 text-slate-500 group-hover:text-emerald-700 text-[12px] font-bold">
                                 <span className="opacity-0 group-hover:opacity-100 transition-opacity">+ Xếp lớp</span>
                               </div>
                             )}
@@ -614,7 +614,7 @@ export const SubjectTeacherTimetableView: React.FC<{ onNavigate?: (view: any) =>
                 </span>
               </div>
 
-              <div className="flex items-center gap-2 text-[11px] text-slate-500 font-bold uppercase">
+              <div className="flex items-center gap-2 text-[12px] text-slate-500 font-bold uppercase">
                 <span>Phòng máy mặc định:</span>
                 <span className="font-black text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-lg border border-indigo-200">
                   {subjectTeacherConfig.roomDefault}
@@ -633,7 +633,7 @@ export const SubjectTeacherTimetableView: React.FC<{ onNavigate?: (view: any) =>
                       <th key={d.day} className="py-3 px-3 text-center border-r border-slate-200 last:border-r-0">
                         <div className="flex flex-col items-center">
                           <span className="text-xs font-black text-slate-900">{d.label}</span>
-                          <span className="text-[10px] text-slate-400 font-bold mt-0.5">({d.short})</span>
+                          <span className="text-[12px] text-slate-400 font-bold mt-0.5">({d.short})</span>
                         </div>
                       </th>
                     ))}
@@ -654,7 +654,7 @@ export const SubjectTeacherTimetableView: React.FC<{ onNavigate?: (view: any) =>
                       <td className="py-3 px-3 text-center font-black text-slate-800 bg-slate-50/50 border-r border-slate-200">
                         TIẾT {period}
                       </td>
-                      <td className="py-2.5 px-2 text-center text-[11px] font-mono text-slate-500 border-r border-slate-200 whitespace-nowrap">
+                      <td className="py-2.5 px-2 text-center text-[12px] font-mono text-slate-500 border-r border-slate-200 whitespace-nowrap">
                         {morningTimes[period - 1] || '---'}
                       </td>
 
@@ -670,7 +670,7 @@ export const SubjectTeacherTimetableView: React.FC<{ onNavigate?: (view: any) =>
                               >
                                 <div className="flex items-start justify-between gap-1 mb-1.5">
                                   <div className="flex flex-wrap items-center gap-1 max-w-[155px]">
-                                    <span className="px-2 py-0.5 rounded-lg text-[10px] font-black uppercase text-white shadow-2xs truncate bg-indigo-700">
+                                    <span className="px-2 py-0.5 rounded-lg text-[12px] font-black uppercase text-white shadow-2xs truncate bg-indigo-700">
                                       {slot.subject || 'TIN HỌC'}
                                     </span>
                                     <span 
@@ -699,20 +699,20 @@ export const SubjectTeacherTimetableView: React.FC<{ onNavigate?: (view: any) =>
                                   </div>
                                 </div>
 
-                                <div className="text-[10px] font-bold text-slate-600 flex items-center gap-1 truncate">
+                                <div className="text-[12px] font-bold text-slate-600 flex items-center gap-1 truncate">
                                   <MapPin className="w-3 h-3 text-indigo-500 shrink-0" />
                                   <span className="truncate">{slot.room || subjectTeacherConfig.roomDefault}</span>
                                 </div>
 
                                 {slot.note && (
-                                  <div className="text-[10px] text-indigo-900 font-medium mt-1 line-clamp-1 italic bg-white/70 px-1.5 py-0.5 rounded-md border border-indigo-100">
+                                  <div className="text-[12px] text-indigo-900 font-medium mt-1 line-clamp-1 italic bg-white/70 px-1.5 py-0.5 rounded-md border border-indigo-100">
                                     {slot.note}
                                   </div>
                                 )}
 
                                 <button
                                   onClick={() => handleJumpToClass(slot.classId, slot.className)}
-                                  className="mt-2 w-full py-1 px-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-[10px] flex items-center justify-center gap-1 shadow-2xs hover-zoom-btn uppercase transition-all"
+                                  className="mt-2 w-full py-1 px-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-[12px] flex items-center justify-center gap-1 shadow-2xs hover-zoom-btn uppercase transition-all"
                                   title="Chuyển ngay sang lớp này để chấm sao và thi đua"
                                 >
                                   <Star className="w-3 h-3 text-amber-300 fill-amber-300" />
@@ -722,11 +722,11 @@ export const SubjectTeacherTimetableView: React.FC<{ onNavigate?: (view: any) =>
                             ) : (
                               <button
                                 onClick={() => handleOpenSlotModal(d.day, 'morning', period)}
-                                className="w-full h-20 rounded-2xl border-2 border-dashed border-slate-200 hover:border-indigo-400 hover:bg-indigo-50/40 text-slate-400 hover:text-indigo-600 transition-all flex flex-col items-center justify-center gap-1 text-[11px] font-black group"
+                                className="w-full h-20 rounded-2xl border-2 border-dashed border-slate-200 hover:border-indigo-400 hover:bg-indigo-50/40 text-slate-400 hover:text-indigo-600 transition-all flex flex-col items-center justify-center gap-1 text-[12px] font-black group"
                                 title="Xếp lớp dạy vào tiết này"
                               >
                                 <Plus className="w-4 h-4 text-slate-300 group-hover:text-indigo-600 group-hover:scale-125 transition-transform" />
-                                <span className="text-[10px] uppercase font-bold text-slate-400 group-hover:text-indigo-600">+ Xếp lớp</span>
+                                <span className="text-[12px] uppercase font-bold text-slate-400 group-hover:text-indigo-600">+ Xếp lớp</span>
                               </button>
                             )}
                           </td>
@@ -748,7 +748,7 @@ export const SubjectTeacherTimetableView: React.FC<{ onNavigate?: (view: any) =>
                       <td className="py-3 px-3 text-center font-black text-slate-800 bg-slate-50/50 border-r border-slate-200">
                         TIẾT {period}
                       </td>
-                      <td className="py-2.5 px-2 text-center text-[11px] font-mono text-slate-500 border-r border-slate-200 whitespace-nowrap">
+                      <td className="py-2.5 px-2 text-center text-[12px] font-mono text-slate-500 border-r border-slate-200 whitespace-nowrap">
                         {afternoonTimes[period - 1] || '---'}
                       </td>
 
@@ -764,7 +764,7 @@ export const SubjectTeacherTimetableView: React.FC<{ onNavigate?: (view: any) =>
                               >
                                 <div className="flex items-start justify-between gap-1 mb-1.5">
                                   <div className="flex flex-wrap items-center gap-1 max-w-[155px]">
-                                    <span className="px-2 py-0.5 rounded-lg text-[10px] font-black uppercase text-white shadow-2xs truncate bg-teal-700">
+                                    <span className="px-2 py-0.5 rounded-lg text-[12px] font-black uppercase text-white shadow-2xs truncate bg-teal-700">
                                       {slot.subject || 'TIN HỌC'}
                                     </span>
                                     <span 
@@ -793,20 +793,20 @@ export const SubjectTeacherTimetableView: React.FC<{ onNavigate?: (view: any) =>
                                   </div>
                                 </div>
 
-                                <div className="text-[10px] font-bold text-slate-600 flex items-center gap-1 truncate">
+                                <div className="text-[12px] font-bold text-slate-600 flex items-center gap-1 truncate">
                                   <MapPin className="w-3 h-3 text-teal-600 shrink-0" />
                                   <span className="truncate">{slot.room || subjectTeacherConfig.roomDefault}</span>
                                 </div>
 
                                 {slot.note && (
-                                  <div className="text-[10px] text-teal-900 font-medium mt-1 line-clamp-1 italic bg-white/70 px-1.5 py-0.5 rounded-md border border-teal-100">
+                                  <div className="text-[12px] text-teal-900 font-medium mt-1 line-clamp-1 italic bg-white/70 px-1.5 py-0.5 rounded-md border border-teal-100">
                                     {slot.note}
                                   </div>
                                 )}
 
                                 <button
                                   onClick={() => handleJumpToClass(slot.classId, slot.className)}
-                                  className="mt-2 w-full py-1 px-2 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-black text-[10px] flex items-center justify-center gap-1 shadow-2xs hover-zoom-btn uppercase transition-all"
+                                  className="mt-2 w-full py-1 px-2 rounded-xl bg-teal-700 hover:bg-teal-800 text-white font-black text-[12px] flex items-center justify-center gap-1 shadow-2xs hover-zoom-btn uppercase transition-all"
                                   title="Chuyển ngay sang lớp này để chấm sao và thi đua"
                                 >
                                   <Star className="w-3 h-3 text-amber-300 fill-amber-300" />
@@ -816,11 +816,11 @@ export const SubjectTeacherTimetableView: React.FC<{ onNavigate?: (view: any) =>
                             ) : (
                               <button
                                 onClick={() => handleOpenSlotModal(d.day, 'afternoon', period)}
-                                className="w-full h-20 rounded-2xl border-2 border-dashed border-slate-200 hover:border-teal-400 hover:bg-teal-50/40 text-slate-400 hover:text-teal-700 transition-all flex flex-col items-center justify-center gap-1 text-[11px] font-black group"
+                                className="w-full h-20 rounded-2xl border-2 border-dashed border-slate-200 hover:border-teal-400 hover:bg-teal-50/40 text-slate-400 hover:text-teal-700 transition-all flex flex-col items-center justify-center gap-1 text-[12px] font-black group"
                                 title="Xếp lớp dạy vào tiết này"
                               >
                                 <Plus className="w-4 h-4 text-slate-300 group-hover:text-teal-600 group-hover:scale-125 transition-transform" />
-                                <span className="text-[10px] uppercase font-bold text-slate-400 group-hover:text-teal-600">+ Xếp lớp</span>
+                                <span className="text-[12px] uppercase font-bold text-slate-400 group-hover:text-teal-700">+ Xếp lớp</span>
                               </button>
                             )}
                           </td>
@@ -844,7 +844,7 @@ export const SubjectTeacherTimetableView: React.FC<{ onNavigate?: (view: any) =>
                 <School className="w-5 h-5 text-indigo-600" />
                 <span>DANH SÁCH {classes.length} LỚP DẠY MÔN {subjectTeacherConfig.subjectName}</span>
               </h3>
-              <span className="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 text-[10px] font-black uppercase flex items-center gap-1">
+              <span className="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 text-[12px] font-black uppercase flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                 Đồng bộ với mục Lớp học ngoài
               </span>
@@ -898,10 +898,10 @@ export const SubjectTeacherTimetableView: React.FC<{ onNavigate?: (view: any) =>
                       >
                         {cls.name}
                       </span>
-                      <span className="text-[10px] font-bold text-slate-500">{cls.grade}</span>
+                      <span className="text-[12px] font-bold text-slate-500">{cls.grade}</span>
                     </div>
 
-                    <div className="space-y-1 text-[11px] text-slate-600">
+                    <div className="space-y-1 text-[12px] text-slate-600">
                       <div className="flex items-center justify-between">
                         <span>Sĩ số:</span>
                         <span className="font-bold text-slate-900">{clsStudents.length} HS</span>
@@ -912,7 +912,7 @@ export const SubjectTeacherTimetableView: React.FC<{ onNavigate?: (view: any) =>
                       </div>
                       <div className="flex items-center justify-between">
                         <span>Xu tích lũy môn:</span>
-                        <span className="font-black text-amber-600 flex items-center gap-0.5">
+                        <span className="font-black text-amber-700 flex items-center gap-0.5">
                           ⭐ {totalCoinsInSubject}
                         </span>
                       </div>
@@ -920,12 +920,12 @@ export const SubjectTeacherTimetableView: React.FC<{ onNavigate?: (view: any) =>
                   </div>
 
                   <div className="mt-3 pt-2 border-t border-slate-200/80 flex items-center justify-between">
-                    <span className="text-[10px] font-black text-indigo-600 uppercase flex items-center gap-1 group-hover:translate-x-1 transition-transform">
+                    <span className="text-[12px] font-black text-indigo-600 uppercase flex items-center gap-1 group-hover:translate-x-1 transition-transform">
                       <span>Vào dạy</span>
                       <ArrowRight className="w-3 h-3" />
                     </span>
                     {isActive && (
-                      <span className="text-[9px] font-black uppercase px-1.5 py-0.2 rounded bg-indigo-600 text-white">
+                      <span className="text-[12px] font-black uppercase px-1.5 py-0.2 rounded bg-indigo-600 text-white">
                         Đang chọn
                       </span>
                     )}
@@ -949,7 +949,7 @@ export const SubjectTeacherTimetableView: React.FC<{ onNavigate?: (view: any) =>
                   <h4 className="text-sm font-black text-slate-900 uppercase">
                     XẾP LỚP DẠY (THỨ {activeSlotModal.day} • {activeSlotModal.session === 'morning' ? 'SÁNG' : 'CHIỀU'} TIẾT {activeSlotModal.period})
                   </h4>
-                  <p className="text-[11px] text-slate-500 font-medium">Môn: {subjectTeacherConfig.subjectName}</p>
+                  <p className="text-[12px] text-slate-500 font-medium">Môn: {subjectTeacherConfig.subjectName}</p>
                 </div>
               </div>
               <button
@@ -967,14 +967,14 @@ export const SubjectTeacherTimetableView: React.FC<{ onNavigate?: (view: any) =>
                   <label className="block text-indigo-950 font-black uppercase text-xs">
                     1. Chọn Môn Giảng Dạy:
                   </label>
-                  <span className="text-[11px] font-black text-indigo-700 bg-white px-2 py-0.5 rounded-lg border border-indigo-200">
+                  <span className="text-[12px] font-black text-indigo-700 bg-white px-2 py-0.5 rounded-lg border border-indigo-200">
                     {slotSubject || 'TIN HỌC'}
                   </span>
                 </div>
 
                 {/* Các môn bộ môn đã cấu hình (Ưu tiên hiển thị Môn chính, Môn 2, Môn 3, Môn 4) */}
                 <div className="space-y-1">
-                  <span className="text-[10px] font-bold text-slate-500 uppercase block">Các môn bạn đảm nhiệm:</span>
+                  <span className="text-[12px] font-bold text-slate-500 uppercase block">Các môn bạn đảm nhiệm:</span>
                   <div className="flex flex-wrap gap-2">
                     {[
                       { name: subjectTeacherConfig.subjectName || 'TIN HỌC', label: 'Môn chính', icon: '⭐', color: 'border-indigo-400' },
@@ -996,7 +996,7 @@ export const SubjectTeacherTimetableView: React.FC<{ onNavigate?: (view: any) =>
                         >
                           <span>{item!.icon}</span>
                           <span>{item!.name}</span>
-                          <span className={`text-[10px] px-1.5 py-0.5 rounded-md font-bold ${
+                          <span className={`text-[12px] px-1.5 py-0.5 rounded-md font-bold ${
                             isSelected ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-600'
                           }`}>
                             {item!.label}
@@ -1009,14 +1009,14 @@ export const SubjectTeacherTimetableView: React.FC<{ onNavigate?: (view: any) =>
 
                 {/* Other Common School Subjects */}
                 <div className="space-y-1 pt-1">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase block">Hoặc chọn môn khác:</span>
+                  <span className="text-[12px] font-bold text-slate-400 uppercase block">Hoặc chọn môn khác:</span>
                   <div className="flex flex-wrap gap-1">
                     {['TIN HỌC', 'CÔNG NGHỆ', 'TIẾNG ANH', 'ÂM NHẠC', 'MĨ THUẬT', 'GIÁO DỤC THỂ CHẤT', 'KHOA HỌC', 'STEM', 'HOẠT ĐỘNG TRẢI NGHIỆM', 'TOÁN', 'TIẾNG VIỆT'].map(sub => (
                       <button
                         key={sub}
                         type="button"
                         onClick={() => setSlotSubject(sub)}
-                        className={`px-2 py-0.5 rounded-lg text-[10px] font-bold uppercase transition-all ${
+                        className={`px-2 py-0.5 rounded-lg text-[12px] font-bold uppercase transition-all ${
                           slotSubject.trim().toUpperCase() === sub.toUpperCase()
                             ? 'bg-indigo-800 text-white'
                             : 'bg-white/80 text-slate-600 hover:bg-slate-200 border border-slate-200'
@@ -1148,7 +1148,7 @@ export const SubjectTeacherTimetableView: React.FC<{ onNavigate?: (view: any) =>
                   <h4 className="text-sm md:text-base font-black text-slate-900 uppercase">
                     CẤU HÌNH THỜI KHÓA BIỂU GIÁO VIÊN BỘ MÔN
                   </h4>
-                  <p className="text-[11px] text-slate-500 font-medium">
+                  <p className="text-[12px] text-slate-500 font-medium">
                     Thiết lập các môn học bạn giảng dạy, phòng học và thời gian biểu
                   </p>
                 </div>
@@ -1171,11 +1171,11 @@ export const SubjectTeacherTimetableView: React.FC<{ onNavigate?: (view: any) =>
                       MÔN HỌC GIẢNG DẠY (GIÁO VIÊN BỘ MÔN CÓ THỂ DẠY NHIỀU MÔN Ở NHIỀU LỚP)
                     </span>
                   </div>
-                  <span className="text-[10px] font-black text-indigo-700 bg-white px-2.5 py-0.5 rounded-full border border-indigo-200 shadow-2xs">
+                  <span className="text-[12px] font-black text-indigo-700 bg-white px-2.5 py-0.5 rounded-full border border-indigo-200 shadow-2xs">
                     {[configSubjectName, configSubject2, configSubject3, configSubject4].filter(s => s && s.trim().length > 0).length} MÔN ĐẢM NHIỆM
                   </span>
                 </div>
-                <p className="text-[11px] text-indigo-800 leading-relaxed">
+                <p className="text-[12px] text-indigo-800 leading-relaxed">
                   Thiết lập môn dạy chính và các môn dạy kèm theo (Môn 2, Môn 3, Môn 4). Khi xếp từng tiết dạy trên TKB, hệ thống sẽ tạo các nút bấm nhanh tương ứng để bạn chọn môn phù hợp cho từng lớp.
                 </p>
 
@@ -1184,11 +1184,11 @@ export const SubjectTeacherTimetableView: React.FC<{ onNavigate?: (view: any) =>
                   {/* Ô 1: MÔN DẠY CHÍNH (BẮT BUỘC) */}
                   <div className="p-3 bg-white rounded-xl border-2 border-indigo-400 shadow-xs space-y-1.5">
                     <div className="flex items-center justify-between">
-                      <span className="font-black text-indigo-950 text-[11px] uppercase flex items-center gap-1">
+                      <span className="font-black text-indigo-950 text-[12px] uppercase flex items-center gap-1">
                         <span>⭐</span>
                         <span>MÔN DẠY CHÍNH (MÔN 1 - BẮT BUỘC):</span>
                       </span>
-                      <span className="text-[9px] font-black text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded">
+                      <span className="text-[12px] font-black text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded">
                         MẶC ĐỊNH
                       </span>
                     </div>
@@ -1231,7 +1231,7 @@ export const SubjectTeacherTimetableView: React.FC<{ onNavigate?: (view: any) =>
                   {/* Ô 2: MÔN DẠY 2 (NẾU CÓ) */}
                   <div className="p-3 bg-white rounded-xl border-2 border-teal-300 shadow-xs space-y-1.5">
                     <div className="flex items-center justify-between">
-                      <span className="font-black text-teal-950 text-[11px] uppercase flex items-center gap-1">
+                      <span className="font-black text-teal-950 text-[12px] uppercase flex items-center gap-1">
                         <span>📘</span>
                         <span>MÔN DẠY 2 (NẾU CÓ):</span>
                       </span>
@@ -1239,7 +1239,7 @@ export const SubjectTeacherTimetableView: React.FC<{ onNavigate?: (view: any) =>
                         <button
                           type="button"
                           onClick={() => setConfigSubject2('')}
-                          className="text-[10px] text-rose-600 hover:text-rose-800 font-bold flex items-center gap-0.5"
+                          className="text-[12px] text-rose-600 hover:text-rose-800 font-bold flex items-center gap-0.5"
                           title="Xóa môn 2 này"
                         >
                           <X className="w-3 h-3" />
@@ -1282,7 +1282,7 @@ export const SubjectTeacherTimetableView: React.FC<{ onNavigate?: (view: any) =>
                   {/* Ô 3: MÔN DẠY 3 (NẾU CÓ) */}
                   <div className="p-3 bg-white rounded-xl border-2 border-amber-300 shadow-xs space-y-1.5">
                     <div className="flex items-center justify-between">
-                      <span className="font-black text-amber-950 text-[11px] uppercase flex items-center gap-1">
+                      <span className="font-black text-amber-950 text-[12px] uppercase flex items-center gap-1">
                         <span>📙</span>
                         <span>MÔN DẠY 3 (NẾU CÓ):</span>
                       </span>
@@ -1290,7 +1290,7 @@ export const SubjectTeacherTimetableView: React.FC<{ onNavigate?: (view: any) =>
                         <button
                           type="button"
                           onClick={() => setConfigSubject3('')}
-                          className="text-[10px] text-rose-600 hover:text-rose-800 font-bold flex items-center gap-0.5"
+                          className="text-[12px] text-rose-600 hover:text-rose-800 font-bold flex items-center gap-0.5"
                           title="Xóa môn 3 này"
                         >
                           <X className="w-3 h-3" />
@@ -1329,7 +1329,7 @@ export const SubjectTeacherTimetableView: React.FC<{ onNavigate?: (view: any) =>
                   {/* Ô 4: MÔN DẠY 4 (NẾU CÓ) */}
                   <div className="p-3 bg-white rounded-xl border-2 border-emerald-300 shadow-xs space-y-1.5">
                     <div className="flex items-center justify-between">
-                      <span className="font-black text-emerald-950 text-[11px] uppercase flex items-center gap-1">
+                      <span className="font-black text-emerald-950 text-[12px] uppercase flex items-center gap-1">
                         <span>📗</span>
                         <span>MÔN DẠY 4 (NẾU CÓ):</span>
                       </span>
@@ -1337,7 +1337,7 @@ export const SubjectTeacherTimetableView: React.FC<{ onNavigate?: (view: any) =>
                         <button
                           type="button"
                           onClick={() => setConfigSubject4('')}
-                          className="text-[10px] text-rose-600 hover:text-rose-800 font-bold flex items-center gap-0.5"
+                          className="text-[12px] text-rose-600 hover:text-rose-800 font-bold flex items-center gap-0.5"
                           title="Xóa môn 4 này"
                         >
                           <X className="w-3 h-3" />
@@ -1374,28 +1374,28 @@ export const SubjectTeacherTimetableView: React.FC<{ onNavigate?: (view: any) =>
 
                 {/* Dải tóm tắt môn học đang cấu hình */}
                 <div className="pt-2 border-t border-indigo-200/60 flex items-center justify-between flex-wrap gap-2">
-                  <span className="text-[11px] font-bold text-indigo-900">
+                  <span className="text-[12px] font-bold text-indigo-900">
                     Môn học sẽ hiển thị trên TKB:
                   </span>
                   <div className="flex flex-wrap items-center gap-1.5">
-                    <span className="px-2.5 py-1 rounded-lg bg-indigo-600 text-white font-black text-[11px] uppercase shadow-2xs flex items-center gap-1">
+                    <span className="px-2.5 py-1 rounded-lg bg-indigo-600 text-white font-black text-[12px] uppercase shadow-2xs flex items-center gap-1">
                       <span>⭐</span>
                       <span>{configSubjectName.trim() || 'TIN HỌC'} (Chính)</span>
                     </span>
                     {configSubject2.trim() && (
-                      <span className="px-2.5 py-1 rounded-lg bg-teal-600 text-white font-black text-[11px] uppercase shadow-2xs flex items-center gap-1">
+                      <span className="px-2.5 py-1 rounded-lg bg-teal-700 text-white font-black text-[12px] uppercase shadow-2xs flex items-center gap-1">
                         <span>📘</span>
                         <span>{configSubject2.trim()} (Môn 2)</span>
                       </span>
                     )}
                     {configSubject3.trim() && (
-                      <span className="px-2.5 py-1 rounded-lg bg-amber-600 text-white font-black text-[11px] uppercase shadow-2xs flex items-center gap-1">
+                      <span className="px-2.5 py-1 rounded-lg bg-amber-700 text-white font-black text-[12px] uppercase shadow-2xs flex items-center gap-1">
                         <span>📙</span>
                         <span>{configSubject3.trim()} (Môn 3)</span>
                       </span>
                     )}
                     {configSubject4.trim() && (
-                      <span className="px-2.5 py-1 rounded-lg bg-emerald-600 text-white font-black text-[11px] uppercase shadow-2xs flex items-center gap-1">
+                      <span className="px-2.5 py-1 rounded-lg bg-emerald-700 text-white font-black text-[12px] uppercase shadow-2xs flex items-center gap-1">
                         <span>📗</span>
                         <span>{configSubject4.trim()} (Môn 4)</span>
                       </span>
@@ -1413,7 +1413,7 @@ export const SubjectTeacherTimetableView: React.FC<{ onNavigate?: (view: any) =>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-slate-700 font-bold uppercase mb-1 text-[11px]">
+                    <label className="block text-slate-700 font-bold uppercase mb-1 text-[12px]">
                       Phòng Học Bộ Môn Mặc Định:
                     </label>
                     <input
@@ -1426,7 +1426,7 @@ export const SubjectTeacherTimetableView: React.FC<{ onNavigate?: (view: any) =>
                   </div>
 
                   <div>
-                    <label className="block text-slate-700 font-bold uppercase mb-1 text-[11px]">
+                    <label className="block text-slate-700 font-bold uppercase mb-1 text-[12px]">
                       Tên Giai Đoạn / Ghi Chú Thời Điểm:
                     </label>
                     <input
@@ -1441,7 +1441,7 @@ export const SubjectTeacherTimetableView: React.FC<{ onNavigate?: (view: any) =>
 
                 <div className="grid grid-cols-2 gap-3 pt-1">
                   <div>
-                    <label className="block text-slate-700 font-bold uppercase mb-1 text-[11px]">
+                    <label className="block text-slate-700 font-bold uppercase mb-1 text-[12px]">
                       Số Tiết Sáng (4 hoặc 5):
                     </label>
                     <select
@@ -1454,7 +1454,7 @@ export const SubjectTeacherTimetableView: React.FC<{ onNavigate?: (view: any) =>
                     </select>
                   </div>
                   <div>
-                    <label className="block text-slate-700 font-bold uppercase mb-1 text-[11px]">
+                    <label className="block text-slate-700 font-bold uppercase mb-1 text-[12px]">
                       Số Tiết Chiều (3 hoặc 4):
                     </label>
                     <select
@@ -1471,7 +1471,7 @@ export const SubjectTeacherTimetableView: React.FC<{ onNavigate?: (view: any) =>
                 <div className="pt-2 flex items-center justify-between p-3 rounded-xl bg-white border border-slate-200">
                   <div>
                     <div className="font-black text-slate-800 uppercase text-xs">Có Dạy Vào Thứ Bảy</div>
-                    <div className="text-[11px] text-slate-500">Hiển thị thêm cột Thứ 7 trên bảng thời khóa biểu</div>
+                    <div className="text-[12px] text-slate-500">Hiển thị thêm cột Thứ 7 trên bảng thời khóa biểu</div>
                   </div>
                   <input
                     type="checkbox"

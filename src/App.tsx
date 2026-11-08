@@ -39,7 +39,7 @@ const AiAssistantView = lazy(() => import('./components/views/AiAssistantView').
 const AccountManagementModal = lazy(() => import('./components/modals/AccountManagementModal').then(m => ({ default: m.AccountManagementModal })));
 
 const ViewLoading = () => (
-  <div className="flex items-center justify-center py-24 text-sky-600 text-sm font-bold gap-2">
+  <div className="flex items-center justify-center py-24 text-sky-700 text-sm font-bold gap-2">
     <span className="w-5 h-5 rounded-full border-2 border-sky-300 border-t-sky-600 animate-spin" />
     Đang mở…
   </div>

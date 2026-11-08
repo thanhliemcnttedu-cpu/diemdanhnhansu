@@ -847,7 +847,7 @@ QUY TẮC BẮT BUỘC:
               <span>
                 Chọn ĐÚNG 2 đáp án (Đã chọn: <strong className={isFullscreen ? 'text-amber-700' : 'text-blue-600'}>{userMultipleAnswers.length}/2</strong>):
               </span>
-              <span className={`text-[11px] italic ${isFullscreen ? 'text-slate-400' : 'text-slate-500'}`}>
+              <span className={`text-[12px] italic ${isFullscreen ? 'text-slate-400' : 'text-slate-500'}`}>
                 Học sinh cần chọn đủ và đúng 2 phương án
               </span>
             </div>
@@ -944,20 +944,20 @@ QUY TẮC BẮT BUỘC:
                 } ${
                   isAnswerChecked
                     ? currentQ.isTrue === true
-                      ? 'bg-emerald-600 border-emerald-400 text-white font-black shadow-xl ring-2 ring-emerald-300 scale-[1.02]'
+                      ? 'bg-emerald-700 border-emerald-400 text-white font-black shadow-xl ring-2 ring-emerald-300 scale-[1.02]'
                       : userTrueFalseAnswer === true
-                      ? 'bg-rose-500 border-rose-400 text-white font-bold'
+                      ? 'bg-rose-600 border-rose-400 text-white font-bold'
                       : isFullscreen ? 'bg-white/5 border-white/10 text-white/90' : 'bg-slate-50 border-slate-200 text-slate-400'
                     : userTrueFalseAnswer === true
-                    ? 'bg-emerald-600 border-emerald-400 text-white font-black shadow-lg ring-2 ring-emerald-300'
+                    ? 'bg-emerald-700 border-emerald-400 text-white font-black shadow-lg ring-2 ring-emerald-300'
                     : isFullscreen
-                    ? 'bg-emerald-600/40 border-emerald-500/40 text-white hover:bg-emerald-900/60 font-bold'
+                    ? 'bg-emerald-700/40 border-emerald-500/40 text-white hover:bg-emerald-900/60 font-bold'
                     : 'bg-emerald-50/50 border-emerald-200 text-emerald-800 hover:bg-emerald-100 font-bold'
                 }`}
               >
                 <div className={isFullscreen ? "text-4xl mb-2" : "text-2xl mb-1"}>✅</div>
                 <div className={isFullscreen ? "text-xl md:text-2xl font-black uppercase" : "text-base font-black uppercase"}>ĐÚNG</div>
-                <div className="text-[11px] opacity-80 mt-0.5">Nhận định này hoàn toàn chính xác</div>
+                <div className="text-[12px] opacity-80 mt-0.5">Nhận định này hoàn toàn chính xác</div>
               </button>
 
               <button
@@ -968,9 +968,9 @@ QUY TẮC BẮT BUỘC:
                 } ${
                   isAnswerChecked
                     ? currentQ.isTrue === false
-                      ? 'bg-emerald-600 border-emerald-400 text-white font-black shadow-xl ring-2 ring-emerald-300 scale-[1.02]'
+                      ? 'bg-emerald-700 border-emerald-400 text-white font-black shadow-xl ring-2 ring-emerald-300 scale-[1.02]'
                       : userTrueFalseAnswer === false
-                      ? 'bg-rose-500 border-rose-400 text-white font-bold'
+                      ? 'bg-rose-600 border-rose-400 text-white font-bold'
                       : isFullscreen ? 'bg-white/5 border-white/10 text-white/90' : 'bg-slate-50 border-slate-200 text-slate-400'
                     : userTrueFalseAnswer === false
                     ? 'bg-rose-600 border-rose-400 text-white font-black shadow-lg ring-2 ring-rose-300'
@@ -981,7 +981,7 @@ QUY TẮC BẮT BUỘC:
               >
                 <div className={isFullscreen ? "text-4xl mb-2" : "text-2xl mb-1"}>❌</div>
                 <div className={isFullscreen ? "text-xl md:text-2xl font-black uppercase" : "text-base font-black uppercase"}>SAI</div>
-                <div className="text-[11px] opacity-80 mt-0.5">Nhận định này chưa chính xác</div>
+                <div className="text-[12px] opacity-80 mt-0.5">Nhận định này chưa chính xác</div>
               </button>
             </div>
           </div>
@@ -1014,7 +1014,7 @@ QUY TẮC BẮT BUỘC:
                       isFullscreen ? 'text-blue-600' : 'text-blue-800'
                     }`}>
                       <span>📌 Cột A (Bấm chọn trước)</span>
-                      <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
+                      <span className={`text-[12px] font-semibold px-2 py-0.5 rounded-full ${
                         isFullscreen ? 'bg-blue-600/80 text-white' : 'bg-blue-50 text-blue-600'
                       }`}>
                         {selectedMatchingLeft ? 'Đang chọn' : 'Chưa chọn'}
@@ -1062,7 +1062,7 @@ QUY TẮC BẮT BUỘC:
                             <span className="flex-1 font-semibold">{pair.left}</span>
                           </div>
                           {matchedRight && (
-                            <div className={`mt-1.5 pt-1.5 border-t text-[11px] font-bold flex items-center justify-between gap-1 ${
+                            <div className={`mt-1.5 pt-1.5 border-t text-[12px] font-bold flex items-center justify-between gap-1 ${
                               isFullscreen ? 'border-white/10' : 'border-slate-200/60'
                             }`}>
                               <div className="flex items-center gap-1">
@@ -1070,7 +1070,7 @@ QUY TẮC BẮT BUỘC:
                                 <span className={`italic ${isFullscreen ? 'text-purple-600' : 'text-purple-700'}`}>"{matchedRight}"</span>
                               </div>
                               {isAnswerChecked && (
-                                <span className={isPairCorrect ? 'text-emerald-600 font-black' : 'text-rose-600 font-bold'}>
+                                <span className={isPairCorrect ? 'text-emerald-700 font-black' : 'text-rose-600 font-bold'}>
                                   {isPairCorrect ? '✅ Đúng' : `❌ Sai (Đáp án: ${pair.right})`}
                                 </span>
                               )}
@@ -1087,7 +1087,7 @@ QUY TẮC BẮT BUỘC:
                       isFullscreen ? 'text-purple-600' : 'text-purple-800'
                     }`}>
                       <span>🎯 Cột B (Bấm chọn để nối với Cột A)</span>
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                      <span className={`text-[12px] font-bold px-2 py-0.5 rounded-full ${
                         isFullscreen ? 'bg-purple-600/80 text-white' : 'bg-purple-100 text-purple-700'
                       }`}>
                         Đã xáo trộn thứ tự
@@ -1128,7 +1128,7 @@ QUY TẮC BẮT BUỘC:
                               : 'border-slate-200 bg-white hover:bg-slate-50 text-slate-700'
                           }`}
                         >
-                          <span className={`rounded-md font-black text-[11px] flex items-center justify-center shrink-0 ${
+                          <span className={`rounded-md font-black text-[12px] flex items-center justify-center shrink-0 ${
                             isFullscreen ? 'w-6 h-6' : 'w-5 h-5'
                           } ${
                             matchedLeftPair
@@ -1140,7 +1140,7 @@ QUY TẮC BẮT BUỘC:
                           <div className="flex-1">
                             <div className="leading-snug">{rightText}</div>
                             {matchedLeftPair && (
-                              <div className={`mt-1 text-[11px] font-semibold flex items-center gap-1 ${
+                              <div className={`mt-1 text-[12px] font-semibold flex items-center gap-1 ${
                                 isFullscreen ? 'text-purple-300' : 'text-purple-700'
                               }`}>
                                 <span>➔ Đã ghép với:</span>
@@ -1201,7 +1201,7 @@ QUY TẮC BẮT BUỘC:
             {/* Barem gợi ý cho giáo viên */}
             <div className={`rounded-2xl border space-y-1.5 ${
               isFullscreen
-                ? 'p-3.5 md:p-4 bg-amber-600/40 border-amber-500/30 text-white text-xs md:text-sm'
+                ? 'p-3.5 md:p-4 bg-amber-700/40 border-amber-500/30 text-white text-xs md:text-sm'
                 : 'p-3 md:p-3.5 bg-amber-50/70 border-amber-200 text-amber-950 text-xs'
             }`}>
               <div className={`font-black flex items-center gap-1.5 ${
@@ -1214,7 +1214,7 @@ QUY TẮC BẮT BUỘC:
                 <strong>Đáp án mẫu:</strong> {currentQ.sampleAnswer || 'Học sinh nêu được đúng trọng tâm nội dung câu hỏi.'}
               </p>
               {currentQ.scoringCriteria && (
-                <p className={`text-[11px] leading-snug ${isFullscreen ? 'text-amber-300/80' : 'text-amber-800'}`}>
+                <p className={`text-[12px] leading-snug ${isFullscreen ? 'text-amber-300/80' : 'text-amber-800'}`}>
                   <strong>Tiêu chí:</strong> {currentQ.scoringCriteria}
                 </p>
               )}
@@ -1235,9 +1235,9 @@ QUY TẮC BẮT BUỘC:
                   onClick={() => setEssayTeacherDecision('correct')}
                   className={`px-4 py-2 rounded-xl text-xs font-black flex items-center gap-1.5 transition-all cursor-pointer ${
                     essayTeacherDecision === 'correct'
-                      ? 'bg-emerald-600 text-white shadow-md'
+                      ? 'bg-emerald-700 text-white shadow-md'
                       : isFullscreen
-                      ? 'bg-emerald-600/60 text-white border border-emerald-500/40 hover:bg-emerald-900/60'
+                      ? 'bg-emerald-700/60 text-white border border-emerald-500/40 hover:bg-emerald-900/60'
                       : 'bg-emerald-50 text-emerald-800 hover:bg-emerald-100 border border-emerald-200'
                   }`}
                 >
@@ -1292,7 +1292,7 @@ QUY TẮC BẮT BUỘC:
           </div>
 
           <div className="flex items-center gap-2 bg-white/10 backdrop-blur-md px-4 py-2 rounded-2xl border border-white/15">
-            <div className="w-2.5 h-2.5 rounded-full bg-emerald-600 animate-ping" />
+            <div className="w-2.5 h-2.5 rounded-full bg-emerald-700 animate-ping" />
             <span className="text-xs font-semibold text-white">
               Lớp đang chọn: <strong className="text-white">{activeClass?.name}</strong> ({classStudents.length} học sinh)
             </span>
@@ -1380,7 +1380,7 @@ QUY TẮC BẮT BUỘC:
               {isLoading ? 'AI Đang Suy Nghĩ & Soạn Lời Phê...' : 'Tạo Lời Phê & Thư Khen AI'}
             </button>
 
-            <div className="text-[11px] text-slate-500 leading-relaxed bg-slate-50 p-3 rounded-xl border border-slate-100">
+            <div className="text-[12px] text-slate-500 leading-relaxed bg-slate-50 p-3 rounded-xl border border-slate-100">
               💡 <strong>Gợi ý:</strong> AI sẽ tự động phân tích số xu thi đua, giới tính và nề nếp của em để soạn lời phê chân thành, mang tính xây dựng cao và thư Zalo cho phụ huynh.
             </div>
           </div>
@@ -1451,7 +1451,7 @@ QUY TẮC BẮT BUỘC:
           {/* FULLSCREEN ARENA OVERLAY (KHI BẬT TOÀN MÀN HÌNH)                          */}
           {/* ========================================================================= */}
           {isQuizFullscreen && quizQuestions.length > 0 && quizQuestions[activeQuizIndex] && (
-            <div className="fixed inset-0 z-[100] bg-gradient-to-br from-sky-600 via-blue-500 to-indigo-600 text-white flex flex-col overflow-y-auto animate-fadeIn select-none">
+            <div className="fixed inset-0 z-[100] bg-gradient-to-br from-sky-700 via-blue-600 to-indigo-600 text-white flex flex-col overflow-y-auto animate-fadeIn select-none">
               {/* FULLSCREEN TOP BAR */}
               <div className="sticky top-0 z-30 bg-white/95 backdrop-blur-md px-4 md:px-6 py-2.5 border-b border-slate-200 flex flex-wrap items-center justify-between gap-3 shadow-lg">
                 <div className="flex items-center gap-3">
@@ -1460,7 +1460,7 @@ QUY TẮC BẮT BUỘC:
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="text-[11px] font-black text-amber-700 bg-amber-400/20 px-2 py-0.5 rounded-full border border-amber-400/30">
+                      <span className="text-[12px] font-black text-amber-700 bg-amber-400/20 px-2 py-0.5 rounded-full border border-amber-400/30">
                         SGK KẾT NỐI TRI THỨC
                       </span>
                       <span className="text-xs font-bold text-slate-600">
@@ -1482,15 +1482,15 @@ QUY TẮC BẮT BUỘC:
                       className="w-7 h-7 rounded-lg object-cover bg-white ring-2 ring-amber-400 shrink-0"
                     />
                   ) : (
-                    <div className="w-7 h-7 rounded-lg bg-slate-100 flex items-center justify-center font-bold text-amber-600 text-xs">
+                    <div className="w-7 h-7 rounded-lg bg-slate-100 flex items-center justify-center font-bold text-amber-700 text-xs">
                       ?
                     </div>
                   )}
                   <div className="text-left">
-                    <div className="text-[9px] text-blue-700 font-bold uppercase leading-none">Học sinh trả lời:</div>
+                    <div className="text-[12px] text-blue-700 font-bold uppercase leading-none">Học sinh trả lời:</div>
                     <div className="text-xs font-black text-slate-800 leading-tight">
                       {isSpinningStudent ? (
-                        <span className="text-amber-600 animate-pulse">{spinningStudentName}...</span>
+                        <span className="text-amber-700 animate-pulse">{spinningStudentName}...</span>
                       ) : selectedStudent ? (
                         <>#{selectedStudent.stt} - {selectedStudent.name} ({selectedStudent.points} xu)</>
                       ) : (
@@ -1579,9 +1579,9 @@ QUY TẮC BẮT BUỘC:
 
                           <span className={`px-2 py-0.5 rounded-md font-extrabold text-xs ${
                             currentQ.difficulty === 'DỄ' 
-                              ? 'bg-emerald-600/60 border border-emerald-400/40 text-white' 
+                              ? 'bg-emerald-700/60 border border-emerald-400/40 text-white' 
                               : currentQ.difficulty === 'TRUNG BÌNH' 
-                              ? 'bg-sky-600/60 border border-sky-400/40 text-white' 
+                              ? 'bg-sky-700/60 border border-sky-400/40 text-white' 
                               : 'bg-rose-600/60 border border-rose-400/40 text-white'
                           }`}>
                             Mức độ: {currentQ.difficulty}
@@ -1607,7 +1607,7 @@ QUY TẮC BẮT BUỘC:
                       {isAnswerChecked && (
                         <div className={`p-4 rounded-2xl border text-xs md:text-sm leading-relaxed transition-all shadow-xl ${
                           isAnswerCorrect
-                            ? 'bg-emerald-600/80 border-emerald-400 text-white'
+                            ? 'bg-emerald-700/80 border-emerald-400 text-white'
                             : 'bg-rose-600/80 border-rose-400 text-white'
                         }`}>
                           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -1700,7 +1700,7 @@ QUY TẮC BẮT BUỘC:
                   <button
                     type="button"
                     onClick={handleCheckAnswer}
-                    className="px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-black text-xs md:text-sm rounded-xl flex items-center gap-1.5 shadow-md shadow-emerald-500/30 hover-zoom-btn cursor-pointer"
+                    className="px-4 py-2 bg-gradient-to-r from-emerald-700 to-teal-700 hover:from-emerald-800 hover:to-teal-800 text-white font-black text-xs md:text-sm rounded-xl flex items-center gap-1.5 shadow-md shadow-emerald-500/30 hover-zoom-btn cursor-pointer"
                   >
                     <CheckCircle2 className="w-4 h-4" />
                     <span>Kiểm tra đáp án</span>
@@ -1762,10 +1762,10 @@ QUY TẮC BẮT BUỘC:
           {/* ========================================================================= */}
           {/* IN-PAGE COMPACT BANNER & STUDENT PICKER                                   */}
           {/* ========================================================================= */}
-          <div className="bg-gradient-to-r from-blue-700 via-indigo-700 to-purple-500 rounded-2xl md:rounded-3xl p-3.5 md:p-4 text-white shadow-md space-y-3">
+          <div className="bg-gradient-to-r from-blue-700 via-indigo-700 to-purple-600 rounded-2xl md:rounded-3xl p-3.5 md:p-4 text-white shadow-md space-y-3">
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
               <div className="space-y-1">
-                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white/20 backdrop-blur-md text-[11px] font-black text-white">
+                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white/20 backdrop-blur-md text-[12px] font-black text-white">
                   <BookOpen className="w-3 h-3" />
                   SGK KẾT NỐI TRI THỨC VỚI CUỘC SỐNG
                 </div>
@@ -1794,7 +1794,7 @@ QUY TẮC BẮT BUỘC:
                     </div>
                   )}
                   <div className="text-left">
-                    <div className="text-[10px] text-white font-bold uppercase leading-none">Học sinh được gọi:</div>
+                    <div className="text-[12px] text-white font-bold uppercase leading-none">Học sinh được gọi:</div>
                     <div className="text-xs font-black text-white leading-tight">
                       {isSpinningStudent ? (
                         <span className="text-amber-300 animate-pulse">{spinningStudentName}...</span>
@@ -1839,7 +1839,7 @@ QUY TẮC BẮT BUỘC:
                 <button
                   type="button"
                   onClick={toggleQuizFullscreen}
-                  className="px-3.5 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-black text-xs md:text-sm rounded-xl flex items-center gap-1.5 shadow-md shadow-emerald-500/30 transition-all hover-zoom-btn cursor-pointer shrink-0"
+                  className="px-3.5 py-2 bg-gradient-to-r from-emerald-700 to-teal-700 hover:from-emerald-800 hover:to-teal-800 text-white font-black text-xs md:text-sm rounded-xl flex items-center gap-1.5 shadow-md shadow-emerald-500/30 transition-all hover-zoom-btn cursor-pointer shrink-0"
                   title="Xem toàn màn hình để chiếu lớp học và thao tác dễ dàng trực quan"
                 >
                   <Maximize2 className="w-4 h-4" />
@@ -1862,7 +1862,7 @@ QUY TẮC BẮT BUỘC:
             {pickedAnnouncement && (
               <div className="py-2 px-3 bg-amber-400 text-slate-950 rounded-xl text-xs md:text-sm font-black flex items-center justify-between shadow-xs animate-bounce">
                 <span>{pickedAnnouncement}</span>
-                <span className="text-[11px] font-semibold bg-white/60 px-2 py-0.5 rounded-md">
+                <span className="text-[12px] font-semibold bg-white/60 px-2 py-0.5 rounded-md">
                   Trả lời đúng được cộng xu thi đua!
                 </span>
               </div>
@@ -1883,7 +1883,7 @@ QUY TẮC BẮT BUỘC:
                       Cấu Hình Câu Hỏi Khởi Động
                     </h3>
                     <div className="flex items-center gap-1.5">
-                      <span className="px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 font-extrabold text-[10px]">
+                      <span className="px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 font-extrabold text-[12px]">
                         KNTT
                       </span>
                       <button
@@ -1899,7 +1899,7 @@ QUY TẮC BẮT BUỘC:
 
                   {/* 1. Môn học */}
                   <div>
-                    <label className="text-[11px] font-bold text-slate-700 block mb-1">
+                    <label className="text-[12px] font-bold text-slate-700 block mb-1">
                       1. Môn học:
                     </label>
                     <select
@@ -1931,7 +1931,7 @@ QUY TẮC BẮT BUỘC:
                   {/* 2. Khối lớp & Học kỳ */}
                   <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <label className="text-[11px] font-bold text-slate-700 block mb-1">
+                      <label className="text-[12px] font-bold text-slate-700 block mb-1">
                         2. Khối lớp:
                       </label>
                       <select
@@ -1946,7 +1946,7 @@ QUY TẮC BẮT BUỘC:
                     </div>
 
                     <div>
-                      <label className="text-[11px] font-bold text-slate-700 block mb-1">
+                      <label className="text-[12px] font-bold text-slate-700 block mb-1">
                         3. Học kỳ:
                       </label>
                       <select
@@ -1963,7 +1963,7 @@ QUY TẮC BẮT BUỘC:
 
                   {/* 3. Dạng câu hỏi */}
                   <div>
-                    <label className="text-[11px] font-bold text-slate-700 block mb-1">
+                    <label className="text-[12px] font-bold text-slate-700 block mb-1">
                       4. Dạng câu hỏi:
                     </label>
                     <select
@@ -1982,7 +1982,7 @@ QUY TẮC BẮT BUỘC:
 
                   {/* 4. Mức độ nhận thức */}
                   <div>
-                    <label className="text-[11px] font-bold text-slate-700 block mb-1">
+                    <label className="text-[12px] font-bold text-slate-700 block mb-1">
                       5. Mức độ:
                     </label>
                     <div className="grid grid-cols-3 gap-1.5">
@@ -1999,7 +1999,7 @@ QUY TẮC BẮT BUỘC:
                             key={level}
                             type="button"
                             onClick={() => setQuizConfig(prev => ({ ...prev, difficulty: level }))}
-                            className={`py-1.5 rounded-lg border text-[11px] text-center transition-all hover-zoom-btn cursor-pointer ${colorClass}`}
+                            className={`py-1.5 rounded-lg border text-[12px] text-center transition-all hover-zoom-btn cursor-pointer ${colorClass}`}
                           >
                             {level}
                           </button>
@@ -2010,7 +2010,7 @@ QUY TẮC BẮT BUỘC:
 
                   {/* 5. Số lượng câu hỏi */}
                   <div>
-                    <label className="text-[11px] font-bold text-slate-700 block mb-1">
+                    <label className="text-[12px] font-bold text-slate-700 block mb-1">
                       6. Số lượng câu:
                     </label>
                     <div className="flex items-center gap-1.5">
@@ -2033,7 +2033,7 @@ QUY TẮC BẮT BUỘC:
 
                   {/* 6. Chủ đề bài học */}
                   <div>
-                    <label className="text-[11px] font-bold text-slate-700 block mb-1">
+                    <label className="text-[12px] font-bold text-slate-700 block mb-1">
                       7. Chủ đề bài học (SGK KNTT):
                     </label>
                     <input
@@ -2058,7 +2058,7 @@ QUY TẮC BẮT BUỘC:
                           key={preset}
                           type="button"
                           onClick={() => setQuizConfig(prev => ({ ...prev, topic: preset }))}
-                          className="px-2 py-0.5 rounded-md bg-slate-100 hover:bg-blue-100 text-[10px] font-medium text-slate-600 hover:text-blue-700 transition-colors cursor-pointer"
+                          className="px-2 py-0.5 rounded-md bg-slate-100 hover:bg-blue-100 text-[12px] font-medium text-slate-600 hover:text-blue-700 transition-colors cursor-pointer"
                         >
                           + {preset}
                         </button>
@@ -2068,7 +2068,7 @@ QUY TẮC BẮT BUỘC:
 
                   {/* 7. Mô tả chi tiết nội dung */}
                   <div>
-                    <label className="text-[11px] font-bold text-slate-700 block mb-1">
+                    <label className="text-[12px] font-bold text-slate-700 block mb-1">
                       8. Mô tả yêu cầu (tùy chọn):
                     </label>
                     <textarea
@@ -2082,7 +2082,7 @@ QUY TẮC BẮT BUỘC:
 
                   {/* Mức thưởng xu */}
                   <div className="flex items-center justify-between p-2.5 bg-amber-50 rounded-xl border border-amber-200">
-                    <div className="text-[11px] font-bold text-amber-900 flex items-center gap-1">
+                    <div className="text-[12px] font-bold text-amber-900 flex items-center gap-1">
                       <Award className="w-3.5 h-3.5 text-amber-600" />
                       Thưởng đúng:
                     </div>
@@ -2094,7 +2094,7 @@ QUY TẮC BẮT BUỘC:
                           onClick={() => setQuizConfig(prev => ({ ...prev, rewardCoins: c }))}
                           className={`px-2 py-0.5 rounded-md text-xs font-black transition-all cursor-pointer ${
                             quizConfig.rewardCoins === c
-                              ? 'bg-amber-600 text-white shadow-xs'
+                              ? 'bg-amber-700 text-white shadow-xs'
                               : 'bg-white text-amber-800 border border-amber-200'
                           }`}
                         >
@@ -2137,7 +2137,7 @@ QUY TẮC BẮT BUỘC:
               {isConfigCollapsed && (
                 <div className="p-3 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-2xl flex flex-wrap items-center justify-between gap-2 shadow-2xs">
                   <div className="flex items-center gap-2 text-xs font-bold text-slate-800">
-                    <span className="px-2 py-0.5 rounded-md bg-blue-600 text-white text-[11px] font-black">
+                    <span className="px-2 py-0.5 rounded-md bg-blue-600 text-white text-[12px] font-black">
                       {quizConfig.subject} · {quizConfig.grade}
                     </span>
                     <span className="text-slate-600">
@@ -2178,7 +2178,7 @@ QUY TẮC BẮT BUỘC:
               {quizNotice && (
                 <div className="p-3 bg-gradient-to-r from-emerald-50 via-teal-50 to-emerald-50 border border-emerald-300 rounded-2xl flex items-center justify-between gap-3 shadow-xs animate-fadeIn">
                   <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-black text-sm shrink-0 shadow-xs">
+                    <div className="w-8 h-8 rounded-xl bg-emerald-700 text-white flex items-center justify-center font-black text-sm shrink-0 shadow-xs">
                       ✨
                     </div>
                     <div>
@@ -2186,12 +2186,12 @@ QUY TẮC BẮT BUỘC:
                         <h4 className="text-xs md:text-sm font-black text-emerald-950">
                           {quizNotice.message}
                         </h4>
-                        <span className="px-2 py-0.5 rounded-full bg-emerald-600 text-white text-[9px] font-black uppercase">
+                        <span className="px-2 py-0.5 rounded-full bg-emerald-700 text-white text-[12px] font-black uppercase">
                           MỚI CẬP NHẬT
                         </span>
                       </div>
                       {quizNotice.sub && (
-                        <p className="text-[11px] font-semibold text-emerald-800">
+                        <p className="text-[12px] font-semibold text-emerald-800">
                           {quizNotice.sub}
                         </p>
                       )}
@@ -2235,7 +2235,7 @@ QUY TẮC BẮT BUỘC:
                           </span>
 
                           {/* Difficulty Tag */}
-                          <span className={`px-2 py-0.5 rounded-md font-extrabold text-[11px] ${
+                          <span className={`px-2 py-0.5 rounded-md font-extrabold text-[12px] ${
                             currentQ.difficulty === 'DỄ' 
                               ? 'bg-emerald-100 text-emerald-800' 
                               : currentQ.difficulty === 'TRUNG BÌNH' 
@@ -2245,7 +2245,7 @@ QUY TẮC BẮT BUỘC:
                             {currentQ.difficulty}
                           </span>
 
-                          <span className="text-amber-600 font-bold text-xs">
+                          <span className="text-amber-700 font-bold text-xs">
                             🪙 +{currentQ.rewardCoins || quizConfig.rewardCoins || 5} xu
                           </span>
                         </div>
@@ -2269,7 +2269,7 @@ QUY TẮC BẮT BUỘC:
                           <button
                             type="button"
                             onClick={toggleQuizFullscreen}
-                            className="ml-1 px-2.5 py-1 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold text-xs rounded-lg flex items-center gap-1 shadow-xs hover-zoom-btn cursor-pointer"
+                            className="ml-1 px-2.5 py-1 bg-gradient-to-r from-emerald-700 to-teal-700 hover:from-emerald-800 hover:to-teal-800 text-white font-bold text-xs rounded-lg flex items-center gap-1 shadow-xs hover-zoom-btn cursor-pointer"
                             title="Mở toàn màn hình để chiếu lớp học"
                           >
                             <Maximize2 className="w-3.5 h-3.5" />
@@ -2304,7 +2304,7 @@ QUY TẮC BẮT BUỘC:
                             <button
                               type="button"
                               onClick={handleCheckAnswer}
-                              className="px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-black text-xs md:text-sm rounded-xl flex items-center gap-1.5 shadow-md shadow-emerald-500/25 hover-zoom-btn transition-all cursor-pointer"
+                              className="px-4 py-2 bg-gradient-to-r from-emerald-700 to-teal-700 hover:from-emerald-800 hover:to-teal-800 text-white font-black text-xs md:text-sm rounded-xl flex items-center gap-1.5 shadow-md shadow-emerald-500/25 hover-zoom-btn transition-all cursor-pointer"
                             >
                               <CheckCircle2 className="w-4 h-4" />
                               <span>Kiểm tra đáp án</span>
@@ -2382,7 +2382,7 @@ QUY TẮC BẮT BUỘC:
                                       ? `CHÍNH XÁC! Chúc mừng em ${selectedStudent?.name || ''} đã trả lời đúng!`
                                       : 'Chưa chính xác rồi! Cố gắng ở câu tiếp theo nhé!'}
                                   </div>
-                                  <div className="text-[11px] opacity-90 mt-0.5">
+                                  <div className="text-[12px] opacity-90 mt-0.5">
                                     {isAnswerCorrect ? (
                                       rewardAwarded ? (
                                         <span className="font-bold text-emerald-700">
@@ -2408,7 +2408,7 @@ QUY TẮC BẮT BUỘC:
                                   className={`px-3.5 py-2 rounded-xl text-xs font-black flex items-center gap-1.5 hover-zoom-btn shrink-0 transition-all cursor-pointer ${
                                     rewardAwarded
                                       ? 'bg-emerald-200 text-emerald-900 cursor-default'
-                                      : 'bg-amber-600 hover:bg-amber-700 text-white shadow-md shadow-amber-500/25'
+                                      : 'bg-amber-700 hover:bg-amber-800 text-white shadow-md shadow-amber-500/25'
                                   }`}
                                 >
                                   <Award className="w-4 h-4" />
@@ -2438,12 +2438,12 @@ QUY TẮC BẮT BUỘC:
                                 <div className="font-bold text-blue-900">Đáp án nối ghép chuẩn xác theo SGK:</div>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
                                   {currentQ.matchingPairs.map((p, pIdx) => (
-                                    <div key={p.id} className="p-1.5 rounded-lg bg-white border border-blue-200 flex items-center gap-2 text-[11px]">
-                                      <span className="w-4 h-4 rounded bg-blue-600 text-white font-bold flex items-center justify-center shrink-0 text-[10px]">
+                                    <div key={p.id} className="p-1.5 rounded-lg bg-white border border-blue-200 flex items-center gap-2 text-[12px]">
+                                      <span className="w-4 h-4 rounded bg-blue-600 text-white font-bold flex items-center justify-center shrink-0 text-[12px]">
                                         A{pIdx + 1}
                                       </span>
                                       <span className="font-semibold text-slate-800">{p.left}</span>
-                                      <span className="text-blue-500 font-black">➔</span>
+                                      <span className="text-blue-600 font-black">➔</span>
                                       <span className="font-bold text-emerald-800">{p.right}</span>
                                     </div>
                                   ))}
@@ -2496,7 +2496,7 @@ QUY TẮC BẮT BUỘC:
               {seatingProposal && (
                 <button
                   onClick={handleApplySeatingProposal}
-                  className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold flex items-center gap-2 shadow-md shadow-emerald-600/25 hover-zoom-btn"
+                  className="px-4 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-bold flex items-center gap-2 shadow-md shadow-emerald-600/25 hover-zoom-btn"
                 >
                   <Check className="w-4 h-4" />
                   Áp Dụng Vào Sơ Đồ Lớp
@@ -2519,7 +2519,7 @@ QUY TẮC BẮT BUỘC:
                     className="p-3.5 bg-slate-50 rounded-2xl border border-slate-200 hover-zoom-card space-y-1.5"
                   >
                     <div className="flex items-center justify-between">
-                      <span className="px-2 py-0.5 rounded bg-blue-100 text-blue-800 font-extrabold text-[10px]">
+                      <span className="px-2 py-0.5 rounded bg-blue-100 text-blue-800 font-extrabold text-[12px]">
                         Bàn đôi #{idx + 1}
                       </span>
                       <HeartHandshake className="w-3.5 h-3.5 text-pink-500" />
@@ -2529,7 +2529,7 @@ QUY TẮC BẮT BUỘC:
                       <span className="text-slate-400">cùng</span>
                       <span className="text-indigo-600">{pair.student2}</span>
                     </div>
-                    <p className="text-[11px] text-slate-500 leading-tight">
+                    <p className="text-[12px] text-slate-500 leading-tight">
                       {pair.reason}
                     </p>
                   </div>
@@ -2582,7 +2582,7 @@ QUY TẮC BẮT BUỘC:
                 >
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <span className="px-2.5 py-1 rounded-full bg-amber-100 text-amber-800 text-[11px] font-bold">
+                      <span className="px-2.5 py-1 rounded-full bg-amber-100 text-amber-800 text-[12px] font-bold">
                         ⏱️ {game.duration}
                       </span>
                       <Lightbulb className="w-4 h-4 text-amber-500" />
@@ -2641,7 +2641,7 @@ QUY TẮC BẮT BUỘC:
                       {msg.attachments.map((att, attIdx) => (
                         <div
                           key={attIdx}
-                          className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-700/70 border border-blue-400/50 text-[11px] font-semibold text-white shadow-xs"
+                          className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-700/70 border border-blue-400/50 text-[12px] font-semibold text-white shadow-xs"
                         >
                           {att.previewUrl ? (
                             <img src={att.previewUrl} alt={att.name} className="w-5 h-5 rounded object-cover border border-white/30 shrink-0" />
@@ -2649,7 +2649,7 @@ QUY TẮC BẮT BUỘC:
                             <FileText className="w-3.5 h-3.5 text-blue-200 shrink-0" />
                           )}
                           <span className="truncate max-w-[130px]" title={att.name}>{att.name}</span>
-                          <span className="text-[10px] text-white">({att.sizeFormatted})</span>
+                          <span className="text-[12px] text-white">({att.sizeFormatted})</span>
                         </div>
                       ))}
                     </div>
@@ -2682,21 +2682,21 @@ QUY TẮC BẮT BUỘC:
                   {f.previewUrl ? (
                     <img src={f.previewUrl} alt={f.name} className="w-6 h-6 rounded object-cover border border-slate-200 shrink-0" />
                   ) : f.fileType === 'pdf' ? (
-                    <span className="px-1.5 py-0.5 rounded bg-rose-100 text-rose-700 font-black text-[9px] shrink-0">PDF</span>
+                    <span className="px-1.5 py-0.5 rounded bg-rose-100 text-rose-700 font-black text-[12px] shrink-0">PDF</span>
                   ) : f.fileType === 'word' ? (
-                    <span className="px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 font-black text-[9px] shrink-0">DOCX</span>
+                    <span className="px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 font-black text-[12px] shrink-0">DOCX</span>
                   ) : f.fileType === 'excel' ? (
-                    <span className="px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-700 font-black text-[9px] shrink-0">XLS</span>
+                    <span className="px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-700 font-black text-[12px] shrink-0">XLS</span>
                   ) : (
                     <FileText className="w-4 h-4 text-slate-500 shrink-0" />
                   )}
 
                   {/* Name and Status */}
                   <div className="flex flex-col min-w-0">
-                    <span className="truncate max-w-[140px] sm:max-w-[200px] font-bold text-[11px] text-slate-800" title={f.name}>
+                    <span className="truncate max-w-[140px] sm:max-w-[200px] font-bold text-[12px] text-slate-800" title={f.name}>
                       {f.name}
                     </span>
-                    <span className={`text-[10px] font-medium ${f.status === 'ready' ? 'text-emerald-600' : 'text-rose-600'}`}>
+                    <span className={`text-[12px] font-medium ${f.status === 'ready' ? 'text-emerald-700' : 'text-rose-600'}`}>
                       {f.status === 'ready' ? `✓ ${f.statusText}` : `✕ ${f.error || f.statusText}`}
                     </span>
                   </div>

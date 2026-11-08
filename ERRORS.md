@@ -123,3 +123,20 @@
 - **Fix Applied**: `getExecutiveScopedData` gộp thêm nguồn Google Drive: đọc mọi tệp `gvcn_*.json` trong thư mục dùng chung (`listClassFiles` + `getLatest`, tải song song 5 tệp), gộp lớp theo id/tên lớp chuẩn hóa, học sinh, điểm danh, bán trú. Có bộ nhớ đệm 60 giây + chống gọi trùng (app làm mới ~12 giây/lần). Không ghi ngược: Quản trị/BGH chỉ ghi tệp riêng (`adminquantri.json`, `bgh.json`), không đụng tệp `gvcn_*`.
 - **Prevention**: Mọi tính năng tổng hợp cho Quản trị/BGH phải có nguồn chạy được trên bản tĩnh (Drive) — thử bằng Apps Script giả lập với BGH ở "máy khác" (xóa `lop_hoc_user_db_<gvcn>` khỏi localStorage trước khi đăng nhập BGH).
 - **Status**: Fixed
+
+---
+
+## [2026-11-08 15:45] - GVCN đăng nhập với bộ nhớ máy trống → tự đẩy lớp 0 học sinh, đè tệp lớp thật trên Drive
+
+- **Type**: Data
+- **Severity**: Critical
+- **File**: `src/context/ClassroomContext.tsx` (đường đăng nhập `loginUser` & khôi phục phiên), `src/services/googleDriveService.ts:pushClassData`
+- **Agent**: Claude Code
+- **Root Cause**: Khi đăng nhập, nếu `localStorage` có bản dữ liệu của GVCN (kể cả bản TRẮNG 0 lớp / 0 học sinh, hoặc bản cũ) thì app dùng luôn, bỏ qua khôi phục từ Drive. Sau đó lớp chủ nhiệm được tạo lại rỗng và tự lưu → `gvcn_<lớp>.json` trên Drive bị ghi đè còn 0 học sinh. Phát hiện khi thử nghiệm trên Drive giả lập.
+- **Error Message**:
+  ```
+  gvcn_1a1.json: students 3 → 0 (exportedAt 07:25, máy có lop_hoc_user_db_<gvcn> = 0 lớp, 0 học sinh)
+  ```
+- **Fix Applied**: (1) GVCN đăng nhập / khôi phục phiên trên bản Drive luôn GỘP THÊM dữ liệu lớp từ Drive (`mergeDriveClassForTeacher`, gộp cộng thêm không xóa); bản máy 0 lớp coi như không có. (2) `pushClassData` từ chối đẩy tệp lớp 0 học sinh khi tệp trên Drive đang có học sinh (hoặc không kiểm tra được).
+- **Prevention**: Mọi luồng tự lưu của GVCN phải coi Drive là nguồn chuẩn khi dữ liệu máy rỗng; không bao giờ để một bản rỗng ghi đè bản có dữ liệu.
+- **Status**: Fixed

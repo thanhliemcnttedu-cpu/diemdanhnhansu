@@ -381,7 +381,7 @@ export const EnergizerGameArena: React.FC<EnergizerGameArenaProps> = ({
                 <Music className="w-4 h-4 text-amber-600" />
                 Đồ họa nhịp điệu & Tiếng vỗ tay
               </span>
-              <span className="text-[11px] font-bold text-amber-700 bg-amber-100/80 px-2 py-0.5 rounded-lg">
+              <span className="text-[12px] font-bold text-amber-700 bg-amber-100/80 px-2 py-0.5 rounded-lg">
                 Nhịp {clappingStep}
               </span>
             </div>
@@ -390,24 +390,24 @@ export const EnergizerGameArena: React.FC<EnergizerGameArenaProps> = ({
             <div className="p-3.5 bg-white rounded-xl border border-amber-100 flex items-center justify-around text-center">
               <div className={`p-2.5 rounded-2xl transition-all ${clappingStep === 1 ? 'bg-amber-100 ring-2 ring-amber-400 scale-105' : 'bg-slate-50'}`}>
                 <div className="text-2xl">👏</div>
-                <div className="text-[11px] font-black text-slate-800 mt-1">Nhịp 1</div>
-                <div className="text-[10px] text-slate-500">Đứng lên vỗ 2 cái</div>
+                <div className="text-[12px] font-black text-slate-800 mt-1">Nhịp 1</div>
+                <div className="text-[12px] text-slate-500">Đứng lên vỗ 2 cái</div>
               </div>
 
               <div className="text-xl font-black text-amber-700">➔</div>
 
               <div className={`p-2.5 rounded-2xl transition-all ${clappingStep === 2 ? 'bg-amber-100 ring-2 ring-amber-400 scale-105' : 'bg-slate-50'}`}>
                 <div className="text-2xl">😄</div>
-                <div className="text-[11px] font-black text-slate-800 mt-1">Nhịp 2</div>
-                <div className="text-[10px] text-slate-500">Cười HA HA!</div>
+                <div className="text-[12px] font-black text-slate-800 mt-1">Nhịp 2</div>
+                <div className="text-[12px] text-slate-500">Cười HA HA!</div>
               </div>
 
               <div className="text-xl font-black text-amber-700">➔</div>
 
               <div className={`p-2.5 rounded-2xl transition-all ${clappingStep === 3 ? 'bg-amber-100 ring-2 ring-amber-400 scale-105' : 'bg-slate-50'}`}>
                 <div className="text-2xl">🎉</div>
-                <div className="text-[11px] font-black text-slate-800 mt-1">Nhịp 3</div>
-                <div className="text-[10px] text-slate-500">Hô "Hạnh Phúc"</div>
+                <div className="text-[12px] font-black text-slate-800 mt-1">Nhịp 3</div>
+                <div className="text-[12px] text-slate-500">Hô "Hạnh Phúc"</div>
               </div>
             </div>
 
@@ -416,21 +416,21 @@ export const EnergizerGameArena: React.FC<EnergizerGameArenaProps> = ({
               <button
                 type="button"
                 onClick={() => handleTriggerClap(1)}
-                className="flex-1 py-2 px-3 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-black shadow-xs hover-zoom-btn flex items-center justify-center gap-1.5 cursor-pointer"
+                className="flex-1 py-2 px-3 bg-amber-700 hover:bg-amber-800 text-white rounded-xl text-xs font-black shadow-xs hover-zoom-btn flex items-center justify-center gap-1.5 cursor-pointer"
               >
                 <span>👏 Gõ Nhịp 1</span>
               </button>
               <button
                 type="button"
                 onClick={() => handleTriggerClap(2)}
-                className="flex-1 py-2 px-3 bg-orange-600 hover:bg-orange-700 text-white rounded-xl text-xs font-black shadow-xs hover-zoom-btn flex items-center justify-center gap-1.5 cursor-pointer"
+                className="flex-1 py-2 px-3 bg-orange-700 hover:bg-orange-800 text-white rounded-xl text-xs font-black shadow-xs hover-zoom-btn flex items-center justify-center gap-1.5 cursor-pointer"
               >
                 <span>😄 Gõ Nhịp 2</span>
               </button>
               <button
                 type="button"
                 onClick={() => handleTriggerClap(3)}
-                className="flex-1 py-2 px-3 bg-rose-500 hover:bg-rose-600 text-white rounded-xl text-xs font-black shadow-xs hover-zoom-btn flex items-center justify-center gap-1.5 cursor-pointer"
+                className="flex-1 py-2 px-3 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-black shadow-xs hover-zoom-btn flex items-center justify-center gap-1.5 cursor-pointer"
               >
                 <span>🎉 Gõ Nhịp 3</span>
               </button>
@@ -446,7 +446,7 @@ export const EnergizerGameArena: React.FC<EnergizerGameArenaProps> = ({
                 <Bell className="w-4 h-4 text-teal-600" />
                 Đồ họa Thiền Tĩnh Lặng & Chuông Định Tâm
               </span>
-              <span className="text-[11px] font-bold text-teal-700 bg-teal-100 px-2 py-0.5 rounded-lg">
+              <span className="text-[12px] font-bold text-teal-700 bg-teal-100 px-2 py-0.5 rounded-lg">
                 100% Yên Tĩnh
               </span>
             </div>
@@ -460,7 +460,7 @@ export const EnergizerGameArena: React.FC<EnergizerGameArenaProps> = ({
                 <div className="text-xs font-black text-slate-800">
                   Thử thách "Bức tượng tĩnh lặng 60 giây"
                 </div>
-                <div className="text-[11px] text-slate-600 leading-snug">
+                <div className="text-[12px] text-slate-600 leading-snug">
                   Cả lớp giữ bất động như tượng đá, hít thở sâu và cảm nhận sự êm dịu của lớp học.
                 </div>
               </div>
@@ -470,7 +470,7 @@ export const EnergizerGameArena: React.FC<EnergizerGameArenaProps> = ({
             <button
               type="button"
               onClick={handleTriggerZenBowl}
-              className="w-full py-2.5 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-xs font-black shadow-xs hover-zoom-btn flex items-center justify-center gap-2 cursor-pointer"
+              className="w-full py-2.5 bg-teal-700 hover:bg-teal-800 text-white rounded-xl text-xs font-black shadow-xs hover-zoom-btn flex items-center justify-center gap-2 cursor-pointer"
             >
               <Bell className="w-4 h-4" />
               <span>GÕ CHUÔNG TĨNH TÂM THIỀN ĐỊNH 🔔</span>
@@ -486,21 +486,21 @@ export const EnergizerGameArena: React.FC<EnergizerGameArenaProps> = ({
                 <Gift className="w-4 h-4 text-purple-600" />
                 Đồ họa Hộp Quà Ma Thuật 3D
               </span>
-              <span className="text-[11px] font-bold text-purple-700 bg-purple-100 px-2 py-0.5 rounded-lg">
+              <span className="text-[12px] font-bold text-purple-700 bg-purple-100 px-2 py-0.5 rounded-lg">
                 Bí Mật Bất Ngờ
               </span>
             </div>
 
             {/* Gift Box Graphic */}
             <div className="p-4 bg-white rounded-xl border border-purple-100 flex flex-col sm:flex-row items-center gap-3.5 shadow-xs">
-              <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-purple-500 to-pink-500 text-white flex items-center justify-center text-3xl shadow-md shrink-0">
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-purple-600 to-pink-600 text-white flex items-center justify-center text-3xl shadow-md shrink-0">
                 🎁
               </div>
               <div className="space-y-1 text-center sm:text-left flex-1">
                 <div className="text-xs font-black text-purple-900">
                   {isBoxOpen ? '✨ HỘP QUÀ ĐÃ MỞ BÍ MẬT:' : 'Hộp quà ma thuật đang chờ Thầy/Cô mở:'}
                 </div>
-                <div className="text-[11px] text-slate-700 font-semibold leading-snug">
+                <div className="text-[12px] text-slate-700 font-semibold leading-snug">
                   {boxRewardText || 'Nhấn nút bên dưới để mở điều bí mật dành cho học sinh trong tiết học!'}
                 </div>
               </div>
@@ -526,18 +526,18 @@ export const EnergizerGameArena: React.FC<EnergizerGameArenaProps> = ({
                 <Wind className="w-4 h-4 text-cyan-600" />
                 Đồ họa Cơn Gió Vui Nhộn & Lá Rơi
               </span>
-              <span className="text-[11px] font-bold text-cyan-700 bg-cyan-100 px-2 py-0.5 rounded-lg">
+              <span className="text-[12px] font-bold text-cyan-700 bg-cyan-100 px-2 py-0.5 rounded-lg">
                 Phản Xạ Nhanh
               </span>
             </div>
 
             {/* Wind Graphic Display */}
             <div className="p-4 bg-white rounded-xl border border-cyan-100 flex items-center gap-3.5 shadow-xs">
-              <div className="w-14 h-14 rounded-2xl bg-cyan-600 text-white flex items-center justify-center text-3xl shadow-md shrink-0">
+              <div className="w-14 h-14 rounded-2xl bg-cyan-700 text-white flex items-center justify-center text-3xl shadow-md shrink-0">
                 💨
               </div>
               <div className="space-y-1">
-                <div className="text-[11px] font-bold text-cyan-700 uppercase">Khẩu lệnh của giáo viên:</div>
+                <div className="text-[12px] font-bold text-cyan-700 uppercase">Khẩu lệnh của giáo viên:</div>
                 <div className="text-xs font-black text-slate-900 leading-snug">
                   {windPromptText}
                 </div>
@@ -548,7 +548,7 @@ export const EnergizerGameArena: React.FC<EnergizerGameArenaProps> = ({
             <button
               type="button"
               onClick={handleTriggerWind}
-              className="w-full py-2.5 bg-cyan-600 hover:bg-cyan-700 text-white rounded-xl text-xs font-black shadow-xs hover-zoom-btn flex items-center justify-center gap-2 cursor-pointer"
+              className="w-full py-2.5 bg-cyan-700 hover:bg-cyan-800 text-white rounded-xl text-xs font-black shadow-xs hover-zoom-btn flex items-center justify-center gap-2 cursor-pointer"
             >
               <Wind className="w-4 h-4" />
               <span>TẠO LỆNH "GIÓ THỔI" MỚI VÀ HIỆU ỨNG GIÓ 🍃</span>
@@ -564,18 +564,18 @@ export const EnergizerGameArena: React.FC<EnergizerGameArenaProps> = ({
                 <Heart className="w-4 h-4 text-rose-600" />
                 Đồ họa Phong Thư Trái Tim Ấm Áp
               </span>
-              <span className="text-[11px] font-bold text-rose-700 bg-rose-100 px-2 py-0.5 rounded-lg">
+              <span className="text-[12px] font-bold text-rose-700 bg-rose-100 px-2 py-0.5 rounded-lg">
                 Tình Bạn Hạnh Phúc
               </span>
             </div>
 
             {/* Letter Envelope Graphic */}
             <div className="p-4 bg-white rounded-xl border border-rose-100 flex items-center gap-3.5 shadow-xs">
-              <div className="w-14 h-14 rounded-2xl bg-rose-500 text-white flex items-center justify-center text-3xl shadow-md shrink-0">
+              <div className="w-14 h-14 rounded-2xl bg-rose-600 text-white flex items-center justify-center text-3xl shadow-md shrink-0">
                 💌
               </div>
               <div className="space-y-1">
-                <div className="text-[11px] font-bold text-rose-700 uppercase">Lời khen ấm áp mẫu:</div>
+                <div className="text-[12px] font-bold text-rose-700 uppercase">Lời khen ấm áp mẫu:</div>
                 <div className="text-xs font-bold text-slate-800 italic leading-snug">
                   {complimentCardText}
                 </div>
@@ -602,21 +602,21 @@ export const EnergizerGameArena: React.FC<EnergizerGameArenaProps> = ({
                 <Hourglass className="w-4 h-4 text-amber-600" />
                 Đồ họa Đồng Hồ Cát Chảy Nhanh
               </span>
-              <span className="text-[11px] font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-lg">
+              <span className="text-[12px] font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-lg">
                 Tác Phong Nhanh Gọn
               </span>
             </div>
 
             {/* Hourglass Graphic */}
             <div className="p-4 bg-white rounded-xl border border-amber-100 flex items-center gap-3.5 shadow-xs">
-              <div className="w-14 h-14 rounded-2xl bg-amber-600 text-white flex items-center justify-center text-3xl shadow-md shrink-0">
+              <div className="w-14 h-14 rounded-2xl bg-amber-700 text-white flex items-center justify-center text-3xl shadow-md shrink-0">
                 ⏳
               </div>
               <div className="space-y-1">
                 <div className="text-xs font-black text-slate-900">
                   Thử thách tác phong 10 giây:
                 </div>
-                <div className="text-[11px] text-slate-600 leading-snug">
+                <div className="text-[12px] text-slate-600 leading-snug">
                   1. Cất sách vở cũ • 2. Lấy sách vở mới • 3. Ngồi ngay ngắn trước tiếng chuông!
                 </div>
               </div>
@@ -686,14 +686,14 @@ export const EnergizerGameArena: React.FC<EnergizerGameArenaProps> = ({
 
       {/* RESULT MODAL / BANNER KHI KẾT THÚC TRÒ CHƠI */}
       {isFinished && (
-        <div className="p-6 bg-gradient-to-r from-amber-600 via-orange-600 to-rose-500 text-white rounded-3xl shadow-xl space-y-4">
+        <div className="p-6 bg-gradient-to-r from-amber-700 via-orange-700 to-rose-600 text-white rounded-3xl shadow-xl space-y-4">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="flex items-center gap-4">
               <div className="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center shrink-0 shadow-inner">
                 <Trophy className="w-8 h-8 text-yellow-200" />
               </div>
               <div>
-                <span className="px-2.5 py-0.5 rounded-full bg-white/20 text-white text-[10px] font-black uppercase">
+                <span className="px-2.5 py-0.5 rounded-full bg-white/20 text-white text-[12px] font-black uppercase">
                   Hoàn Thành Trò Chơi 5 Phút
                 </span>
                 <h2 className="text-xl md:text-2xl font-black tracking-tight mt-0.5">
@@ -730,21 +730,21 @@ export const EnergizerGameArena: React.FC<EnergizerGameArenaProps> = ({
           {/* Quick Metrics */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
             <div className="p-3.5 bg-white/15 backdrop-blur-md rounded-2xl border border-white/20">
-              <div className="text-[11px] text-white font-bold uppercase">Tổng xu đã tặng trong lượt chơi</div>
+              <div className="text-[12px] text-white font-bold uppercase">Tổng xu đã tặng trong lượt chơi</div>
               <div className="text-2xl font-black text-white mt-0.5">+{totalCoinsAwarded} xu</div>
-              <div className="text-[10px] text-white mt-0.5">Đã cập nhật trực tiếp vào hệ thống</div>
+              <div className="text-[12px] text-white mt-0.5">Đã cập nhật trực tiếp vào hệ thống</div>
             </div>
 
             <div className="p-3.5 bg-white/15 backdrop-blur-md rounded-2xl border border-white/20">
-              <div className="text-[11px] text-white font-bold uppercase">Số học sinh được vinh danh</div>
+              <div className="text-[12px] text-white font-bold uppercase">Số học sinh được vinh danh</div>
               <div className="text-2xl font-black text-white mt-0.5">{uniqueStudentsAwardedCount} / {classStudents.length} bạn</div>
-              <div className="text-[10px] text-white mt-0.5">Tạo động lực thi đua tự giác</div>
+              <div className="text-[12px] text-white mt-0.5">Tạo động lực thi đua tự giác</div>
             </div>
 
             <div className="p-3.5 bg-white/15 backdrop-blur-md rounded-2xl border border-white/20">
-              <div className="text-[11px] text-white font-bold uppercase">Tổng số lượt tặng xu</div>
+              <div className="text-[12px] text-white font-bold uppercase">Tổng số lượt tặng xu</div>
               <div className="text-2xl font-black text-white mt-0.5">{awardHistory.length} lượt</div>
-              <div className="text-[10px] text-white mt-0.5">Ghi nhận minh bạch vào sổ thi đua</div>
+              <div className="text-[12px] text-white mt-0.5">Ghi nhận minh bạch vào sổ thi đua</div>
             </div>
           </div>
         </div>
@@ -757,10 +757,10 @@ export const EnergizerGameArena: React.FC<EnergizerGameArenaProps> = ({
           {/* Game Title & Rules Card */}
           <div className="p-5 bg-white rounded-3xl border border-slate-200 shadow-sm space-y-3.5">
             <div className="flex items-center justify-between">
-              <span className="px-2.5 py-1 rounded-full bg-blue-100 text-blue-800 text-[11px] font-black">
+              <span className="px-2.5 py-1 rounded-full bg-blue-100 text-blue-800 text-[12px] font-black">
                 ⏱️ Thời lượng chuẩn: {game.duration}
               </span>
-              <span className="text-xs font-bold text-emerald-600 flex items-center gap-1">
+              <span className="text-xs font-bold text-emerald-700 flex items-center gap-1">
                 <CheckCircle2 className="w-3.5 h-3.5" /> Nạp Năng Lượng Tức Thì
               </span>
             </div>
@@ -789,7 +789,7 @@ export const EnergizerGameArena: React.FC<EnergizerGameArenaProps> = ({
           {renderGameThemeGraphics()}
 
           {/* Countdown Timer Display & Controls */}
-          <div className="p-6 bg-gradient-to-b from-sky-600 to-indigo-600 text-white rounded-3xl shadow-lg space-y-5 text-center">
+          <div className="p-6 bg-gradient-to-b from-sky-700 to-indigo-600 text-white rounded-3xl shadow-lg space-y-5 text-center">
             <div className="text-xs font-bold uppercase tracking-widest text-slate-400">
               Thời Gian Đếm Ngược
             </div>
@@ -804,7 +804,7 @@ export const EnergizerGameArena: React.FC<EnergizerGameArenaProps> = ({
               <div className="text-xs text-slate-400 mt-1">
                 {isRunning ? (
                   <span className="text-emerald-400 font-semibold flex items-center justify-center gap-1">
-                    <span className="w-2 h-2 rounded-full bg-emerald-600 animate-ping" />
+                    <span className="w-2 h-2 rounded-full bg-emerald-700 animate-ping" />
                     Trò chơi đang diễn ra sôi nổi 🎵
                   </span>
                 ) : isFinished ? (
@@ -818,7 +818,7 @@ export const EnergizerGameArena: React.FC<EnergizerGameArenaProps> = ({
             {/* Progress Bar */}
             <div className="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
               <div
-                className="bg-gradient-to-r from-amber-600 to-yellow-600 h-2.5 rounded-full transition-all duration-300 ease-out"
+                className="bg-gradient-to-r from-amber-700 to-yellow-700 h-2.5 rounded-full transition-all duration-300 ease-out"
                 style={{ width: `${progressPercent}%` }}
               />
             </div>
@@ -830,7 +830,7 @@ export const EnergizerGameArena: React.FC<EnergizerGameArenaProps> = ({
                 type="button"
                 onClick={handleStart}
                 disabled={isRunning}
-                className="py-3 px-3 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs md:text-sm flex items-center justify-center gap-1.5 shadow-md shadow-emerald-600/30 hover-zoom-btn disabled:opacity-40 transition-all cursor-pointer"
+                className="py-3 px-3 rounded-2xl bg-emerald-700 hover:bg-emerald-800 text-white font-black text-xs md:text-sm flex items-center justify-center gap-1.5 shadow-md shadow-emerald-600/30 hover-zoom-btn disabled:opacity-40 transition-all cursor-pointer"
               >
                 <Play className="w-4 h-4 fill-white" />
                 <span>Bắt Đầu</span>
@@ -860,7 +860,7 @@ export const EnergizerGameArena: React.FC<EnergizerGameArenaProps> = ({
             </div>
 
             {/* Quick Adjustment Options */}
-            <div className="flex items-center justify-center gap-2 pt-2 border-t border-slate-800 text-[11px] text-slate-400">
+            <div className="flex items-center justify-center gap-2 pt-2 border-t border-slate-800 text-[12px] text-slate-400">
               <span>Chỉnh giờ:</span>
               <button
                 type="button"
@@ -904,7 +904,7 @@ export const EnergizerGameArena: React.FC<EnergizerGameArenaProps> = ({
 
               {/* Coin Amount Selector */}
               <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl">
-                <span className="text-[11px] font-bold text-slate-600 px-2">Mức xu:</span>
+                <span className="text-[12px] font-bold text-slate-600 px-2">Mức xu:</span>
                 {[1, 2, 3, 5, 10].map(amt => (
                   <button
                     key={amt}
@@ -912,7 +912,7 @@ export const EnergizerGameArena: React.FC<EnergizerGameArenaProps> = ({
                     onClick={() => setSelectedCoinAmount(amt)}
                     className={`px-2.5 py-1 rounded-lg text-xs font-black transition-all cursor-pointer ${
                       selectedCoinAmount === amt
-                        ? 'bg-amber-600 text-white shadow-xs'
+                        ? 'bg-amber-700 text-white shadow-xs'
                         : 'text-slate-700 hover:bg-slate-200'
                     }`}
                   >
@@ -961,7 +961,7 @@ export const EnergizerGameArena: React.FC<EnergizerGameArenaProps> = ({
                   <Users className="w-4 h-4 text-indigo-600" />
                   2. Tặng Xu Cho Nhóm / Tổ Thi Đua
                 </span>
-                <span className="text-[11px] text-slate-500">Bấm nút để thưởng nhanh cho tổ</span>
+                <span className="text-[12px] text-slate-500">Bấm nút để thưởng nhanh cho tổ</span>
               </div>
 
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
@@ -975,8 +975,8 @@ export const EnergizerGameArena: React.FC<EnergizerGameArenaProps> = ({
                       className="p-3 bg-slate-50 hover:bg-indigo-50 border border-slate-200 hover:border-indigo-300 rounded-2xl text-center space-y-1 hover-zoom-card transition-all cursor-pointer"
                     >
                       <div className="text-xs font-black text-slate-800">{grpName}</div>
-                      <div className="text-[11px] text-slate-500 font-medium">{grpMembers.length} học sinh</div>
-                      <div className="pt-1 text-[11px] font-black text-indigo-600">
+                      <div className="text-[12px] text-slate-500 font-medium">{grpMembers.length} học sinh</div>
+                      <div className="pt-1 text-[12px] font-black text-indigo-600">
                         +{selectedCoinAmount} xu / bạn
                       </div>
                     </button>
@@ -995,7 +995,7 @@ export const EnergizerGameArena: React.FC<EnergizerGameArenaProps> = ({
                 <button
                   type="button"
                   onClick={handlePickRandomStudent}
-                  className="text-[11px] text-amber-700 hover:text-amber-800 font-bold flex items-center gap-1 hover:underline cursor-pointer"
+                  className="text-[12px] text-amber-700 hover:text-amber-800 font-bold flex items-center gap-1 hover:underline cursor-pointer"
                 >
                   <Shuffle className="w-3.5 h-3.5" />
                   Chọn ngẫu nhiên 1 bạn
@@ -1018,7 +1018,7 @@ export const EnergizerGameArena: React.FC<EnergizerGameArenaProps> = ({
                 <button
                   type="button"
                   onClick={handleAwardStudent}
-                  className="w-full sm:w-auto px-5 py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-black flex items-center justify-center gap-1.5 shadow-md shadow-amber-500/25 hover-zoom-btn shrink-0 cursor-pointer"
+                  className="w-full sm:w-auto px-5 py-2.5 bg-amber-700 hover:bg-amber-800 text-white rounded-xl text-xs font-black flex items-center justify-center gap-1.5 shadow-md shadow-amber-500/25 hover-zoom-btn shrink-0 cursor-pointer"
                 >
                   <Award className="w-4 h-4" />
                   <span>Tặng +{selectedCoinAmount} Xu</span>
@@ -1043,12 +1043,12 @@ export const EnergizerGameArena: React.FC<EnergizerGameArenaProps> = ({
                         <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
                         <span className="font-bold text-slate-800">{rec.title}</span>
                         {rec.count > 1 && (
-                          <span className="text-[10px] text-slate-500">({rec.count} bạn)</span>
+                          <span className="text-[12px] text-slate-500">({rec.count} bạn)</span>
                         )}
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className="font-black text-amber-600">+{rec.amount * rec.count} xu</span>
-                        <span className="text-[10px] text-slate-400">{rec.timestamp}</span>
+                        <span className="font-black text-amber-700">+{rec.amount * rec.count} xu</span>
+                        <span className="text-[12px] text-slate-400">{rec.timestamp}</span>
                       </div>
                     </div>
                   ))}

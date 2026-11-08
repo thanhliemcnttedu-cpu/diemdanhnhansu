@@ -178,7 +178,7 @@ export const ExportStudentListModal: React.FC<ExportStudentListModalProps> = ({
       <div className="bg-white w-full max-w-4xl rounded-3xl shadow-2xl border border-indigo-100 overflow-hidden my-auto animate-in fade-in zoom-in-95 duration-200">
         
         {/* Header */}
-        <div className="px-6 py-5 bg-gradient-to-r from-emerald-600 via-teal-600 to-indigo-700 text-white flex items-center justify-between">
+        <div className="px-6 py-5 bg-gradient-to-r from-emerald-700 via-teal-700 to-indigo-700 text-white flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-2xl bg-white/15 flex items-center justify-center shadow-inner">
               <FileSpreadsheet className="w-6 h-6 text-white" />
@@ -217,7 +217,7 @@ export const ExportStudentListModal: React.FC<ExportStudentListModalProps> = ({
                   <Award className="w-4 h-4" />
                 </span>
                 {exportType === 'full' && (
-                  <span className="w-5 h-5 rounded-full bg-emerald-600 text-white flex items-center justify-center">
+                  <span className="w-5 h-5 rounded-full bg-emerald-700 text-white flex items-center justify-center">
                     <Check className="w-3 h-3 stroke-[3]" />
                   </span>
                 )}
@@ -267,7 +267,7 @@ export const ExportStudentListModal: React.FC<ExportStudentListModalProps> = ({
                   <Calendar className="w-4 h-4" />
                 </span>
                 {exportType === 'attendance' && (
-                  <span className="w-5 h-5 rounded-full bg-amber-600 text-white flex items-center justify-center">
+                  <span className="w-5 h-5 rounded-full bg-amber-700 text-white flex items-center justify-center">
                     <Check className="w-3 h-3 stroke-[3]" />
                   </span>
                 )}
@@ -378,14 +378,14 @@ export const ExportStudentListModal: React.FC<ExportStudentListModalProps> = ({
                       <td className="py-2 px-3 font-bold text-slate-800">{st.name}</td>
                       <td className="py-2 px-3 text-center font-mono text-slate-600">{st.birthDate || '—'}</td>
                       <td className="py-2 px-3 text-center">
-                        <span className={`px-2 py-0.5 rounded-md font-bold text-[10px] ${st.gender === 'Nam' ? 'bg-sky-50 text-sky-700' : 'bg-pink-50 text-pink-700'}`}>
+                        <span className={`px-2 py-0.5 rounded-md font-bold text-[12px] ${st.gender === 'Nam' ? 'bg-sky-50 text-sky-700' : 'bg-pink-50 text-pink-700'}`}>
                           {st.gender}
                         </span>
                       </td>
                       <td className="py-2 px-3 text-center text-slate-600 font-semibold">{st.group || 'Tổ 1'}</td>
                       {exportType === 'full' && (
                         <>
-                          <td className="py-2 px-3 text-center font-black text-amber-600 font-mono">
+                          <td className="py-2 px-3 text-center font-black text-amber-700 font-mono">
                             🪙 {st.points || 0}
                           </td>
                           <td className="py-2 px-3 text-center font-black text-indigo-600 font-mono">
@@ -407,7 +407,7 @@ export const ExportStudentListModal: React.FC<ExportStudentListModalProps> = ({
           <div className={`p-6 bg-white border-2 border-dashed border-slate-300 rounded-2xl space-y-4 ${isPreviewPrintOpen ? 'block' : 'hidden print:block'}`}>
             <div className="flex items-center justify-between pb-3 border-b border-slate-200">
               <span className="text-xs font-black text-slate-700 uppercase">Mẫu hiển thị khi in ấn (Khổ A4)</span>
-              <span className="text-[11px] text-slate-500">Chuẩn mực sư phạm, tự động căn chỉnh lề</span>
+              <span className="text-[12px] text-slate-500">Chuẩn mực sư phạm, tự động căn chỉnh lề</span>
             </div>
 
             <div id="printable-student-list" ref={printAreaRef} className="space-y-4 text-slate-900 bg-white p-4">
@@ -498,7 +498,7 @@ export const ExportStudentListModal: React.FC<ExportStudentListModalProps> = ({
                       ......., ngày {new Date().getDate()} tháng {new Date().getMonth() + 1} năm {new Date().getFullYear()}
                     </p>
                     <p className="font-bold uppercase">GIÁO VIÊN CHỦ NHIỆM</p>
-                    <p className="text-[11px] italic text-slate-500">(Ký và ghi rõ họ tên)</p>
+                    <p className="text-[12px] italic text-slate-500">(Ký và ghi rõ họ tên)</p>
                     <div className="h-16"></div>
                     <p className="font-bold text-slate-800">{customTeacher}</p>
                   </div>
@@ -535,7 +535,7 @@ export const ExportStudentListModal: React.FC<ExportStudentListModalProps> = ({
 
             <button
               onClick={handleExportExcel}
-              className="px-5 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-xl text-xs font-black flex items-center gap-2 transition-all hover-zoom-btn shadow-md shadow-emerald-600/25"
+              className="px-5 py-2.5 bg-gradient-to-r from-emerald-700 to-teal-700 hover:from-emerald-800 hover:to-teal-800 text-white rounded-xl text-xs font-black flex items-center gap-2 transition-all hover-zoom-btn shadow-md shadow-emerald-600/25"
             >
               <Download className="w-4 h-4" />
               <span>Tải File Excel (.xlsx)</span>

@@ -399,10 +399,10 @@ export const NoiseMeterView: React.FC = () => {
               activeAttentionAlert.theme === 'rose'
                 ? 'bg-gradient-to-b from-rose-600 via-red-600 to-rose-700 border-rose-300 text-white shadow-rose-900/50'
                 : activeAttentionAlert.theme === 'orange'
-                ? 'bg-gradient-to-b from-orange-600 via-amber-600 to-red-600 border-amber-300 text-white shadow-orange-900/50'
+                ? 'bg-gradient-to-b from-orange-700 via-amber-700 to-red-600 border-amber-300 text-white shadow-orange-900/50'
                 : activeAttentionAlert.theme === 'amber'
                 ? 'bg-gradient-to-b from-amber-400 via-yellow-500 to-amber-600 border-yellow-200 text-slate-950 shadow-amber-900/50'
-                : 'bg-gradient-to-b from-emerald-600 via-teal-600 to-emerald-700 border-emerald-300 text-white shadow-emerald-900/50'
+                : 'bg-gradient-to-b from-emerald-700 via-teal-700 to-emerald-700 border-emerald-300 text-white shadow-emerald-900/50'
             }`}
           >
             {/* Top Bar with 20s Countdown Timer Badge & Close Button */}
@@ -460,7 +460,7 @@ export const NoiseMeterView: React.FC = () => {
             <div className="mt-8 pt-4">
               <div className="w-full bg-black/20 rounded-full h-3 overflow-hidden p-0.5 border border-white/20">
                 <div 
-                  className="bg-amber-600 h-full rounded-full transition-all duration-1000 ease-linear shadow-xs"
+                  className="bg-amber-700 h-full rounded-full transition-all duration-1000 ease-linear shadow-xs"
                   style={{ width: `${(attentionSecondsLeft / 20) * 100}%` }}
                 />
               </div>
@@ -535,7 +535,7 @@ export const NoiseMeterView: React.FC = () => {
                   {silenceSecondsLeft !== null ? `${silenceSecondsLeft}s` : '⏱️'}
                 </span>
               </div>
-              <p className="text-[11px] text-slate-400 mt-2">
+              <p className="text-[12px] text-slate-400 mt-2">
                 Khi hết giờ sẽ tự động khen lớp "TUYỆT VỜI!" 🎉
               </p>
             </div>
@@ -582,13 +582,13 @@ export const NoiseMeterView: React.FC = () => {
               <h3 className="text-sm font-black text-slate-900 flex items-center gap-2">
                 <span>Phát Hiện Tiếng Ồn Tự Động (Microphone)</span>
                 {isListening && (
-                  <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-black uppercase flex items-center gap-1">
+                  <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[12px] font-black uppercase flex items-center gap-1">
                     <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
                     Đang nghe trực tiếp
                   </span>
                 )}
                 {isSimulating && (
-                  <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[10px] font-black uppercase">
+                  <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[12px] font-black uppercase">
                     Đang mô phỏng (Demo)
                   </span>
                 )}
@@ -613,7 +613,7 @@ export const NoiseMeterView: React.FC = () => {
               <button
                 type="button"
                 onClick={startMic}
-                className="px-4 py-2 bg-rose-500 hover:bg-rose-600 text-white rounded-xl text-xs font-bold shadow-md shadow-rose-500/25 flex items-center gap-1.5 hover-zoom-btn"
+                className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold shadow-md shadow-rose-500/25 flex items-center gap-1.5 hover-zoom-btn"
               >
                 <Mic className="w-3.5 h-3.5" />
                 <span>Bật micro</span>
@@ -658,7 +658,7 @@ export const NoiseMeterView: React.FC = () => {
               <button
                 type="button"
                 onClick={startMic}
-                className="px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs flex items-center gap-1 hover-zoom-btn"
+                className="px-3 py-1.5 rounded-lg bg-amber-700 hover:bg-amber-800 text-white font-bold text-xs flex items-center gap-1 hover-zoom-btn"
               >
                 <RefreshCw className="w-3 h-3" />
                 <span>Thử lại bật micro</span>
@@ -684,7 +684,7 @@ export const NoiseMeterView: React.FC = () => {
                   {noiseLevel} dB
                 </span>
                 {noiseLevel >= threshold && (
-                  <span className="px-2 py-0.5 rounded-full bg-rose-100 text-rose-700 text-[10px] font-black animate-bounce">
+                  <span className="px-2 py-0.5 rounded-full bg-rose-100 text-rose-700 text-[12px] font-black animate-bounce">
                     ⚠️ QUÁ NGƯỠNG CHO PHÉP!
                   </span>
                 )}
@@ -694,7 +694,7 @@ export const NoiseMeterView: React.FC = () => {
                 <button
                   type="button"
                   onClick={triggerTestNoiseSpike}
-                  className="px-2.5 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-[11px] font-bold hover-zoom-btn"
+                  className="px-2.5 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-[12px] font-bold hover-zoom-btn"
                   title="Thử tạo tiếng ồn 82dB để kiểm tra cảnh báo"
                 >
                   ⚡ Thử tạo tiếng ồn (82 dB)
@@ -718,7 +718,7 @@ export const NoiseMeterView: React.FC = () => {
             </div>
 
             {/* Scale Legends */}
-            <div className="flex items-center justify-between text-[11px] text-slate-400 font-semibold">
+            <div className="flex items-center justify-between text-[12px] text-slate-400 font-semibold">
               <span>0 dB (Yên lặng)</span>
               <span className="font-bold text-rose-600">Ngưỡng báo động: {threshold} dB</span>
               <span>100 dB (Rất ồn)</span>
@@ -732,7 +732,7 @@ export const NoiseMeterView: React.FC = () => {
                 <span className="font-mono text-indigo-600 font-black">{threshold} dB</span>
               </div>
               <div className="flex items-center gap-3 w-full sm:w-64">
-                <span className="text-[10px] text-slate-400">40 dB</span>
+                <span className="text-[12px] text-slate-400">40 dB</span>
                 <input
                   type="range"
                   min="40"
@@ -741,7 +741,7 @@ export const NoiseMeterView: React.FC = () => {
                   onChange={(e) => setThreshold(Number(e.target.value))}
                   className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600"
                 />
-                <span className="text-[10px] text-slate-400">90 dB</span>
+                <span className="text-[12px] text-slate-400">90 dB</span>
               </div>
             </div>
           </div>
@@ -751,7 +751,7 @@ export const NoiseMeterView: React.FC = () => {
             <p className="text-xs font-bold text-slate-700">
               Bật Micro hoặc Chế độ Mô phỏng để bắt đầu phát hiện tiếng ồn tự động.
             </p>
-            <p className="text-[11px] text-slate-400 mt-1">
+            <p className="text-[12px] text-slate-400 mt-1">
               Hệ thống sẽ đo âm lượng âm thanh theo chuẩn dB và tự động phát âm thanh cảnh báo khi lớp quá ồn.
             </p>
           </div>

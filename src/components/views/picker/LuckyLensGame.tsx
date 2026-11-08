@@ -454,7 +454,7 @@ export const LuckyLensGame: React.FC<LuckyLensGameProps> = ({
       {/* --- TOP CONTROL BAR --- */}
       <div className="bg-white rounded-3xl p-4 md:p-5 border border-slate-200/90 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-cyan-600 via-blue-600 to-indigo-600 text-white flex items-center justify-center font-black shadow-md shadow-cyan-500/25 shrink-0">
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-cyan-700 via-blue-600 to-indigo-600 text-white flex items-center justify-center font-black shadow-md shadow-cyan-500/25 shrink-0">
             <Camera className="w-6 h-6 animate-pulse text-cyan-200" />
           </div>
           <div>
@@ -462,7 +462,7 @@ export const LuckyLensGame: React.FC<LuckyLensGameProps> = ({
               <h2 className="text-base sm:text-lg font-black text-slate-900 tracking-tight uppercase">
                 Ống Kính May Mắn • Lucky Camera Lens
               </h2>
-              <span className="px-2 py-0.5 rounded-full bg-cyan-100 text-cyan-800 text-[10px] font-black uppercase">
+              <span className="px-2 py-0.5 rounded-full bg-cyan-100 text-cyan-800 text-[12px] font-black uppercase">
                 Lớp {activeClass?.name || '4A1'}
               </span>
             </div>
@@ -489,7 +489,7 @@ export const LuckyLensGame: React.FC<LuckyLensGameProps> = ({
               type="button"
               onClick={() => setCallMode('coins')}
               className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all ${
-                callMode === 'coins' ? 'bg-amber-600 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'
+                callMode === 'coins' ? 'bg-amber-700 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'
               }`}
             >
               🪙 Kèm Thưởng Xu
@@ -543,18 +543,18 @@ export const LuckyLensGame: React.FC<LuckyLensGameProps> = ({
         <div className="flex items-center justify-between text-slate-800 text-xs font-mono tracking-wider z-30 pointer-events-none">
           {/* Top Left: Recording status & Resolution */}
           <div className="flex items-center gap-2">
-            <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-rose-600/90 text-white font-black text-[11px] shadow-md uppercase">
+            <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-rose-600/90 text-white font-black text-[12px] shadow-md uppercase">
               <span className="w-2 h-2 rounded-full bg-white animate-ping" />
               <span>REC • 4K 60FPS</span>
             </span>
-            <span className="px-2.5 py-1 rounded-xl bg-slate-100/90 text-cyan-600 border border-slate-200 font-bold hidden sm:inline">
+            <span className="px-2.5 py-1 rounded-xl bg-slate-100/90 text-cyan-700 border border-slate-200 font-bold hidden sm:inline">
               {scanPhaseText}
             </span>
           </div>
 
           {/* Top Center: Viewfinder Crosshair Status */}
-          <div className="hidden md:flex items-center gap-2 text-slate-500 text-[11px] font-bold">
-            <span className="text-cyan-600">[ AF-C CONTINUOUS ]</span>
+          <div className="hidden md:flex items-center gap-2 text-slate-500 text-[12px] font-bold">
+            <span className="text-cyan-700">[ AF-C CONTINUOUS ]</span>
             <span>•</span>
             <span>SHUTTER: 1/1000s</span>
             <span>•</span>
@@ -566,7 +566,7 @@ export const LuckyLensGame: React.FC<LuckyLensGameProps> = ({
             <span className="px-2.5 py-1 rounded-xl bg-slate-100/90 text-amber-700 border border-slate-200 font-bold text-xs">
               Sẵn sàng: {activeStudents.length} / {groupFiltered.length} HS
             </span>
-            <span className="text-emerald-600 font-black hidden sm:inline">
+            <span className="text-emerald-700 font-black hidden sm:inline">
               [▮▮▮▯] 85%
             </span>
           </div>
@@ -652,13 +652,13 @@ export const LuckyLensGame: React.FC<LuckyLensGameProps> = ({
                   </div>
 
                   {/* Student Name Label Below */}
-                  <div className="mt-1 px-1.5 py-0.2 rounded-md bg-white/95 text-slate-800 text-[9.5px] font-black truncate max-w-[72px] text-center shadow-xs border border-slate-200">
+                  <div className="mt-1 px-1.5 py-0.2 rounded-md bg-white/95 text-slate-800 text-[12px] font-black truncate max-w-[72px] text-center shadow-xs border border-slate-200">
                     {p.student.name}
                   </div>
 
                   {/* STT Pin */}
                   <div 
-                    className="absolute -top-1.5 -left-1.5 w-4.5 h-4.5 rounded-full text-[9px] font-mono font-black text-slate-950 flex items-center justify-center shadow-md border border-white"
+                    className="absolute -top-1.5 -left-1.5 w-4.5 h-4.5 rounded-full text-[12px] font-mono font-black text-slate-950 flex items-center justify-center shadow-md border border-white"
                     style={{ backgroundColor: isTarget ? '#fbbf24' : p.color }}
                   >
                     {p.student.stt}
@@ -693,7 +693,7 @@ export const LuckyLensGame: React.FC<LuckyLensGameProps> = ({
               <button
                 type="button"
                 onClick={handleResetExclusions}
-                className="text-xs font-black text-cyan-600 hover:text-cyan-600 hover:underline flex items-center gap-1 bg-white/80 px-2.5 py-1.5 rounded-xl border border-slate-200"
+                className="text-xs font-black text-cyan-700 hover:text-cyan-700 hover:underline flex items-center gap-1 bg-white/80 px-2.5 py-1.5 rounded-xl border border-slate-200"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
                 <span>Đặt lại ({excludedIds.length})</span>
@@ -709,8 +709,8 @@ export const LuckyLensGame: React.FC<LuckyLensGameProps> = ({
               onClick={handleStartCapture}
               className={`px-8 sm:px-10 py-3.5 sm:py-4 rounded-2xl text-xs sm:text-sm font-black tracking-wider text-white flex items-center gap-3 shadow-2xl transition-all duration-200 hover-zoom-btn uppercase disabled:opacity-50 cursor-pointer ${
                 isScanning
-                  ? 'bg-gradient-to-r from-amber-600 via-orange-600 to-rose-600 animate-pulse shadow-orange-500/50'
-                  : 'bg-gradient-to-r from-cyan-600 via-blue-600 to-indigo-600 hover:from-cyan-700 hover:to-indigo-700 shadow-cyan-500/40 ring-4 ring-cyan-500/30'
+                  ? 'bg-gradient-to-r from-amber-700 via-orange-700 to-rose-600 animate-pulse shadow-orange-500/50'
+                  : 'bg-gradient-to-r from-cyan-700 via-blue-600 to-indigo-600 hover:from-cyan-800 hover:to-indigo-700 shadow-cyan-500/40 ring-4 ring-cyan-500/30'
               }`}
             >
               <Camera className={`w-5 h-5 ${isScanning ? 'animate-spin' : ''}`} />
@@ -735,7 +735,7 @@ export const LuckyLensGame: React.FC<LuckyLensGameProps> = ({
             <button
               type="button"
               onClick={() => setHistoryList([])}
-              className="text-[11px] font-bold text-slate-400 hover:text-slate-600"
+              className="text-[12px] font-bold text-slate-400 hover:text-slate-600"
             >
               Xóa lịch sử
             </button>
@@ -758,7 +758,7 @@ export const LuckyLensGame: React.FC<LuckyLensGameProps> = ({
                   <span className="text-xs font-black text-slate-800 block truncate max-w-[110px]">
                     {item.student.name}
                   </span>
-                  <span className="text-[10px] text-slate-400 font-medium">
+                  <span className="text-[12px] text-slate-400 font-medium">
                     #{item.student.stt} • {item.time}
                   </span>
                 </div>
@@ -776,7 +776,7 @@ export const LuckyLensGame: React.FC<LuckyLensGameProps> = ({
           <div className="bg-white rounded-3xl shadow-2xl border-4 border-amber-400 max-w-lg w-full overflow-hidden animate-in zoom-in-95 duration-200 relative">
             
             {/* Header */}
-            <div className="px-6 py-3.5 bg-gradient-to-r from-amber-600 via-orange-600 to-rose-600 text-white flex items-center justify-between">
+            <div className="px-6 py-3.5 bg-gradient-to-r from-amber-700 via-orange-700 to-rose-600 text-white flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Camera className="w-5 h-5 text-amber-200 animate-bounce" />
                 <h3 className="text-sm font-black uppercase tracking-tight">
@@ -805,7 +805,7 @@ export const LuckyLensGame: React.FC<LuckyLensGameProps> = ({
                     className="w-full h-full object-cover object-center"
                     onError={(e) => handleAvatarImgError(e, winner.gender, winner.name)}
                   />
-                  <div className="absolute top-2 right-2 px-2 py-0.5 rounded-full bg-amber-400 text-amber-950 text-[9px] font-black uppercase shadow-xs">
+                  <div className="absolute top-2 right-2 px-2 py-0.5 rounded-full bg-amber-400 text-amber-950 text-[12px] font-black uppercase shadow-xs">
                     POLAROID 4K
                   </div>
                 </div>
@@ -832,7 +832,7 @@ export const LuckyLensGame: React.FC<LuckyLensGameProps> = ({
                   type="button"
                   disabled={hasAwardedCoins}
                   onClick={() => handleAwardWinner(2, 'Ống kính may mắn')}
-                  className="px-4 py-2 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white rounded-xl text-xs font-black shadow-md shadow-amber-500/20 transition-all hover-zoom-btn flex items-center gap-1.5 disabled:opacity-50 uppercase"
+                  className="px-4 py-2 bg-gradient-to-r from-amber-700 to-orange-700 hover:from-amber-800 hover:to-orange-800 text-white rounded-xl text-xs font-black shadow-md shadow-amber-500/20 transition-all hover-zoom-btn flex items-center gap-1.5 disabled:opacity-50 uppercase"
                 >
                   <Coins className="w-3.5 h-3.5" />
                   <span>+2 Xu Thưởng</span>
@@ -842,7 +842,7 @@ export const LuckyLensGame: React.FC<LuckyLensGameProps> = ({
                   type="button"
                   disabled={hasAwardedCoins}
                   onClick={() => handleAwardWinner(3, 'Ống kính may mắn xuất sắc')}
-                  className="px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-xl text-xs font-black shadow-md shadow-emerald-500/20 transition-all hover-zoom-btn flex items-center gap-1.5 disabled:opacity-50 uppercase"
+                  className="px-4 py-2 bg-gradient-to-r from-emerald-700 to-teal-700 hover:from-emerald-800 hover:to-teal-800 text-white rounded-xl text-xs font-black shadow-md shadow-emerald-500/20 transition-all hover-zoom-btn flex items-center gap-1.5 disabled:opacity-50 uppercase"
                 >
                   <Sparkles className="w-3.5 h-3.5" />
                   <span>+3 Xu Khen Thưởng</span>

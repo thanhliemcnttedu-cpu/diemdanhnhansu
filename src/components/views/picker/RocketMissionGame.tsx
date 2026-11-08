@@ -253,11 +253,11 @@ export const RocketMissionGame: React.FC = () => {
 
         {/* Duration selection (User request: lựa chọn 4 giây) */}
         <div className="flex items-center gap-2 bg-slate-100/80 px-3 py-1.5 rounded-2xl border border-slate-200">
-          <span className="text-[11px] font-bold text-slate-600">Thời gian quay:</span>
+          <span className="text-[12px] font-bold text-slate-600">Thời gian quay:</span>
           <select
             value={spinDuration}
             onChange={(e) => setSpinDuration(parseInt(e.target.value) || 4)}
-            className="bg-transparent text-xs font-black text-amber-600 focus:outline-none cursor-pointer"
+            className="bg-transparent text-xs font-black text-amber-700 focus:outline-none cursor-pointer"
           >
             <option value={3} className="bg-white text-slate-800">3 giây</option>
             <option value={4} className="bg-white text-slate-800">4 giây (Chuẩn)</option>
@@ -276,7 +276,7 @@ export const RocketMissionGame: React.FC = () => {
         <div className="relative z-10 flex items-center justify-between text-indigo-600 text-xs font-mono pb-2 border-b border-indigo-900/40">
           <div className="flex items-center gap-2">
             <Compass className="w-4 h-4 text-cyan-600 animate-spin" />
-            <span className="font-black text-cyan-600 tracking-wider">RADAR QUÉT TRẠM VŨ TRỤ LỚP HỌC</span>
+            <span className="font-black text-cyan-700 tracking-wider">RADAR QUÉT TRẠM VŨ TRỤ LỚP HỌC</span>
           </div>
           <span>Sĩ số khả dụng: {activeList.length} học sinh</span>
         </div>
@@ -306,7 +306,7 @@ export const RocketMissionGame: React.FC = () => {
                   />
                 </div>
                 <div className="text-left">
-                  <div className="text-[10px] text-cyan-600 font-mono font-bold">HÀNH TINH #{activeList[currentPlanetIndex].stt}</div>
+                  <div className="text-[12px] text-cyan-700 font-mono font-bold">HÀNH TINH #{activeList[currentPlanetIndex].stt}</div>
                   <div className="text-base font-black text-slate-800">{activeList[currentPlanetIndex].name}</div>
                 </div>
               </div>
@@ -319,7 +319,7 @@ export const RocketMissionGame: React.FC = () => {
           <button
             onClick={launchRocket}
             disabled={isLaunching || activeList.length === 0}
-            className="w-full py-4 px-6 bg-gradient-to-r from-indigo-600 via-cyan-600 to-emerald-600 hover:from-indigo-700 hover:to-emerald-700 text-white font-black text-sm md:text-base rounded-2xl shadow-lg shadow-cyan-500/25 flex items-center justify-center gap-2.5 transition-all hover-zoom-btn disabled:opacity-50 uppercase cursor-pointer"
+            className="w-full py-4 px-6 bg-gradient-to-r from-indigo-600 via-cyan-700 to-emerald-700 hover:from-indigo-700 hover:to-emerald-800 text-white font-black text-sm md:text-base rounded-2xl shadow-lg shadow-cyan-500/25 flex items-center justify-center gap-2.5 transition-all hover-zoom-btn disabled:opacity-50 uppercase cursor-pointer"
           >
             <Play className={`w-5 h-5 fill-white ${isLaunching ? 'animate-spin' : ''}`} />
             <span>{isLaunching ? `🚀 PHI THUYỀN ĐANG KHÁM PHÁ (${spinDuration}S)...` : `🚀 BẤM PHÓNG TÀU VŨ TRỤ (${spinDuration} GIÂY)`}</span>
@@ -380,8 +380,8 @@ export const RocketMissionGame: React.FC = () => {
                     disabled={hasAwarded}
                     className={`px-5 py-2.5 rounded-2xl text-xs font-black shadow-md flex items-center gap-1.5 transition-all hover-zoom-btn uppercase ${
                       hasAwarded
-                        ? 'bg-emerald-600 text-white'
-                        : 'bg-amber-600 hover:bg-amber-700 text-white'
+                        ? 'bg-emerald-700 text-white'
+                        : 'bg-amber-700 hover:bg-amber-800 text-white'
                     }`}
                   >
                     {hasAwarded ? <Check className="w-4 h-4" /> : <Award className="w-4 h-4" />}
@@ -409,11 +409,11 @@ export const RocketMissionGame: React.FC = () => {
             <div className="bg-white rounded-2xl p-4 md:p-5 border border-indigo-200 shadow-sm space-y-3 mt-3">
               <div className="flex items-center justify-between pb-2 border-b border-slate-100">
                 <div className="flex items-center gap-2">
-                  <span className="px-2 py-0.5 rounded-md bg-purple-100 text-purple-800 text-[10px] font-black uppercase">
+                  <span className="px-2 py-0.5 rounded-md bg-purple-100 text-purple-800 text-[12px] font-black uppercase">
                     {currentQuestion.type === 'multiple_choice' ? '📝 Câu hỏi Trắc nghiệm' : '🗣️ Câu hỏi Bằng lời'}
                   </span>
                   <span className="text-xs font-bold text-slate-600">{currentQuestion.subject || 'Tổng hợp'}</span>
-                  <span className="text-xs font-bold text-amber-600">Thưởng +{currentQuestion.pointsReward || 2} xu</span>
+                  <span className="text-xs font-bold text-amber-700">Thưởng +{currentQuestion.pointsReward || 2} xu</span>
                 </div>
 
                 <div className="flex items-center gap-1.5">
@@ -423,7 +423,7 @@ export const RocketMissionGame: React.FC = () => {
                       setEditTargetQuestion(currentQuestion);
                       setIsQuestionBankOpen(true);
                     }}
-                    className="text-[11px] font-bold text-amber-800 hover:text-amber-950 bg-amber-50 hover:bg-amber-100 border border-amber-200 px-2 py-1 rounded-lg flex items-center gap-1 cursor-pointer transition-colors"
+                    className="text-[12px] font-bold text-amber-800 hover:text-amber-950 bg-amber-50 hover:bg-amber-100 border border-amber-200 px-2 py-1 rounded-lg flex items-center gap-1 cursor-pointer transition-colors"
                   >
                     <Edit3 className="w-3 h-3 text-amber-600" />
                     <span>Sửa câu hỏi</span>
@@ -431,7 +431,7 @@ export const RocketMissionGame: React.FC = () => {
                   <button
                     type="button"
                     onClick={handlePickAnotherQuestion}
-                    className="text-[11px] font-bold text-indigo-600 hover:underline px-2 py-1 cursor-pointer"
+                    className="text-[12px] font-bold text-indigo-600 hover:underline px-2 py-1 cursor-pointer"
                   >
                     Đổi câu khác
                   </button>
@@ -441,7 +441,7 @@ export const RocketMissionGame: React.FC = () => {
                       setEditTargetQuestion(null);
                       setIsQuestionBankOpen(true);
                     }}
-                    className="text-[11px] font-bold text-slate-500 hover:text-slate-800 px-2 py-1 cursor-pointer"
+                    className="text-[12px] font-bold text-slate-500 hover:text-slate-800 px-2 py-1 cursor-pointer"
                   >
                     Kho đề
                   </button>
@@ -508,7 +508,7 @@ export const RocketMissionGame: React.FC = () => {
                       )}
                       {currentQuestion.answerImage && (
                         <div className="pt-1">
-                          <span className="text-[10px] font-black uppercase text-slate-600 block mb-1">Ảnh minh họa đáp án:</span>
+                          <span className="text-[12px] font-black uppercase text-slate-600 block mb-1">Ảnh minh họa đáp án:</span>
                           <img
                             src={currentQuestion.answerImage}
                             alt="Ảnh đáp án"
@@ -537,7 +537,7 @@ export const RocketMissionGame: React.FC = () => {
                       onClick={() => handleAwardCoins(currentQuestion.pointsReward || 2)}
                       disabled={hasAwarded}
                       className={`px-4 py-1.5 rounded-xl text-xs font-black shadow-xs flex items-center gap-1 transition-all ${
-                        hasAwarded ? 'bg-emerald-600 text-white' : 'bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer'
+                        hasAwarded ? 'bg-emerald-700 text-white' : 'bg-emerald-700 hover:bg-emerald-800 text-white cursor-pointer'
                       }`}
                     >
                       <Check className="w-3.5 h-3.5" />
@@ -554,7 +554,7 @@ export const RocketMissionGame: React.FC = () => {
                       )}
                       {currentQuestion.answerImage && (
                         <div className="pt-1">
-                          <span className="text-[10px] font-black uppercase text-amber-900 block mb-1">Ảnh minh họa đáp án giáo viên:</span>
+                          <span className="text-[12px] font-black uppercase text-amber-900 block mb-1">Ảnh minh họa đáp án giáo viên:</span>
                           <img
                             src={currentQuestion.answerImage}
                             alt="Ảnh đáp án giáo viên"

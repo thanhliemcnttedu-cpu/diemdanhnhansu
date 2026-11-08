@@ -441,6 +441,27 @@ export const googleDriveService = {
         (standardJson as any).scope = 'management_settings_only';
       }
 
+      // 🛡️ CHỐT CHẶN MẤT DỮ LIỆU: máy GVCN định đẩy tệp lớp 0 học sinh trong khi tệp trên Drive đang có học sinh
+      // (thường do bộ nhớ máy trống/cũ) → KHÔNG ghi đè. GVCN đăng nhập lại để khôi phục lớp từ Drive.
+      if (!isManagementPush && currentUser.role === 'homeroom' && Array.isArray((standardJson as any).students) && (standardJson as any).students.length === 0) {
+        try {
+          const fileForCheck = this.getFileNameForUser(currentUser, standardJson.classInfo?.name, userData.teacherRole);
+          const remoteRes = await fetch(`${scriptUrl}${scriptUrl.includes('?') ? '&' : '?'}action=getLatest&strict=1&folderId=${encodeURIComponent(folderId || '')}&fileName=${encodeURIComponent(fileForCheck)}`);
+          const remote = await remoteRes.json();
+          const remoteCount = Array.isArray(remote?.students) ? remote.students.length : (Array.isArray(remote?.fullClassroomData?.students) ? remote.fullClassroomData.students.length : 0);
+          if (remoteCount > 0) {
+            const msg = `Bảo vệ dữ liệu: không ghi đè lớp ${standardJson.classInfo?.name || ''} trên Drive (Drive có ${remoteCount} học sinh, máy này đang có 0). Hãy đăng xuất rồi đăng nhập lại để khôi phục lớp từ Drive.`;
+            console.warn(msg);
+            this.saveConfig({ syncStatus: 'error', lastError: msg });
+            this.notifyStatusListeners({ status: 'error', error: msg });
+            return { success: false, message: msg };
+          }
+        } catch (_) {
+          // không kiểm tra được (mất mạng) → không đẩy tệp rỗng cho an toàn
+          return { success: false, message: 'Chưa đẩy lớp rỗng lên Drive vì không kiểm tra được dữ liệu hiện có.' };
+        }
+      }
+
       // Lưu 1 bản rolling daily backup cục bộ
       dataAdapter.createDailyRollingBackup(currentUser.username, userData).catch(() => {});
 

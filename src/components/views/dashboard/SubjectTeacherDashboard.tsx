@@ -150,20 +150,20 @@ export const SubjectTeacherDashboard: React.FC<SubjectTeacherDashboardProps> = (
                 alt={teacherProfile.name}
                 className="w-10 h-10 sm:w-11 sm:h-11 rounded-lg object-cover ring-2 ring-white shadow-xs bg-white hover-zoom-interactive"
               />
-              <span className="absolute -bottom-1 -right-1 px-1 py-0.1 bg-emerald-600 text-white font-black text-[8px] rounded-full shadow-xs uppercase">
+              <span className="absolute -bottom-1 -right-1 px-1 py-0.1 bg-emerald-700 text-white font-black text-[11px] rounded-full shadow-xs uppercase">
                 GVBM
               </span>
             </div>
 
             <div className="space-y-0.5">
               <div className="flex flex-wrap items-center gap-1">
-                <span className="inline-flex items-center gap-1 px-2 py-0.2 rounded-md bg-white/95 text-[9.5px] font-black text-emerald-800 shadow-2xs border border-emerald-100 uppercase">
+                <span className="inline-flex items-center gap-1 px-2 py-0.2 rounded-md bg-white/95 text-[12px] font-black text-emerald-800 shadow-2xs border border-emerald-100 uppercase">
                   GV: <strong className="text-emerald-950 font-black">{teacherProfile.name}</strong>
                 </span>
-                <span className="inline-flex items-center gap-1 px-2 py-0.2 rounded-md bg-amber-400 text-amber-950 text-[9.5px] font-black shadow-2xs uppercase">
+                <span className="inline-flex items-center gap-1 px-2 py-0.2 rounded-md bg-amber-400 text-amber-950 text-[12px] font-black shadow-2xs uppercase">
                   MÔN: <strong>{subjectName}</strong>
                 </span>
-                <span className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded-md bg-indigo-50 text-[9.5px] font-black text-indigo-800 border border-indigo-200 shadow-2xs uppercase">
+                <span className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded-md bg-indigo-50 text-[12px] font-black text-indigo-800 border border-indigo-200 shadow-2xs uppercase">
                   {classes.length} LỚP PHỤ TRÁCH
                 </span>
               </div>
@@ -172,7 +172,7 @@ export const SubjectTeacherDashboard: React.FC<SubjectTeacherDashboardProps> = (
                 <h1 className="text-sm sm:text-base font-black text-slate-900 tracking-tight uppercase leading-snug">
                   {getGreeting()}, <span className="text-emerald-700">{teacherProfile.name}</span>! 👋
                 </h1>
-                <span className="text-[10px] text-slate-500 font-bold uppercase hidden sm:inline">
+                <span className="text-[12px] text-slate-500 font-bold uppercase hidden sm:inline">
                   • {teacherProfile.schoolName} • PHÒNG: {subjectTeacherConfig.roomDefault}
                 </span>
               </div>
@@ -183,7 +183,7 @@ export const SubjectTeacherDashboard: React.FC<SubjectTeacherDashboardProps> = (
           <div className="flex flex-wrap items-center gap-1 shrink-0 pt-1 lg:pt-0">
             <button
               onClick={() => onNavigate('schedule')}
-              className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-black text-[10.5px] flex items-center justify-center gap-1 shadow-2xs hover-zoom-btn uppercase"
+              className="px-2.5 py-1 bg-emerald-700 hover:bg-emerald-800 text-white rounded-lg font-black text-[12px] flex items-center justify-center gap-1 shadow-2xs hover-zoom-btn uppercase"
             >
               <Calendar className="w-3 h-3" />
               <span>TKB BỘ MÔN</span>
@@ -191,7 +191,7 @@ export const SubjectTeacherDashboard: React.FC<SubjectTeacherDashboardProps> = (
 
             <button
               onClick={() => onNavigate('students')}
-              className="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-black text-[10.5px] flex items-center justify-center gap-1 shadow-2xs hover-zoom-btn uppercase"
+              className="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-black text-[12px] flex items-center justify-center gap-1 shadow-2xs hover-zoom-btn uppercase"
             >
               <Star className="w-3 h-3 text-amber-300" />
               <span>CHẤM SAO / XU</span>
@@ -199,7 +199,7 @@ export const SubjectTeacherDashboard: React.FC<SubjectTeacherDashboardProps> = (
 
             <button
               onClick={() => onNavigate('picker')}
-              className="px-2.5 py-1 bg-sky-600 hover:bg-sky-700 text-white rounded-lg font-black text-[10.5px] flex items-center justify-center gap-1 shadow-2xs hover-zoom-btn uppercase"
+              className="px-2.5 py-1 bg-sky-700 hover:bg-sky-800 text-white rounded-lg font-black text-[12px] flex items-center justify-center gap-1 shadow-2xs hover-zoom-btn uppercase"
             >
               <Sparkles className="w-3 h-3" />
               <span>GỌI TÊN</span>
@@ -207,7 +207,7 @@ export const SubjectTeacherDashboard: React.FC<SubjectTeacherDashboardProps> = (
 
             <button
               onClick={() => onNavigate('reports')}
-              className="px-2.5 py-1 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-black text-[10.5px] flex items-center justify-center gap-1 shadow-2xs hover-zoom-btn uppercase"
+              className="px-2.5 py-1 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-black text-[12px] flex items-center justify-center gap-1 shadow-2xs hover-zoom-btn uppercase"
             >
               <Trophy className="w-3 h-3" />
               <span>THỐNG KÊ</span>
@@ -215,7 +215,7 @@ export const SubjectTeacherDashboard: React.FC<SubjectTeacherDashboardProps> = (
 
             <button
               onClick={() => onNavigate('noise')}
-              className="px-2.5 py-1 bg-rose-500 hover:bg-rose-600 text-white rounded-lg font-black text-[10.5px] flex items-center justify-center gap-1 shadow-2xs hover-zoom-btn uppercase"
+              className="px-2.5 py-1 bg-rose-600 hover:bg-rose-700 text-white rounded-lg font-black text-[12px] flex items-center justify-center gap-1 shadow-2xs hover-zoom-btn uppercase"
             >
               <Volume2 className="w-3 h-3" />
               <span>CHỐNG ỒN</span>
@@ -224,7 +224,7 @@ export const SubjectTeacherDashboard: React.FC<SubjectTeacherDashboardProps> = (
         </div>
 
         {/* Footer info banner */}
-        <div className="mt-2 pt-1.5 border-t border-emerald-200/60 flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-[10.5px] text-emerald-950 font-bold">
+        <div className="mt-2 pt-1.5 border-t border-emerald-200/60 flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-[12px] text-emerald-950 font-bold">
           <div className="flex items-center gap-1.5 uppercase">
             <span>📅 NĂM HỌC: {teacherProfile.academicYear || '2026–2027'}</span>
             <span>•</span>
@@ -233,7 +233,7 @@ export const SubjectTeacherDashboard: React.FC<SubjectTeacherDashboardProps> = (
 
           <button
             onClick={() => setIsInitClassesOpen(true)}
-            className="px-2.5 py-0.5 bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 hover:from-emerald-700 hover:to-cyan-700 text-white rounded-md font-black text-[10px] uppercase flex items-center gap-1 shadow-2xs hover-zoom-btn self-start sm:self-auto"
+            className="px-2.5 py-0.5 bg-gradient-to-r from-emerald-700 via-teal-700 to-cyan-700 hover:from-emerald-800 hover:to-cyan-800 text-white rounded-md font-black text-[12px] uppercase flex items-center gap-1 shadow-2xs hover-zoom-btn self-start sm:self-auto"
             title="Tạo nhanh các lớp giảng dạy bộ môn, điền thông tin lớp và số lượng học sinh"
           >
             <Sparkles className="w-2.5 h-2.5 text-amber-300 animate-pulse" />
@@ -253,14 +253,14 @@ export const SubjectTeacherDashboard: React.FC<SubjectTeacherDashboardProps> = (
             <div className="w-7 h-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center font-black group-hover:bg-blue-600 group-hover:text-white transition-colors">
               <School className="w-3.5 h-3.5" />
             </div>
-            <span className="text-[10px] font-black text-blue-600 flex items-center gap-0.5 group-hover:translate-x-0.5 transition-transform uppercase">
+            <span className="text-[12px] font-black text-blue-600 flex items-center gap-0.5 group-hover:translate-x-0.5 transition-transform uppercase">
               QUẢN LÝ <ArrowUpRight className="w-2.5 h-2.5" />
             </span>
           </div>
           <div>
-            <div className="text-[9.5px] font-black text-slate-500 uppercase tracking-wider">SỐ LỚP DẠY BỘ MÔN</div>
+            <div className="text-[12px] font-black text-slate-500 uppercase tracking-wider">SỐ LỚP DẠY BỘ MÔN</div>
             <div className="text-base sm:text-lg font-black text-slate-900 tracking-tight font-mono leading-tight">
-              {classes.length} <span className="text-[10px] font-bold text-slate-500 uppercase">LỚP HỌC</span>
+              {classes.length} <span className="text-[12px] font-bold text-slate-500 uppercase">LỚP HỌC</span>
             </div>
           </div>
         </div>
@@ -271,17 +271,17 @@ export const SubjectTeacherDashboard: React.FC<SubjectTeacherDashboardProps> = (
           className="bg-white rounded-xl p-2.5 px-3 border border-slate-200/80 shadow-2xs hover-zoom-card cursor-pointer group flex flex-col justify-between"
         >
           <div className="flex items-center justify-between mb-1">
-            <div className="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center font-black group-hover:bg-emerald-600 group-hover:text-white transition-colors">
+            <div className="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center font-black group-hover:bg-emerald-600 group-hover:text-white transition-colors">
               <Calendar className="w-3.5 h-3.5" />
             </div>
-            <span className="text-[10px] font-black text-emerald-600 flex items-center gap-0.5 group-hover:translate-x-0.5 transition-transform uppercase">
+            <span className="text-[12px] font-black text-emerald-700 flex items-center gap-0.5 group-hover:translate-x-0.5 transition-transform uppercase">
               XEM TKB <ArrowUpRight className="w-2.5 h-2.5" />
             </span>
           </div>
           <div>
-            <div className="text-[9.5px] font-black text-slate-500 uppercase tracking-wider">TIẾT DẠY TRONG TUẦN</div>
-            <div className="text-base sm:text-lg font-black text-emerald-600 tracking-tight font-mono leading-tight">
-              {totalSubjectWeeklySlots} <span className="text-[10px] font-bold text-slate-500 uppercase">TIẾT / TUẦN</span>
+            <div className="text-[12px] font-black text-slate-500 uppercase tracking-wider">TIẾT DẠY TRONG TUẦN</div>
+            <div className="text-base sm:text-lg font-black text-emerald-700 tracking-tight font-mono leading-tight">
+              {totalSubjectWeeklySlots} <span className="text-[12px] font-bold text-slate-500 uppercase">TIẾT / TUẦN</span>
             </div>
           </div>
         </div>
@@ -292,17 +292,17 @@ export const SubjectTeacherDashboard: React.FC<SubjectTeacherDashboardProps> = (
           className="bg-white rounded-xl p-2.5 px-3 border border-slate-200/80 shadow-2xs hover-zoom-card cursor-pointer group flex flex-col justify-between"
         >
           <div className="flex items-center justify-between mb-1">
-            <div className="w-7 h-7 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center font-black group-hover:bg-amber-600 group-hover:text-white transition-colors">
+            <div className="w-7 h-7 rounded-lg bg-amber-50 text-amber-700 flex items-center justify-center font-black group-hover:bg-amber-600 group-hover:text-white transition-colors">
               <Star className="w-3.5 h-3.5" />
             </div>
-            <span className="text-[10px] font-black text-amber-600 flex items-center gap-0.5 group-hover:translate-x-0.5 transition-transform uppercase">
+            <span className="text-[12px] font-black text-amber-700 flex items-center gap-0.5 group-hover:translate-x-0.5 transition-transform uppercase">
               THI ĐUA <ArrowUpRight className="w-2.5 h-2.5" />
             </span>
           </div>
           <div>
-            <div className="text-[9.5px] font-black text-slate-500 uppercase tracking-wider">TỔNG XU MÔN {subjectName}</div>
-            <div className="text-base sm:text-lg font-black text-amber-600 tracking-tight font-mono leading-tight">
-              ⭐ {totalSubjectCoins} <span className="text-[10px] font-bold text-slate-500 uppercase">XU ĐÃ TRAO</span>
+            <div className="text-[12px] font-black text-slate-500 uppercase tracking-wider">TỔNG XU MÔN {subjectName}</div>
+            <div className="text-base sm:text-lg font-black text-amber-700 tracking-tight font-mono leading-tight">
+              ⭐ {totalSubjectCoins} <span className="text-[12px] font-bold text-slate-500 uppercase">XU ĐÃ TRAO</span>
             </div>
           </div>
         </div>
@@ -316,14 +316,14 @@ export const SubjectTeacherDashboard: React.FC<SubjectTeacherDashboardProps> = (
             <div className="w-7 h-7 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center font-black group-hover:bg-purple-600 group-hover:text-white transition-colors">
               <Users className="w-3.5 h-3.5" />
             </div>
-            <span className="text-[10px] font-black text-purple-600 flex items-center gap-0.5 group-hover:translate-x-0.5 transition-transform uppercase">
+            <span className="text-[12px] font-black text-purple-600 flex items-center gap-0.5 group-hover:translate-x-0.5 transition-transform uppercase">
               DANH SÁCH <ArrowUpRight className="w-2.5 h-2.5" />
             </span>
           </div>
           <div>
-            <div className="text-[9.5px] font-black text-slate-500 uppercase tracking-wider">TỔNG SỐ HỌC SINH</div>
+            <div className="text-[12px] font-black text-slate-500 uppercase tracking-wider">TỔNG SỐ HỌC SINH</div>
             <div className="text-base sm:text-lg font-black text-slate-900 tracking-tight font-mono leading-tight">
-              {totalStudents} <span className="text-[10px] font-bold text-slate-500 uppercase">HỌC SINH</span>
+              {totalStudents} <span className="text-[12px] font-bold text-slate-500 uppercase">HỌC SINH</span>
             </div>
           </div>
         </div>
@@ -334,7 +334,7 @@ export const SubjectTeacherDashboard: React.FC<SubjectTeacherDashboardProps> = (
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
           <div>
             <div className="flex items-center gap-2">
-              <span className="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-black uppercase">
+              <span className="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[12px] font-black uppercase">
                 TRANG CHỦ BỘ MÔN
               </span>
               <span className="text-slate-400">•</span>
@@ -372,18 +372,18 @@ export const SubjectTeacherDashboard: React.FC<SubjectTeacherDashboardProps> = (
                 onClick={() => setSelectedDashboardDay(d.day)}
                 className={`px-4 py-2.5 rounded-2xl text-xs font-black transition-all flex items-center gap-2 shrink-0 hover-zoom-btn uppercase ${
                   isSelected
-                    ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/25 scale-102'
+                    ? 'bg-emerald-700 text-white shadow-md shadow-emerald-600/25 scale-102'
                     : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                 }`}
               >
                 <span>{d.label}</span>
-                <span className={`px-2 py-0.5 rounded-full text-[10px] ${
+                <span className={`px-2 py-0.5 rounded-full text-[12px] ${
                   isSelected ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-700'
                 }`}>
                   {countSlotsOnDay} tiết
                 </span>
                 {isToday && (
-                  <span className={`px-1.5 py-0.2 rounded text-[9px] font-black ${
+                  <span className={`px-1.5 py-0.2 rounded text-[12px] font-black ${
                     isSelected ? 'bg-amber-400 text-amber-950' : 'bg-emerald-100 text-emerald-800'
                   }`}>
                     HÔM NAY
@@ -422,7 +422,7 @@ export const SubjectTeacherDashboard: React.FC<SubjectTeacherDashboardProps> = (
                       </span>
                     </div>
 
-                    <div className="text-[11px] font-mono text-slate-500 font-bold flex items-center gap-1.5">
+                    <div className="text-[12px] font-mono text-slate-500 font-bold flex items-center gap-1.5">
                       <Clock className="w-3.5 h-3.5 text-slate-400" />
                       <span>{time || 'Khung giờ chuẩn'}</span>
                     </div>
@@ -438,7 +438,7 @@ export const SubjectTeacherDashboard: React.FC<SubjectTeacherDashboardProps> = (
                       </div>
                     )}
 
-                    <div className="pt-2 border-t border-slate-200/80 flex items-center justify-between text-[11px] text-slate-500 font-bold">
+                    <div className="pt-2 border-t border-slate-200/80 flex items-center justify-between text-[12px] text-slate-500 font-bold">
                       <span>Sĩ số: {matchingStudents.length} HS</span>
                       <span className="text-amber-700 font-black">⭐ {classCoins} xu</span>
                     </div>
@@ -446,7 +446,7 @@ export const SubjectTeacherDashboard: React.FC<SubjectTeacherDashboardProps> = (
 
                   <button
                     onClick={() => handleJumpToClass(matchingClass?.id || slot.classId)}
-                    className="mt-3.5 w-full py-2 px-3 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs uppercase flex items-center justify-center gap-1.5 shadow-md shadow-emerald-600/20 hover-zoom-btn transition-all"
+                    className="mt-3.5 w-full py-2 px-3 rounded-2xl bg-emerald-700 hover:bg-emerald-800 text-white font-black text-xs uppercase flex items-center justify-center gap-1.5 shadow-md shadow-emerald-600/20 hover-zoom-btn transition-all"
                   >
                     <Star className="w-3.5 h-3.5 text-amber-300 fill-amber-300" />
                     <span>VÀO LỚP DẠY & CHẤM SAO</span>
@@ -483,14 +483,14 @@ export const SubjectTeacherDashboard: React.FC<SubjectTeacherDashboardProps> = (
           <div className="space-y-3">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center font-black">
+                <div className="w-9 h-9 rounded-2xl bg-amber-50 text-amber-700 flex items-center justify-center font-black">
                   <Star className="w-5 h-5 fill-amber-500" />
                 </div>
                 <div>
                   <h3 className="text-sm md:text-base font-black text-slate-900 uppercase">
                     CHẤM SAO TẶNG XU THEO LỚP
                   </h3>
-                  <p className="text-[11px] text-amber-700 font-bold uppercase">
+                  <p className="text-[12px] text-amber-700 font-bold uppercase">
                     MÔN: {subjectName} • ĐANG CHỌN LỚP {selectedQuickClass?.name}
                   </p>
                 </div>
@@ -517,7 +517,7 @@ export const SubjectTeacherDashboard: React.FC<SubjectTeacherDashboardProps> = (
                   }}
                   className={`px-3 py-1 rounded-xl text-xs font-black uppercase transition-all shrink-0 hover-zoom-btn ${
                     quickAwardClassId === cls.id
-                      ? 'bg-amber-600 text-white shadow-xs'
+                      ? 'bg-amber-700 text-white shadow-xs'
                       : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                   }`}
                 >
@@ -542,7 +542,7 @@ export const SubjectTeacherDashboard: React.FC<SubjectTeacherDashboardProps> = (
                       <img src={st.avatar} alt="" className="w-8 h-8 rounded-full bg-slate-200 object-cover shrink-0" />
                       <div className="min-w-0">
                         <div className="text-xs font-black text-slate-900 uppercase truncate">{st.name}</div>
-                        <div className="text-[10px] text-amber-700 font-black">
+                        <div className="text-[12px] text-amber-700 font-black">
                           ⭐ {coins} xu môn {subjectName}
                         </div>
                       </div>
@@ -558,14 +558,14 @@ export const SubjectTeacherDashboard: React.FC<SubjectTeacherDashboardProps> = (
                       </button>
                       <button
                         onClick={() => handleQuickAward(st.id, st.name, 2)}
-                        className="px-2 py-1 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-black text-xs uppercase shadow-2xs hover-zoom-btn"
+                        className="px-2 py-1 rounded-xl bg-amber-700 hover:bg-amber-800 text-white font-black text-xs uppercase shadow-2xs hover-zoom-btn"
                         title="Thưởng +2 xu"
                       >
                         +2 ⭐
                       </button>
                       <button
                         onClick={() => handleQuickAward(st.id, st.name, 5)}
-                        className="px-2 py-1 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs uppercase shadow-2xs hover-zoom-btn"
+                        className="px-2 py-1 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-black text-xs uppercase shadow-2xs hover-zoom-btn"
                         title="Thưởng +5 xu xuất sắc"
                       >
                         +5 🌟
@@ -601,7 +601,7 @@ export const SubjectTeacherDashboard: React.FC<SubjectTeacherDashboardProps> = (
                   <h3 className="text-sm md:text-base font-black text-slate-900 uppercase">
                     XẾP HẠNG THI ĐUA CÁC LỚP
                   </h3>
-                  <p className="text-[11px] text-emerald-700 font-bold uppercase">
+                  <p className="text-[12px] text-emerald-700 font-bold uppercase">
                     MÔN: {subjectName} ({classes.length} LỚP PHỤ TRÁCH)
                   </p>
                 </div>
@@ -636,7 +636,7 @@ export const SubjectTeacherDashboard: React.FC<SubjectTeacherDashboardProps> = (
                     }`}
                   >
                     <div className="flex items-center gap-2.5 min-w-0">
-                      <span className={`px-2 py-0.5 rounded-lg text-[10px] font-black uppercase border shrink-0 ${
+                      <span className={`px-2 py-0.5 rounded-lg text-[12px] font-black uppercase border shrink-0 ${
                         isTop3 ? medalColors[idx] : 'bg-slate-100 text-slate-600 border-slate-200'
                       }`}>
                         {isTop3 ? medals[idx] : `Hạng ${idx + 1}`}
@@ -645,10 +645,10 @@ export const SubjectTeacherDashboard: React.FC<SubjectTeacherDashboardProps> = (
                       <div className="min-w-0">
                         <div className="font-black text-slate-900 text-xs uppercase flex items-center gap-1.5">
                           <span>Lớp {cls.name}</span>
-                          <span className="text-[10px] font-normal text-slate-400">({cls.grade})</span>
+                          <span className="text-[12px] font-normal text-slate-400">({cls.grade})</span>
                         </div>
                         {cls.topStudent && (
-                          <div className="text-[10px] text-slate-500 font-medium truncate">
+                          <div className="text-[12px] text-slate-500 font-medium truncate">
                             Dẫn đầu: <strong className="text-emerald-800">{cls.topStudent.name}</strong> ({cls.topStudent.coins} xu)
                           </div>
                         )}
@@ -656,10 +656,10 @@ export const SubjectTeacherDashboard: React.FC<SubjectTeacherDashboardProps> = (
                     </div>
 
                     <div className="text-right shrink-0">
-                      <div className="text-sm font-black text-amber-600">
+                      <div className="text-sm font-black text-amber-700">
                         ⭐ {cls.totalCoins} xu
                       </div>
-                      <div className="text-[10px] text-slate-400 font-bold">
+                      <div className="text-[12px] text-slate-400 font-bold">
                         TB: {cls.avgCoins} xu/em
                       </div>
                     </div>

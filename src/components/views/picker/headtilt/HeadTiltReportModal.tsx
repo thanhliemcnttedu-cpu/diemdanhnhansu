@@ -23,7 +23,7 @@ export const HeadTiltReportModal: React.FC<HeadTiltReportModalProps> = ({
         /* MÀN HÌNH HOÀN THÀNH TỔNG KẾT (Page 16 trong PDF) */
         <div className="relative w-full max-w-md bg-white rounded-3xl p-8 shadow-2xl border border-slate-100 text-center animate-in zoom-in-95">
           {/* Confetti icon header */}
-          <div className="w-20 h-20 mx-auto mb-4 rounded-3xl bg-gradient-to-tr from-amber-600 to-rose-500 flex items-center justify-center shadow-lg shadow-amber-500/30 text-white">
+          <div className="w-20 h-20 mx-auto mb-4 rounded-3xl bg-gradient-to-tr from-amber-700 to-rose-600 flex items-center justify-center shadow-lg shadow-amber-500/30 text-white">
             <Trophy className="w-10 h-10" />
           </div>
 
@@ -32,7 +32,7 @@ export const HeadTiltReportModal: React.FC<HeadTiltReportModalProps> = ({
           </h2>
 
           <div className="my-5 p-4 rounded-2xl bg-slate-50 border border-slate-100">
-            <div className="text-3xl font-black text-emerald-600 mb-1">
+            <div className="text-3xl font-black text-emerald-700 mb-1">
               Trả lời đúng: {result.correctCount}/{result.totalQuestions} câu
             </div>
             <div className="text-sm font-bold text-slate-500">
@@ -113,7 +113,7 @@ export const HeadTiltReportModal: React.FC<HeadTiltReportModalProps> = ({
                 <div className="flex items-start gap-3">
                   <div
                     className={`w-7 h-7 rounded-xl shrink-0 flex items-center justify-center font-black text-xs text-white ${
-                      rec.isCorrect ? 'bg-emerald-600' : 'bg-rose-500'
+                      rec.isCorrect ? 'bg-emerald-700' : 'bg-rose-600'
                     }`}
                   >
                     {rec.isCorrect ? <Check className="w-4 h-4" /> : <X className="w-4 h-4" />}

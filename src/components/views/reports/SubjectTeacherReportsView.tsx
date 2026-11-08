@@ -150,7 +150,7 @@ export const SubjectTeacherReportsView: React.FC<{ onNavigate?: (view: any) => v
   return (
     <div className="space-y-6">
       {/* Hero Header */}
-      <div className="p-6 md:p-7 rounded-3xl bg-gradient-to-r from-emerald-600 via-teal-600 to-indigo-700 text-white shadow-xl relative overflow-hidden">
+      <div className="p-6 md:p-7 rounded-3xl bg-gradient-to-r from-emerald-700 via-teal-700 to-indigo-700 text-white shadow-xl relative overflow-hidden">
         <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 rounded-full bg-white/10 blur-3xl pointer-events-none" />
         <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
           <div className="space-y-2">
@@ -162,7 +162,7 @@ export const SubjectTeacherReportsView: React.FC<{ onNavigate?: (view: any) => v
               <span className="px-3 py-1 rounded-xl bg-amber-400 text-amber-950 font-black text-xs uppercase tracking-wider shadow-2xs">
                 MÔN: {subjectName}
               </span>
-              <span className="px-3 py-1 rounded-xl bg-emerald-600/80 text-white font-bold text-xs uppercase tracking-wider">
+              <span className="px-3 py-1 rounded-xl bg-emerald-700/80 text-white font-bold text-xs uppercase tracking-wider">
                 {classes.length} LỚP PHỤ TRÁCH
               </span>
             </div>
@@ -200,19 +200,19 @@ export const SubjectTeacherReportsView: React.FC<{ onNavigate?: (view: any) => v
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6 pt-5 border-t border-white/15">
           <div className="bg-white/10 backdrop-blur-md rounded-2xl p-3 border border-white/15 text-center">
             <div className="text-2xl font-black text-amber-300">{classes.length}</div>
-            <div className="text-[10px] font-bold text-white/90 uppercase mt-0.5">Lớp Phụ Trách</div>
+            <div className="text-[12px] font-bold text-white/90 uppercase mt-0.5">Lớp Phụ Trách</div>
           </div>
           <div className="bg-white/10 backdrop-blur-md rounded-2xl p-3 border border-white/15 text-center">
             <div className="text-2xl font-black text-white">{totalStudentsAll}</div>
-            <div className="text-[10px] font-bold text-white/90 uppercase mt-0.5">Tổng Học Sinh Dạy</div>
+            <div className="text-[12px] font-bold text-white/90 uppercase mt-0.5">Tổng Học Sinh Dạy</div>
           </div>
           <div className="bg-white/10 backdrop-blur-md rounded-2xl p-3 border border-white/15 text-center">
             <div className="text-2xl font-black text-emerald-300">⭐ {totalCoinsAll}</div>
-            <div className="text-[10px] font-bold text-white/90 uppercase mt-0.5">Tổng Sao/Xu Đã Trao</div>
+            <div className="text-[12px] font-bold text-white/90 uppercase mt-0.5">Tổng Sao/Xu Đã Trao</div>
           </div>
           <div className="bg-white/10 backdrop-blur-md rounded-2xl p-3 border border-white/15 text-center">
             <div className="text-2xl font-black text-white">{avgCoinsAll}</div>
-            <div className="text-[10px] font-bold text-white/90 uppercase mt-0.5">Điểm TB / Học Sinh</div>
+            <div className="text-[12px] font-bold text-white/90 uppercase mt-0.5">Điểm TB / Học Sinh</div>
           </div>
         </div>
       </div>
@@ -224,7 +224,7 @@ export const SubjectTeacherReportsView: React.FC<{ onNavigate?: (view: any) => v
             onClick={() => setReportSubTab('classes_summary')}
             className={`px-3.5 py-2 rounded-lg font-black text-xs uppercase transition-all flex items-center gap-1.5 ${
               reportSubTab === 'classes_summary'
-                ? 'bg-emerald-600 text-white shadow-xs'
+                ? 'bg-emerald-700 text-white shadow-xs'
                 : 'text-slate-600 hover:text-slate-900'
             }`}
           >
@@ -236,7 +236,7 @@ export const SubjectTeacherReportsView: React.FC<{ onNavigate?: (view: any) => v
             onClick={() => setReportSubTab('student_details')}
             className={`px-3.5 py-2 rounded-lg font-black text-xs uppercase transition-all flex items-center gap-1.5 ${
               reportSubTab === 'student_details'
-                ? 'bg-emerald-600 text-white shadow-xs'
+                ? 'bg-emerald-700 text-white shadow-xs'
                 : 'text-slate-600 hover:text-slate-900'
             }`}
           >
@@ -248,7 +248,7 @@ export const SubjectTeacherReportsView: React.FC<{ onNavigate?: (view: any) => v
             onClick={() => setReportSubTab('top_performers')}
             className={`px-3.5 py-2 rounded-lg font-black text-xs uppercase transition-all flex items-center gap-1.5 ${
               reportSubTab === 'top_performers'
-                ? 'bg-emerald-600 text-white shadow-xs'
+                ? 'bg-emerald-700 text-white shadow-xs'
                 : 'text-slate-600 hover:text-slate-900'
             }`}
           >
@@ -341,7 +341,7 @@ export const SubjectTeacherReportsView: React.FC<{ onNavigate?: (view: any) => v
                             <span className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: cls.color }} />
                             <div>
                               <div className="font-black text-slate-900 text-sm">Lớp {cls.name}</div>
-                              <div className="text-[10px] text-slate-400 font-medium">{cls.teacherName}</div>
+                              <div className="text-[12px] text-slate-400 font-medium">{cls.teacherName}</div>
                             </div>
                           </div>
                         </td>
@@ -376,7 +376,7 @@ export const SubjectTeacherReportsView: React.FC<{ onNavigate?: (view: any) => v
                               <span className="font-extrabold text-slate-800 truncate max-w-[130px]">
                                 {cls.topStudent.name}
                               </span>
-                              <span className="text-[10px] font-black text-amber-600 bg-amber-50 px-1.5 py-0.2 rounded">
+                              <span className="text-[12px] font-black text-amber-700 bg-amber-50 px-1.5 py-0.2 rounded">
                                 ⭐ {cls.topStudent.coins}
                               </span>
                             </div>
@@ -392,7 +392,7 @@ export const SubjectTeacherReportsView: React.FC<{ onNavigate?: (view: any) => v
                                 setSelectedReportClassId(cls.id);
                                 setReportSubTab('student_details');
                               }}
-                              className="px-2 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-black text-[10px] uppercase transition-colors"
+                              className="px-2 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-black text-[12px] uppercase transition-colors"
                               title="Xem danh sách điểm từng học sinh lớp này"
                             >
                               Chi tiết
@@ -402,7 +402,7 @@ export const SubjectTeacherReportsView: React.FC<{ onNavigate?: (view: any) => v
                                 setActiveClassId(cls.id);
                                 if (onNavigate) onNavigate('students');
                               }}
-                              className="px-2 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-black text-[10px] uppercase transition-colors"
+                              className="px-2 py-1 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white font-black text-[12px] uppercase transition-colors"
                               title="Chuyển sang chấm sao cho lớp này"
                             >
                               Chấm điểm
@@ -507,7 +507,7 @@ export const SubjectTeacherReportsView: React.FC<{ onNavigate?: (view: any) => v
                             <img src={st.avatar} alt="" className="w-7 h-7 rounded-full bg-slate-100 object-cover" />
                             <div>
                               <div className="font-black text-slate-900 text-xs">{st.name}</div>
-                              <div className="text-[10px] text-slate-400 font-mono">{st.birthDate || '---'}</div>
+                              <div className="text-[12px] text-slate-400 font-mono">{st.birthDate || '---'}</div>
                             </div>
                           </div>
                         </td>
@@ -519,7 +519,7 @@ export const SubjectTeacherReportsView: React.FC<{ onNavigate?: (view: any) => v
                         </td>
                         <td className="py-3 px-3 text-center">
                           {st.role ? (
-                            <span className="px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 text-[10px] font-black uppercase">
+                            <span className="px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 text-[12px] font-black uppercase">
                               {st.role.split('•')[0]}
                             </span>
                           ) : <span className="text-slate-500">---</span>}
@@ -534,7 +534,7 @@ export const SubjectTeacherReportsView: React.FC<{ onNavigate?: (view: any) => v
                           {st.points} xu
                         </td>
                         <td className="py-3 px-4 text-center">
-                          <span className={`px-2.5 py-1 rounded-full text-[11px] uppercase ${tierColor}`}>
+                          <span className={`px-2.5 py-1 rounded-full text-[12px] uppercase ${tierColor}`}>
                             {tier}
                           </span>
                         </td>
@@ -579,13 +579,13 @@ export const SubjectTeacherReportsView: React.FC<{ onNavigate?: (view: any) => v
                   }`}
                 >
                   <div className="flex items-start justify-between gap-2 mb-2">
-                    <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase ${
+                    <span className={`px-2.5 py-0.5 rounded-full text-[12px] font-black uppercase ${
                       isTop3 ? 'bg-amber-400 text-amber-950' : 'bg-slate-200 text-slate-700'
                     }`}>
                       {isTop3 ? medals[idx] : `HẠNG ${idx + 1}`}
                     </span>
                     <span 
-                      className="px-2 py-0.5 rounded-md text-[10px] font-black text-white uppercase shadow-2xs"
+                      className="px-2 py-0.5 rounded-md text-[12px] font-black text-white uppercase shadow-2xs"
                       style={{ backgroundColor: matchingClass?.color || '#4F46E5' }}
                     >
                       {matchingClass?.name || 'LỚP'}
@@ -600,14 +600,14 @@ export const SubjectTeacherReportsView: React.FC<{ onNavigate?: (view: any) => v
                     />
                     <div className="min-w-0">
                       <div className="text-xs font-black text-slate-900 uppercase truncate">{st.name}</div>
-                      <div className="text-[10px] text-slate-500 font-bold uppercase mt-0.5">
+                      <div className="text-[12px] text-slate-500 font-bold uppercase mt-0.5">
                         {matchingClass?.grade} • {st.group || 'Tổ 1'}
                       </div>
                     </div>
                   </div>
 
                   <div className="pt-2 border-t border-slate-200/80 flex items-center justify-between">
-                    <span className="text-[10px] font-bold text-slate-500 uppercase">Sao bộ môn:</span>
+                    <span className="text-[12px] font-bold text-slate-500 uppercase">Sao bộ môn:</span>
                     <span className="text-xs font-black text-amber-700 flex items-center gap-1">
                       <Star className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
                       <span>{coins} XU</span>

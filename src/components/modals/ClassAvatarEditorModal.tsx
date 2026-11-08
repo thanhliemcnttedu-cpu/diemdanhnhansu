@@ -341,19 +341,19 @@ export const ClassAvatarEditorModal: React.FC<ClassAvatarEditorModalProps> = ({
               </div>
               
               {/* Badge instruction */}
-              <div className="absolute bottom-2.5 left-1/2 -translate-x-1/2 bg-black/75 text-white text-[11px] font-bold px-3 py-1 rounded-full pointer-events-none flex items-center gap-1.5 backdrop-blur-xs shadow-md">
+              <div className="absolute bottom-2.5 left-1/2 -translate-x-1/2 bg-black/75 text-white text-[12px] font-bold px-3 py-1 rounded-full pointer-events-none flex items-center gap-1.5 backdrop-blur-xs shadow-md">
                 <Move className="w-3 h-3 text-amber-400" />
                 <span>Nhấp & kéo ảnh để chỉnh góc nhìn đẹp nhất</span>
               </div>
 
               {/* Top Banner info */}
-              <div className="absolute top-2.5 left-2.5 bg-black/65 text-amber-700 text-[10px] font-black uppercase px-2 py-0.5 rounded-lg pointer-events-none backdrop-blur-xs flex items-center gap-1">
+              <div className="absolute top-2.5 left-2.5 bg-black/65 text-amber-700 text-[12px] font-black uppercase px-2 py-0.5 rounded-lg pointer-events-none backdrop-blur-xs flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                 <span>TỈ LỆ BANNER 2:1 (FULL HD)</span>
               </div>
 
               {/* Zoom & Rotation indicator */}
-              <div className="absolute top-2.5 right-2.5 bg-black/65 text-white text-[10px] font-mono px-2 py-0.5 rounded-lg pointer-events-none backdrop-blur-xs font-bold">
+              <div className="absolute top-2.5 right-2.5 bg-black/65 text-white text-[12px] font-mono px-2 py-0.5 rounded-lg pointer-events-none backdrop-blur-xs font-bold">
                 {Math.round(scale * 100)}% {rotation !== 0 ? `• ${rotation}°` : ''}
               </div>
             </div>
@@ -431,7 +431,7 @@ export const ClassAvatarEditorModal: React.FC<ClassAvatarEditorModalProps> = ({
                 />
               </div>
 
-              <div className="flex justify-between text-[10px] text-slate-400 font-bold px-1">
+              <div className="flex justify-between text-[12px] text-slate-400 font-bold px-1">
                 <span>50% (Thu nhỏ)</span>
                 <span>100% (Chuẩn)</span>
                 <span>200%</span>
@@ -465,7 +465,7 @@ export const ClassAvatarEditorModal: React.FC<ClassAvatarEditorModalProps> = ({
 
             {/* Quick Presets */}
             <div>
-              <span className="text-[11px] font-bold text-slate-400 block mb-1.5">
+              <span className="text-[12px] font-bold text-slate-400 block mb-1.5">
                 Hoặc chọn biểu tượng lớp học sinh động có sẵn:
               </span>
               <div className="flex items-center gap-2 overflow-x-auto pb-1">

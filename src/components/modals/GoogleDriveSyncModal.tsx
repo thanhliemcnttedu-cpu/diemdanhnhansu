@@ -322,17 +322,17 @@ export const GoogleDriveSyncModal: React.FC<GoogleDriveSyncModalProps> = ({ isOp
       <div className="relative w-full max-w-2xl bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[92vh]">
         
         {/* Header chuẩn Ảnh 6 & 7 */}
-        <div className="bg-gradient-to-r from-teal-700 via-emerald-600 to-teal-600 text-white px-5 py-3.5 flex items-center justify-between shrink-0 shadow-sm">
+        <div className="bg-gradient-to-r from-teal-700 via-emerald-700 to-teal-700 text-white px-5 py-3.5 flex items-center justify-between shrink-0 shadow-sm">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-white/20 text-white flex items-center justify-center shadow-md shrink-0">
               <Cloud className="w-5 h-5 text-white" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="px-2 py-0.2 rounded bg-white text-emerald-900 text-[10px] font-black uppercase tracking-wider">
+                <span className="px-2 py-0.2 rounded bg-white text-emerald-900 text-[12px] font-black uppercase tracking-wider">
                   GOOGLE DRIVE CLOUD
                 </span>
-                <span className="text-[11px] text-white font-medium">
+                <span className="text-[12px] text-white font-medium">
                   {isExecutive ? 'Quản trị / Ban Giám Hiệu' : `Giáo viên: ${currentUser?.fullName || 'Giáo viên Chủ nhiệm'}`}
                 </span>
               </div>
@@ -342,7 +342,7 @@ export const GoogleDriveSyncModal: React.FC<GoogleDriveSyncModalProps> = ({ isOp
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <span className="text-[11px] font-mono font-bold text-white bg-white/10 px-2.5 py-1 rounded-lg hidden sm:inline">
+            <span className="text-[12px] font-mono font-bold text-white bg-white/10 px-2.5 py-1 rounded-lg hidden sm:inline">
               {currentDateStr}
             </span>
             <button 
@@ -374,17 +374,17 @@ export const GoogleDriveSyncModal: React.FC<GoogleDriveSyncModalProps> = ({ isOp
           )}
 
           {/* Banner Lưu trữ tệp trên Google Drive (Ảnh 7 & Bổ sung BGH/Admin) */}
-          <div className="p-3.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-700 text-white shadow-xs space-y-1">
+          <div className="p-3.5 rounded-xl bg-gradient-to-r from-emerald-700 to-teal-700 text-white shadow-xs space-y-1">
             <div className="flex items-center justify-between">
               <span className="text-xs font-black uppercase flex items-center gap-1.5 tracking-wide">
                 <Sparkles className="w-3.5 h-3.5 text-yellow-300" />
                 LƯU TRỮ TRÊN THƯ MỤC GOOGLE DRIVE DÙNG CHUNG
               </span>
-              <span className="font-mono text-[11px] bg-black/25 px-2.5 py-0.5 rounded font-bold text-white">
+              <span className="font-mono text-[12px] bg-black/25 px-2.5 py-0.5 rounded font-bold text-white">
                 {classSpecificFileName}
               </span>
             </div>
-            <p className="text-[11.5px] text-white leading-relaxed pt-0.5">
+            <p className="text-[12px] text-white leading-relaxed pt-0.5">
               {(isSchoolAdmin && currentUser?.role !== 'bgh') ? (
                 <>Tài khoản Quản trị Nhà Trường lưu trữ toàn diện vào file <strong className="text-white font-mono">quantrinhatruong.json</strong> trong thư mục dùng chung, liên thông đồng bộ toàn bộ cơ sở dữ liệu trường học.</>
               ) : isBgh ? (
@@ -417,12 +417,12 @@ export const GoogleDriveSyncModal: React.FC<GoogleDriveSyncModalProps> = ({ isOp
               {/* Bước 1 */}
               <div className="p-2.5 rounded-xl bg-white border border-emerald-200 space-y-1">
                 <div className="flex items-center gap-2">
-                  <div className="w-5 h-5 rounded-full bg-emerald-600 text-white font-black text-xs flex items-center justify-center">
+                  <div className="w-5 h-5 rounded-full bg-emerald-700 text-white font-black text-xs flex items-center justify-center">
                     1
                   </div>
                   <strong className="text-xs font-black text-slate-800">Tạo thư mục Drive</strong>
                 </div>
-                <p className="text-[11px] text-slate-600 leading-relaxed">
+                <p className="text-[12px] text-slate-600 leading-relaxed">
                   Mở Google Drive, tạo thư mục ví dụ: <code className="text-emerald-800 font-bold bg-slate-50 px-1 py-0.2 rounded">DuLieu_LopHocHanhPhuc</code>
                 </p>
               </div>
@@ -430,12 +430,12 @@ export const GoogleDriveSyncModal: React.FC<GoogleDriveSyncModalProps> = ({ isOp
               {/* Bước 2 */}
               <div className="p-2.5 rounded-xl bg-white border border-orange-200 space-y-1">
                 <div className="flex items-center gap-2">
-                  <div className="w-5 h-5 rounded-full bg-orange-600 text-white font-black text-xs flex items-center justify-center">
+                  <div className="w-5 h-5 rounded-full bg-orange-700 text-white font-black text-xs flex items-center justify-center">
                     2
                   </div>
                   <strong className="text-xs font-black text-slate-800">Chia sẻ quyền "Can Edit"</strong>
                 </div>
-                <p className="text-[11px] text-slate-600 leading-relaxed">
+                <p className="text-[12px] text-slate-600 leading-relaxed">
                   Chuột phải thư mục ➡️ Chia sẻ ➡️ Chọn: "Bất kỳ ai có đường liên kết" ➡️ Chọn vai trò: <strong>Người chỉnh sửa (Can edit)</strong>.
                 </p>
               </div>
@@ -448,7 +448,7 @@ export const GoogleDriveSyncModal: React.FC<GoogleDriveSyncModalProps> = ({ isOp
                   </div>
                   <strong className="text-xs font-black text-slate-800">Dán link (Tự động lưu)</strong>
                 </div>
-                <p className="text-[11px] text-slate-600 leading-relaxed">
+                <p className="text-[12px] text-slate-600 leading-relaxed">
                   Chỉ cần dán link vào ô bên dưới, hệ thống sẽ tự động lưu và kích hoạt Cầu nối Apps Script (1-Click) luôn!
                 </p>
               </div>
@@ -474,11 +474,11 @@ export const GoogleDriveSyncModal: React.FC<GoogleDriveSyncModalProps> = ({ isOp
                 </button>
               </div>
               {config.scriptUrl && config.folderId ? (
-                <pre className="whitespace-pre-wrap break-all bg-white p-2.5 rounded-lg border border-indigo-200 font-mono text-[11px] text-slate-700 select-all">
+                <pre className="whitespace-pre-wrap break-all bg-white p-2.5 rounded-lg border border-indigo-200 font-mono text-[12px] text-slate-700 select-all">
                   {googleDriveService.buildConnectionShareText(currentUser?.schoolName)}
                 </pre>
               ) : (
-                <p className="text-[11px] font-semibold text-indigo-900">
+                <p className="text-[12px] font-semibold text-indigo-900">
                   Bước 1: tạo thư mục Drive, chia sẻ "Bất kỳ ai có liên kết – Người chỉnh sửa". Bước 2: triển khai mã Apps Script (mục bên dưới). Bước 3: lưu link thư mục + URL Apps Script → khung tin nhắn gửi toàn trường sẽ hiện ở đây.
                 </p>
               )}
@@ -490,7 +490,7 @@ export const GoogleDriveSyncModal: React.FC<GoogleDriveSyncModalProps> = ({ isOp
               <Link2 className="w-4 h-4 text-sky-700" />
               DÁN THÔNG TIN KẾT NỐI TỪ QUẢN TRỊ NHÀ TRƯỜNG
             </span>
-            <p className="text-[11px] font-semibold text-slate-600">
+            <p className="text-[12px] font-semibold text-slate-600">
               BGH và GVCN dán nguyên tin nhắn kết nối (gồm link thư mục dùng chung và mã kết nối Apps Script) rồi bấm Áp dụng. Cả trường cùng làm việc trên một thư mục Google Drive.
             </p>
             <div className="flex flex-col sm:flex-row gap-2">
@@ -505,7 +505,7 @@ export const GoogleDriveSyncModal: React.FC<GoogleDriveSyncModalProps> = ({ isOp
                 type="button"
                 onClick={handleApplyConnectionText}
                 disabled={!connectionTextInput.trim() || isTesting}
-                className="px-4 py-2 rounded-xl bg-sky-600 hover:bg-sky-700 disabled:opacity-50 text-white font-bold text-xs uppercase cursor-pointer shrink-0"
+                className="px-4 py-2 rounded-xl bg-sky-700 hover:bg-sky-800 disabled:opacity-50 text-white font-bold text-xs uppercase cursor-pointer shrink-0"
               >
                 {isTesting ? 'ĐANG KIỂM TRA...' : 'ÁP DỤNG'}
               </button>
@@ -520,7 +520,7 @@ export const GoogleDriveSyncModal: React.FC<GoogleDriveSyncModalProps> = ({ isOp
                 THƯ MỤC GOOGLE DRIVE ĐANG KẾT NỐI:
               </span>
               {config.folderId && (
-                <span className="px-2 py-0.5 rounded bg-emerald-700 text-white font-mono text-[11px] font-bold">
+                <span className="px-2 py-0.5 rounded bg-emerald-700 text-white font-mono text-[12px] font-bold">
                   ID: {config.folderId}
                 </span>
               )}
@@ -545,7 +545,7 @@ export const GoogleDriveSyncModal: React.FC<GoogleDriveSyncModalProps> = ({ isOp
                   </button>
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[11px] font-bold text-slate-600">URL Cầu nối Apps Script (Tùy chọn nâng cao):</label>
+                  <label className="text-[12px] font-bold text-slate-600">URL Cầu nối Apps Script (Tùy chọn nâng cao):</label>
                   <input
                     type="text"
                     value={scriptUrlInput}
@@ -575,7 +575,7 @@ export const GoogleDriveSyncModal: React.FC<GoogleDriveSyncModalProps> = ({ isOp
                   <button
                     type="button"
                     onClick={() => setIsEditingFolder(true)}
-                    className="px-2.5 py-1 rounded-lg bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs flex items-center gap-1 cursor-pointer"
+                    className="px-2.5 py-1 rounded-lg bg-teal-700 hover:bg-teal-800 text-white font-bold text-xs flex items-center gap-1 cursor-pointer"
                   >
                     <span>ĐỔI THƯ MỤC KHÁC</span>
                   </button>
@@ -587,7 +587,7 @@ export const GoogleDriveSyncModal: React.FC<GoogleDriveSyncModalProps> = ({ isOp
           {/* Lịch Sử Các Thư Mục Google Drive Thầy/Cô Đã Từng Dùng (Ảnh 6) */}
           {Array.isArray(config.folderHistory) && config.folderHistory.length > 0 && (
             <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 space-y-1.5">
-              <span className="text-[11px] font-black text-slate-700 uppercase flex items-center gap-1.5">
+              <span className="text-[12px] font-black text-slate-700 uppercase flex items-center gap-1.5">
                 <History className="w-3.5 h-3.5 text-slate-500" />
                 LỊCH SỬ CÁC THƯ MỤC GOOGLE DRIVE THẦY/CÔ ĐÃ TỪNG DÙNG:
               </span>
@@ -597,12 +597,12 @@ export const GoogleDriveSyncModal: React.FC<GoogleDriveSyncModalProps> = ({ isOp
                     <div className="flex items-center gap-2 truncate">
                       <Folder className="w-3.5 h-3.5 text-amber-500 shrink-0" />
                       <span className="font-mono font-bold text-slate-800">ID: {item.id}</span>
-                      <span className="text-[10.5px] text-slate-400">[{item.date}]</span>
+                      <span className="text-[12px] text-slate-400">[{item.date}]</span>
                     </div>
                     <button
                       type="button"
                       onClick={() => handleSelectHistoryFolder(item)}
-                      className="px-2.5 py-0.5 rounded-md bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-[11px] border border-indigo-200 transition-colors cursor-pointer shrink-0"
+                      className="px-2.5 py-0.5 rounded-md bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-[12px] border border-indigo-200 transition-colors cursor-pointer shrink-0"
                     >
                       Chọn lại
                     </button>
@@ -621,7 +621,7 @@ export const GoogleDriveSyncModal: React.FC<GoogleDriveSyncModalProps> = ({ isOp
               className={`py-3 px-4 rounded-xl font-black text-xs uppercase tracking-wide flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer active:scale-[0.99] ${
                 !currentUser 
                   ? 'bg-slate-300 text-slate-500 cursor-not-allowed opacity-60' 
-                  : 'bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white'
+                  : 'bg-gradient-to-r from-emerald-700 to-teal-700 hover:from-emerald-800 hover:to-teal-800 text-white'
               }`}
               title={!currentUser ? 'Vui lòng đăng nhập trước khi đẩy dữ liệu lớp lên Drive' : 'Đồng bộ dữ liệu lớp hiện tại lên Google Drive'}
             >
@@ -646,7 +646,7 @@ export const GoogleDriveSyncModal: React.FC<GoogleDriveSyncModalProps> = ({ isOp
           <div className="p-3 rounded-xl bg-gradient-to-r from-teal-50 to-emerald-50 border border-teal-200 text-teal-950 text-xs leading-relaxed flex items-start gap-2.5">
             <span className="text-base leading-none">⚡</span>
             <div>
-              <strong className="text-teal-800 uppercase font-black tracking-wide block text-[11.5px] pb-0.5">
+              <strong className="text-teal-800 uppercase font-black tracking-wide block text-[12px] pb-0.5">
                 Cơ chế ngầm tự động đồng bộ Google Drive mỗi 5 giây (Toàn hệ thống):
               </strong>
               <span>
@@ -666,8 +666,8 @@ export const GoogleDriveSyncModal: React.FC<GoogleDriveSyncModalProps> = ({ isOp
                 <button
                   type="button"
                   onClick={() => setSyncMethod('appscript')}
-                  className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition-colors cursor-pointer ${
-                    syncMethod === 'appscript' ? 'bg-emerald-600 text-white' : 'text-slate-600 hover:text-slate-900'
+                  className={`px-2.5 py-1 rounded-md text-[12px] font-bold transition-colors cursor-pointer ${
+                    syncMethod === 'appscript' ? 'bg-emerald-700 text-white' : 'text-slate-600 hover:text-slate-900'
                   }`}
                 >
                   Cầu nối Apps Script (1-Click)
@@ -675,8 +675,8 @@ export const GoogleDriveSyncModal: React.FC<GoogleDriveSyncModalProps> = ({ isOp
                 <button
                   type="button"
                   onClick={() => setSyncMethod('desktop')}
-                  className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition-colors cursor-pointer ${
-                    syncMethod === 'desktop' ? 'bg-emerald-600 text-white' : 'text-slate-600 hover:text-slate-900'
+                  className={`px-2.5 py-1 rounded-md text-[12px] font-bold transition-colors cursor-pointer ${
+                    syncMethod === 'desktop' ? 'bg-emerald-700 text-white' : 'text-slate-600 hover:text-slate-900'
                   }`}
                 >
                   Ổ Drive trên máy (Desktop)
@@ -686,7 +686,7 @@ export const GoogleDriveSyncModal: React.FC<GoogleDriveSyncModalProps> = ({ isOp
 
             {syncMethod === 'desktop' ? (
               <div className="space-y-2">
-                <p className="text-[11px] text-slate-600 leading-relaxed">
+                <p className="text-[12px] text-slate-600 leading-relaxed">
                   Nếu máy tính Thầy/Cô có cài ứng dụng Google Drive cho máy tính (Google Drive for Desktop), hãy nhập đường dẫn thư mục Google Drive tại đây:
                 </p>
                 <div className="flex gap-2">
@@ -705,7 +705,7 @@ export const GoogleDriveSyncModal: React.FC<GoogleDriveSyncModalProps> = ({ isOp
                     LƯU
                   </button>
                 </div>
-                <div className="text-[10.5px] text-emerald-700 font-medium">
+                <div className="text-[12px] text-emerald-700 font-medium">
                   ✓ Khi lưu tại đây, Google Drive trên máy tính sẽ tự động đồng bộ thời gian thực 2 chiều lên đám mây 24/7!
                 </div>
               </div>
@@ -759,7 +759,7 @@ export const GoogleDriveSyncModal: React.FC<GoogleDriveSyncModalProps> = ({ isOp
                     <span className="font-black text-emerald-900 mr-1">💡 Tự động 1-Click:</span>
                     Thầy Cô chỉ cần dán link thư mục Google Drive (đã bật quyền <em>"Người chỉnh sửa"</em>) vào phần mềm. Hệ thống sẽ tự động ghi đè duy nhất 01 tệp dữ liệu mà không cần cài đặt Apps Script phức tạp, không tạo file rác giúp thư mục Drive luôn gọn gàng!
                   </div>
-                  <div className="text-[11px] text-slate-500 italic">
+                  <div className="text-[12px] text-slate-500 italic">
                     (Tùy chọn nâng cao: Thầy Cô cũng có thể tự dán URL Web App riêng của mình vào ô bên dưới nếu muốn)
                   </div>
                 </div>
@@ -770,7 +770,7 @@ export const GoogleDriveSyncModal: React.FC<GoogleDriveSyncModalProps> = ({ isOp
                     <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
                     <span>Lưu ý quan trọng khi Triển khai (Deploy) Google Apps Script:</span>
                   </div>
-                  <ul className="list-disc list-inside text-[11px] space-y-0.5 text-amber-900 pl-1 leading-relaxed">
+                  <ul className="list-disc list-inside text-[12px] space-y-0.5 text-amber-900 pl-1 leading-relaxed">
                     <li>Thực thi dưới dạng (Execute as): <strong>Tôi - Tài khoản của bạn (Me)</strong></li>
                     <li>Ai có quyền truy cập (Who has access): <strong className="text-rose-700 underline">Bất kỳ ai (Anyone)</strong> <em>(Không để mặc định "Only myself" vì sẽ bị chặn)</em></li>
                   </ul>
@@ -833,9 +833,9 @@ export const GoogleDriveSyncModal: React.FC<GoogleDriveSyncModalProps> = ({ isOp
                           <strong className="block font-bold">
                             {testResult.success ? '✅ Kết nối Google Apps Script thành công!' : '⚠️ Kết nối Cầu nối chưa thành công:'}
                           </strong>
-                          <p className="text-[11.5px] leading-relaxed">{testResult.message}</p>
+                          <p className="text-[12px] leading-relaxed">{testResult.message}</p>
                           {testResult.isAuthError && (
-                            <div className="mt-1 p-2 rounded-lg bg-white/80 border border-rose-200 text-[11px] text-rose-900 leading-relaxed font-normal">
+                            <div className="mt-1 p-2 rounded-lg bg-white/80 border border-rose-200 text-[12px] text-rose-900 leading-relaxed font-normal">
                               <strong>Cách khắc phục 30 giây:</strong> Mở trang Apps Script ➡️ Bấm nút <strong>Triển khai (Deploy)</strong> ở góc trên bên phải ➡️ Chọn <strong>Quản lý bản triển khai (Manage deployments)</strong> ➡️ Bấm biểu tượng chiếc bút (Edit) ➡️ Đổi mục <strong>"Ai có quyền truy cập"</strong> thành <strong>"Bất kỳ ai (Anyone)"</strong> ➡️ Bấm Triển khai và sao chép lại link!
                             </div>
                           )}
@@ -849,7 +849,7 @@ export const GoogleDriveSyncModal: React.FC<GoogleDriveSyncModalProps> = ({ isOp
                 {showScriptCode && (
                   <div className="rounded-xl border border-slate-700 overflow-hidden shadow-md animate-in fade-in duration-200">
                     <div className="bg-white text-slate-700 px-3.5 py-2.5 flex items-center justify-between flex-wrap gap-2 border-b border-slate-200">
-                      <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-600">
+                      <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-700">
                         <Code2 className="w-4 h-4 text-emerald-600" />
                         <span>Mã nguồn Google Apps Script (Đã tự động điền Folder ID của Thầy Cô)</span>
                       </div>
@@ -874,7 +874,7 @@ export const GoogleDriveSyncModal: React.FC<GoogleDriveSyncModalProps> = ({ isOp
                             });
                           }}
                           className={`px-3 py-1 rounded-lg font-bold text-xs flex items-center gap-1.5 transition-colors cursor-pointer ${
-                            isCopiedCode ? 'bg-emerald-600 text-white' : 'bg-amber-500 hover:bg-amber-600 text-slate-950'
+                            isCopiedCode ? 'bg-emerald-700 text-white' : 'bg-amber-500 hover:bg-amber-600 text-slate-950'
                           }`}
                         >
                           {isCopiedCode ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
@@ -882,7 +882,7 @@ export const GoogleDriveSyncModal: React.FC<GoogleDriveSyncModalProps> = ({ isOp
                         </button>
                       </div>
                     </div>
-                    <pre className="p-3.5 bg-white text-emerald-600 font-mono text-[11px] leading-relaxed max-h-64 overflow-x-auto overflow-y-auto whitespace-pre select-all border-none">
+                    <pre className="p-3.5 bg-white text-emerald-700 font-mono text-[12px] leading-relaxed max-h-64 overflow-x-auto overflow-y-auto whitespace-pre select-all border-none">
                       {googleDriveService.generateAppsScriptCode(config.folderId)}
                     </pre>
                   </div>
@@ -898,7 +898,7 @@ export const GoogleDriveSyncModal: React.FC<GoogleDriveSyncModalProps> = ({ isOp
                   id="autoSyncToggle"
                   checked={autoSync}
                   onChange={(e) => setAutoSync(e.target.checked)}
-                  className="w-4 h-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500"
+                  className="w-4 h-4 text-emerald-700 rounded border-slate-300 focus:ring-emerald-500"
                 />
                 <label htmlFor="autoSyncToggle" className="text-xs font-semibold text-slate-700 cursor-pointer">
                   Tự động đồng bộ lên Google Drive sau mỗi buổi dạy (khi có thay đổi điểm, điểm danh)
@@ -907,7 +907,7 @@ export const GoogleDriveSyncModal: React.FC<GoogleDriveSyncModalProps> = ({ isOp
               <button
                 type="button"
                 onClick={handleSaveConfig}
-                className="text-[11px] font-bold text-emerald-700 hover:underline cursor-pointer"
+                className="text-[12px] font-bold text-emerald-700 hover:underline cursor-pointer"
               >
                 Lưu thiết lập
               </button>
@@ -928,7 +928,7 @@ export const GoogleDriveSyncModal: React.FC<GoogleDriveSyncModalProps> = ({ isOp
                   type="button"
                   onClick={loadBghSummary}
                   disabled={isAggregating}
-                  className="px-2.5 py-1 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs flex items-center gap-1 transition-colors cursor-pointer"
+                  className="px-2.5 py-1 rounded-lg bg-amber-700 hover:bg-amber-800 text-white font-bold text-xs flex items-center gap-1 transition-colors cursor-pointer"
                 >
                   <RefreshCw className={`w-3 h-3 ${isAggregating ? 'animate-spin' : ''}`} />
                   <span>{isAggregating ? 'Đang quét...' : 'Cập nhật số liệu'}</span>
@@ -939,19 +939,19 @@ export const GoogleDriveSyncModal: React.FC<GoogleDriveSyncModalProps> = ({ isOp
                 <div className="space-y-2.5">
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">
                     <div className="p-2 rounded-lg bg-white border border-amber-200">
-                      <div className="text-[10px] text-slate-500 font-bold uppercase">Tổng số lớp</div>
+                      <div className="text-[12px] text-slate-500 font-bold uppercase">Tổng số lớp</div>
                       <div className="text-sm font-black text-indigo-950">{bghReport.summary.totalClasses}</div>
                     </div>
                     <div className="p-2 rounded-lg bg-white border border-amber-200">
-                      <div className="text-[10px] text-slate-500 font-bold uppercase">Tổng học sinh</div>
+                      <div className="text-[12px] text-slate-500 font-bold uppercase">Tổng học sinh</div>
                       <div className="text-sm font-black text-indigo-950">{bghReport.summary.totalStudents}</div>
                     </div>
                     <div className="p-2 rounded-lg bg-white border border-amber-200">
-                      <div className="text-[10px] text-emerald-700 font-bold uppercase">Tỉ lệ chuyên cần</div>
+                      <div className="text-[12px] text-emerald-700 font-bold uppercase">Tỉ lệ chuyên cần</div>
                       <div className="text-sm font-black text-emerald-800">{bghReport.summary.attendanceRate}</div>
                     </div>
                     <div className="p-2 rounded-lg bg-white border border-amber-200">
-                      <div className="text-[10px] text-orange-700 font-bold uppercase">Tỉ lệ bán trú</div>
+                      <div className="text-[12px] text-orange-700 font-bold uppercase">Tỉ lệ bán trú</div>
                       <div className="text-sm font-black text-orange-800">{bghReport.summary.boardingRate}</div>
                     </div>
                   </div>
@@ -959,8 +959,8 @@ export const GoogleDriveSyncModal: React.FC<GoogleDriveSyncModalProps> = ({ isOp
                   {/* Chi tiết từng lớp */}
                   {Array.isArray(bghReport.classesDetail) && bghReport.classesDetail.length > 0 && (
                     <div className="overflow-x-auto max-h-44 border border-amber-200 rounded-lg">
-                      <table className="w-full text-[11px] text-left">
-                        <thead className="bg-amber-100/70 text-amber-950 font-black uppercase text-[10px]">
+                      <table className="w-full text-[12px] text-left">
+                        <thead className="bg-amber-100/70 text-amber-950 font-black uppercase text-[12px]">
                           <tr>
                             <th className="p-1.5">Lớp</th>
                             <th className="p-1.5">Tệp lưu</th>
@@ -975,12 +975,12 @@ export const GoogleDriveSyncModal: React.FC<GoogleDriveSyncModalProps> = ({ isOp
                           {bghReport.classesDetail.map((c, i) => (
                             <tr key={i} className="hover:bg-amber-50/50">
                               <td className="p-1.5 font-bold text-slate-900">{c.className}</td>
-                              <td className="p-1.5 font-mono text-[10px] text-slate-500">{c.fileName}</td>
+                              <td className="p-1.5 font-mono text-[12px] text-slate-500">{c.fileName}</td>
                               <td className="p-1.5">{c.total}</td>
                               <td className="p-1.5 font-medium text-emerald-700">{c.present} ({c.attendanceRate})</td>
                               <td className="p-1.5 font-medium text-orange-700">{c.boardingActual}/{c.boardingRegistered}</td>
                               <td className="p-1.5">
-                                <span className={`px-1.5 py-0.2 rounded text-[9.5px] font-bold ${
+                                <span className={`px-1.5 py-0.2 rounded text-[12px] font-bold ${
                                   c.status === 'reported' ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-600'
                                 }`}>
                                   {c.status === 'reported' ? 'Đã báo cáo' : 'Chưa điểm danh'}
@@ -990,7 +990,7 @@ export const GoogleDriveSyncModal: React.FC<GoogleDriveSyncModalProps> = ({ isOp
                                 <button
                                   type="button"
                                   onClick={() => handleManualPull(c.fileName)}
-                                  className="px-2 py-0.5 rounded bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-[10px] border border-indigo-200 transition-colors cursor-pointer"
+                                  className="px-2 py-0.5 rounded bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-[12px] border border-indigo-200 transition-colors cursor-pointer"
                                   title={`Tải dữ liệu của ${c.className}`}
                                 >
                                   Nạp dữ liệu
@@ -1004,7 +1004,7 @@ export const GoogleDriveSyncModal: React.FC<GoogleDriveSyncModalProps> = ({ isOp
                   )}
                 </div>
               ) : (
-                <p className="text-[11px] text-slate-600">
+                <p className="text-[12px] text-slate-600">
                   Nhấn "Cập nhật số liệu" để tự động quét toàn bộ các tệp <code className="font-mono text-amber-900 font-bold">gvcn_*.json</code> mà các giáo viên chủ nhiệm đã đẩy lên thư mục Google Drive dùng chung.
                 </p>
               )}
@@ -1015,7 +1015,7 @@ export const GoogleDriveSyncModal: React.FC<GoogleDriveSyncModalProps> = ({ isOp
 
         {/* Footer chuẩn Ảnh 6 */}
         <div className="px-5 py-3 bg-slate-50 border-t border-slate-200 flex items-center justify-between shrink-0">
-          <div className="text-[11px] text-slate-500 font-medium truncate max-w-sm">
+          <div className="text-[12px] text-slate-500 font-medium truncate max-w-sm">
             Google Drive Cloud Sync v2.5 • Tự động kích hoạt Cầu nối Apps Script (1-Click) & Đổi thư mục linh hoạt
           </div>
           <button

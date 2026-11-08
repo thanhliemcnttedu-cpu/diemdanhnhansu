@@ -277,7 +277,7 @@ export const TimerView: React.FC = () => {
             <div>
               <h2 className="text-base md:text-lg font-black text-slate-900 flex items-center gap-2">
                 <span>Đồng Hồ Lớp Học & Đếm Ngược</span>
-                <span className="px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 text-[10px] font-bold border border-indigo-200">
+                <span className="px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 text-[12px] font-bold border border-indigo-200">
                   Thời Gian Thực
                 </span>
               </h2>
@@ -347,7 +347,7 @@ export const TimerView: React.FC = () => {
       {/* ANALOG CLOCK STAGE (ĐỒNG HỒ KIM THỜI GIAN THỰC & NGÀY THÁNG NĂM)      */}
       {/* ===================================================================== */}
       {(viewMode === 'analog' || viewMode === 'split') && (
-        <div className={`bg-gradient-to-br from-indigo-500 via-blue-500 to-indigo-600 rounded-3xl p-4 sm:p-6 md:p-8 text-white shadow-xl border border-indigo-500/20 relative overflow-hidden hover-zoom-card ${viewMode === 'analog' ? 'max-w-3xl mx-auto' : ''}`}>
+        <div className={`bg-gradient-to-br from-indigo-600 via-blue-600 to-indigo-600 rounded-3xl p-4 sm:p-6 md:p-8 text-white shadow-xl border border-indigo-500/20 relative overflow-hidden hover-zoom-card ${viewMode === 'analog' ? 'max-w-3xl mx-auto' : ''}`}>
           {/* Subtle Ambient Lights */}
           <div className="absolute top-0 right-0 w-72 h-72 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
           <div className="absolute bottom-0 left-0 w-72 h-72 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
@@ -442,7 +442,7 @@ export const TimerView: React.FC = () => {
 
             {/* Right: Date, Day of Week & Digital Time Banner */}
             <div className="flex-1 text-center md:text-left space-y-2.5 sm:space-y-3">
-              <div className="inline-flex items-center gap-2 px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-full bg-white/20 text-white border border-white/40 text-[11px] sm:text-xs font-black uppercase tracking-wider">
+              <div className="inline-flex items-center gap-2 px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-full bg-white/20 text-white border border-white/40 text-[12px] sm:text-xs font-black uppercase tracking-wider">
                 <CalendarIcon className="w-3.5 h-3.5 text-amber-200" />
                 <span>Thời Gian Hiện Tại • Năm Học 2026 - 2027</span>
               </div>
@@ -462,7 +462,7 @@ export const TimerView: React.FC = () => {
                 {digitalTimeVi}
               </div>
 
-              <p className="text-[11px] sm:text-xs text-white font-medium">
+              <p className="text-[12px] sm:text-xs text-white font-medium">
                 Đồng hồ kim và lịch ngày tháng tự động đồng bộ chính xác theo giờ hệ thống của máy tính và lớp học.
               </p>
             </div>
@@ -552,7 +552,7 @@ export const TimerView: React.FC = () => {
                 <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-3 sm:p-4">
                   {remainingSeconds === 0 ? (
                     <div className={`flex flex-col items-center justify-center ${isAlarmActive ? 'animate-bounce' : ''}`}>
-                      <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-red-600 animate-flash-red text-white text-[10px] sm:text-[11px] font-black uppercase mb-1 shadow-md">
+                      <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-red-600 animate-flash-red text-white text-[12px] sm:text-[12px] font-black uppercase mb-1 shadow-md">
                         <Bell className="w-3 h-3 sm:w-3.5 sm:h-3.5 animate-spin" />
                         <span>CẢNH BÁO</span>
                       </div>
@@ -560,11 +560,11 @@ export const TimerView: React.FC = () => {
                         HẾT GIỜ
                       </span>
                       {isAlarmActive ? (
-                        <span className="text-[11px] sm:text-xs font-black text-red-600 mt-1 flex items-center gap-1">
+                        <span className="text-[12px] sm:text-xs font-black text-red-600 mt-1 flex items-center gap-1">
                           <Bell className="w-3 h-3 text-red-500 animate-pulse" /> Chuông reo: còn {alarmSecondsLeft}s
                         </span>
                       ) : (
-                        <span className="text-[11px] sm:text-xs font-bold text-slate-400 mt-0.5">
+                        <span className="text-[12px] sm:text-xs font-bold text-slate-400 mt-0.5">
                           ĐÃ HOÀN THÀNH
                         </span>
                       )}
@@ -574,7 +574,7 @@ export const TimerView: React.FC = () => {
                       <span className="text-2xl sm:text-3xl md:text-4xl font-black font-mono tracking-tight text-slate-900">
                         {formatTime(remainingSeconds)}
                       </span>
-                      <span className="text-[10px] sm:text-xs font-extrabold uppercase tracking-widest text-slate-400 mt-0.5 sm:mt-1">
+                      <span className="text-[12px] sm:text-xs font-extrabold uppercase tracking-widest text-slate-400 mt-0.5 sm:mt-1">
                         {isRunning ? 'ĐANG CHẠY' : 'SẴN SÀNG'}
                       </span>
                     </>
@@ -609,7 +609,7 @@ export const TimerView: React.FC = () => {
                   }}
                   className={`flex-1 min-w-[110px] sm:min-w-[130px] px-3 sm:px-8 py-2.5 sm:py-3 rounded-2xl font-black text-xs sm:text-sm text-white shadow-md flex items-center justify-center gap-1.5 sm:gap-2 hover-zoom-btn ${
                     isRunning
-                      ? 'bg-amber-600 hover:bg-amber-700 shadow-amber-500/25'
+                      ? 'bg-amber-700 hover:bg-amber-800 shadow-amber-500/25'
                       : 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-600/25'
                   }`}
                 >
@@ -661,7 +661,7 @@ export const TimerView: React.FC = () => {
                     <span className="text-xl sm:text-2xl font-black font-mono my-0.5 sm:my-1 text-slate-800 w-10 sm:w-12 text-center">
                       {setHours}
                     </span>
-                    <span className="text-[9.5px] sm:text-[10px] text-slate-400 font-bold uppercase">Giờ</span>
+                    <span className="text-[12px] sm:text-[12px] text-slate-400 font-bold uppercase">Giờ</span>
                     <button
                       type="button"
                       onClick={() => setSetHours(prev => Math.max(0, prev - 1))}
@@ -685,7 +685,7 @@ export const TimerView: React.FC = () => {
                     <span className="text-xl sm:text-2xl font-black font-mono my-0.5 sm:my-1 text-slate-800 w-10 sm:w-12 text-center">
                       {setMins}
                     </span>
-                    <span className="text-[9.5px] sm:text-[10px] text-slate-400 font-bold uppercase">Phút</span>
+                    <span className="text-[12px] sm:text-[12px] text-slate-400 font-bold uppercase">Phút</span>
                     <button
                       type="button"
                       onClick={() => setSetMins(prev => Math.max(0, prev - 1))}
@@ -709,7 +709,7 @@ export const TimerView: React.FC = () => {
                     <span className="text-xl sm:text-2xl font-black font-mono my-0.5 sm:my-1 text-slate-800 w-10 sm:w-12 text-center">
                       {setSecs}
                     </span>
-                    <span className="text-[9.5px] sm:text-[10px] text-slate-400 font-bold uppercase">Giây</span>
+                    <span className="text-[12px] sm:text-[12px] text-slate-400 font-bold uppercase">Giây</span>
                     <button
                       type="button"
                       onClick={() => setSetSecs(prev => Math.max(0, prev - 1))}
@@ -740,7 +740,7 @@ export const TimerView: React.FC = () => {
                   <button
                     type="button"
                     onClick={handleStartQuick30s}
-                    className="px-2.5 py-1 rounded-lg bg-amber-100 hover:bg-amber-200 text-amber-800 text-[11px] font-black flex items-center gap-1 hover-zoom-btn transition-colors"
+                    className="px-2.5 py-1 rounded-lg bg-amber-100 hover:bg-amber-200 text-amber-800 text-[12px] font-black flex items-center gap-1 hover-zoom-btn transition-colors"
                   >
                     <Play className="w-3 h-3 fill-amber-800" />
                     <span>Bắt đầu 30s ngay</span>
@@ -765,7 +765,7 @@ export const TimerView: React.FC = () => {
                         }`}
                       >
                         {is30s && (
-                          <span className="absolute -top-1.5 -right-1 px-1 py-0.2 bg-red-500 text-[8px] text-white font-extrabold rounded-full">
+                          <span className="absolute -top-1.5 -right-1 px-1 py-0.2 bg-red-600 text-[11px] text-white font-extrabold rounded-full">
                             HOT
                           </span>
                         )}

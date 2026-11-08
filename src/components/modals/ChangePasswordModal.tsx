@@ -119,11 +119,11 @@ export const ChangePasswordModal: React.FC<Props> = ({ currentUser }) => {
         ) : (
           <>
             <label className="block space-y-1">
-              <span className="text-[11px] font-black text-slate-600 uppercase">Mật khẩu hiện tại</span>
+              <span className="text-[12px] font-black text-slate-600 uppercase">Mật khẩu hiện tại</span>
               <input type={show ? 'text' : 'password'} value={oldPassword} onChange={e => setOldPassword(e.target.value)} className={inputCls} required autoComplete="current-password" />
             </label>
             <label className="block space-y-1">
-              <span className="text-[11px] font-black text-slate-600 uppercase">Mật khẩu mới (ít nhất 6 ký tự)</span>
+              <span className="text-[12px] font-black text-slate-600 uppercase">Mật khẩu mới (ít nhất 6 ký tự)</span>
               <div className="relative">
                 <input type={show ? 'text' : 'password'} value={newPassword} onChange={e => setNewPassword(e.target.value)} className={inputCls} required autoComplete="new-password" />
                 <button type="button" onClick={() => setShow(!show)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
@@ -132,7 +132,7 @@ export const ChangePasswordModal: React.FC<Props> = ({ currentUser }) => {
               </div>
             </label>
             <label className="block space-y-1">
-              <span className="text-[11px] font-black text-slate-600 uppercase">Nhập lại mật khẩu mới</span>
+              <span className="text-[12px] font-black text-slate-600 uppercase">Nhập lại mật khẩu mới</span>
               <input type={show ? 'text' : 'password'} value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} className={inputCls} required autoComplete="new-password" />
             </label>
             <button

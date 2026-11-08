@@ -801,7 +801,7 @@ export const DuckRaceGame: React.FC = () => {
           <button
             onClick={handleStartCountdown}
             disabled={isRacing || countdown !== null || duckStudents.length === 0}
-            className="px-5 py-2.5 bg-gradient-to-r from-amber-600 via-orange-600 to-amber-600 hover:from-amber-700 hover:to-orange-700 text-white rounded-2xl text-xs font-black flex items-center gap-2 shadow-md shadow-orange-500/25 transition-all hover-zoom-btn disabled:opacity-50 uppercase cursor-pointer"
+            className="px-5 py-2.5 bg-gradient-to-r from-amber-700 via-orange-700 to-amber-700 hover:from-amber-800 hover:to-orange-800 text-white rounded-2xl text-xs font-black flex items-center gap-2 shadow-md shadow-orange-500/25 transition-all hover-zoom-btn disabled:opacity-50 uppercase cursor-pointer"
           >
             <Play className="w-4 h-4 fill-white" />
             <span>
@@ -812,7 +812,7 @@ export const DuckRaceGame: React.FC = () => {
       </div>
 
       {/* 2. LIVE DASHBOARD BANNER & COMMENTARY */}
-      <div className="bg-gradient-to-r from-sky-600 via-indigo-600 to-blue-700 rounded-3xl p-4 text-white shadow-lg flex flex-col md:flex-row items-center justify-between gap-3 border border-sky-400/40 relative overflow-hidden">
+      <div className="bg-gradient-to-r from-sky-700 via-indigo-600 to-blue-700 rounded-3xl p-4 text-white shadow-lg flex flex-col md:flex-row items-center justify-between gap-3 border border-sky-400/40 relative overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(255,255,255,0.2),transparent_70%)] pointer-events-none" />
 
         <div className="flex items-center gap-3 relative z-10 w-full md:w-auto">
@@ -821,7 +821,7 @@ export const DuckRaceGame: React.FC = () => {
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="px-2 py-0.5 rounded-full bg-amber-400 text-amber-950 text-[10px] font-black uppercase tracking-wider">
+              <span className="px-2 py-0.5 rounded-full bg-amber-400 text-amber-950 text-[12px] font-black uppercase tracking-wider">
                 ĐƯỜNG ĐUA 3D OLYMPIC
               </span>
               <span className="text-xs text-white font-semibold">
@@ -836,7 +836,7 @@ export const DuckRaceGame: React.FC = () => {
 
         {/* Live Top 3 Mini-Leaderboard */}
         <div className="flex items-center gap-2 relative z-10 bg-black/25 backdrop-blur-md px-3 py-1.5 rounded-2xl border border-white/20 self-stretch md:self-auto justify-around">
-          <span className="text-[10px] font-black text-amber-300 uppercase tracking-wider shrink-0 flex items-center gap-1">
+          <span className="text-[12px] font-black text-amber-300 uppercase tracking-wider shrink-0 flex items-center gap-1">
             <Trophy className="w-3 h-3 text-amber-400" />
             <span>Top dẫn đầu:</span>
           </span>
@@ -846,7 +846,7 @@ export const DuckRaceGame: React.FC = () => {
               <div key={st.id} className="flex items-center gap-1.5 text-xs font-black">
                 <span>{medal}</span>
                 <img src={st.avatar} onError={(e) => handleAvatarImgError(e, st?.gender, st?.name)} alt={st.name} className="w-5 h-5 rounded-full object-cover object-center border border-white" />
-                <span className="truncate max-w-[80px] sm:max-w-[110px] text-white text-[11px]">{st.name}</span>
+                <span className="truncate max-w-[80px] sm:max-w-[110px] text-white text-[12px]">{st.name}</span>
               </div>
             );
           })}
@@ -863,7 +863,7 @@ export const DuckRaceGame: React.FC = () => {
         {countdown !== null && (
           <div className="absolute inset-0 z-40 bg-black/50 backdrop-blur-xs flex flex-col items-center justify-center animate-in fade-in zoom-in-95 duration-200">
             <div className="text-center">
-              <div className="w-28 h-28 sm:w-36 sm:h-36 rounded-full bg-gradient-to-tr from-amber-600 to-orange-600 border-4 border-white shadow-2xl flex items-center justify-center text-5xl sm:text-6xl font-black text-white animate-bounce">
+              <div className="w-28 h-28 sm:w-36 sm:h-36 rounded-full bg-gradient-to-tr from-amber-700 to-orange-700 border-4 border-white shadow-2xl flex items-center justify-center text-5xl sm:text-6xl font-black text-white animate-bounce">
                 {countdown === 0 ? '🏁 GO!' : countdown}
               </div>
               <p className="mt-4 text-xl sm:text-2xl font-black text-white uppercase tracking-wider drop-shadow-md">
@@ -908,7 +908,7 @@ export const DuckRaceGame: React.FC = () => {
                 key={st.id}
                 className={`relative h-14 sm:h-16 rounded-2xl flex items-center px-3 overflow-hidden transition-all duration-150 ${
                   isWinner
-                    ? 'bg-amber-600/40 border-2 border-amber-300 shadow-lg shadow-amber-400/30 ring-2 ring-amber-300'
+                    ? 'bg-amber-700/40 border-2 border-amber-300 shadow-lg shadow-amber-400/30 ring-2 ring-amber-300'
                     : isBoosting
                     ? 'bg-white/40 border-2 border-yellow-300 shadow-md'
                     : 'bg-white/25 hover:bg-white/30 border border-white/40 shadow-inner'
@@ -918,14 +918,14 @@ export const DuckRaceGame: React.FC = () => {
                 }}
               >
                 {/* 3D Olympic Floating Lane Buoys (Phao bơi phân làn) */}
-                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-red-500 via-white to-blue-500 opacity-60" />
-                <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-red-500 via-white to-blue-500 opacity-60" />
+                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-red-600 via-white to-blue-600 opacity-60" />
+                <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-red-600 via-white to-blue-600 opacity-60" />
 
                 {/* Lane Number Badge */}
                 <div className="w-8 shrink-0 flex flex-col items-center justify-center font-black font-mono z-10">
                   <span className="text-xs text-sky-950 font-black">#{idx + 1}</span>
                   {state.rank <= 3 && isRacing && (
-                    <span className="text-[9px] px-1 rounded-sm bg-amber-400 text-amber-950 font-black">
+                    <span className="text-[12px] px-1 rounded-sm bg-amber-400 text-amber-950 font-black">
                       Top {state.rank}
                     </span>
                   )}
@@ -935,7 +935,7 @@ export const DuckRaceGame: React.FC = () => {
                 <div className="absolute right-0 top-0 bottom-0 w-12 border-l-2 border-dashed border-red-500 bg-gradient-to-r from-red-500/80 to-red-600/90 flex items-center justify-center font-black text-white text-xs pointer-events-none z-10">
                   <div className="flex flex-col items-center">
                     <span className="text-sm">🏁</span>
-                    <span className="text-[8px] font-black text-white uppercase tracking-tighter">ĐÍCH</span>
+                    <span className="text-[11px] font-black text-white uppercase tracking-tighter">ĐÍCH</span>
                   </div>
                 </div>
 
@@ -961,7 +961,7 @@ export const DuckRaceGame: React.FC = () => {
 
                   {/* Nitro Boost Flash */}
                   {isBoosting && (
-                    <div className="absolute -top-3.5 left-2 px-2 py-0.5 rounded-full bg-gradient-to-r from-amber-600 via-orange-600 to-red-500 text-white font-black text-[9px] shadow-lg animate-bounce whitespace-nowrap z-30 flex items-center gap-0.5">
+                    <div className="absolute -top-3.5 left-2 px-2 py-0.5 rounded-full bg-gradient-to-r from-amber-700 via-orange-700 to-red-600 text-white font-black text-[12px] shadow-lg animate-bounce whitespace-nowrap z-30 flex items-center gap-0.5">
                       <Flame className="w-2.5 h-2.5 fill-yellow-200" />
                       <span>NITRO!</span>
                     </div>
@@ -1053,7 +1053,7 @@ export const DuckRaceGame: React.FC = () => {
                       ? 'bg-yellow-300 text-slate-900 border border-white ring-1 ring-yellow-400'
                       : 'bg-white/95 backdrop-blur-md text-slate-800 border border-slate-200'
                   }`}>
-                    <span className="text-[10px] opacity-75 font-mono">#{st.stt}</span>
+                    <span className="text-[12px] opacity-75 font-mono">#{st.stt}</span>
                     <span>{st.name}</span>
                     {isWinner && <Crown className="w-3.5 h-3.5 text-amber-600 fill-amber-500" />}
                   </div>
@@ -1232,21 +1232,21 @@ export const DuckRaceGame: React.FC = () => {
                   {podium[1] && (
                     <div className="flex flex-col items-center gap-1">
                       <img src={podium[1].avatar} alt={podium[1].name} className="w-10 h-10 rounded-full object-cover border-2 border-slate-400 shadow-md" />
-                      <span className="text-[9px] text-slate-300 font-black truncate max-w-[56px]">{podium[1].name.split(' ').pop()}</span>
+                      <span className="text-[12px] text-slate-300 font-black truncate max-w-[56px]">{podium[1].name.split(' ').pop()}</span>
                       <div className="w-14 h-10 rounded-t-lg flex items-center justify-center text-white font-black text-sm" style={{ background: 'linear-gradient(180deg,#9ca3af,#6b7280)' }}>🥈</div>
                     </div>
                   )}
                   {podium[0] && (
                     <div className="flex flex-col items-center gap-1">
                       <img src={podium[0].avatar} alt={podium[0].name} className="w-12 h-12 rounded-full object-cover border-2 border-amber-300 shadow-lg" />
-                      <span className="text-[9px] font-black truncate max-w-[64px] text-amber-300">{podium[0].name.split(' ').pop()}</span>
+                      <span className="text-[12px] font-black truncate max-w-[64px] text-amber-300">{podium[0].name.split(' ').pop()}</span>
                       <div className="w-16 h-14 rounded-t-lg flex items-center justify-center font-black text-base shadow-lg" style={{ background: 'linear-gradient(180deg,#fbbf24,#d97706)' }}>🥇</div>
                     </div>
                   )}
                   {podium[2] && (
                     <div className="flex flex-col items-center gap-1">
                       <img src={podium[2].avatar} alt={podium[2].name} className="w-10 h-10 rounded-full object-cover border-2 border-orange-400 shadow-md" />
-                      <span className="text-[9px] text-orange-300 font-black truncate max-w-[56px]">{podium[2].name.split(' ').pop()}</span>
+                      <span className="text-[12px] text-orange-300 font-black truncate max-w-[56px]">{podium[2].name.split(' ').pop()}</span>
                       <div className="w-14 h-8 rounded-t-lg flex items-center justify-center text-white font-black text-sm" style={{ background: 'linear-gradient(180deg,#f97316,#c2410c)' }}>🥉</div>
                     </div>
                   )}

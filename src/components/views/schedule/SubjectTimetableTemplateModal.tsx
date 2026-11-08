@@ -351,7 +351,7 @@ export const SubjectTimetableTemplateModal: React.FC<SubjectTimetableTemplateMod
               <Calendar className="w-6 h-6 text-amber-300" />
             </div>
             <div>
-              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-400 text-amber-950 text-[10px] font-black uppercase tracking-wider mb-1">
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-400 text-amber-950 text-[12px] font-black uppercase tracking-wider mb-1">
                 <Sparkles className="w-3 h-3" />
                 MÔN {subjectName}
               </div>
@@ -428,15 +428,15 @@ export const SubjectTimetableTemplateModal: React.FC<SubjectTimetableTemplateMod
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex items-center gap-3">
-                      <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-emerald-600 to-teal-600 text-white flex items-center justify-center font-black text-lg shadow-md shrink-0">
+                      <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-emerald-700 to-teal-700 text-white flex items-center justify-center font-black text-lg shadow-md shrink-0">
                         <Star className="w-6 h-6 text-amber-300 fill-amber-300" />
                       </div>
                       <div>
                         <div className="flex flex-wrap items-center gap-2 mb-1">
-                          <span className="px-2.5 py-0.5 rounded-full bg-amber-400 text-amber-950 font-black text-[10px] uppercase tracking-wider">
+                          <span className="px-2.5 py-0.5 rounded-full bg-amber-400 text-amber-950 font-black text-[12px] uppercase tracking-wider">
                             ★ MẪU THỰC TẾ CHUẨN THEO ẢNH
                           </span>
-                          <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-900 font-bold text-[10px] uppercase">
+                          <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-900 font-bold text-[12px] uppercase">
                             18 TIẾT / TUẦN (18 LỚP BỘ MÔN)
                           </span>
                         </div>
@@ -450,27 +450,27 @@ export const SubjectTimetableTemplateModal: React.FC<SubjectTimetableTemplateMod
                     </div>
 
                     <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0 ${
-                      selectedTemplate === 'template_by_image' ? 'border-emerald-600 bg-emerald-600 text-white shadow-xs' : 'border-slate-300'
+                      selectedTemplate === 'template_by_image' ? 'border-emerald-600 bg-emerald-700 text-white shadow-xs' : 'border-slate-300'
                     }`}>
                       {selectedTemplate === 'template_by_image' && '✓'}
                     </div>
                   </div>
 
-                  <div className="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px] font-bold">
+                  <div className="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-2 text-[12px] font-bold">
                     <div className="bg-white/80 p-2 rounded-xl border border-emerald-200">
-                      <span className="text-slate-500 block text-[10px]">THỨ HAI (6 tiết):</span>
+                      <span className="text-slate-500 block text-[12px]">THỨ HAI (6 tiết):</span>
                       <span className="text-emerald-800 font-black">4A1 → 4A6</span>
                     </div>
                     <div className="bg-white/80 p-2 rounded-xl border border-emerald-200">
-                      <span className="text-slate-500 block text-[10px]">THỨ BA (7 tiết):</span>
+                      <span className="text-slate-500 block text-[12px]">THỨ BA (7 tiết):</span>
                       <span className="text-emerald-800 font-black">3A1 → 3A7</span>
                     </div>
                     <div className="bg-white/80 p-2 rounded-xl border border-emerald-200">
-                      <span className="text-slate-500 block text-[10px]">THỨ TƯ (4 tiết):</span>
+                      <span className="text-slate-500 block text-[12px]">THỨ TƯ (4 tiết):</span>
                       <span className="text-emerald-800 font-black">5A1 → 5A4</span>
                     </div>
                     <div className="bg-white/80 p-2 rounded-xl border border-emerald-200">
-                      <span className="text-slate-500 block text-[10px]">THỨ SÁU (1 tiết):</span>
+                      <span className="text-slate-500 block text-[12px]">THỨ SÁU (1 tiết):</span>
                       <span className="text-emerald-800 font-black">5A5</span>
                     </div>
                   </div>
@@ -482,7 +482,7 @@ export const SubjectTimetableTemplateModal: React.FC<SubjectTimetableTemplateMod
                           type="checkbox"
                           checked={autoCreateClasses}
                           onChange={e => setAutoCreateClasses(e.target.checked)}
-                          className="w-4 h-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500"
+                          className="w-4 h-4 text-emerald-700 rounded border-slate-300 focus:ring-emerald-500"
                         />
                         <span>Tự động khởi tạo đầy đủ 18 lớp học tương ứng (3A1–3A7, 4A1–4A6, 5A1–5A5) nếu chưa có</span>
                       </label>
@@ -512,7 +512,7 @@ export const SubjectTimetableTemplateModal: React.FC<SubjectTimetableTemplateMod
                           <h4 className="text-xs sm:text-sm font-black text-slate-900 uppercase">
                             Mẫu Phân Bổ Chuẩn (20 Tiết / Tuần)
                           </h4>
-                          <span className="text-[10px] font-bold text-indigo-700 uppercase bg-indigo-100 px-2 py-0.5 rounded">
+                          <span className="text-[12px] font-bold text-indigo-700 uppercase bg-indigo-100 px-2 py-0.5 rounded">
                             Khuyên Dùng Phổ Biến
                           </span>
                         </div>
@@ -549,13 +549,13 @@ export const SubjectTimetableTemplateModal: React.FC<SubjectTimetableTemplateMod
                           <h4 className="text-xs sm:text-sm font-black text-slate-900 uppercase">
                             Mẫu Chuyên Dạy Ca Sáng
                           </h4>
-                          <span className="text-[10px] font-bold text-amber-800 uppercase bg-amber-100 px-2 py-0.5 rounded">
+                          <span className="text-[12px] font-bold text-amber-800 uppercase bg-amber-100 px-2 py-0.5 rounded">
                             Tiết 1 – 4 Sáng (T2 - T6)
                           </span>
                         </div>
                       </div>
                       <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                        selectedTemplate === 'morning_only' ? 'border-amber-600 bg-amber-600 text-white' : 'border-slate-300'
+                        selectedTemplate === 'morning_only' ? 'border-amber-600 bg-amber-700 text-white' : 'border-slate-300'
                       }`}>
                         {selectedTemplate === 'morning_only' && '✓'}
                       </div>
@@ -586,13 +586,13 @@ export const SubjectTimetableTemplateModal: React.FC<SubjectTimetableTemplateMod
                           <h4 className="text-xs sm:text-sm font-black text-slate-900 uppercase">
                             Mẫu 2 Tiết Liền / Lớp
                           </h4>
-                          <span className="text-[10px] font-bold text-emerald-800 uppercase bg-emerald-100 px-2 py-0.5 rounded">
+                          <span className="text-[12px] font-bold text-emerald-800 uppercase bg-emerald-100 px-2 py-0.5 rounded">
                             Thực Hành Phòng Máy
                           </span>
                         </div>
                       </div>
                       <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                        selectedTemplate === 'double_periods' ? 'border-emerald-600 bg-emerald-600 text-white' : 'border-slate-300'
+                        selectedTemplate === 'double_periods' ? 'border-emerald-600 bg-emerald-700 text-white' : 'border-slate-300'
                       }`}>
                         {selectedTemplate === 'double_periods' && '✓'}
                       </div>
@@ -623,7 +623,7 @@ export const SubjectTimetableTemplateModal: React.FC<SubjectTimetableTemplateMod
                           <h4 className="text-xs sm:text-sm font-black text-slate-900 uppercase">
                             Tự Động Thông Minh Tùy Biến
                           </h4>
-                          <span className="text-[10px] font-bold text-purple-800 uppercase bg-purple-100 px-2 py-0.5 rounded">
+                          <span className="text-[12px] font-bold text-purple-800 uppercase bg-purple-100 px-2 py-0.5 rounded">
                             Tùy Chọn Theo Lớp
                           </span>
                         </div>
@@ -722,7 +722,7 @@ export const SubjectTimetableTemplateModal: React.FC<SubjectTimetableTemplateMod
               {/* Fast Preview Banner */}
               <div className="flex items-center justify-between p-4 bg-emerald-50 border border-emerald-200 rounded-2xl text-xs">
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-black">
+                  <div className="w-9 h-9 rounded-xl bg-emerald-700 text-white flex items-center justify-center font-black">
                     {previewSlots.length}
                   </div>
                   <div>
@@ -738,7 +738,7 @@ export const SubjectTimetableTemplateModal: React.FC<SubjectTimetableTemplateMod
                 <button
                   type="button"
                   onClick={() => setActiveTab('preview')}
-                  className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-black text-xs uppercase flex items-center gap-1.5 transition-all shadow-xs"
+                  className="px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl font-black text-xs uppercase flex items-center gap-1.5 transition-all shadow-xs"
                 >
                   <span>Xem trước</span>
                   <ArrowRight className="w-3.5 h-3.5" />
@@ -798,7 +798,7 @@ export const SubjectTimetableTemplateModal: React.FC<SubjectTimetableTemplateMod
                                     <span className="block font-black text-emerald-950 text-xs">
                                       {slot.className}
                                     </span>
-                                    <span className="block text-[9px] text-emerald-700 font-bold truncate">
+                                    <span className="block text-[12px] text-emerald-700 font-bold truncate">
                                       {slot.room || defaultRoom}
                                     </span>
                                   </div>
@@ -826,7 +826,7 @@ export const SubjectTimetableTemplateModal: React.FC<SubjectTimetableTemplateMod
                                     <span className="block font-black text-amber-950 text-xs">
                                       {slot.className}
                                     </span>
-                                    <span className="block text-[9px] text-amber-700 font-bold truncate">
+                                    <span className="block text-[12px] text-amber-700 font-bold truncate">
                                       {slot.room || defaultRoom}
                                     </span>
                                   </div>

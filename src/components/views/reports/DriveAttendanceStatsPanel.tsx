@@ -194,7 +194,7 @@ export const DriveAttendanceStatsPanel: React.FC = () => {
         </div>
         <button
           onClick={() => setIsGoogleDriveModalOpen(true)}
-          className="px-3 py-2 rounded-xl bg-sky-600 text-white text-xs font-black hover:bg-sky-700 shrink-0"
+          className="px-3 py-2 rounded-xl bg-sky-700 text-white text-xs font-black hover:bg-sky-800 shrink-0"
         >
           Cấu hình Google Drive
         </button>
@@ -211,7 +211,7 @@ export const DriveAttendanceStatsPanel: React.FC = () => {
           </div>
           <div>
             <p className="text-[12px] font-black text-sky-900 uppercase">Chuyên cần & bán trú toàn trường (Google Drive)</p>
-            <p className="text-[10px] font-bold text-slate-500">
+            <p className="text-[12px] font-bold text-slate-500">
               {data
                 ? `Đã báo cáo hôm nay: ${reportedToday}/${data.totalClasses} lớp • Cập nhật ${lastLoadedAt} • tự làm mới 15 giây`
                 : 'Đang tải số liệu từ các lớp...'}
@@ -229,7 +229,7 @@ export const DriveAttendanceStatsPanel: React.FC = () => {
       </div>
 
       {error && (
-        <div className="flex items-start gap-2 p-2.5 rounded-xl bg-amber-50 border border-amber-200 text-[11px] font-bold text-amber-800">
+        <div className="flex items-start gap-2 p-2.5 rounded-xl bg-amber-50 border border-amber-200 text-[12px] font-bold text-amber-800">
           <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
           <span>{error}</span>
         </div>
@@ -239,32 +239,32 @@ export const DriveAttendanceStatsPanel: React.FC = () => {
         {periods.map(p => (
           <div key={p.key} className="rounded-xl border border-slate-100 bg-slate-50/60 p-3">
             <div className="flex items-center justify-between">
-              <span className="text-[11px] font-black text-slate-700 uppercase">{p.label}</span>
-              <span className="text-[10px] font-bold text-slate-400">
+              <span className="text-[12px] font-black text-slate-700 uppercase">{p.label}</span>
+              <span className="text-[12px] font-bold text-slate-400">
                 {p.from === p.to ? formatVN(p.from) : `${formatVN(p.from).slice(0, 5)}–${formatVN(p.to).slice(0, 5)}`}
               </span>
             </div>
             <div className="mt-2 flex items-center gap-1.5">
               <CheckSquare className="w-3.5 h-3.5 text-emerald-600" />
-              <span className="text-[10px] font-bold text-slate-500">Chuyên cần</span>
+              <span className="text-[12px] font-bold text-slate-500">Chuyên cần</span>
             </div>
             <div className="flex items-baseline gap-1.5">
-              <span className={`text-xl font-black font-mono ${p.attendanceRate === null ? 'text-slate-500' : p.attendanceRate >= 95 ? 'text-emerald-700' : 'text-amber-600'}`}>
+              <span className={`text-xl font-black font-mono ${p.attendanceRate === null ? 'text-slate-500' : p.attendanceRate >= 95 ? 'text-emerald-700' : 'text-amber-700'}`}>
                 {p.attendanceRate === null ? '—' : `${p.attendanceRate}%`}
               </span>
-              <span className="text-[10px] font-bold text-slate-500">
+              <span className="text-[12px] font-bold text-slate-500">
                 {p.students > 0 ? `${p.present}/${p.students}${p.days > 1 ? ` lượt • ${p.days} ngày` : ''}` : 'chưa có số liệu'}
               </span>
             </div>
             <div className="mt-1.5 flex items-center gap-1.5">
               <Utensils className="w-3.5 h-3.5 text-orange-500" />
-              <span className="text-[10px] font-bold text-slate-500">Ăn bán trú</span>
+              <span className="text-[12px] font-bold text-slate-500">Ăn bán trú</span>
             </div>
             <div className="flex items-baseline gap-1.5">
-              <span className={`text-xl font-black font-mono ${p.boardingRate === null ? 'text-slate-500' : 'text-orange-600'}`}>
+              <span className={`text-xl font-black font-mono ${p.boardingRate === null ? 'text-slate-500' : 'text-orange-700'}`}>
                 {p.boardingRate === null ? '—' : `${p.boardingRate}%`}
               </span>
-              <span className="text-[10px] font-bold text-slate-500">
+              <span className="text-[12px] font-bold text-slate-500">
                 {p.boardingRegistered > 0 ? `${p.boardingActual}/${p.boardingRegistered} suất` : 'chưa có số liệu'}
               </span>
             </div>
@@ -274,7 +274,7 @@ export const DriveAttendanceStatsPanel: React.FC = () => {
 
       {classRows.length > 0 && (
         <div className="overflow-x-auto rounded-xl border border-slate-100">
-          <table className="w-full text-[11px]">
+          <table className="w-full text-[12px]">
             <thead className="bg-slate-50 text-slate-600">
               <tr>
                 <th className="text-left px-2.5 py-2 font-black">Lớp</th>
@@ -303,7 +303,7 @@ export const DriveAttendanceStatsPanel: React.FC = () => {
                       {r.att ? (
                         <span className="inline-flex items-center gap-1 text-emerald-700 font-black"><CheckCircle2 className="w-3.5 h-3.5" />Đã báo cáo</span>
                       ) : (
-                        <span className="inline-flex items-center gap-1 text-amber-600 font-black"><Clock className="w-3.5 h-3.5" />Chưa</span>
+                        <span className="inline-flex items-center gap-1 text-amber-700 font-black"><Clock className="w-3.5 h-3.5" />Chưa</span>
                       )}
                     </td>
                   </tr>

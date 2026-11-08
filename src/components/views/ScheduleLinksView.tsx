@@ -587,7 +587,7 @@ export const ScheduleLinksView: React.FC<ScheduleLinksViewProps> = ({ defaultTab
                   onClick={() => setSubjectScheduleMode('subject_overall')}
                   className={`px-3 py-1.5 rounded-lg font-black text-xs transition-all uppercase flex items-center gap-1.5 ${
                     subjectScheduleMode === 'subject_overall'
-                      ? 'bg-emerald-600 text-white shadow-xs'
+                      ? 'bg-emerald-700 text-white shadow-xs'
                       : 'text-slate-600 hover:text-slate-900'
                   }`}
                 >
@@ -652,7 +652,7 @@ export const ScheduleLinksView: React.FC<ScheduleLinksViewProps> = ({ defaultTab
                   CHỌN MẪU TRÌNH BÀY THỜI KHÓA BIỂU (7 MẪU NGHỆ THUẬT THEO ẢNH):
                 </h3>
               </div>
-              <span className="text-[11px] font-bold text-indigo-600">
+              <span className="text-[12px] font-bold text-indigo-600">
                 Đang dùng: <strong className="text-indigo-900">{TEMPLATES.find(t => t.id === selectedTemplate)?.name}</strong>
               </span>
             </div>
@@ -683,13 +683,13 @@ export const ScheduleLinksView: React.FC<ScheduleLinksViewProps> = ({ defaultTab
                       <h4 className="text-xs font-black text-slate-800 leading-tight">
                         {tmpl.name}
                       </h4>
-                      <p className="text-[10px] text-slate-400 font-medium line-clamp-1 mt-0.5">
+                      <p className="text-[12px] text-slate-400 font-medium line-clamp-1 mt-0.5">
                         {tmpl.description}
                       </p>
                     </div>
 
                     <div className="mt-2 pt-1 border-t border-slate-100 flex items-center justify-between">
-                      <span className="text-[9px] font-extrabold px-1.5 py-0.5 rounded-md bg-indigo-100/70 text-indigo-800">
+                      <span className="text-[12px] font-extrabold px-1.5 py-0.5 rounded-md bg-indigo-100/70 text-indigo-800">
                         {tmpl.badge}
                       </span>
                     </div>
@@ -759,7 +759,7 @@ export const ScheduleLinksView: React.FC<ScheduleLinksViewProps> = ({ defaultTab
               <button
                 onClick={handleDownloadImage}
                 disabled={isExportingImage}
-                className="px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-xl font-black flex items-center gap-1.5 shadow-sm shadow-emerald-600/20 transition-all hover-zoom-btn disabled:opacity-50"
+                className="px-4 py-2 bg-gradient-to-r from-emerald-700 to-teal-700 hover:from-emerald-800 hover:to-teal-800 text-white rounded-xl font-black flex items-center gap-1.5 shadow-sm shadow-emerald-600/20 transition-all hover-zoom-btn disabled:opacity-50"
                 title="Tải ảnh PNG sắc nét để gửi vào nhóm Zalo phụ huynh hoặc lưu trữ"
               >
                 <ImageIcon className="w-4 h-4" />
@@ -784,7 +784,7 @@ export const ScheduleLinksView: React.FC<ScheduleLinksViewProps> = ({ defaultTab
               <span>💡</span>
               <span><strong>Mẹo:</strong> Nhấp chuột vào bất kỳ ô tiết học nào để chọn nhanh môn học hoặc gõ môn tùy ý.</span>
             </span>
-            <span className="text-[11px] font-bold text-indigo-600">
+            <span className="text-[12px] font-bold text-indigo-600">
               Sáng: {timetableConfig.morningPeriods} tiết • Chiều: {timetableConfig.afternoonPeriods} tiết
             </span>
           </div>
@@ -828,7 +828,7 @@ export const ScheduleLinksView: React.FC<ScheduleLinksViewProps> = ({ defaultTab
                 </div>
 
                 {/* Gợi ý cuộn ngang trên điện thoại */}
-                <div className="sm:hidden flex items-center gap-1.5 text-[10px] text-indigo-700 bg-indigo-50 border border-indigo-200 px-2.5 py-1 rounded-xl font-bold w-fit mb-2">
+                <div className="sm:hidden flex items-center gap-1.5 text-[12px] text-indigo-700 bg-indigo-50 border border-indigo-200 px-2.5 py-1 rounded-xl font-bold w-fit mb-2">
                   <span>⇄ Vuốt ngang để xem đủ thời khóa biểu từ Thứ Hai đến Thứ Bảy</span>
                 </div>
 
@@ -836,7 +836,7 @@ export const ScheduleLinksView: React.FC<ScheduleLinksViewProps> = ({ defaultTab
                 <div className="overflow-x-auto rounded-2xl border border-indigo-200 scrollbar-thin">
                   <table className="min-w-[760px] w-full text-xs text-left border-collapse">
                     <thead>
-                      <tr className="bg-gradient-to-r from-indigo-700 to-violet-700 text-white font-black uppercase text-[11px]">
+                      <tr className="bg-gradient-to-r from-indigo-700 to-violet-700 text-white font-black uppercase text-[12px]">
                         <th className="py-3 px-3 w-16 text-center border-r border-indigo-600/50 whitespace-nowrap">Buổi</th>
                         <th className="py-3 px-2 w-14 text-center border-r border-indigo-600/50 whitespace-nowrap">Tiết</th>
                         {displaySettings.showTimeSlots && (
@@ -858,7 +858,7 @@ export const ScheduleLinksView: React.FC<ScheduleLinksViewProps> = ({ defaultTab
                             {pIdx === 0 && (
                               <td 
                                 rowSpan={timetableConfig.morningPeriods} 
-                                className="py-3 px-2 text-center font-black text-amber-800 bg-amber-50/70 border-r border-indigo-100 uppercase text-[11px] tracking-wider"
+                                className="py-3 px-2 text-center font-black text-amber-800 bg-amber-50/70 border-r border-indigo-100 uppercase text-[12px] tracking-wider"
                               >
                                 SÁNG
                               </td>
@@ -867,7 +867,7 @@ export const ScheduleLinksView: React.FC<ScheduleLinksViewProps> = ({ defaultTab
                               Tiết {period}
                             </td>
                             {displaySettings.showTimeSlots && (
-                              <td className="py-2.5 px-2 text-center font-mono text-[11px] font-bold text-slate-500 border-r border-indigo-100 bg-slate-50/30">
+                              <td className="py-2.5 px-2 text-center font-mono text-[12px] font-bold text-slate-500 border-r border-indigo-100 bg-slate-50/30">
                                 {displaySettings.morningTimes[pIdx] || ''}
                               </td>
                             )}
@@ -905,7 +905,7 @@ export const ScheduleLinksView: React.FC<ScheduleLinksViewProps> = ({ defaultTab
                             {pIdx === 0 && (
                               <td 
                                 rowSpan={timetableConfig.afternoonPeriods} 
-                                className="py-3 px-2 text-center font-black text-blue-800 bg-blue-50/70 border-r border-indigo-100 uppercase text-[11px] tracking-wider"
+                                className="py-3 px-2 text-center font-black text-blue-800 bg-blue-50/70 border-r border-indigo-100 uppercase text-[12px] tracking-wider"
                               >
                                 CHIỀU
                               </td>
@@ -914,7 +914,7 @@ export const ScheduleLinksView: React.FC<ScheduleLinksViewProps> = ({ defaultTab
                               Tiết {period}
                             </td>
                             {displaySettings.showTimeSlots && (
-                              <td className="py-2.5 px-2 text-center font-mono text-[11px] font-bold text-slate-500 border-r border-indigo-100 bg-slate-50/30">
+                              <td className="py-2.5 px-2 text-center font-mono text-[12px] font-bold text-slate-500 border-r border-indigo-100 bg-slate-50/30">
                                 {displaySettings.afternoonTimes[pIdx] || ''}
                               </td>
                             )}
@@ -956,7 +956,7 @@ export const ScheduleLinksView: React.FC<ScheduleLinksViewProps> = ({ defaultTab
             {selectedTemplate === 'rainbow_train' && (
               <div className="space-y-4 bg-gradient-to-b from-sky-100/70 via-amber-50/30 to-pink-50/50 p-5 rounded-3xl border-4 border-amber-300 shadow-inner">
                 {/* Header Banner with Rainbow & Train Illustration */}
-                <div className="relative text-center py-4 bg-gradient-to-r from-amber-600 via-pink-500 to-sky-600 rounded-2xl shadow-md text-white overflow-hidden">
+                <div className="relative text-center py-4 bg-gradient-to-r from-amber-700 via-pink-600 to-sky-700 rounded-2xl shadow-md text-white overflow-hidden">
                   <div className="absolute left-3 top-2 text-2xl animate-bounce">🎈</div>
                   <div className="absolute right-3 top-2 text-2xl animate-bounce">🌈</div>
                   <div className="absolute left-1/4 -bottom-1 opacity-20 text-4xl">🚂</div>
@@ -971,7 +971,7 @@ export const ScheduleLinksView: React.FC<ScheduleLinksViewProps> = ({ defaultTab
                       « {displaySettings.slogan} »
                     </p>
                     {displaySettings.showTeacherInfo && (
-                      <p className="text-[11px] text-white font-bold">
+                      <p className="text-[12px] text-white font-bold">
                         GVCN: {displaySettings.teacherName} • Năm học {displaySettings.academicYear}
                       </p>
                     )}
@@ -1010,7 +1010,7 @@ export const ScheduleLinksView: React.FC<ScheduleLinksViewProps> = ({ defaultTab
 
                         {/* Morning Slots */}
                         <div className="p-2.5 space-y-2 flex-1">
-                          <span className="text-[10px] font-black uppercase text-amber-600 block border-b border-amber-100 pb-0.5">
+                          <span className="text-[12px] font-black uppercase text-amber-700 block border-b border-amber-100 pb-0.5">
                             ☀️ Buổi Sáng:
                           </span>
                           {Array.from({ length: timetableConfig.morningPeriods }).map((_, pIdx) => {
@@ -1025,7 +1025,7 @@ export const ScheduleLinksView: React.FC<ScheduleLinksViewProps> = ({ defaultTab
                                   slot?.subject ? pillStyle : 'bg-slate-50 border-dashed border-slate-200 text-slate-400'
                                 }`}
                               >
-                                <span className="w-5 h-5 rounded-full bg-white/80 font-black font-mono text-[10px] flex items-center justify-center shrink-0 shadow-2xs">
+                                <span className="w-5 h-5 rounded-full bg-white/80 font-black font-mono text-[12px] flex items-center justify-center shrink-0 shadow-2xs">
                                   {p}
                                 </span>
                                 <div className="truncate flex-1">
@@ -1040,7 +1040,7 @@ export const ScheduleLinksView: React.FC<ScheduleLinksViewProps> = ({ defaultTab
                           {/* Afternoon Slots */}
                           {timetableConfig.afternoonPeriods > 0 && (
                             <div className="pt-2 border-t border-slate-100 space-y-2">
-                              <span className="text-[10px] font-black uppercase text-blue-600 block border-b border-blue-100 pb-0.5">
+                              <span className="text-[12px] font-black uppercase text-blue-600 block border-b border-blue-100 pb-0.5">
                                 🌤️ Buổi Chiều:
                               </span>
                               {Array.from({ length: timetableConfig.afternoonPeriods }).map((_, pIdx) => {
@@ -1055,7 +1055,7 @@ export const ScheduleLinksView: React.FC<ScheduleLinksViewProps> = ({ defaultTab
                                       slot?.subject ? pillStyle : 'bg-slate-50 border-dashed border-slate-200 text-slate-400'
                                     }`}
                                   >
-                                    <span className="w-5 h-5 rounded-full bg-white/80 font-black font-mono text-[10px] flex items-center justify-center shrink-0 shadow-2xs">
+                                    <span className="w-5 h-5 rounded-full bg-white/80 font-black font-mono text-[12px] flex items-center justify-center shrink-0 shadow-2xs">
                                       {p}
                                     </span>
                                     <div className="truncate flex-1">
@@ -1083,11 +1083,11 @@ export const ScheduleLinksView: React.FC<ScheduleLinksViewProps> = ({ defaultTab
             {selectedTemplate === 'peacock_blossom' && (
               <div className="space-y-4 bg-gradient-to-br from-emerald-50 via-teal-50/50 to-indigo-50/60 p-5 rounded-3xl border-4 border-emerald-400 shadow-md">
                 {/* Header Banner */}
-                <div className="p-4 bg-gradient-to-r from-emerald-600 via-teal-700 to-cyan-600 rounded-2xl text-white shadow-md relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-3">
+                <div className="p-4 bg-gradient-to-r from-emerald-700 via-teal-700 to-cyan-700 rounded-2xl text-white shadow-md relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-3">
                   <div className="flex items-center gap-3">
                     <span className="text-4xl animate-pulse">🦚</span>
                     <div>
-                      <p className="text-[11px] font-black uppercase tracking-widest text-emerald-300">
+                      <p className="text-[12px] font-black uppercase tracking-widest text-emerald-300">
                         {displaySettings.schoolName}
                       </p>
                       <h2 className="text-2xl sm:text-3xl font-black uppercase tracking-wide text-white drop-shadow-sm">
@@ -1103,7 +1103,7 @@ export const ScheduleLinksView: React.FC<ScheduleLinksViewProps> = ({ defaultTab
                     <p className="font-bold">
                       GVCN: <span className="text-white font-black">{displaySettings.teacherName}</span>
                     </p>
-                    <p className="text-[11px] text-emerald-300">
+                    <p className="text-[12px] text-emerald-300">
                       {displaySettings.semester} • Năm học: {displaySettings.academicYear}
                     </p>
                   </div>
@@ -1113,7 +1113,7 @@ export const ScheduleLinksView: React.FC<ScheduleLinksViewProps> = ({ defaultTab
                 <div className="overflow-x-auto rounded-2xl border-2 border-emerald-300 bg-white scrollbar-thin">
                   <table className="min-w-[760px] w-full text-xs text-left border-collapse">
                     <thead>
-                      <tr className="bg-gradient-to-r from-emerald-700 via-teal-700 to-cyan-600 text-white font-black uppercase text-[11px]">
+                      <tr className="bg-gradient-to-r from-emerald-700 via-teal-700 to-cyan-700 text-white font-black uppercase text-[12px]">
                         <th className="py-3 px-3 w-16 text-center border-r border-emerald-600">Buổi</th>
                         <th className="py-3 px-2 w-14 text-center border-r border-emerald-600">Tiết</th>
                         {displaySettings.showTimeSlots && (
@@ -1135,7 +1135,7 @@ export const ScheduleLinksView: React.FC<ScheduleLinksViewProps> = ({ defaultTab
                             {pIdx === 0 && (
                               <td 
                                 rowSpan={timetableConfig.morningPeriods} 
-                                className="py-3 px-2 text-center font-black text-emerald-900 bg-emerald-100/60 border-r border-emerald-200 uppercase text-[11px]"
+                                className="py-3 px-2 text-center font-black text-emerald-900 bg-emerald-100/60 border-r border-emerald-200 uppercase text-[12px]"
                               >
                                 SÁNG
                               </td>
@@ -1144,7 +1144,7 @@ export const ScheduleLinksView: React.FC<ScheduleLinksViewProps> = ({ defaultTab
                               Tiết {period}
                             </td>
                             {displaySettings.showTimeSlots && (
-                              <td className="py-2.5 px-2 text-center font-mono text-[11px] font-bold text-emerald-800 border-r border-emerald-200 bg-emerald-50/20">
+                              <td className="py-2.5 px-2 text-center font-mono text-[12px] font-bold text-emerald-800 border-r border-emerald-200 bg-emerald-50/20">
                                 {displaySettings.morningTimes[pIdx] || ''}
                               </td>
                             )}
@@ -1163,7 +1163,7 @@ export const ScheduleLinksView: React.FC<ScheduleLinksViewProps> = ({ defaultTab
                                       <span>{slot.subject}</span>
                                     </div>
                                   ) : (
-                                    <div className="w-full py-2 rounded-xl text-center text-slate-500 font-medium hover:text-emerald-600">
+                                    <div className="w-full py-2 rounded-xl text-center text-slate-500 font-medium hover:text-emerald-700">
                                       + Chọn môn
                                     </div>
                                   )}
@@ -1182,7 +1182,7 @@ export const ScheduleLinksView: React.FC<ScheduleLinksViewProps> = ({ defaultTab
                             {pIdx === 0 && (
                               <td 
                                 rowSpan={timetableConfig.afternoonPeriods} 
-                                className="py-3 px-2 text-center font-black text-teal-900 bg-teal-100/60 border-r border-emerald-200 uppercase text-[11px]"
+                                className="py-3 px-2 text-center font-black text-teal-900 bg-teal-100/60 border-r border-emerald-200 uppercase text-[12px]"
                               >
                                 CHIỀU
                               </td>
@@ -1191,7 +1191,7 @@ export const ScheduleLinksView: React.FC<ScheduleLinksViewProps> = ({ defaultTab
                               Tiết {period}
                             </td>
                             {displaySettings.showTimeSlots && (
-                              <td className="py-2.5 px-2 text-center font-mono text-[11px] font-bold text-teal-800 border-r border-emerald-200 bg-teal-50/20">
+                              <td className="py-2.5 px-2 text-center font-mono text-[12px] font-bold text-teal-800 border-r border-emerald-200 bg-teal-50/20">
                                 {displaySettings.afternoonTimes[pIdx] || ''}
                               </td>
                             )}
@@ -1210,7 +1210,7 @@ export const ScheduleLinksView: React.FC<ScheduleLinksViewProps> = ({ defaultTab
                                       <span>{slot.subject}</span>
                                     </div>
                                   ) : (
-                                    <div className="w-full py-2 rounded-xl text-center text-slate-500 font-medium hover:text-teal-600">
+                                    <div className="w-full py-2 rounded-xl text-center text-slate-500 font-medium hover:text-teal-700">
                                       + Chọn môn
                                     </div>
                                   )}
@@ -1231,7 +1231,7 @@ export const ScheduleLinksView: React.FC<ScheduleLinksViewProps> = ({ defaultTab
             {/* (Theo bang-thoi-khoa-bieu-in-pp-thiet-ke-theo-yeu-cau-2.jpg)  */}
             {/* ------------------------------------------------------------- */}
             {selectedTemplate === 'chalkboard_wood' && (
-              <div className="space-y-4 bg-emerald-600 p-6 rounded-3xl border-8 border-amber-900 shadow-2xl relative text-white">
+              <div className="space-y-4 bg-emerald-700 p-6 rounded-3xl border-8 border-amber-900 shadow-2xl relative text-white">
                 {/* Chalkboard Header */}
                 <div className="text-center pb-3 border-b-2 border-dashed border-emerald-700/80 space-y-1">
                   <div className="flex items-center justify-center gap-3">
@@ -1253,7 +1253,7 @@ export const ScheduleLinksView: React.FC<ScheduleLinksViewProps> = ({ defaultTab
                 <div className="overflow-x-auto rounded-2xl border-2 border-emerald-700/80">
                   <table className="w-full text-xs text-left border-collapse text-white">
                     <thead>
-                      <tr className="bg-emerald-600/90 text-white font-black uppercase text-[11px] border-b border-emerald-700">
+                      <tr className="bg-emerald-700/90 text-white font-black uppercase text-[12px] border-b border-emerald-700">
                         <th className="py-3 px-3 w-16 text-center border-r border-emerald-700">Buổi</th>
                         <th className="py-3 px-2 w-14 text-center border-r border-emerald-700">Tiết</th>
                         {displaySettings.showTimeSlots && (
@@ -1275,7 +1275,7 @@ export const ScheduleLinksView: React.FC<ScheduleLinksViewProps> = ({ defaultTab
                             {pIdx === 0 && (
                               <td 
                                 rowSpan={timetableConfig.morningPeriods} 
-                                className="py-3 px-2 text-center font-black text-white bg-emerald-600/80 border-r border-emerald-700 uppercase text-[11px]"
+                                className="py-3 px-2 text-center font-black text-white bg-emerald-700/80 border-r border-emerald-700 uppercase text-[12px]"
                               >
                                 SÁNG
                               </td>
@@ -1284,7 +1284,7 @@ export const ScheduleLinksView: React.FC<ScheduleLinksViewProps> = ({ defaultTab
                               Tiết {period}
                             </td>
                             {displaySettings.showTimeSlots && (
-                              <td className="py-2.5 px-2 text-center font-mono text-[10px] text-emerald-400 border-r border-emerald-700">
+                              <td className="py-2.5 px-2 text-center font-mono text-[12px] text-emerald-400 border-r border-emerald-700">
                                 {displaySettings.morningTimes[pIdx] || ''}
                               </td>
                             )}
@@ -1298,7 +1298,7 @@ export const ScheduleLinksView: React.FC<ScheduleLinksViewProps> = ({ defaultTab
                                   className="p-1.5 border-r border-emerald-700 last:border-r-0 cursor-pointer hover:bg-emerald-800/60 transition-colors"
                                 >
                                   {slot?.subject ? (
-                                    <div className="w-full py-2 px-2.5 rounded-xl bg-emerald-600/90 border border-emerald-500 shadow-inner text-center font-black text-white flex items-center justify-center gap-1.5 hover-zoom-btn">
+                                    <div className="w-full py-2 px-2.5 rounded-xl bg-emerald-700/90 border border-emerald-500 shadow-inner text-center font-black text-white flex items-center justify-center gap-1.5 hover-zoom-btn">
                                       <span>{subMeta?.icon || '⭐'}</span>
                                       <span className="text-white">{slot.subject}</span>
                                     </div>
@@ -1322,7 +1322,7 @@ export const ScheduleLinksView: React.FC<ScheduleLinksViewProps> = ({ defaultTab
                             {pIdx === 0 && (
                               <td 
                                 rowSpan={timetableConfig.afternoonPeriods} 
-                                className="py-3 px-2 text-center font-black text-white bg-emerald-600/80 border-r border-emerald-700 uppercase text-[11px]"
+                                className="py-3 px-2 text-center font-black text-white bg-emerald-700/80 border-r border-emerald-700 uppercase text-[12px]"
                               >
                                 CHIỀU
                               </td>
@@ -1331,7 +1331,7 @@ export const ScheduleLinksView: React.FC<ScheduleLinksViewProps> = ({ defaultTab
                               Tiết {period}
                             </td>
                             {displaySettings.showTimeSlots && (
-                              <td className="py-2.5 px-2 text-center font-mono text-[10px] text-emerald-400 border-r border-emerald-700">
+                              <td className="py-2.5 px-2 text-center font-mono text-[12px] text-emerald-400 border-r border-emerald-700">
                                 {displaySettings.afternoonTimes[pIdx] || ''}
                               </td>
                             )}
@@ -1345,7 +1345,7 @@ export const ScheduleLinksView: React.FC<ScheduleLinksViewProps> = ({ defaultTab
                                   className="p-1.5 border-r border-emerald-700 last:border-r-0 cursor-pointer hover:bg-emerald-800/60 transition-colors"
                                 >
                                   {slot?.subject ? (
-                                    <div className="w-full py-2 px-2.5 rounded-xl bg-emerald-600/90 border border-sky-500 shadow-inner text-center font-black text-white flex items-center justify-center gap-1.5 hover-zoom-btn">
+                                    <div className="w-full py-2 px-2.5 rounded-xl bg-emerald-700/90 border border-sky-500 shadow-inner text-center font-black text-white flex items-center justify-center gap-1.5 hover-zoom-btn">
                                       <span>{subMeta?.icon || '⭐'}</span>
                                       <span className="text-white">{slot.subject}</span>
                                     </div>
@@ -1388,7 +1388,7 @@ export const ScheduleLinksView: React.FC<ScheduleLinksViewProps> = ({ defaultTab
 
                   <div className="text-xs text-sky-900 font-bold space-y-0.5">
                     <p>GVCN: <strong className="text-indigo-800">{displaySettings.teacherName}</strong></p>
-                    <p className="text-sky-700 text-[11px]">{displaySettings.semester} • Năm học: {displaySettings.academicYear}</p>
+                    <p className="text-sky-700 text-[12px]">{displaySettings.semester} • Năm học: {displaySettings.academicYear}</p>
                   </div>
                 </div>
 
@@ -1396,13 +1396,13 @@ export const ScheduleLinksView: React.FC<ScheduleLinksViewProps> = ({ defaultTab
                 <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-${daysToShow.length} gap-3`}>
                   {daysToShow.map((d) => (
                     <div key={d.day} className="bg-white/95 rounded-2xl border-2 border-sky-200 shadow-sm overflow-hidden flex flex-col">
-                      <div className="bg-gradient-to-r from-sky-600 to-indigo-500 p-2.5 text-center text-white font-black text-xs uppercase flex items-center justify-center gap-1.5 shadow-xs">
+                      <div className="bg-gradient-to-r from-sky-700 to-indigo-600 p-2.5 text-center text-white font-black text-xs uppercase flex items-center justify-center gap-1.5 shadow-xs">
                         <span>{d.icon}</span>
                         <span>{d.label}</span>
                       </div>
 
                       <div className="p-2.5 space-y-2 flex-1">
-                        <span className="text-[10px] font-black uppercase text-amber-700 block">
+                        <span className="text-[12px] font-black uppercase text-amber-700 block">
                           ☀️ Sáng:
                         </span>
                         {Array.from({ length: timetableConfig.morningPeriods }).map((_, pIdx) => {
@@ -1419,7 +1419,7 @@ export const ScheduleLinksView: React.FC<ScheduleLinksViewProps> = ({ defaultTab
                                   : 'bg-slate-50 border-dashed border-slate-200 text-slate-400'
                               }`}
                             >
-                              <span className="w-5 h-5 rounded-full bg-sky-200 font-black text-[10px] text-sky-900 flex items-center justify-center shrink-0">
+                              <span className="w-5 h-5 rounded-full bg-sky-200 font-black text-[12px] text-sky-900 flex items-center justify-center shrink-0">
                                 {p}
                               </span>
                               <span className="truncate">{slot?.subject ? `${meta?.icon || ''} ${slot.subject}` : '+ Trống'}</span>
@@ -1429,7 +1429,7 @@ export const ScheduleLinksView: React.FC<ScheduleLinksViewProps> = ({ defaultTab
 
                         {timetableConfig.afternoonPeriods > 0 && (
                           <div className="pt-2 border-t border-slate-100 space-y-2">
-                            <span className="text-[10px] font-black uppercase text-indigo-700 block">
+                            <span className="text-[12px] font-black uppercase text-indigo-700 block">
                               🌤️ Chiều:
                             </span>
                             {Array.from({ length: timetableConfig.afternoonPeriods }).map((_, pIdx) => {
@@ -1446,7 +1446,7 @@ export const ScheduleLinksView: React.FC<ScheduleLinksViewProps> = ({ defaultTab
                                       : 'bg-slate-50 border-dashed border-slate-200 text-slate-400'
                                   }`}
                                 >
-                                  <span className="w-5 h-5 rounded-full bg-purple-200 font-black text-[10px] text-purple-900 flex items-center justify-center shrink-0">
+                                  <span className="w-5 h-5 rounded-full bg-purple-200 font-black text-[12px] text-purple-900 flex items-center justify-center shrink-0">
                                     {p}
                                   </span>
                                   <span className="truncate">{slot?.subject ? `${meta?.icon || ''} ${slot.subject}` : '+ Trống'}</span>
@@ -1471,7 +1471,7 @@ export const ScheduleLinksView: React.FC<ScheduleLinksViewProps> = ({ defaultTab
                 {/* Header */}
                 <div className="bg-gradient-to-r from-violet-600 via-indigo-600 to-rose-600 p-4 sm:p-5 rounded-3xl text-white shadow-lg flex flex-col md:flex-row md:items-center justify-between gap-3">
                   <div>
-                    <span className="text-[10px] font-black uppercase tracking-widest bg-white/20 px-2 py-0.5 rounded-md">
+                    <span className="text-[12px] font-black uppercase tracking-widest bg-white/20 px-2 py-0.5 rounded-md">
                       {displaySettings.schoolName}
                     </span>
                     <h2 className="text-2xl sm:text-3xl font-black uppercase tracking-tight mt-1">
@@ -1509,7 +1509,7 @@ export const ScheduleLinksView: React.FC<ScheduleLinksViewProps> = ({ defaultTab
                         </div>
 
                         <div className="p-3 space-y-2 flex-1">
-                          <span className="text-[10px] font-black uppercase text-amber-700 tracking-wider block">
+                          <span className="text-[12px] font-black uppercase text-amber-700 tracking-wider block">
                             Buổi Sáng
                           </span>
 
@@ -1527,7 +1527,7 @@ export const ScheduleLinksView: React.FC<ScheduleLinksViewProps> = ({ defaultTab
                                     : 'bg-slate-50/50 border-dashed border-slate-200 text-slate-500 hover:text-slate-500'
                                 }`}
                               >
-                                <span className={`w-6 h-6 rounded-xl ${theme.numBg} font-black font-mono text-[11px] flex items-center justify-center shrink-0 shadow-2xs`}>
+                                <span className={`w-6 h-6 rounded-xl ${theme.numBg} font-black font-mono text-[12px] flex items-center justify-center shrink-0 shadow-2xs`}>
                                   {p}
                                 </span>
                                 <span className="truncate">{slot?.subject ? `${meta?.icon || ''} ${slot.subject}` : '+ Chọn môn'}</span>
@@ -1537,7 +1537,7 @@ export const ScheduleLinksView: React.FC<ScheduleLinksViewProps> = ({ defaultTab
 
                           {timetableConfig.afternoonPeriods > 0 && (
                             <div className="pt-2 border-t border-slate-100 space-y-2">
-                              <span className="text-[10px] font-black uppercase text-blue-700 tracking-wider block">
+                              <span className="text-[12px] font-black uppercase text-blue-700 tracking-wider block">
                                 Buổi Chiều
                               </span>
                               {Array.from({ length: timetableConfig.afternoonPeriods }).map((_, pIdx) => {
@@ -1554,7 +1554,7 @@ export const ScheduleLinksView: React.FC<ScheduleLinksViewProps> = ({ defaultTab
                                         : 'bg-slate-50/50 border-dashed border-slate-200 text-slate-500 hover:text-slate-500'
                                     }`}
                                   >
-                                    <span className={`w-6 h-6 rounded-xl ${theme.numBg} font-black font-mono text-[11px] flex items-center justify-center shrink-0 shadow-2xs`}>
+                                    <span className={`w-6 h-6 rounded-xl ${theme.numBg} font-black font-mono text-[12px] flex items-center justify-center shrink-0 shadow-2xs`}>
                                       {p}
                                     </span>
                                     <span className="truncate">{slot?.subject ? `${meta?.icon || ''} ${slot.subject}` : '+ Chọn môn'}</span>
@@ -1623,7 +1623,7 @@ export const ScheduleLinksView: React.FC<ScheduleLinksViewProps> = ({ defaultTab
                           {pIdx === 0 && (
                             <td 
                               rowSpan={timetableConfig.morningPeriods} 
-                              className="border border-slate-800 py-2 px-2 text-center font-bold bg-slate-50 uppercase text-[10px]"
+                              className="border border-slate-800 py-2 px-2 text-center font-bold bg-slate-50 uppercase text-[12px]"
                             >
                               SÁNG
                             </td>
@@ -1632,7 +1632,7 @@ export const ScheduleLinksView: React.FC<ScheduleLinksViewProps> = ({ defaultTab
                             Tiết {period}
                           </td>
                           {displaySettings.showTimeSlots && (
-                            <td className="border border-slate-800 py-2 px-2 text-center font-mono text-[11px]">
+                            <td className="border border-slate-800 py-2 px-2 text-center font-mono text-[12px]">
                               {displaySettings.morningTimes[pIdx] || ''}
                             </td>
                           )}
@@ -1660,7 +1660,7 @@ export const ScheduleLinksView: React.FC<ScheduleLinksViewProps> = ({ defaultTab
                           {pIdx === 0 && (
                             <td 
                               rowSpan={timetableConfig.afternoonPeriods} 
-                              className="border border-slate-800 py-2 px-2 text-center font-bold bg-slate-50 uppercase text-[10px]"
+                              className="border border-slate-800 py-2 px-2 text-center font-bold bg-slate-50 uppercase text-[12px]"
                             >
                               CHIỀU
                             </td>
@@ -1669,7 +1669,7 @@ export const ScheduleLinksView: React.FC<ScheduleLinksViewProps> = ({ defaultTab
                             Tiết {period}
                           </td>
                           {displaySettings.showTimeSlots && (
-                            <td className="border border-slate-800 py-2 px-2 text-center font-mono text-[11px]">
+                            <td className="border border-slate-800 py-2 px-2 text-center font-mono text-[12px]">
                               {displaySettings.afternoonTimes[pIdx] || ''}
                             </td>
                           )}
@@ -1696,7 +1696,7 @@ export const ScheduleLinksView: React.FC<ScheduleLinksViewProps> = ({ defaultTab
                 <div className="pt-6 grid grid-cols-2 text-xs">
                   <div className="text-center space-y-1">
                     <p className="font-bold uppercase">DUYỆT CỦA BAN GIÁM HIỆU</p>
-                    <p className="text-[11px] italic text-slate-500">(Ký và đóng dấu)</p>
+                    <p className="text-[12px] italic text-slate-500">(Ký và đóng dấu)</p>
                     <div className="h-16"></div>
                   </div>
 
@@ -1705,7 +1705,7 @@ export const ScheduleLinksView: React.FC<ScheduleLinksViewProps> = ({ defaultTab
                       ......., ngày {new Date().getDate()} tháng {new Date().getMonth() + 1} năm {new Date().getFullYear()}
                     </p>
                     <p className="font-bold uppercase">GIÁO VIÊN CHỦ NHIỆM</p>
-                    <p className="text-[11px] italic text-slate-500">(Ký và ghi rõ họ tên)</p>
+                    <p className="text-[12px] italic text-slate-500">(Ký và ghi rõ họ tên)</p>
                     <div className="h-14"></div>
                     <p className="font-bold text-slate-800">{displaySettings.teacherName}</p>
                   </div>
@@ -1717,7 +1717,7 @@ export const ScheduleLinksView: React.FC<ScheduleLinksViewProps> = ({ defaultTab
             {/* TEMPLATE 8: VŨ TRỤ GALAXY & PHI HÀNH GIA                      */}
             {/* ------------------------------------------------------------- */}
             {selectedTemplate === 'cosmic_galaxy' && (
-              <div className="space-y-4 rounded-3xl p-5 sm:p-6 bg-gradient-to-b from-sky-600 via-indigo-600 to-indigo-500 text-white border border-indigo-500/30 shadow-2xl relative overflow-hidden">
+              <div className="space-y-4 rounded-3xl p-5 sm:p-6 bg-gradient-to-b from-sky-700 via-indigo-600 to-indigo-600 text-white border border-indigo-500/30 shadow-2xl relative overflow-hidden">
                 {/* Galactic Background Accents */}
                 <div className="absolute top-0 right-0 w-80 h-80 bg-purple-600/10 rounded-full blur-3xl pointer-events-none" />
                 <div className="absolute bottom-0 left-0 w-80 h-80 bg-cyan-600/10 rounded-full blur-3xl pointer-events-none" />
@@ -1727,9 +1727,9 @@ export const ScheduleLinksView: React.FC<ScheduleLinksViewProps> = ({ defaultTab
                   <div>
                     <div className="flex items-center gap-2 text-cyan-400 text-xs font-black tracking-widest uppercase">
                       <span>🚀 {displaySettings.schoolName}</span>
-                      <span className="px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 text-[10px]">GALAXY CLASS</span>
+                      <span className="px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 text-[12px]">GALAXY CLASS</span>
                     </div>
-                    <h2 className="text-2xl sm:text-3xl font-black bg-gradient-to-r from-cyan-600 via-indigo-200 to-pink-500 bg-clip-text text-transparent uppercase tracking-tight mt-1 flex items-center gap-2">
+                    <h2 className="text-2xl sm:text-3xl font-black bg-gradient-to-r from-cyan-700 via-indigo-200 to-pink-600 bg-clip-text text-transparent uppercase tracking-tight mt-1 flex items-center gap-2">
                       <span>🪐</span>
                       <span>{displaySettings.title} • {displaySettings.className}</span>
                     </h2>
@@ -1757,7 +1757,7 @@ export const ScheduleLinksView: React.FC<ScheduleLinksViewProps> = ({ defaultTab
                 <div className="overflow-x-auto rounded-2xl border border-indigo-500/30 bg-white/60 backdrop-blur-md">
                   <table className="w-full text-xs text-left border-collapse">
                     <thead>
-                      <tr className="bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-600 text-white font-black text-[11px] uppercase border-b border-indigo-500/30">
+                      <tr className="bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-600 text-white font-black text-[12px] uppercase border-b border-indigo-500/30">
                         <th className="py-3 px-3 w-16 text-center border-r border-indigo-500/20">Buổi</th>
                         <th className="py-3 px-2 w-14 text-center border-r border-indigo-500/20">Tiết</th>
                         {displaySettings.showTimeSlots && (
@@ -1782,7 +1782,7 @@ export const ScheduleLinksView: React.FC<ScheduleLinksViewProps> = ({ defaultTab
                             {pIdx === 0 && (
                               <td 
                                 rowSpan={timetableConfig.morningPeriods} 
-                                className="py-3 px-2 text-center font-black text-amber-300 bg-amber-500/10 border-r border-indigo-500/20 uppercase text-[11px]"
+                                className="py-3 px-2 text-center font-black text-amber-300 bg-amber-500/10 border-r border-indigo-500/20 uppercase text-[12px]"
                               >
                                 ☀️ SÁNG
                               </td>
@@ -1791,7 +1791,7 @@ export const ScheduleLinksView: React.FC<ScheduleLinksViewProps> = ({ defaultTab
                               Tiết {period}
                             </td>
                             {displaySettings.showTimeSlots && (
-                              <td className="py-2.5 px-2 text-center font-mono text-[11px] text-slate-500 border-r border-indigo-500/20">
+                              <td className="py-2.5 px-2 text-center font-mono text-[12px] text-slate-500 border-r border-indigo-500/20">
                                 {displaySettings.morningTimes[pIdx] || ''}
                               </td>
                             )}
@@ -1829,7 +1829,7 @@ export const ScheduleLinksView: React.FC<ScheduleLinksViewProps> = ({ defaultTab
                             {pIdx === 0 && (
                               <td 
                                 rowSpan={timetableConfig.afternoonPeriods} 
-                                className="py-3 px-2 text-center font-black text-purple-300 bg-purple-500/10 border-r border-indigo-500/20 uppercase text-[11px]"
+                                className="py-3 px-2 text-center font-black text-purple-300 bg-purple-500/10 border-r border-indigo-500/20 uppercase text-[12px]"
                               >
                                 🌙 CHIỀU
                               </td>
@@ -1838,7 +1838,7 @@ export const ScheduleLinksView: React.FC<ScheduleLinksViewProps> = ({ defaultTab
                               Tiết {period}
                             </td>
                             {displaySettings.showTimeSlots && (
-                              <td className="py-2.5 px-2 text-center font-mono text-[11px] text-slate-500 border-r border-indigo-500/20">
+                              <td className="py-2.5 px-2 text-center font-mono text-[12px] text-slate-500 border-r border-indigo-500/20">
                                 {displaySettings.afternoonTimes[pIdx] || ''}
                               </td>
                             )}
@@ -1888,7 +1888,7 @@ export const ScheduleLinksView: React.FC<ScheduleLinksViewProps> = ({ defaultTab
                   <div>
                     <div className="flex items-center gap-2 text-emerald-800 text-xs font-black tracking-wider uppercase">
                       <span>🦁 {displaySettings.schoolName}</span>
-                      <span className="px-2 py-0.5 rounded-full bg-emerald-200 text-emerald-900 font-bold text-[10px]">SAFARI KIDS</span>
+                      <span className="px-2 py-0.5 rounded-full bg-emerald-200 text-emerald-900 font-bold text-[12px]">SAFARI KIDS</span>
                     </div>
                     <h2 className="text-2xl sm:text-3xl font-black text-emerald-950 uppercase tracking-tight mt-1 flex items-center gap-2">
                       <span>🌿</span>
@@ -1917,7 +1917,7 @@ export const ScheduleLinksView: React.FC<ScheduleLinksViewProps> = ({ defaultTab
                 <div className="overflow-x-auto rounded-2xl border border-emerald-300 bg-white">
                   <table className="w-full text-xs text-left border-collapse">
                     <thead>
-                      <tr className="bg-gradient-to-r from-emerald-700 to-teal-700 text-white font-black text-[11px] uppercase">
+                      <tr className="bg-gradient-to-r from-emerald-700 to-teal-700 text-white font-black text-[12px] uppercase">
                         <th className="py-3 px-3 w-16 text-center border-r border-emerald-600/50">Buổi</th>
                         <th className="py-3 px-2 w-14 text-center border-r border-emerald-600/50">Tiết</th>
                         {displaySettings.showTimeSlots && (
@@ -1939,7 +1939,7 @@ export const ScheduleLinksView: React.FC<ScheduleLinksViewProps> = ({ defaultTab
                             {pIdx === 0 && (
                               <td 
                                 rowSpan={timetableConfig.morningPeriods} 
-                                className="py-3 px-2 text-center font-black text-amber-800 bg-amber-100/70 border-r border-emerald-100 uppercase text-[11px]"
+                                className="py-3 px-2 text-center font-black text-amber-800 bg-amber-100/70 border-r border-emerald-100 uppercase text-[12px]"
                               >
                                 ☀️ SÁNG
                               </td>
@@ -1948,7 +1948,7 @@ export const ScheduleLinksView: React.FC<ScheduleLinksViewProps> = ({ defaultTab
                               Tiết {period}
                             </td>
                             {displaySettings.showTimeSlots && (
-                              <td className="py-2.5 px-2 text-center font-mono text-[11px] text-slate-500 border-r border-emerald-100">
+                              <td className="py-2.5 px-2 text-center font-mono text-[12px] text-slate-500 border-r border-emerald-100">
                                 {displaySettings.morningTimes[pIdx] || ''}
                               </td>
                             )}
@@ -1967,7 +1967,7 @@ export const ScheduleLinksView: React.FC<ScheduleLinksViewProps> = ({ defaultTab
                                       <span>{slot.subject}</span>
                                     </div>
                                   ) : (
-                                    <div className="w-full py-2 rounded-xl text-center text-slate-500 font-medium hover:text-emerald-600">
+                                    <div className="w-full py-2 rounded-xl text-center text-slate-500 font-medium hover:text-emerald-700">
                                       + Chọn môn
                                     </div>
                                   )}
@@ -1986,7 +1986,7 @@ export const ScheduleLinksView: React.FC<ScheduleLinksViewProps> = ({ defaultTab
                             {pIdx === 0 && (
                               <td 
                                 rowSpan={timetableConfig.afternoonPeriods} 
-                                className="py-3 px-2 text-center font-black text-teal-800 bg-teal-100/70 border-r border-emerald-100 uppercase text-[11px]"
+                                className="py-3 px-2 text-center font-black text-teal-800 bg-teal-100/70 border-r border-emerald-100 uppercase text-[12px]"
                               >
                                 🌴 CHIỀU
                               </td>
@@ -1995,7 +1995,7 @@ export const ScheduleLinksView: React.FC<ScheduleLinksViewProps> = ({ defaultTab
                               Tiết {period}
                             </td>
                             {displaySettings.showTimeSlots && (
-                              <td className="py-2.5 px-2 text-center font-mono text-[11px] text-slate-500 border-r border-emerald-100">
+                              <td className="py-2.5 px-2 text-center font-mono text-[12px] text-slate-500 border-r border-emerald-100">
                                 {displaySettings.afternoonTimes[pIdx] || ''}
                               </td>
                             )}
@@ -2014,7 +2014,7 @@ export const ScheduleLinksView: React.FC<ScheduleLinksViewProps> = ({ defaultTab
                                       <span>{slot.subject}</span>
                                     </div>
                                   ) : (
-                                    <div className="w-full py-2 rounded-xl text-center text-slate-500 font-medium hover:text-teal-600">
+                                    <div className="w-full py-2 rounded-xl text-center text-slate-500 font-medium hover:text-teal-700">
                                       + Chọn môn
                                     </div>
                                   )}
@@ -2045,7 +2045,7 @@ export const ScheduleLinksView: React.FC<ScheduleLinksViewProps> = ({ defaultTab
                   <div>
                     <div className="flex items-center gap-2 text-rose-700 text-xs font-black tracking-wider uppercase">
                       <span>🏰 {displaySettings.schoolName}</span>
-                      <span className="px-2 py-0.5 rounded-full bg-pink-100 text-pink-700 font-bold text-[10px]">CỔ TÍCH TUỔI THƠ</span>
+                      <span className="px-2 py-0.5 rounded-full bg-pink-100 text-pink-700 font-bold text-[12px]">CỔ TÍCH TUỔI THƠ</span>
                     </div>
                     <h2 className="text-2xl sm:text-3xl font-black text-pink-950 uppercase tracking-tight mt-1 flex items-center gap-2">
                       <span>🎀</span>
@@ -2074,7 +2074,7 @@ export const ScheduleLinksView: React.FC<ScheduleLinksViewProps> = ({ defaultTab
                 <div className="overflow-x-auto rounded-2xl border border-pink-200 bg-white">
                   <table className="w-full text-xs text-left border-collapse">
                     <thead>
-                      <tr className="bg-gradient-to-r from-pink-500 via-rose-500 to-purple-500 text-white font-black text-[11px] uppercase">
+                      <tr className="bg-gradient-to-r from-pink-600 via-rose-600 to-purple-600 text-white font-black text-[12px] uppercase">
                         <th className="py-3 px-3 w-16 text-center border-r border-pink-400/50">Buổi</th>
                         <th className="py-3 px-2 w-14 text-center border-r border-pink-400/50">Tiết</th>
                         {displaySettings.showTimeSlots && (
@@ -2096,7 +2096,7 @@ export const ScheduleLinksView: React.FC<ScheduleLinksViewProps> = ({ defaultTab
                             {pIdx === 0 && (
                               <td 
                                 rowSpan={timetableConfig.morningPeriods} 
-                                className="py-3 px-2 text-center font-black text-rose-800 bg-rose-100/60 border-r border-pink-100 uppercase text-[11px]"
+                                className="py-3 px-2 text-center font-black text-rose-800 bg-rose-100/60 border-r border-pink-100 uppercase text-[12px]"
                               >
                                 🌸 SÁNG
                               </td>
@@ -2105,7 +2105,7 @@ export const ScheduleLinksView: React.FC<ScheduleLinksViewProps> = ({ defaultTab
                               Tiết {period}
                             </td>
                             {displaySettings.showTimeSlots && (
-                              <td className="py-2.5 px-2 text-center font-mono text-[11px] text-slate-500 border-r border-pink-100">
+                              <td className="py-2.5 px-2 text-center font-mono text-[12px] text-slate-500 border-r border-pink-100">
                                 {displaySettings.morningTimes[pIdx] || ''}
                               </td>
                             )}
@@ -2143,7 +2143,7 @@ export const ScheduleLinksView: React.FC<ScheduleLinksViewProps> = ({ defaultTab
                             {pIdx === 0 && (
                               <td 
                                 rowSpan={timetableConfig.afternoonPeriods} 
-                                className="py-3 px-2 text-center font-black text-purple-800 bg-purple-100/60 border-r border-pink-100 uppercase text-[11px]"
+                                className="py-3 px-2 text-center font-black text-purple-800 bg-purple-100/60 border-r border-pink-100 uppercase text-[12px]"
                               >
                                 🦄 CHIỀU
                               </td>
@@ -2152,7 +2152,7 @@ export const ScheduleLinksView: React.FC<ScheduleLinksViewProps> = ({ defaultTab
                               Tiết {period}
                             </td>
                             {displaySettings.showTimeSlots && (
-                              <td className="py-2.5 px-2 text-center font-mono text-[11px] text-slate-500 border-r border-pink-100">
+                              <td className="py-2.5 px-2 text-center font-mono text-[12px] text-slate-500 border-r border-pink-100">
                                 {displaySettings.afternoonTimes[pIdx] || ''}
                               </td>
                             )}
@@ -2234,11 +2234,11 @@ export const ScheduleLinksView: React.FC<ScheduleLinksViewProps> = ({ defaultTab
               <div key={link.id} className="bg-white rounded-3xl border border-indigo-100 p-5 shadow-2xs hover:border-indigo-300 hover:shadow-md transition-all flex flex-col justify-between hover-zoom-card">
                 <div>
                   <div className="flex items-start justify-between gap-2">
-                    <span className="text-[10px] font-black text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded-lg">{link.category}</span>
+                    <span className="text-[12px] font-black text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded-lg">{link.category}</span>
                     <div className="flex items-center gap-0.5">
                       <button onClick={() => handleMoveLink(index, 'up')} disabled={index === 0} className={`p-1 rounded-lg transition-colors ${index === 0 ? 'text-slate-200 cursor-not-allowed' : 'text-slate-400 hover:text-indigo-600 hover:bg-indigo-50'}`} title="Di chuyển lên"><ArrowUp className="w-3.5 h-3.5" /></button>
                       <button onClick={() => handleMoveLink(index, 'down')} disabled={index === quickLinks.length - 1} className={`p-1 rounded-lg transition-colors ${index === quickLinks.length - 1 ? 'text-slate-200 cursor-not-allowed' : 'text-slate-400 hover:text-indigo-600 hover:bg-indigo-50'}`} title="Di chuyển xuống"><ArrowDown className="w-3.5 h-3.5" /></button>
-                      <button onClick={() => handleOpenEditLink(link)} className="p-1 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors" title="Chỉnh sửa"><Pencil className="w-3.5 h-3.5" /></button>
+                      <button onClick={() => handleOpenEditLink(link)} className="p-1 text-slate-400 hover:text-amber-700 hover:bg-amber-50 rounded-lg transition-colors" title="Chỉnh sửa"><Pencil className="w-3.5 h-3.5" /></button>
                       <button onClick={() => deleteQuickLink(link.id)} className="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors" title="Xóa"><Trash2 className="w-3.5 h-3.5" /></button>
                     </div>
                   </div>
@@ -2253,7 +2253,7 @@ export const ScheduleLinksView: React.FC<ScheduleLinksViewProps> = ({ defaultTab
                       {link.description && <p className="text-xs text-slate-500 mt-0.5 line-clamp-1">{link.description}</p>}
                     </div>
                   </div>
-                  <p className="text-[11px] font-mono text-indigo-500/80 truncate mt-2 font-semibold">{link.url}</p>
+                  <p className="text-[12px] font-mono text-indigo-600 truncate mt-2 font-semibold">{link.url}</p>
                 </div>
                 <div className="mt-4 pt-3 border-t border-slate-100">
                   <a href={link.url} target="_blank" rel="noreferrer" className="w-full py-2.5 px-3 rounded-xl text-xs font-black text-indigo-700 bg-indigo-50 hover:bg-indigo-100 transition-all flex items-center justify-center gap-1.5 hover-zoom-btn">
@@ -2302,7 +2302,7 @@ export const ScheduleLinksView: React.FC<ScheduleLinksViewProps> = ({ defaultTab
                     {linkIconUrl && (
                       <div className="mt-2 flex items-center gap-2">
                         <img src={linkIconUrl} alt="preview" className="w-8 h-8 rounded-lg object-cover border" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
-                        <button type="button" onClick={() => setLinkIconUrl('')} className="text-[10px] text-rose-500 font-bold hover:underline">Xóa ảnh</button>
+                        <button type="button" onClick={() => setLinkIconUrl('')} className="text-[12px] text-rose-600 font-bold hover:underline">Xóa ảnh</button>
                       </div>
                     )}
                   </div>
@@ -2356,7 +2356,7 @@ export const ScheduleLinksView: React.FC<ScheduleLinksViewProps> = ({ defaultTab
                     {editLinkIconUrl && (
                       <div className="mt-2 flex items-center gap-2">
                         <img src={editLinkIconUrl} alt="preview" className="w-8 h-8 rounded-lg object-cover border" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
-                        <button type="button" onClick={() => setEditLinkIconUrl('')} className="text-[10px] text-rose-500 font-bold hover:underline">Xóa ảnh</button>
+                        <button type="button" onClick={() => setEditLinkIconUrl('')} className="text-[12px] text-rose-600 font-bold hover:underline">Xóa ảnh</button>
                       </div>
                     )}
                   </div>
@@ -2366,7 +2366,7 @@ export const ScheduleLinksView: React.FC<ScheduleLinksViewProps> = ({ defaultTab
                   </div>
                   <div className="flex justify-end gap-2 pt-2">
                     <button type="button" onClick={() => setEditingLinkId(null)} className="px-4 py-2 text-xs font-medium text-slate-600 hover:bg-slate-100 rounded-xl">Hủy</button>
-                    <button type="button" onClick={handleSaveEditLink} className="px-4 py-2 text-xs font-bold text-white bg-amber-600 hover:bg-amber-700 rounded-xl shadow-xs flex items-center gap-1.5"><Check className="w-3.5 h-3.5" /><span>Lưu thay đổi</span></button>
+                    <button type="button" onClick={handleSaveEditLink} className="px-4 py-2 text-xs font-bold text-white bg-amber-700 hover:bg-amber-800 rounded-xl shadow-xs flex items-center gap-1.5"><Check className="w-3.5 h-3.5" /><span>Lưu thay đổi</span></button>
                   </div>
                 </div>
               </div>

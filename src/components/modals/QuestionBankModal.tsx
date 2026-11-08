@@ -378,7 +378,7 @@ export const QuestionBankModal: React.FC<QuestionBankModalProps> = ({
                 <h2 className="text-sm sm:text-base md:text-lg font-black uppercase tracking-wide">
                   QUẢN LÝ BỘ CÂU HỎI & KHO ĐỀ THEO MÔN HỌC
                 </h2>
-                <span className="px-2.5 py-0.5 rounded-full bg-amber-400 text-amber-950 text-[10px] font-black uppercase">
+                <span className="px-2.5 py-0.5 rounded-full bg-amber-400 text-amber-950 text-[12px] font-black uppercase">
                   {bank.length} Câu hỏi
                 </span>
               </div>
@@ -410,7 +410,7 @@ export const QuestionBankModal: React.FC<QuestionBankModalProps> = ({
         </div>
 
         {toastMessage && (
-          <div className="bg-emerald-600 text-white text-xs font-bold px-4 py-2 text-center animate-in fade-in duration-150">
+          <div className="bg-emerald-700 text-white text-xs font-bold px-4 py-2 text-center animate-in fade-in duration-150">
             {toastMessage}
           </div>
         )}
@@ -418,7 +418,7 @@ export const QuestionBankModal: React.FC<QuestionBankModalProps> = ({
         {/* 1. MỤC ĐƯA LÊN BỘ ĐỀ THEO MÔN */}
         <div className="px-4 py-2.5 bg-amber-50/70 border-b border-amber-200/80 flex flex-wrap items-center justify-between gap-3 text-xs">
           <div className="flex flex-wrap items-center gap-2">
-            <div className="flex items-center gap-1.5 bg-amber-100/80 px-2.5 py-1 rounded-xl text-amber-950 font-black uppercase text-[11px]">
+            <div className="flex items-center gap-1.5 bg-amber-100/80 px-2.5 py-1 rounded-xl text-amber-950 font-black uppercase text-[12px]">
               <Layers className="w-3.5 h-3.5 text-amber-700" />
               <span>BỘ ĐỀ THEO MÔN:</span>
             </div>
@@ -455,12 +455,12 @@ export const QuestionBankModal: React.FC<QuestionBankModalProps> = ({
               />
             )}
 
-            <span className="text-[11px] text-amber-900 font-semibold hidden md:inline">
+            <span className="text-[12px] text-amber-900 font-semibold hidden md:inline">
               👉 Tải file Word/PDF/Ảnh sẽ tự gắn vào môn <strong className="text-indigo-700 underline font-black">{effectiveTargetSubject}</strong>
             </span>
           </div>
 
-          <div className="text-[11px] text-slate-500 font-bold ml-auto flex items-center gap-1">
+          <div className="text-[12px] text-slate-500 font-bold ml-auto flex items-center gap-1">
             <Tag className="w-3 h-3 text-indigo-500" />
             <span>Môn đang chọn: </span>
             <span className="px-2 py-0.5 rounded-md bg-indigo-100 text-indigo-800 font-black">
@@ -526,7 +526,7 @@ export const QuestionBankModal: React.FC<QuestionBankModalProps> = ({
             {/* Add Manually */}
             <button
               onClick={handleStartCreateNew}
-              className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black flex items-center gap-1.5 shadow-sm transition-all hover-zoom-btn uppercase cursor-pointer"
+              className="px-3.5 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-black flex items-center gap-1.5 shadow-sm transition-all hover-zoom-btn uppercase cursor-pointer"
             >
               <Plus className="w-4 h-4" />
               <span>Thêm Câu Mới</span>
@@ -575,10 +575,10 @@ export const QuestionBankModal: React.FC<QuestionBankModalProps> = ({
 
         {/* 3. Subject Filter Navigation Pills */}
         <div className="px-4 py-2 bg-slate-100/90 border-b border-slate-200 flex flex-wrap items-center gap-1.5 overflow-x-auto">
-          <span className="text-[10px] font-black uppercase text-slate-600 mr-1 shrink-0">LỌC MÔN HỌC:</span>
+          <span className="text-[12px] font-black uppercase text-slate-600 mr-1 shrink-0">LỌC MÔN HỌC:</span>
           <button
             onClick={() => setSelectedSubject('all')}
-            className={`px-2.5 py-1 rounded-lg text-[11px] font-black transition-all shrink-0 cursor-pointer ${
+            className={`px-2.5 py-1 rounded-lg text-[12px] font-black transition-all shrink-0 cursor-pointer ${
               selectedSubject === 'all'
                 ? 'bg-indigo-600 text-white shadow-xs'
                 : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-200'
@@ -593,14 +593,14 @@ export const QuestionBankModal: React.FC<QuestionBankModalProps> = ({
               <button
                 key={sub}
                 onClick={() => setSelectedSubject(sub)}
-                className={`px-2.5 py-1 rounded-lg text-[11px] font-black transition-all shrink-0 cursor-pointer flex items-center gap-1 ${
+                className={`px-2.5 py-1 rounded-lg text-[12px] font-black transition-all shrink-0 cursor-pointer flex items-center gap-1 ${
                   isCurrent
                     ? 'bg-indigo-600 text-white shadow-xs'
                     : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-200'
                 }`}
               >
                 <span>{sub}</span>
-                <span className={`px-1.5 py-0.2 rounded-full text-[9px] font-bold ${
+                <span className={`px-1.5 py-0.2 rounded-full text-[12px] font-bold ${
                   isCurrent ? 'bg-white/25 text-white' : 'bg-slate-100 text-slate-600'
                 }`}>
                   {count}
@@ -614,7 +614,7 @@ export const QuestionBankModal: React.FC<QuestionBankModalProps> = ({
               <button
                 type="button"
                 onClick={handleExportSubjectJson}
-                className="px-2 py-1 bg-white hover:bg-slate-50 text-indigo-700 border border-indigo-200 rounded-lg text-[10px] font-bold flex items-center gap-1 cursor-pointer shadow-2xs"
+                className="px-2 py-1 bg-white hover:bg-slate-50 text-indigo-700 border border-indigo-200 rounded-lg text-[12px] font-bold flex items-center gap-1 cursor-pointer shadow-2xs"
                 title={`Tải xuống file đề môn ${selectedSubject}`}
               >
                 <span>📥 Xuất file môn</span>
@@ -622,7 +622,7 @@ export const QuestionBankModal: React.FC<QuestionBankModalProps> = ({
               <button
                 type="button"
                 onClick={handleClearSubjectQuestions}
-                className="px-2 py-1 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-lg text-[10px] font-bold flex items-center gap-1 cursor-pointer"
+                className="px-2 py-1 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-lg text-[12px] font-bold flex items-center gap-1 cursor-pointer"
                 title={`Xóa tất cả câu hỏi của môn ${selectedSubject}`}
               >
                 <Trash2 className="w-3 h-3" />
@@ -654,7 +654,7 @@ export const QuestionBankModal: React.FC<QuestionBankModalProps> = ({
               {/* Type, Subject & Points */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
-                  <label className="block text-[11px] font-black uppercase text-slate-700 mb-1">Loại câu hỏi:</label>
+                  <label className="block text-[12px] font-black uppercase text-slate-700 mb-1">Loại câu hỏi:</label>
                   <select
                     value={editingQuestion.type}
                     onChange={(e) => handleTypeChange(e.target.value as QuestionType)}
@@ -671,7 +671,7 @@ export const QuestionBankModal: React.FC<QuestionBankModalProps> = ({
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-black uppercase text-slate-700 mb-1">Môn học / Bộ đề:</label>
+                  <label className="block text-[12px] font-black uppercase text-slate-700 mb-1">Môn học / Bộ đề:</label>
                   <input
                     type="text"
                     value={editingQuestion.subject || ''}
@@ -683,7 +683,7 @@ export const QuestionBankModal: React.FC<QuestionBankModalProps> = ({
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-black uppercase text-slate-700 mb-1">Xu thưởng khi đúng:</label>
+                  <label className="block text-[12px] font-black uppercase text-slate-700 mb-1">Xu thưởng khi đúng:</label>
                   <input
                     type="number"
                     min="1"
@@ -697,7 +697,7 @@ export const QuestionBankModal: React.FC<QuestionBankModalProps> = ({
 
               {/* Question Text */}
               <div>
-                <label className="block text-[11px] font-black uppercase text-slate-700 mb-1">
+                <label className="block text-[12px] font-black uppercase text-slate-700 mb-1">
                   Nội dung câu hỏi:
                   {editingQuestion.type === 'fill_blank' && (
                     <span className="ml-2 font-normal text-purple-700 lowercase">(dùng ký hiệu [___] hoặc [từ_cần_điền] cho chỗ trống)</span>
@@ -720,7 +720,7 @@ export const QuestionBankModal: React.FC<QuestionBankModalProps> = ({
               {/* Question Image (Chèn ảnh câu hỏi) */}
               <div className="space-y-1.5 p-3 bg-white rounded-2xl border border-slate-200">
                 <div className="flex items-center justify-between">
-                  <label className="text-[11px] font-black uppercase text-slate-700 flex items-center gap-1.5">
+                  <label className="text-[12px] font-black uppercase text-slate-700 flex items-center gap-1.5">
                     <ImageIcon className="w-3.5 h-3.5 text-indigo-600" />
                     <span>Hình ảnh minh họa câu hỏi (Tùy chọn):</span>
                   </label>
@@ -728,7 +728,7 @@ export const QuestionBankModal: React.FC<QuestionBankModalProps> = ({
                     <button
                       type="button"
                       onClick={() => questionImageInputRef.current?.click()}
-                      className="px-2.5 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-lg text-[10px] font-black uppercase flex items-center gap-1 cursor-pointer transition-colors"
+                      className="px-2.5 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-lg text-[12px] font-black uppercase flex items-center gap-1 cursor-pointer transition-colors"
                     >
                       <Upload className="w-3 h-3" />
                       <span>Tải ảnh từ máy</span>
@@ -737,7 +737,7 @@ export const QuestionBankModal: React.FC<QuestionBankModalProps> = ({
                       <button
                         type="button"
                         onClick={() => handleRemoveImage('image')}
-                        className="px-2 py-1 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-lg text-[10px] font-black uppercase cursor-pointer"
+                        className="px-2 py-1 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-lg text-[12px] font-black uppercase cursor-pointer"
                       >
                         Xóa ảnh
                       </button>
@@ -760,7 +760,7 @@ export const QuestionBankModal: React.FC<QuestionBankModalProps> = ({
                       alt="Ảnh câu hỏi xem trước"
                       className="max-h-28 rounded-lg border border-slate-300 object-contain bg-white shadow-2xs"
                     />
-                    <span className="text-[10px] text-slate-500 font-medium">Xem trước ảnh minh họa câu hỏi</span>
+                    <span className="text-[12px] text-slate-500 font-medium">Xem trước ảnh minh họa câu hỏi</span>
                   </div>
                 )}
               </div>
@@ -768,7 +768,7 @@ export const QuestionBankModal: React.FC<QuestionBankModalProps> = ({
               {/* DẠNG 1 & 2: TRẮC NGHIỆM ĐƠN / NHIỀU ĐÁP ÁN (TÙY BIẾN SỐ LƯỢNG ĐÁP ÁN) */}
               {(editingQuestion.type === 'multiple_choice' || editingQuestion.type === 'multi_select') && (
                 <div className="space-y-3 bg-white p-4 rounded-2xl border border-slate-200">
-                  <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] font-black uppercase text-slate-700">
+                  <div className="flex flex-wrap items-center justify-between gap-2 text-[12px] font-black uppercase text-slate-700">
                     <span className="flex items-center gap-1.5">
                       <CheckSquare className="w-4 h-4 text-indigo-600" />
                       <span>
@@ -857,7 +857,7 @@ export const QuestionBankModal: React.FC<QuestionBankModalProps> = ({
                                 activeOptionIndexForImageRef.current = idx;
                                 optionImageInputRef.current?.click();
                               }}
-                              className="px-2.5 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-xl text-[10px] font-black uppercase flex items-center gap-1 cursor-pointer transition-colors shrink-0"
+                              className="px-2.5 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-xl text-[12px] font-black uppercase flex items-center gap-1 cursor-pointer transition-colors shrink-0"
                               title={`Tải ảnh từ máy cho đáp án ${String.fromCharCode(65 + idx)}`}
                             >
                               <ImageIcon className="w-3 h-3 text-indigo-600" />
@@ -868,7 +868,7 @@ export const QuestionBankModal: React.FC<QuestionBankModalProps> = ({
                               <button
                                 type="button"
                                 onClick={() => handleRemoveOptionImage(idx)}
-                                className="px-2 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-xl text-[10px] font-black uppercase cursor-pointer shrink-0"
+                                className="px-2 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-xl text-[12px] font-black uppercase cursor-pointer shrink-0"
                                 title={`Xóa ảnh đáp án ${String.fromCharCode(65 + idx)}`}
                               >
                                 Xóa ảnh
@@ -914,7 +914,7 @@ export const QuestionBankModal: React.FC<QuestionBankModalProps> = ({
                                 className="max-h-20 max-w-[120px] rounded-lg border border-slate-300 object-contain bg-white shadow-2xs"
                               />
                               <div className="flex-1">
-                                <span className="text-[10px] text-slate-600 font-bold block">
+                                <span className="text-[12px] text-slate-600 font-bold block">
                                   Ảnh minh họa đáp án {String.fromCharCode(65 + idx)}:
                                 </span>
                                 <input
@@ -922,7 +922,7 @@ export const QuestionBankModal: React.FC<QuestionBankModalProps> = ({
                                   value={optImage.startsWith('data:') ? '' : optImage}
                                   onChange={(e) => handleSetOptionImageUrl(idx, e.target.value)}
                                   placeholder="Hoặc dán URL link ảnh..."
-                                  className="w-full text-[10px] bg-white border border-slate-200 rounded px-2 py-1 mt-0.5 font-mono text-slate-700"
+                                  className="w-full text-[12px] bg-white border border-slate-200 rounded px-2 py-1 mt-0.5 font-mono text-slate-700"
                                 />
                               </div>
                             </div>
@@ -937,7 +937,7 @@ export const QuestionBankModal: React.FC<QuestionBankModalProps> = ({
               {/* DẠNG 3: ĐÚNG / SAI */}
               {editingQuestion.type === 'true_false' && (
                 <div className="space-y-2 bg-white p-4 rounded-2xl border border-slate-200">
-                  <label className="block text-[11px] font-black uppercase text-slate-700 mb-1">
+                  <label className="block text-[12px] font-black uppercase text-slate-700 mb-1">
                     CHỌN ĐÁP ÁN ĐÚNG CỦA CÂU HỎI / KHẲNG ĐỊNH:
                   </label>
                   <div className="grid grid-cols-2 gap-3">
@@ -946,7 +946,7 @@ export const QuestionBankModal: React.FC<QuestionBankModalProps> = ({
                       onClick={() => setEditingQuestion({ ...editingQuestion, isTrue: true })}
                       className={`py-3.5 px-4 rounded-2xl font-black text-sm flex items-center justify-center gap-2 border-2 cursor-pointer transition-all ${
                         editingQuestion.isTrue === true
-                          ? 'bg-emerald-600 text-white border-emerald-600 shadow-md scale-[1.02]'
+                          ? 'bg-emerald-700 text-white border-emerald-600 shadow-md scale-[1.02]'
                           : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
                       }`}
                     >
@@ -972,12 +972,12 @@ export const QuestionBankModal: React.FC<QuestionBankModalProps> = ({
               {/* DẠNG 4: KÉO THẢ / ĐIỀN CHỖ TRỐNG */}
               {editingQuestion.type === 'fill_blank' && (
                 <div className="space-y-3 bg-white p-4 rounded-2xl border border-slate-200">
-                  <div className="flex items-center justify-between text-[11px] font-black uppercase text-slate-700">
+                  <div className="flex items-center justify-between text-[12px] font-black uppercase text-slate-700">
                     <span>DANH SÁCH TỪ ĐÚNG CẦN ĐIỀN & TỪ GÂY NHIỄU:</span>
                   </div>
 
                   <div>
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">
+                    <label className="block text-[12px] font-bold text-slate-500 uppercase mb-1">
                       Các từ ĐÚNG điền vào các vị trí (phân cách bằng dấu phẩy):
                     </label>
                     <input
@@ -993,7 +993,7 @@ export const QuestionBankModal: React.FC<QuestionBankModalProps> = ({
                   </div>
 
                   <div>
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">
+                    <label className="block text-[12px] font-bold text-slate-500 uppercase mb-1">
                       Các từ GÂY NHIỄU (các thẻ lựa chọn thêm để học sinh chọn đúng):
                     </label>
                     <input
@@ -1013,7 +1013,7 @@ export const QuestionBankModal: React.FC<QuestionBankModalProps> = ({
               {/* DẠNG 5: SẮP XẾP THỨ TỰ CÁC BƯỚC */}
               {editingQuestion.type === 'sequence_order' && (
                 <div className="space-y-3 bg-white p-4 rounded-2xl border border-slate-200">
-                  <div className="flex items-center justify-between text-[11px] font-black uppercase text-slate-700">
+                  <div className="flex items-center justify-between text-[12px] font-black uppercase text-slate-700">
                     <span>DANH SÁCH CÁC BƯỚC THEO THỨ TỰ CHUẨN (HỆ THỐNG SẼ TỰ XÁO TRỘN KHI CHƠI):</span>
                     <button
                       type="button"
@@ -1102,7 +1102,7 @@ export const QuestionBankModal: React.FC<QuestionBankModalProps> = ({
               {/* DẠNG 6: NỐI CỘT A VỚI CỘT B */}
               {editingQuestion.type === 'matching' && (
                 <div className="space-y-3 bg-white p-4 rounded-2xl border border-slate-200">
-                  <div className="flex items-center justify-between text-[11px] font-black uppercase text-slate-700">
+                  <div className="flex items-center justify-between text-[12px] font-black uppercase text-slate-700">
                     <span>DANH SÁCH CÁC CẶP TƯƠNG ỨNG CỘT A VÀ CỘT B:</span>
                     <button
                       type="button"
@@ -1185,7 +1185,7 @@ export const QuestionBankModal: React.FC<QuestionBankModalProps> = ({
 
               {/* Teacher Answer Key / Explanation */}
               <div>
-                <label className="block text-[11px] font-black uppercase text-slate-700 mb-1">
+                <label className="block text-[12px] font-black uppercase text-slate-700 mb-1">
                   Đáp án đối chiếu & Giải thích chi tiết của giáo viên:
                 </label>
                 <textarea
@@ -1200,7 +1200,7 @@ export const QuestionBankModal: React.FC<QuestionBankModalProps> = ({
               {/* Teacher Answer Image */}
               <div className="space-y-1.5 p-3 bg-amber-50/60 rounded-2xl border border-amber-200">
                 <div className="flex items-center justify-between">
-                  <label className="text-[11px] font-black uppercase text-amber-900 flex items-center gap-1.5">
+                  <label className="text-[12px] font-black uppercase text-amber-900 flex items-center gap-1.5">
                     <ImageIcon className="w-3.5 h-3.5 text-amber-700" />
                     <span>Hình ảnh đáp án / Lời giải chi tiết của giáo viên (Tùy chọn):</span>
                   </label>
@@ -1208,7 +1208,7 @@ export const QuestionBankModal: React.FC<QuestionBankModalProps> = ({
                     <button
                       type="button"
                       onClick={() => answerImageInputRef.current?.click()}
-                      className="px-2.5 py-1 bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-300 rounded-lg text-[10px] font-black uppercase flex items-center gap-1 cursor-pointer transition-colors"
+                      className="px-2.5 py-1 bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-300 rounded-lg text-[12px] font-black uppercase flex items-center gap-1 cursor-pointer transition-colors"
                     >
                       <Upload className="w-3 h-3" />
                       <span>Tải ảnh từ máy</span>
@@ -1217,7 +1217,7 @@ export const QuestionBankModal: React.FC<QuestionBankModalProps> = ({
                       <button
                         type="button"
                         onClick={() => handleRemoveImage('answerImage')}
-                        className="px-2 py-1 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-lg text-[10px] font-black uppercase cursor-pointer"
+                        className="px-2 py-1 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-lg text-[12px] font-black uppercase cursor-pointer"
                       >
                         Xóa ảnh
                       </button>
@@ -1240,7 +1240,7 @@ export const QuestionBankModal: React.FC<QuestionBankModalProps> = ({
                       alt="Ảnh đáp án xem trước"
                       className="max-h-28 rounded-lg border border-amber-300 object-contain bg-white shadow-2xs"
                     />
-                    <span className="text-[10px] text-amber-800 font-medium">Xem trước ảnh đáp án giáo viên</span>
+                    <span className="text-[12px] text-amber-800 font-medium">Xem trước ảnh đáp án giáo viên</span>
                   </div>
                 )}
               </div>
@@ -1343,7 +1343,7 @@ export const QuestionBankModal: React.FC<QuestionBankModalProps> = ({
                           handleTypeChange(selectedType as QuestionType);
                         }
                       }}
-                      className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black transition-all cursor-pointer shadow-xs"
+                      className="px-3.5 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-black transition-all cursor-pointer shadow-xs"
                     >
                       + Thêm câu hỏi mới vào môn này
                     </button>
@@ -1363,45 +1363,45 @@ export const QuestionBankModal: React.FC<QuestionBankModalProps> = ({
                         
                         {/* Type Badges */}
                         {q.type === 'multiple_choice' && (
-                          <span className="px-2 py-0.5 rounded-md text-[10px] font-black uppercase bg-blue-50 text-blue-700 border border-blue-200">
+                          <span className="px-2 py-0.5 rounded-md text-[12px] font-black uppercase bg-blue-50 text-blue-700 border border-blue-200">
                             Trắc nghiệm 1 đáp án ({q.options?.length || 4} phương án)
                           </span>
                         )}
                         {q.type === 'multi_select' && (
-                          <span className="px-2 py-0.5 rounded-md text-[10px] font-black uppercase bg-purple-50 text-purple-700 border border-purple-200">
+                          <span className="px-2 py-0.5 rounded-md text-[12px] font-black uppercase bg-purple-50 text-purple-700 border border-purple-200">
                             Nhiều đáp án đúng
                           </span>
                         )}
                         {q.type === 'true_false' && (
-                          <span className="px-2 py-0.5 rounded-md text-[10px] font-black uppercase bg-amber-50 text-amber-700 border border-amber-200">
+                          <span className="px-2 py-0.5 rounded-md text-[12px] font-black uppercase bg-amber-50 text-amber-700 border border-amber-200">
                             Đúng / Sai
                           </span>
                         )}
                         {q.type === 'fill_blank' && (
-                          <span className="px-2 py-0.5 rounded-md text-[10px] font-black uppercase bg-emerald-50 text-emerald-700 border border-emerald-200">
+                          <span className="px-2 py-0.5 rounded-md text-[12px] font-black uppercase bg-emerald-50 text-emerald-700 border border-emerald-200">
                             Điền chỗ trống / Kéo thả
                           </span>
                         )}
                         {q.type === 'sequence_order' && (
-                          <span className="px-2 py-0.5 rounded-md text-[10px] font-black uppercase bg-cyan-50 text-cyan-700 border border-cyan-200">
+                          <span className="px-2 py-0.5 rounded-md text-[12px] font-black uppercase bg-cyan-50 text-cyan-700 border border-cyan-200">
                             Sắp xếp thứ tự
                           </span>
                         )}
                         {q.type === 'matching' && (
-                          <span className="px-2 py-0.5 rounded-md text-[10px] font-black uppercase bg-pink-50 text-pink-700 border border-pink-200">
+                          <span className="px-2 py-0.5 rounded-md text-[12px] font-black uppercase bg-pink-50 text-pink-700 border border-pink-200">
                             Nối cột A - B
                           </span>
                         )}
                         {q.type === 'oral' && (
-                          <span className="px-2 py-0.5 rounded-md text-[10px] font-black uppercase bg-slate-100 text-slate-700 border border-slate-200">
+                          <span className="px-2 py-0.5 rounded-md text-[12px] font-black uppercase bg-slate-100 text-slate-700 border border-slate-200">
                             Trả lời bằng lời
                           </span>
                         )}
 
-                        <span className="px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-800 text-[10px] font-black border border-indigo-200">
+                        <span className="px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-800 text-[12px] font-black border border-indigo-200">
                           {q.subject || 'Tổng hợp'}
                         </span>
-                        <span className="text-[10px] text-amber-700 font-bold flex items-center gap-0.5">
+                        <span className="text-[12px] text-amber-700 font-bold flex items-center gap-0.5">
                           <Award className="w-3 h-3 text-amber-500" />
                           +{q.pointsReward || 2} xu
                         </span>
@@ -1461,8 +1461,8 @@ export const QuestionBankModal: React.FC<QuestionBankModalProps> = ({
                               }`}
                             >
                               <div className="flex items-center gap-2">
-                                <span className={`w-5 h-5 rounded-md flex items-center justify-center text-[10px] font-black shrink-0 ${
-                                  isCorrect ? 'bg-emerald-600 text-white' : 'bg-slate-200 text-slate-700'
+                                <span className={`w-5 h-5 rounded-md flex items-center justify-center text-[12px] font-black shrink-0 ${
+                                  isCorrect ? 'bg-emerald-700 text-white' : 'bg-slate-200 text-slate-700'
                                 }`}>
                                   {String.fromCharCode(65 + optIdx)}
                                 </span>
@@ -1510,7 +1510,7 @@ export const QuestionBankModal: React.FC<QuestionBankModalProps> = ({
                           <>
                             <span className="font-bold text-slate-400 ml-2">Từ gây nhiễu:</span>
                             {q.distractorWords.map((w, i) => (
-                              <span key={i} className="px-2 py-0.5 bg-slate-100 text-slate-600 rounded-lg text-[11px] font-semibold">
+                              <span key={i} className="px-2 py-0.5 bg-slate-100 text-slate-600 rounded-lg text-[12px] font-semibold">
                                 {w}
                               </span>
                             ))}
@@ -1525,7 +1525,7 @@ export const QuestionBankModal: React.FC<QuestionBankModalProps> = ({
                         <span className="font-bold text-slate-500">Trình tự chuẩn:</span>
                         {q.sequenceItems.map((step, sIdx) => (
                           <span key={sIdx} className="px-2.5 py-1 bg-cyan-50 text-cyan-950 rounded-xl font-bold border border-cyan-200 flex items-center gap-1">
-                            <span className="text-[10px] font-black text-cyan-700">#{sIdx + 1}</span>
+                            <span className="text-[12px] font-black text-cyan-700">#{sIdx + 1}</span>
                             <span>{step}</span>
                           </span>
                         ))}
@@ -1547,7 +1547,7 @@ export const QuestionBankModal: React.FC<QuestionBankModalProps> = ({
 
                     {/* Teacher Answer Key */}
                     {q.teacherAnswerKey && (
-                      <div className="text-[11px] text-slate-600 bg-slate-50 p-2 rounded-xl border border-slate-200 flex items-start gap-1.5">
+                      <div className="text-[12px] text-slate-600 bg-slate-50 p-2 rounded-xl border border-slate-200 flex items-start gap-1.5">
                         <strong className="text-slate-800 shrink-0">Đáp án GV:</strong>
                         <span className="italic">{q.teacherAnswerKey}</span>
                       </div>
@@ -1556,7 +1556,7 @@ export const QuestionBankModal: React.FC<QuestionBankModalProps> = ({
                     {/* Teacher Answer Image */}
                     {q.answerImage && (
                       <div className="pt-0.5 flex items-center gap-2">
-                        <span className="text-[10px] font-bold text-amber-800 shrink-0">Ảnh đáp án GV:</span>
+                        <span className="text-[12px] font-bold text-amber-800 shrink-0">Ảnh đáp án GV:</span>
                         <img 
                           src={q.answerImage} 
                           alt="Ảnh đáp án giáo viên" 

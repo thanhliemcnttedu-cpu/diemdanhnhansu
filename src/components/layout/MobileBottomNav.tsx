@@ -75,7 +75,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
             }`}>
               <Icon className="w-5 h-5" />
             </div>
-            <span className="text-[10.5px] tracking-tight leading-none normal-case truncate max-w-[64px]">
+            <span className="text-[12px] tracking-tight leading-none normal-case truncate max-w-[64px]">
               {item.label}
             </span>
           </button>
@@ -92,7 +92,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
         <div className="p-1 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-600 text-white shadow-xs shadow-indigo-600/30">
           <Menu className="w-5 h-5" />
         </div>
-        <span className="text-[10.5px] tracking-tight leading-none normal-case text-indigo-700 font-bold">
+        <span className="text-[12px] tracking-tight leading-none normal-case text-indigo-700 font-bold">
           Menu
         </span>
       </button>

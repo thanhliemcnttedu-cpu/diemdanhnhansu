@@ -745,7 +745,7 @@ export const ReportsDataView: React.FC<ReportsDataViewProps> = ({ defaultTab = '
                   type="button"
                   onClick={() => setStatsSubMode('realtime_admin')}
                   className={`px-4 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-2 cursor-pointer uppercase ${statsSubMode === 'realtime_admin'
-                      ? 'bg-gradient-to-r from-indigo-500 to-indigo-700 text-white shadow-xs'
+                      ? 'bg-gradient-to-r from-indigo-600 to-indigo-700 text-white shadow-xs'
                       : 'text-indigo-900 hover:text-indigo-950 font-black'
                     }`}
                 >
@@ -758,7 +758,7 @@ export const ReportsDataView: React.FC<ReportsDataViewProps> = ({ defaultTab = '
                     type="button"
                     onClick={() => setStatsSubMode('subject_reports')}
                     className={`px-4 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-2 cursor-pointer uppercase ${statsSubMode === 'subject_reports'
-                        ? 'bg-emerald-600 text-white shadow-xs'
+                        ? 'bg-emerald-700 text-white shadow-xs'
                         : 'text-slate-600 hover:text-slate-900'
                       }`}
                   >
@@ -792,7 +792,7 @@ export const ReportsDataView: React.FC<ReportsDataViewProps> = ({ defaultTab = '
                 </button>
               </div>
 
-              <span className="text-[11px] font-bold text-slate-500 uppercase px-2 hidden sm:inline">
+              <span className="text-[12px] font-bold text-slate-500 uppercase px-2 hidden sm:inline">
                 {statsSubMode === 'realtime_admin'
                   ? 'Đồng bộ 2 chiều thời gian thực theo Phân hiệu & Điểm trường'
                   : statsSubMode === 'subject_reports'
@@ -816,15 +816,15 @@ export const ReportsDataView: React.FC<ReportsDataViewProps> = ({ defaultTab = '
                   <div className="bg-white rounded-3xl border border-slate-200/90 p-5 shadow-xs hover-zoom-card relative overflow-hidden">
                     <div className="flex items-center justify-between">
                       <span className="text-xs font-black uppercase tracking-wider text-slate-500">TỔNG XU TÍCH LŨY</span>
-                      <div className="w-9 h-9 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center shadow-2xs">
+                      <div className="w-9 h-9 rounded-2xl bg-amber-50 text-amber-700 flex items-center justify-center shadow-2xs">
                         <Award className="w-4 h-4" />
                       </div>
                     </div>
-                    <div className="text-3xl font-black font-mono text-amber-600 mt-2">
+                    <div className="text-3xl font-black font-mono text-amber-700 mt-2">
                       {totalCoins} <span className="text-xs font-bold text-slate-400 uppercase">xu</span>
                     </div>
-                    <div className="text-[11px] text-slate-500 mt-1 flex items-center gap-1 font-bold uppercase">
-                      <span className="text-emerald-600 font-bold">● {classTransactions.length}</span> LƯỢT KHEN THƯỞNG & RÈN LUYỆN
+                    <div className="text-[12px] text-slate-500 mt-1 flex items-center gap-1 font-bold uppercase">
+                      <span className="text-emerald-700 font-bold">● {classTransactions.length}</span> LƯỢT KHEN THƯỞNG & RÈN LUYỆN
                     </div>
                   </div>
 
@@ -838,7 +838,7 @@ export const ReportsDataView: React.FC<ReportsDataViewProps> = ({ defaultTab = '
                     <div className="text-3xl font-black font-mono text-blue-600 mt-2">
                       {avgCoins} <span className="text-xs font-bold text-slate-400 uppercase">xu/em</span>
                     </div>
-                    <div className="text-[11px] text-slate-500 mt-1 uppercase font-bold">
+                    <div className="text-[12px] text-slate-500 mt-1 uppercase font-bold">
                       SĨ SỐ LỚP: <strong className="text-slate-800 font-black">{currentClassStudents.length} HỌC SINH</strong>
                     </div>
                   </div>
@@ -846,14 +846,14 @@ export const ReportsDataView: React.FC<ReportsDataViewProps> = ({ defaultTab = '
                   <div className="bg-white rounded-3xl border border-slate-200/90 p-5 shadow-xs hover-zoom-card relative overflow-hidden">
                     <div className="flex items-center justify-between">
                       <span className="text-xs font-black uppercase tracking-wider text-slate-500">HỌC SINH XUẤT SẮC</span>
-                      <div className="w-9 h-9 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center shadow-2xs">
+                      <div className="w-9 h-9 rounded-2xl bg-emerald-50 text-emerald-700 flex items-center justify-center shadow-2xs">
                         <Star className="w-4 h-4 text-emerald-600 fill-emerald-500" />
                       </div>
                     </div>
-                    <div className="text-3xl font-black font-mono text-emerald-600 mt-2">
+                    <div className="text-3xl font-black font-mono text-emerald-700 mt-2">
                       {excellentStudents.length} <span className="text-xs font-bold text-slate-400 uppercase">em (≥30 xu)</span>
                     </div>
-                    <div className="text-[11px] text-slate-500 mt-1 uppercase font-bold">
+                    <div className="text-[12px] text-slate-500 mt-1 uppercase font-bold">
                       TỶ LỆ: <strong className="text-emerald-700 font-black">{currentClassStudents.length > 0 ? Math.round((excellentStudents.length / currentClassStudents.length) * 100) : 0}%</strong> SĨ SỐ CẢ LỚP
                     </div>
                   </div>
@@ -868,7 +868,7 @@ export const ReportsDataView: React.FC<ReportsDataViewProps> = ({ defaultTab = '
                     <div className="text-3xl font-black font-mono text-rose-600 mt-2">
                       {lowCoinStudents.length} <span className="text-xs font-bold text-slate-400 uppercase">em (≤0 xu)</span>
                     </div>
-                    <div className="text-[11px] text-rose-600 mt-1 font-black uppercase">
+                    <div className="text-[12px] text-rose-600 mt-1 font-black uppercase">
                       CẦN GIÁO VIÊN TẠO CƠ HỘI PHÁT BIỂU
                     </div>
                   </div>
@@ -977,7 +977,7 @@ export const ReportsDataView: React.FC<ReportsDataViewProps> = ({ defaultTab = '
                                     <span className="text-sm font-black text-slate-900 font-mono">
                                       {item.value}
                                     </span>
-                                    <span className="text-[10px] text-slate-400 font-bold ml-1">
+                                    <span className="text-[12px] text-slate-400 font-bold ml-1">
                                       ({percent}%)
                                     </span>
                                   </div>
@@ -994,7 +994,7 @@ export const ReportsDataView: React.FC<ReportsDataViewProps> = ({ defaultTab = '
                                   />
                                 </div>
 
-                                <div className="flex items-center justify-between text-[11px] text-slate-500 mt-1.5 font-medium">
+                                <div className="flex items-center justify-between text-[12px] text-slate-500 mt-1.5 font-medium">
                                   <span>{item.sub}</span>
                                   <span className="font-semibold text-slate-600">{percent}% tổng thể</span>
                                 </div>
@@ -1044,25 +1044,25 @@ export const ReportsDataView: React.FC<ReportsDataViewProps> = ({ defaultTab = '
                           <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
                             {hoveredDataIndex !== null && chartData[hoveredDataIndex] ? (
                               <>
-                                <div className="text-[10px] font-black uppercase text-slate-400">
+                                <div className="text-[12px] font-black uppercase text-slate-400">
                                   {chartData[hoveredDataIndex].label}
                                 </div>
                                 <div className="text-2xl font-black text-slate-900 font-mono">
                                   {chartData[hoveredDataIndex].value}
                                 </div>
-                                <div className="text-[11px] font-bold text-indigo-600">
+                                <div className="text-[12px] font-bold text-indigo-600">
                                   {totalChartValue > 0 ? Math.round((chartData[hoveredDataIndex].value / totalChartValue) * 100) : 0}%
                                 </div>
                               </>
                             ) : (
                               <>
-                                <div className="text-[10px] font-black uppercase text-slate-400 tracking-wider">
+                                <div className="text-[12px] font-black uppercase text-slate-400 tracking-wider">
                                   TỔNG CỘNG
                                 </div>
                                 <div className="text-3xl font-black text-slate-900 font-mono">
                                   {totalChartValue}
                                 </div>
-                                <div className="text-[10px] font-semibold text-slate-500">
+                                <div className="text-[12px] font-semibold text-slate-500">
                                   {currentClassStudents.length} học sinh
                                 </div>
                               </>
@@ -1095,7 +1095,7 @@ export const ReportsDataView: React.FC<ReportsDataViewProps> = ({ defaultTab = '
                                     <span className="text-xs font-bold text-slate-800 truncate block">
                                       {item.label}
                                     </span>
-                                    <span className="text-[10px] text-slate-400 font-medium">
+                                    <span className="text-[12px] text-slate-400 font-medium">
                                       {item.sub}
                                     </span>
                                   </div>
@@ -1105,7 +1105,7 @@ export const ReportsDataView: React.FC<ReportsDataViewProps> = ({ defaultTab = '
                                   <span className="text-xs font-black text-slate-900 font-mono">
                                     {item.value}
                                   </span>
-                                  <span className="text-[10px] text-slate-500 font-bold ml-1">
+                                  <span className="text-[12px] text-slate-500 font-bold ml-1">
                                     ({percent}%)
                                   </span>
                                 </div>
@@ -1173,7 +1173,7 @@ export const ReportsDataView: React.FC<ReportsDataViewProps> = ({ defaultTab = '
                                         x={p.x}
                                         y={p.y - 12}
                                         textAnchor="middle"
-                                        className="text-[10px] font-mono font-bold fill-slate-700"
+                                        className="text-[12px] font-mono font-bold fill-slate-700"
                                       >
                                         {p.value}
                                       </text>
@@ -1185,7 +1185,7 @@ export const ReportsDataView: React.FC<ReportsDataViewProps> = ({ defaultTab = '
                           </svg>
 
                           {/* X-axis labels */}
-                          <div className="flex justify-between items-center pt-2 border-t border-slate-200 text-[10px] font-bold text-slate-500 overflow-x-auto">
+                          <div className="flex justify-between items-center pt-2 border-t border-slate-200 text-[12px] font-bold text-slate-500 overflow-x-auto">
                             {chartData.map((d, i) => (
                               <div key={i} className="text-center truncate px-1">
                                 <span className={hoveredDataIndex === i ? 'text-indigo-600 font-extrabold' : ''}>
@@ -1263,7 +1263,7 @@ export const ReportsDataView: React.FC<ReportsDataViewProps> = ({ defaultTab = '
                         className="p-3 bg-slate-50/70 border border-slate-200/80 rounded-2xl flex items-center justify-between hover-zoom-interactive"
                       >
                         <div className="flex items-center gap-2.5 min-w-0">
-                          <span className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black shrink-0 ${idx === 0 ? 'bg-amber-400 text-amber-950 shadow-xs' :
+                          <span className={`w-6 h-6 rounded-full flex items-center justify-center text-[12px] font-black shrink-0 ${idx === 0 ? 'bg-amber-400 text-amber-950 shadow-xs' :
                               idx === 1 ? 'bg-slate-300 text-slate-900 shadow-xs' :
                                 idx === 2 ? 'bg-amber-700 text-white shadow-xs' :
                                   'bg-slate-200 text-slate-700'
@@ -1277,7 +1277,7 @@ export const ReportsDataView: React.FC<ReportsDataViewProps> = ({ defaultTab = '
                           />
                           <div className="truncate">
                             <div className="text-xs font-black text-slate-900 truncate">{st.name}</div>
-                            <div className="text-[10px] text-slate-500 font-medium">STT {st.stt} · {st.group || 'Tổ 1'}</div>
+                            <div className="text-[12px] text-slate-500 font-medium">STT {st.stt} · {st.group || 'Tổ 1'}</div>
                           </div>
                         </div>
 
@@ -1340,7 +1340,7 @@ export const ReportsDataView: React.FC<ReportsDataViewProps> = ({ defaultTab = '
 
             {/* Banner Trial Mode trên View Dữ Liệu (Ảnh 3 & 8) */}
             {!isCdKeyActivated && (
-              <div className="p-3.5 rounded-2xl bg-gradient-to-r from-amber-600 via-orange-600 to-amber-600 text-white flex items-center justify-between shadow-xs animate-in fade-in">
+              <div className="p-3.5 rounded-2xl bg-gradient-to-r from-amber-700 via-orange-700 to-amber-700 text-white flex items-center justify-between shadow-xs animate-in fade-in">
                 <div className="flex items-center gap-2.5 text-xs font-bold truncate">
                   <span className="text-lg">⚠️</span>
                   <span className="truncate">
@@ -1360,7 +1360,7 @@ export const ReportsDataView: React.FC<ReportsDataViewProps> = ({ defaultTab = '
             {/* 1. BANNER PHÂN CẤP DANH TÍNH & PHẠM VI QUYỀN HẠN SAO LƯU */}
             {isCurrentUserSuperAdmin ? (
               /* CẤP 1: QUẢN TRỊ VIÊN HỆ THỐNG CẤP CAO (ADMIN TỐI CAO) */
-              <div className="p-5 md:p-6 rounded-3xl bg-gradient-to-br from-indigo-500 via-indigo-500 to-purple-500 text-white shadow-lg space-y-4 border border-indigo-700/50">
+              <div className="p-5 md:p-6 rounded-3xl bg-gradient-to-br from-indigo-600 via-indigo-600 to-purple-600 text-white shadow-lg space-y-4 border border-indigo-700/50">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div className="flex items-center gap-3">
                     <div className="w-11 h-11 rounded-2xl bg-amber-400 text-indigo-950 flex items-center justify-center font-black shadow-md shrink-0">
@@ -1368,10 +1368,10 @@ export const ReportsDataView: React.FC<ReportsDataViewProps> = ({ defaultTab = '
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="px-2.5 py-0.5 rounded-full bg-amber-400 text-indigo-950 font-black text-[10px] uppercase tracking-wider">
+                        <span className="px-2.5 py-0.5 rounded-full bg-amber-400 text-indigo-950 font-black text-[12px] uppercase tracking-wider">
                           👑 ADMIN TỐI CAO
                         </span>
-                        <span className="text-[11px] font-bold text-white">
+                        <span className="text-[12px] font-bold text-white">
                           QUẢN TRỊ VIÊN HỆ THỐNG CẤP CAO
                         </span>
                       </div>
@@ -1449,7 +1449,7 @@ export const ReportsDataView: React.FC<ReportsDataViewProps> = ({ defaultTab = '
                 {/* THẺ THỐNG KÊ NHANH CHO PHẠM VI ĐANG CHỌN */}
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-1">
                   <div className="p-2.5 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/10">
-                    <div className="text-[10px] font-bold text-white/90 uppercase">
+                    <div className="text-[12px] font-bold text-white/90 uppercase">
                       {selectedAdminScope === 'system' ? 'Tổng số trường' : 'Trường đang chọn'}
                     </div>
                     <div className="text-sm font-black text-amber-300 truncate">
@@ -1458,7 +1458,7 @@ export const ReportsDataView: React.FC<ReportsDataViewProps> = ({ defaultTab = '
                   </div>
 
                   <div className="p-2.5 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/10">
-                    <div className="text-[10px] font-bold text-white/90 uppercase">
+                    <div className="text-[12px] font-bold text-white/90 uppercase">
                       {selectedAdminScope === 'system' ? 'Tổng số tài khoản' : 'Tài khoản trường'}
                     </div>
                     <div className="text-sm font-black text-white font-mono">
@@ -1470,7 +1470,7 @@ export const ReportsDataView: React.FC<ReportsDataViewProps> = ({ defaultTab = '
                   </div>
 
                   <div className="p-2.5 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/10">
-                    <div className="text-[10px] font-bold text-white/90 uppercase">
+                    <div className="text-[12px] font-bold text-white/90 uppercase">
                       {selectedAdminScope === 'system' ? 'Tổng số lớp (GVCN)' : 'Lớp thuộc trường'}
                     </div>
                     <div className="text-sm font-black text-white font-mono">
@@ -1479,7 +1479,7 @@ export const ReportsDataView: React.FC<ReportsDataViewProps> = ({ defaultTab = '
                   </div>
 
                   <div className="p-2.5 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/10">
-                    <div className="text-[10px] font-bold text-white/90 uppercase">
+                    <div className="text-[12px] font-bold text-white/90 uppercase">
                       {selectedAdminScope === 'system' ? 'Tổng số học sinh' : 'Học sinh trường'}
                     </div>
                     <div className="text-sm font-black text-sky-300 font-mono">
@@ -1490,7 +1490,7 @@ export const ReportsDataView: React.FC<ReportsDataViewProps> = ({ defaultTab = '
               </div>
             ) : isSchoolAdminAccount ? (
               /* CẤP 2: TÀI KHOẢN QUẢN TRỊ NHÀ TRƯỜNG (BGH / ADMIN TRƯỜNG) */
-              <div className="p-5 md:p-6 rounded-3xl bg-gradient-to-br from-emerald-600 via-teal-600 to-indigo-500 text-white shadow-lg space-y-3.5 border border-emerald-600/50">
+              <div className="p-5 md:p-6 rounded-3xl bg-gradient-to-br from-emerald-700 via-teal-700 to-indigo-600 text-white shadow-lg space-y-3.5 border border-emerald-600/50">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div className="flex items-center gap-3">
                     <div className="w-11 h-11 rounded-2xl bg-amber-400 text-emerald-950 flex items-center justify-center font-black shadow-md shrink-0">
@@ -1498,10 +1498,10 @@ export const ReportsDataView: React.FC<ReportsDataViewProps> = ({ defaultTab = '
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="px-2.5 py-0.5 rounded-full bg-amber-400 text-emerald-950 font-black text-[10px] uppercase tracking-wider">
+                        <span className="px-2.5 py-0.5 rounded-full bg-amber-400 text-emerald-950 font-black text-[12px] uppercase tracking-wider">
                           🏫 BẢO VỆ DỮ LIỆU TOÀN TRƯỜNG
                         </span>
-                        <span className="text-[11px] font-bold text-white">
+                        <span className="text-[12px] font-bold text-white">
                           QUẢN TRỊ VIÊN NHÀ TRƯỜNG
                         </span>
                       </div>
@@ -1524,21 +1524,21 @@ export const ReportsDataView: React.FC<ReportsDataViewProps> = ({ defaultTab = '
                 {/* THỐNG KÊ DỮ LIỆU TOÀN TRƯỜNG */}
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-1">
                   <div className="p-2.5 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/10">
-                    <div className="text-[10px] font-bold text-white uppercase">Đơn vị trường</div>
+                    <div className="text-[12px] font-bold text-white uppercase">Đơn vị trường</div>
                     <div className="text-xs font-black text-amber-300 truncate">
                       {currentUser?.schoolName || 'TRƯỜNG HỌC'}
                     </div>
                   </div>
                   <div className="p-2.5 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/10">
-                    <div className="text-[10px] font-bold text-white uppercase">Sĩ số toàn trường</div>
+                    <div className="text-[12px] font-bold text-white uppercase">Sĩ số toàn trường</div>
                     <div className="text-sm font-black text-white font-mono">103 Học sinh</div>
                   </div>
                   <div className="p-2.5 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/10">
-                    <div className="text-[10px] font-bold text-white uppercase">Quy mô lớp học</div>
+                    <div className="text-[12px] font-bold text-white uppercase">Quy mô lớp học</div>
                     <div className="text-sm font-black text-amber-300 font-mono">66 Lớp GVCN</div>
                   </div>
                   <div className="p-2.5 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/10">
-                    <div className="text-[10px] font-bold text-white uppercase">Tài khoản GV trường</div>
+                    <div className="text-[12px] font-bold text-white uppercase">Tài khoản GV trường</div>
                     <div className="text-sm font-black text-white font-mono">
                       {allUsers.filter(u => (u.schoolName || '').trim().toLowerCase() === (currentUser?.schoolName || 'TRƯỜNG HỌC').trim().toLowerCase()).length} Giáo viên
                     </div>
@@ -1547,7 +1547,7 @@ export const ReportsDataView: React.FC<ReportsDataViewProps> = ({ defaultTab = '
               </div>
             ) : (
               /* CẤP 3: TÀI KHOẢN GIÁO VIÊN PHỤ TRÁCH */
-              <div className="p-5 md:p-6 rounded-3xl bg-gradient-to-br from-blue-700 via-indigo-700 to-indigo-500 text-white shadow-lg space-y-3.5 border border-blue-500/50">
+              <div className="p-5 md:p-6 rounded-3xl bg-gradient-to-br from-blue-700 via-indigo-700 to-indigo-600 text-white shadow-lg space-y-3.5 border border-blue-500/50">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div className="flex items-center gap-3">
                     <div className="w-11 h-11 rounded-2xl bg-white text-indigo-700 flex items-center justify-center font-black shadow-md shrink-0">
@@ -1555,10 +1555,10 @@ export const ReportsDataView: React.FC<ReportsDataViewProps> = ({ defaultTab = '
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="px-2.5 py-0.5 rounded-full bg-white text-indigo-900 font-black text-[10px] uppercase tracking-wider">
+                        <span className="px-2.5 py-0.5 rounded-full bg-white text-indigo-900 font-black text-[12px] uppercase tracking-wider">
                           👤 TÀI KHOẢN GIÁO VIÊN PHỤ TRÁCH
                         </span>
-                        <span className="text-[11px] font-bold text-white">
+                        <span className="text-[12px] font-bold text-white">
                           {currentUser?.role === 'homeroom' ? 'Giáo viên Chủ nhiệm' : 'Giáo viên Bộ môn'}
                         </span>
                       </div>
@@ -1580,19 +1580,19 @@ export const ReportsDataView: React.FC<ReportsDataViewProps> = ({ defaultTab = '
 
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 pt-1">
                   <div className="p-2.5 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/10">
-                    <div className="text-[10px] font-bold text-white uppercase">Giáo viên phụ trách</div>
+                    <div className="text-[12px] font-bold text-white uppercase">Giáo viên phụ trách</div>
                     <div className="text-xs font-black text-amber-300 truncate">
                       {currentUser?.fullName || teacherProfile.name}
                     </div>
                   </div>
                   <div className="p-2.5 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/10">
-                    <div className="text-[10px] font-bold text-white uppercase">Lớp phụ trách</div>
+                    <div className="text-[12px] font-bold text-white uppercase">Lớp phụ trách</div>
                     <div className="text-sm font-black text-white font-mono">
                       {classes.length} Lớp học
                     </div>
                   </div>
                   <div className="p-2.5 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/10">
-                    <div className="text-[10px] font-bold text-white uppercase">Học sinh lớp</div>
+                    <div className="text-[12px] font-bold text-white uppercase">Học sinh lớp</div>
                     <div className="text-sm font-black text-white font-mono">
                       {currentClassStudents.length} Học sinh
                     </div>
@@ -1655,7 +1655,7 @@ export const ReportsDataView: React.FC<ReportsDataViewProps> = ({ defaultTab = '
               {/* Card 2: Restore Upload (.JSON & .ZIP) với Modal Xem Trước Khôi Phục */}
               <div className="bg-white rounded-3xl border border-slate-200/90 p-4 sm:p-6 shadow-xs flex flex-col justify-between space-y-4 sm:space-y-5 hover-zoom-card">
                 <div className="space-y-2">
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center shadow-2xs">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-emerald-50 text-emerald-700 flex items-center justify-center shadow-2xs">
                     <Upload className="w-5 h-5 sm:w-6 sm:h-6" />
                   </div>
                   <h3 className="text-xs sm:text-sm font-black text-slate-900 uppercase">
@@ -1684,7 +1684,7 @@ export const ReportsDataView: React.FC<ReportsDataViewProps> = ({ defaultTab = '
                   >
                     <Upload className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600 animate-bounce" />
                     <span>{isImportLoading ? 'ĐANG PHÂN TÍCH TỆP...' : 'CHỌN FILE .JSON / .ZIP'}</span>
-                    <span className="text-[10px] text-emerald-600 font-medium">BẤM ĐỂ DUYỆT TỆP</span>
+                    <span className="text-[12px] text-emerald-700 font-medium">BẤM ĐỂ DUYỆT TỆP</span>
                   </button>
                 </div>
               </div>
@@ -1726,10 +1726,10 @@ export const ReportsDataView: React.FC<ReportsDataViewProps> = ({ defaultTab = '
               <div className="bg-white rounded-3xl border-2 border-emerald-300/80 p-4 sm:p-5 shadow-xs flex flex-col justify-between space-y-3 hover-zoom-card">
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <div className="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center shadow-2xs">
+                    <div className="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-700 flex items-center justify-center shadow-2xs">
                       <Cloud className="w-5 h-5 text-emerald-600" />
                     </div>
-                    <span className="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-black uppercase tracking-wider">
+                    <span className="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[12px] font-black uppercase tracking-wider">
                       ĐÁM MÂY GOOGLE
                     </span>
                   </div>
@@ -1744,7 +1744,7 @@ export const ReportsDataView: React.FC<ReportsDataViewProps> = ({ defaultTab = '
                 <button
                   type="button"
                   onClick={() => setIsGoogleDriveModalOpen(true)}
-                  className="w-full py-2.5 sm:py-3 px-4 rounded-2xl text-xs font-black text-white bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 shadow-md shadow-emerald-600/20 transition-all hover-zoom-btn flex items-center justify-center gap-2 uppercase cursor-pointer"
+                  className="w-full py-2.5 sm:py-3 px-4 rounded-2xl text-xs font-black text-white bg-gradient-to-r from-teal-700 to-emerald-700 hover:from-teal-800 hover:to-emerald-800 shadow-md shadow-emerald-600/20 transition-all hover-zoom-btn flex items-center justify-center gap-2 uppercase cursor-pointer"
                 >
                   <Cloud className="w-4 h-4" />
                   <span>CẤU HÌNH & ĐỒNG BỘ GOOGLE DRIVE</span>
@@ -1755,10 +1755,10 @@ export const ReportsDataView: React.FC<ReportsDataViewProps> = ({ defaultTab = '
               <div className="bg-white rounded-3xl border-2 border-orange-300/80 p-4 sm:p-5 shadow-xs flex flex-col justify-between space-y-3 hover-zoom-card">
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <div className="w-10 h-10 rounded-2xl bg-orange-50 text-orange-600 flex items-center justify-center shadow-2xs">
+                    <div className="w-10 h-10 rounded-2xl bg-orange-50 text-orange-700 flex items-center justify-center shadow-2xs">
                       <HardDrive className="w-5 h-5 text-orange-600" />
                     </div>
-                    <span className="px-2.5 py-0.5 rounded-full bg-orange-100 text-orange-800 text-[10px] font-black uppercase tracking-wider">
+                    <span className="px-2.5 py-0.5 rounded-full bg-orange-100 text-orange-800 text-[12px] font-black uppercase tracking-wider">
                       Ổ D / E AN TOÀN
                     </span>
                   </div>
@@ -1773,7 +1773,7 @@ export const ReportsDataView: React.FC<ReportsDataViewProps> = ({ defaultTab = '
                 <button
                   type="button"
                   onClick={() => setIsDataStorageModalOpen(true)}
-                  className="w-full py-2.5 sm:py-3 px-4 rounded-2xl text-xs font-black text-white bg-gradient-to-r from-amber-600 via-orange-600 to-amber-600 hover:from-amber-700 hover:to-orange-700 shadow-md shadow-orange-500/20 transition-all hover-zoom-btn flex items-center justify-center gap-2 uppercase cursor-pointer"
+                  className="w-full py-2.5 sm:py-3 px-4 rounded-2xl text-xs font-black text-white bg-gradient-to-r from-amber-700 via-orange-700 to-amber-700 hover:from-amber-800 hover:to-orange-800 shadow-md shadow-orange-500/20 transition-all hover-zoom-btn flex items-center justify-center gap-2 uppercase cursor-pointer"
                 >
                   <HardDrive className="w-4 h-4" />
                   <span>CHỌN NƠI LƯU DATA / NẠP TỪ THƯ MỤC CŨ</span>
@@ -1794,7 +1794,7 @@ export const ReportsDataView: React.FC<ReportsDataViewProps> = ({ defaultTab = '
                         <h3 className="text-sm font-black text-slate-900 uppercase">
                           XÁC NHẬN KHÔI PHỤC DỮ LIỆU PHÂN CẤP
                         </h3>
-                        <p className="text-[11px] text-slate-500 font-medium">
+                        <p className="text-[12px] text-slate-500 font-medium">
                           Kiểm tra thông tin chi tiết tệp sao lưu trước khi tiến hành nạp
                         </p>
                       </div>
@@ -1818,7 +1818,7 @@ export const ReportsDataView: React.FC<ReportsDataViewProps> = ({ defaultTab = '
 
                     <div className="flex items-center justify-between">
                       <span className="text-slate-500 font-bold">Phân cấp sao lưu:</span>
-                      <span className="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-900 font-black uppercase text-[10px]">
+                      <span className="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-900 font-black uppercase text-[12px]">
                         {restorePreview.summary.scopeText}
                       </span>
                     </div>
@@ -1834,21 +1834,21 @@ export const ReportsDataView: React.FC<ReportsDataViewProps> = ({ defaultTab = '
 
                     <div className="grid grid-cols-3 gap-2 pt-2 border-t border-slate-200">
                       <div className="text-center p-2 rounded-xl bg-white border border-slate-200">
-                        <div className="text-[10px] text-slate-500 font-bold uppercase">Số lớp</div>
+                        <div className="text-[12px] text-slate-500 font-bold uppercase">Số lớp</div>
                         <div className="text-sm font-black text-indigo-700 font-mono">
                           {restorePreview.summary.totalClasses} Lớp
                         </div>
                       </div>
 
                       <div className="text-center p-2 rounded-xl bg-white border border-slate-200">
-                        <div className="text-[10px] text-slate-500 font-bold uppercase">Học sinh</div>
+                        <div className="text-[12px] text-slate-500 font-bold uppercase">Học sinh</div>
                         <div className="text-sm font-black text-emerald-700 font-mono">
                           {restorePreview.summary.totalStudents} HS
                         </div>
                       </div>
 
                       <div className="text-center p-2 rounded-xl bg-white border border-slate-200">
-                        <div className="text-[10px] text-slate-500 font-bold uppercase">Tài khoản</div>
+                        <div className="text-[12px] text-slate-500 font-bold uppercase">Tài khoản</div>
                         <div className="text-sm font-black text-amber-700 font-mono">
                           {restorePreview.summary.totalTeachers} Users
                         </div>
@@ -1856,7 +1856,7 @@ export const ReportsDataView: React.FC<ReportsDataViewProps> = ({ defaultTab = '
                     </div>
 
                     {restorePreview.summary.exportedAt && (
-                      <div className="text-[10px] text-slate-500 pt-1">
+                      <div className="text-[12px] text-slate-500 pt-1">
                         ⏱️ Xuất ngày: {new Date(restorePreview.summary.exportedAt).toLocaleString('vi-VN')}
                         {restorePreview.summary.exportedBy ? ` bởi ${restorePreview.summary.exportedBy}` : ''}
                       </div>
@@ -1886,7 +1886,7 @@ export const ReportsDataView: React.FC<ReportsDataViewProps> = ({ defaultTab = '
                       type="button"
                       onClick={handleConfirmRestore}
                       disabled={isRestoringData}
-                      className="px-5 py-2.5 rounded-2xl text-xs font-black text-white bg-emerald-600 hover:bg-emerald-700 shadow-md shadow-emerald-600/20 transition-all hover-zoom-btn flex items-center gap-2 uppercase disabled:opacity-50"
+                      className="px-5 py-2.5 rounded-2xl text-xs font-black text-white bg-emerald-700 hover:bg-emerald-800 shadow-md shadow-emerald-600/20 transition-all hover-zoom-btn flex items-center gap-2 uppercase disabled:opacity-50"
                     >
                       {isRestoringData ? (
                         <>
@@ -1923,12 +1923,12 @@ export const ReportsDataView: React.FC<ReportsDataViewProps> = ({ defaultTab = '
                     <span className="text-xs md:text-sm font-black text-indigo-950 uppercase tracking-tight">
                       THÔNG TIN TÁC GIẢ ỨNG DỤNG (BẢN QUYỀN PHẦN MỀM)
                     </span>
-                    <p className="text-[11px] text-indigo-800 font-medium">
+                    <p className="text-[12px] text-indigo-800 font-medium">
                       Thông tin bản quyền của tác giả phần mềm được quy định cố định, hiển thị rõ ràng trên hệ thống.
                     </p>
                   </div>
                 </div>
-                <span className="px-3 py-1 rounded-full bg-indigo-600 text-white text-[10px] font-black border border-indigo-700 shadow-2xs uppercase flex items-center gap-1">
+                <span className="px-3 py-1 rounded-full bg-indigo-600 text-white text-[12px] font-black border border-indigo-700 shadow-2xs uppercase flex items-center gap-1">
                   <Lock className="w-3 h-3" />
                   <span>CỐ ĐỊNH - KHÔNG THỂ SỬA</span>
                 </span>
@@ -1936,19 +1936,19 @@ export const ReportsDataView: React.FC<ReportsDataViewProps> = ({ defaultTab = '
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs pt-1">
                 <div className="p-3.5 bg-white/80 rounded-2xl border border-indigo-100 space-y-1">
-                  <span className="text-slate-500 font-bold block text-[10px] uppercase tracking-wider">TÁC GIẢ PHẦN MỀM:</span>
+                  <span className="text-slate-500 font-bold block text-[12px] uppercase tracking-wider">TÁC GIẢ PHẦN MỀM:</span>
                   <span className="text-sm font-black text-indigo-950 uppercase">{APP_AUTHOR_INFO.name}</span>
-                  <div className="text-[10px] text-indigo-700 font-bold uppercase">BẢN QUYỀN CỐ ĐỊNH</div>
+                  <div className="text-[12px] text-indigo-700 font-bold uppercase">BẢN QUYỀN CỐ ĐỊNH</div>
                 </div>
 
                 <div className="p-3.5 bg-white/80 rounded-2xl border border-indigo-100 space-y-1">
-                  <span className="text-slate-500 font-bold block text-[10px] uppercase tracking-wider">ĐƠN VỊ CÔNG TÁC:</span>
+                  <span className="text-slate-500 font-bold block text-[12px] uppercase tracking-wider">ĐƠN VỊ CÔNG TÁC:</span>
                   <span className="text-xs font-black text-indigo-900 uppercase block">{APP_AUTHOR_INFO.schoolName}</span>
-                  <div className="text-[10px] text-slate-500 font-medium uppercase">PHÒNG GIÁO DỤC VÀ ĐÀO TẠO</div>
+                  <div className="text-[12px] text-slate-500 font-medium uppercase">PHÒNG GIÁO DỤC VÀ ĐÀO TẠO</div>
                 </div>
 
                 <div className="p-3.5 bg-white/80 rounded-2xl border border-indigo-100 space-y-1">
-                  <span className="text-slate-500 font-bold block text-[10px] uppercase tracking-wider">ZALO HỖ TRỢ KỸ THUẬT:</span>
+                  <span className="text-slate-500 font-bold block text-[12px] uppercase tracking-wider">ZALO HỖ TRỢ KỸ THUẬT:</span>
                   <a
                     href={APP_AUTHOR_INFO.zaloUrl}
                     target="_blank"
@@ -1958,11 +1958,11 @@ export const ReportsDataView: React.FC<ReportsDataViewProps> = ({ defaultTab = '
                     <MessageCircle className="w-3.5 h-3.5 text-blue-600" />
                     <span>{APP_AUTHOR_INFO.zalo}</span>
                   </a>
-                  <div className="text-[10px] text-slate-400 font-medium">BẤM ĐỂ MỞ ZALO HỖ TRỢ</div>
+                  <div className="text-[12px] text-slate-400 font-medium">BẤM ĐỂ MỞ ZALO HỖ TRỢ</div>
                 </div>
 
                 <div className="p-3.5 bg-white/80 rounded-2xl border border-indigo-100 space-y-1">
-                  <span className="text-slate-500 font-bold block text-[10px] uppercase tracking-wider">LIÊN KẾT FACEBOOK:</span>
+                  <span className="text-slate-500 font-bold block text-[12px] uppercase tracking-wider">LIÊN KẾT FACEBOOK:</span>
                   <a
                     href={APP_AUTHOR_INFO.facebook}
                     target="_blank"
@@ -1971,7 +1971,7 @@ export const ReportsDataView: React.FC<ReportsDataViewProps> = ({ defaultTab = '
                   >
                     Facebook Tác giả
                   </a>
-                  <div className="text-[10px] text-slate-400 font-medium truncate">{APP_AUTHOR_INFO.facebook}</div>
+                  <div className="text-[12px] text-slate-400 font-medium truncate">{APP_AUTHOR_INFO.facebook}</div>
                 </div>
               </div>
             </div>
@@ -2035,7 +2035,7 @@ export const ReportsDataView: React.FC<ReportsDataViewProps> = ({ defaultTab = '
                             }}
                           />
                         </div>
-                        <span className="mt-2 px-2.5 py-0.5 rounded-full bg-indigo-100 text-indigo-800 text-[10px] font-black uppercase tracking-wider">
+                        <span className="mt-2 px-2.5 py-0.5 rounded-full bg-indigo-100 text-indigo-800 text-[12px] font-black uppercase tracking-wider">
                           {profileRole || 'GIÁO VIÊN'}
                         </span>
                       </div>
@@ -2083,7 +2083,7 @@ export const ReportsDataView: React.FC<ReportsDataViewProps> = ({ defaultTab = '
 
                     {/* Presets Grid */}
                     <div className="pt-3 border-t border-slate-200/70">
-                      <div className="text-[11px] font-black text-slate-700 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                      <div className="text-[12px] font-black text-slate-700 uppercase tracking-wider mb-2 flex items-center gap-1.5">
                         <Sparkles className="w-3.5 h-3.5 text-amber-500" />
                         <span>HOẶC CHỌN NHANH ẢNH ĐẠI DIỆN SƯ PHẠM MẪU:</span>
                       </div>
@@ -2117,7 +2117,7 @@ export const ReportsDataView: React.FC<ReportsDataViewProps> = ({ defaultTab = '
                                 className="w-10 h-10 rounded-xl object-cover"
                                 referrerPolicy="no-referrer"
                               />
-                              <span className="text-[10px] font-bold text-slate-700 truncate w-full text-center">
+                              <span className="text-[12px] font-bold text-slate-700 truncate w-full text-center">
                                 {preset.label}
                               </span>
                             </button>
@@ -2188,7 +2188,7 @@ export const ReportsDataView: React.FC<ReportsDataViewProps> = ({ defaultTab = '
                             <div className="text-xs font-black uppercase">
                               {currentUser?.role === 'admin' || currentUser?.username?.toLowerCase() === 'adminquantri' ? 'QUẢN TRỊ VIÊN TỐI CAO' : 'QUẢN TRỊ VIÊN NHÀ TRƯỜNG'}
                             </div>
-                            <div className="text-[10px] text-indigo-700 font-semibold">
+                            <div className="text-[12px] text-indigo-700 font-semibold">
                               Quản trị và tổng hợp số liệu toàn bộ các lớp Giáo viên chủ nhiệm
                             </div>
                           </div>
@@ -2201,7 +2201,7 @@ export const ReportsDataView: React.FC<ReportsDataViewProps> = ({ defaultTab = '
                               setTeacherRole('homeroom');
                               setProfileRole('GIÁO VIÊN CHỦ NHIỆM');
                             }}
-                            className={`px-2 py-2.5 rounded-xl border text-[11px] sm:text-xs font-black uppercase flex items-center justify-center gap-1 transition-all ${teacherRole === 'homeroom'
+                            className={`px-2 py-2.5 rounded-xl border text-[12px] sm:text-xs font-black uppercase flex items-center justify-center gap-1 transition-all ${teacherRole === 'homeroom'
                                 ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs'
                                 : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
                               }`}
@@ -2215,8 +2215,8 @@ export const ReportsDataView: React.FC<ReportsDataViewProps> = ({ defaultTab = '
                               setTeacherRole('subject');
                               setProfileRole(`GIÁO VIÊN BỘ MÔN ${subjectTeacherConfig.subjectName || 'TIN HỌC'}`);
                             }}
-                            className={`px-2 py-2.5 rounded-xl border text-[11px] sm:text-xs font-black uppercase flex items-center justify-center gap-1 transition-all ${teacherRole === 'subject'
-                                ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
+                            className={`px-2 py-2.5 rounded-xl border text-[12px] sm:text-xs font-black uppercase flex items-center justify-center gap-1 transition-all ${teacherRole === 'subject'
+                                ? 'bg-emerald-700 text-white border-emerald-600 shadow-xs'
                                 : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
                               }`}
                           >
@@ -2227,7 +2227,7 @@ export const ReportsDataView: React.FC<ReportsDataViewProps> = ({ defaultTab = '
                       )}
                       {!isAdminAccount && teacherRole === 'subject' && (
                         <div className="pt-1.5 space-y-1">
-                          <label className="text-[10px] font-black text-emerald-900 uppercase">
+                          <label className="text-[12px] font-black text-emerald-900 uppercase">
                             Môn Giảng Dạy Bộ Môn (ví dụ: Tin học, Tiếng Anh, Âm nhạc...):
                           </label>
                           <input
@@ -2289,7 +2289,7 @@ export const ReportsDataView: React.FC<ReportsDataViewProps> = ({ defaultTab = '
                     {/* 8. Địa chỉ liên kết mạng xã hội Facebook */}
                     <div>
                       <label className="block text-xs font-black text-slate-700 mb-1 flex items-center gap-1.5 uppercase">
-                        <span className="w-4 h-4 rounded-full bg-blue-600 text-white flex items-center justify-center text-[10px] font-black shrink-0">f</span>
+                        <span className="w-4 h-4 rounded-full bg-blue-600 text-white flex items-center justify-center text-[12px] font-black shrink-0">f</span>
                         <span>ĐỊA CHỈ LIÊN KẾT MẠNG XÃ HỘI FACEBOOK:</span>
                       </label>
                       <input
@@ -2389,7 +2389,7 @@ export const ReportsDataView: React.FC<ReportsDataViewProps> = ({ defaultTab = '
                     <div className="flex items-center gap-2">
                       {classes.length > 1 && (
                         <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-2xl border border-slate-200">
-                          <span className="text-[11px] font-bold text-slate-500 pl-2 uppercase">Lớp:</span>
+                          <span className="text-[12px] font-bold text-slate-500 pl-2 uppercase">Lớp:</span>
                           <select
                             value={selectedSettingsClassId}
                             onChange={(e) => setSelectedSettingsClassId(e.target.value)}
@@ -2414,7 +2414,7 @@ export const ReportsDataView: React.FC<ReportsDataViewProps> = ({ defaultTab = '
                       <button
                         type="button"
                         onClick={handleSaveParentCommittee}
-                        className="px-5 py-2.5 text-xs font-black text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 rounded-2xl shadow-md shadow-emerald-600/20 transition-all hover-zoom-btn flex items-center gap-1.5 uppercase"
+                        className="px-5 py-2.5 text-xs font-black text-white bg-gradient-to-r from-emerald-700 to-teal-700 hover:from-emerald-800 hover:to-teal-800 rounded-2xl shadow-md shadow-emerald-600/20 transition-all hover-zoom-btn flex items-center gap-1.5 uppercase"
                       >
                         <Check className="w-3.5 h-3.5" />
                         <span>LƯU KHẨU HIỆU & BAN PHỤ HUYNH</span>
@@ -2430,7 +2430,7 @@ export const ReportsDataView: React.FC<ReportsDataViewProps> = ({ defaultTab = '
                           <Sparkles className="w-4 h-4 text-amber-500" />
                           <span>KHẨU HIỆU / SLOGAN CỦA LỚP HỌC (HIỂN THỊ TRÊN INFOGRAPHIC):</span>
                         </label>
-                        <span className="text-[10px] font-bold text-amber-800 bg-amber-100 px-2.5 py-0.5 rounded-full uppercase">
+                        <span className="text-[12px] font-bold text-amber-800 bg-amber-100 px-2.5 py-0.5 rounded-full uppercase">
                           LỚP {currentSettingsClass?.name || 'HỌC'}
                         </span>
                       </div>
@@ -2445,25 +2445,25 @@ export const ReportsDataView: React.FC<ReportsDataViewProps> = ({ defaultTab = '
 
                       {/* Slogan Quick Suggestion Chips */}
                       <div className="flex flex-wrap items-center gap-2 pt-1">
-                        <span className="text-[11px] font-bold text-slate-500 uppercase">Gợi ý nhanh:</span>
+                        <span className="text-[12px] font-bold text-slate-500 uppercase">Gợi ý nhanh:</span>
                         <button
                           type="button"
                           onClick={() => setClassSlogan('Lớp học hạnh phúc • Chăm ngoan, sáng tạo, tự tin tỏa sáng')}
-                          className="px-3 py-1 bg-white hover:bg-amber-100 border border-amber-200 text-amber-900 rounded-xl text-[11px] font-bold transition-colors hover-zoom-btn"
+                          className="px-3 py-1 bg-white hover:bg-amber-100 border border-amber-200 text-amber-900 rounded-xl text-[12px] font-bold transition-colors hover-zoom-btn"
                         >
                           “Lớp học hạnh phúc • Chăm ngoan, sáng tạo, tự tin tỏa sáng”
                         </button>
                         <button
                           type="button"
                           onClick={() => setClassSlogan('Đoàn kết - Chăm ngoan - Tự tin - Tỏa sáng')}
-                          className="px-3 py-1 bg-white hover:bg-amber-100 border border-amber-200 text-amber-900 rounded-xl text-[11px] font-bold transition-colors hover-zoom-btn"
+                          className="px-3 py-1 bg-white hover:bg-amber-100 border border-amber-200 text-amber-900 rounded-xl text-[12px] font-bold transition-colors hover-zoom-btn"
                         >
                           “Đoàn kết - Chăm ngoan - Tự tin - Tỏa sáng”
                         </button>
                         <button
                           type="button"
                           onClick={() => setClassSlogan('Mỗi ngày đến trường là một ngày vui')}
-                          className="px-3 py-1 bg-white hover:bg-amber-100 border border-amber-200 text-amber-900 rounded-xl text-[11px] font-bold transition-colors hover-zoom-btn"
+                          className="px-3 py-1 bg-white hover:bg-amber-100 border border-amber-200 text-amber-900 rounded-xl text-[12px] font-bold transition-colors hover-zoom-btn"
                         >
                           “Mỗi ngày đến trường là một ngày vui”
                         </button>
@@ -2477,7 +2477,7 @@ export const ReportsDataView: React.FC<ReportsDataViewProps> = ({ defaultTab = '
                           <UserCheck className="w-4 h-4 text-emerald-600" />
                           <span>DANH SÁCH BAN ĐẠI DIỆN CHA MẸ HỌC SINH (4 VỊ TRÍ):</span>
                         </div>
-                        <span className="text-[11px] text-slate-500 font-bold uppercase">
+                        <span className="text-[12px] text-slate-500 font-bold uppercase">
                           ĐẦY ĐỦ HỌ TÊN VÀ SỐ ĐIỆN THOẠI LIÊN HỆ
                         </span>
                       </div>
@@ -2487,14 +2487,14 @@ export const ReportsDataView: React.FC<ReportsDataViewProps> = ({ defaultTab = '
                         <div className="p-4 rounded-2xl bg-slate-50/80 border border-slate-200 space-y-3 hover-zoom-interactive">
                           <div className="flex items-center justify-between border-b border-slate-200/80 pb-2">
                             <span className="text-xs font-black text-indigo-700 uppercase flex items-center gap-1.5">
-                              <span className="w-5 h-5 rounded-full bg-indigo-600 text-white flex items-center justify-center text-[10px] font-black">1</span>
+                              <span className="w-5 h-5 rounded-full bg-indigo-600 text-white flex items-center justify-center text-[12px] font-black">1</span>
                               <span>TRƯỞNG BAN PHỤ HUYNH</span>
                             </span>
                             {parentHeadPhone && (
                               <div className="flex items-center gap-1.5">
                                 <a
                                   href={`tel:${parentHeadPhone.replace(/\s+/g, '')}`}
-                                  className="p-1.5 bg-emerald-100 hover:bg-emerald-200 text-emerald-800 rounded-lg text-[10px] font-bold transition-colors flex items-center gap-1"
+                                  className="p-1.5 bg-emerald-100 hover:bg-emerald-200 text-emerald-800 rounded-lg text-[12px] font-bold transition-colors flex items-center gap-1"
                                   title="Gọi điện"
                                 >
                                   <Phone className="w-3 h-3" />
@@ -2504,7 +2504,7 @@ export const ReportsDataView: React.FC<ReportsDataViewProps> = ({ defaultTab = '
                                   href={`https://zalo.me/${parentHeadPhone.replace(/\s+/g, '')}`}
                                   target="_blank"
                                   rel="noreferrer"
-                                  className="p-1.5 bg-blue-100 hover:bg-blue-200 text-blue-800 rounded-lg text-[10px] font-bold transition-colors flex items-center gap-1"
+                                  className="p-1.5 bg-blue-100 hover:bg-blue-200 text-blue-800 rounded-lg text-[12px] font-bold transition-colors flex items-center gap-1"
                                   title="Nhắn Zalo"
                                 >
                                   <MessageCircle className="w-3 h-3" />
@@ -2516,7 +2516,7 @@ export const ReportsDataView: React.FC<ReportsDataViewProps> = ({ defaultTab = '
 
                           <div className="space-y-2">
                             <div>
-                              <label className="block text-[10px] font-black text-slate-500 uppercase mb-1">
+                              <label className="block text-[12px] font-black text-slate-500 uppercase mb-1">
                                 HỌ VÀ TÊN TRƯỞNG BAN:
                               </label>
                               <input
@@ -2529,7 +2529,7 @@ export const ReportsDataView: React.FC<ReportsDataViewProps> = ({ defaultTab = '
                             </div>
 
                             <div>
-                              <label className="block text-[10px] font-black text-slate-500 uppercase mb-1">
+                              <label className="block text-[12px] font-black text-slate-500 uppercase mb-1">
                                 SỐ ĐIỆN THOẠI LIÊN HỆ:
                               </label>
                               <input
@@ -2547,14 +2547,14 @@ export const ReportsDataView: React.FC<ReportsDataViewProps> = ({ defaultTab = '
                         <div className="p-4 rounded-2xl bg-slate-50/80 border border-slate-200 space-y-3 hover-zoom-interactive">
                           <div className="flex items-center justify-between border-b border-slate-200/80 pb-2">
                             <span className="text-xs font-black text-indigo-700 uppercase flex items-center gap-1.5">
-                              <span className="w-5 h-5 rounded-full bg-indigo-600 text-white flex items-center justify-center text-[10px] font-black">2</span>
+                              <span className="w-5 h-5 rounded-full bg-indigo-600 text-white flex items-center justify-center text-[12px] font-black">2</span>
                               <span>PHÓ BAN PHỤ HUYNH</span>
                             </span>
                             {parentDeputyPhone && (
                               <div className="flex items-center gap-1.5">
                                 <a
                                   href={`tel:${parentDeputyPhone.replace(/\s+/g, '')}`}
-                                  className="p-1.5 bg-emerald-100 hover:bg-emerald-200 text-emerald-800 rounded-lg text-[10px] font-bold transition-colors flex items-center gap-1"
+                                  className="p-1.5 bg-emerald-100 hover:bg-emerald-200 text-emerald-800 rounded-lg text-[12px] font-bold transition-colors flex items-center gap-1"
                                   title="Gọi điện"
                                 >
                                   <Phone className="w-3 h-3" />
@@ -2564,7 +2564,7 @@ export const ReportsDataView: React.FC<ReportsDataViewProps> = ({ defaultTab = '
                                   href={`https://zalo.me/${parentDeputyPhone.replace(/\s+/g, '')}`}
                                   target="_blank"
                                   rel="noreferrer"
-                                  className="p-1.5 bg-blue-100 hover:bg-blue-200 text-blue-800 rounded-lg text-[10px] font-bold transition-colors flex items-center gap-1"
+                                  className="p-1.5 bg-blue-100 hover:bg-blue-200 text-blue-800 rounded-lg text-[12px] font-bold transition-colors flex items-center gap-1"
                                   title="Nhắn Zalo"
                                 >
                                   <MessageCircle className="w-3 h-3" />
@@ -2576,7 +2576,7 @@ export const ReportsDataView: React.FC<ReportsDataViewProps> = ({ defaultTab = '
 
                           <div className="space-y-2">
                             <div>
-                              <label className="block text-[10px] font-black text-slate-500 uppercase mb-1">
+                              <label className="block text-[12px] font-black text-slate-500 uppercase mb-1">
                                 HỌ VÀ TÊN PHÓ BAN:
                               </label>
                               <input
@@ -2589,7 +2589,7 @@ export const ReportsDataView: React.FC<ReportsDataViewProps> = ({ defaultTab = '
                             </div>
 
                             <div>
-                              <label className="block text-[10px] font-black text-slate-500 uppercase mb-1">
+                              <label className="block text-[12px] font-black text-slate-500 uppercase mb-1">
                                 SỐ ĐIỆN THOẠI LIÊN HỆ:
                               </label>
                               <input
@@ -2607,14 +2607,14 @@ export const ReportsDataView: React.FC<ReportsDataViewProps> = ({ defaultTab = '
                         <div className="p-4 rounded-2xl bg-slate-50/80 border border-slate-200 space-y-3 hover-zoom-interactive">
                           <div className="flex items-center justify-between border-b border-slate-200/80 pb-2">
                             <span className="text-xs font-black text-slate-800 uppercase flex items-center gap-1.5">
-                              <span className="w-5 h-5 rounded-full bg-slate-600 text-white flex items-center justify-center text-[10px] font-black">3</span>
+                              <span className="w-5 h-5 rounded-full bg-slate-600 text-white flex items-center justify-center text-[12px] font-black">3</span>
                               <span>ỦY VIÊN BAN PHỤ HUYNH 1</span>
                             </span>
                             {parentMember1Phone && (
                               <div className="flex items-center gap-1.5">
                                 <a
                                   href={`tel:${parentMember1Phone.replace(/\s+/g, '')}`}
-                                  className="p-1.5 bg-emerald-100 hover:bg-emerald-200 text-emerald-800 rounded-lg text-[10px] font-bold transition-colors flex items-center gap-1"
+                                  className="p-1.5 bg-emerald-100 hover:bg-emerald-200 text-emerald-800 rounded-lg text-[12px] font-bold transition-colors flex items-center gap-1"
                                   title="Gọi điện"
                                 >
                                   <Phone className="w-3 h-3" />
@@ -2624,7 +2624,7 @@ export const ReportsDataView: React.FC<ReportsDataViewProps> = ({ defaultTab = '
                                   href={`https://zalo.me/${parentMember1Phone.replace(/\s+/g, '')}`}
                                   target="_blank"
                                   rel="noreferrer"
-                                  className="p-1.5 bg-blue-100 hover:bg-blue-200 text-blue-800 rounded-lg text-[10px] font-bold transition-colors flex items-center gap-1"
+                                  className="p-1.5 bg-blue-100 hover:bg-blue-200 text-blue-800 rounded-lg text-[12px] font-bold transition-colors flex items-center gap-1"
                                   title="Nhắn Zalo"
                                 >
                                   <MessageCircle className="w-3 h-3" />
@@ -2636,7 +2636,7 @@ export const ReportsDataView: React.FC<ReportsDataViewProps> = ({ defaultTab = '
 
                           <div className="space-y-2">
                             <div>
-                              <label className="block text-[10px] font-black text-slate-500 uppercase mb-1">
+                              <label className="block text-[12px] font-black text-slate-500 uppercase mb-1">
                                 HỌ VÀ TÊN ỦY VIÊN 1:
                               </label>
                               <input
@@ -2649,7 +2649,7 @@ export const ReportsDataView: React.FC<ReportsDataViewProps> = ({ defaultTab = '
                             </div>
 
                             <div>
-                              <label className="block text-[10px] font-black text-slate-500 uppercase mb-1">
+                              <label className="block text-[12px] font-black text-slate-500 uppercase mb-1">
                                 SỐ ĐIỆN THOẠI LIÊN HỆ:
                               </label>
                               <input
@@ -2667,14 +2667,14 @@ export const ReportsDataView: React.FC<ReportsDataViewProps> = ({ defaultTab = '
                         <div className="p-4 rounded-2xl bg-slate-50/80 border border-slate-200 space-y-3 hover-zoom-interactive">
                           <div className="flex items-center justify-between border-b border-slate-200/80 pb-2">
                             <span className="text-xs font-black text-slate-800 uppercase flex items-center gap-1.5">
-                              <span className="w-5 h-5 rounded-full bg-slate-600 text-white flex items-center justify-center text-[10px] font-black">4</span>
+                              <span className="w-5 h-5 rounded-full bg-slate-600 text-white flex items-center justify-center text-[12px] font-black">4</span>
                               <span>ỦY VIÊN BAN PHỤ HUYNH 2</span>
                             </span>
                             {parentMember2Phone && (
                               <div className="flex items-center gap-1.5">
                                 <a
                                   href={`tel:${parentMember2Phone.replace(/\s+/g, '')}`}
-                                  className="p-1.5 bg-emerald-100 hover:bg-emerald-200 text-emerald-800 rounded-lg text-[10px] font-bold transition-colors flex items-center gap-1"
+                                  className="p-1.5 bg-emerald-100 hover:bg-emerald-200 text-emerald-800 rounded-lg text-[12px] font-bold transition-colors flex items-center gap-1"
                                   title="Gọi điện"
                                 >
                                   <Phone className="w-3 h-3" />
@@ -2684,7 +2684,7 @@ export const ReportsDataView: React.FC<ReportsDataViewProps> = ({ defaultTab = '
                                   href={`https://zalo.me/${parentMember2Phone.replace(/\s+/g, '')}`}
                                   target="_blank"
                                   rel="noreferrer"
-                                  className="p-1.5 bg-blue-100 hover:bg-blue-200 text-blue-800 rounded-lg text-[10px] font-bold transition-colors flex items-center gap-1"
+                                  className="p-1.5 bg-blue-100 hover:bg-blue-200 text-blue-800 rounded-lg text-[12px] font-bold transition-colors flex items-center gap-1"
                                   title="Nhắn Zalo"
                                 >
                                   <MessageCircle className="w-3 h-3" />
@@ -2696,7 +2696,7 @@ export const ReportsDataView: React.FC<ReportsDataViewProps> = ({ defaultTab = '
 
                           <div className="space-y-2">
                             <div>
-                              <label className="block text-[10px] font-black text-slate-500 uppercase mb-1">
+                              <label className="block text-[12px] font-black text-slate-500 uppercase mb-1">
                                 HỌ VÀ TÊN ỦY VIÊN 2:
                               </label>
                               <input
@@ -2709,7 +2709,7 @@ export const ReportsDataView: React.FC<ReportsDataViewProps> = ({ defaultTab = '
                             </div>
 
                             <div>
-                              <label className="block text-[10px] font-black text-slate-500 uppercase mb-1">
+                              <label className="block text-[12px] font-black text-slate-500 uppercase mb-1">
                                 SỐ ĐIỆN THOẠI LIÊN HỆ:
                               </label>
                               <input
@@ -2748,7 +2748,7 @@ export const ReportsDataView: React.FC<ReportsDataViewProps> = ({ defaultTab = '
 
                       <button
                         type="submit"
-                        className="px-6 py-3 text-xs font-black text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 rounded-2xl shadow-md shadow-emerald-600/20 transition-all hover-zoom-btn flex items-center gap-2 uppercase"
+                        className="px-6 py-3 text-xs font-black text-white bg-gradient-to-r from-emerald-700 to-teal-700 hover:from-emerald-800 hover:to-teal-800 rounded-2xl shadow-md shadow-emerald-600/20 transition-all hover-zoom-btn flex items-center gap-2 uppercase"
                       >
                         <Check className="w-4 h-4" />
                         <span>LƯU KHẨU HIỆU & BAN PHỤ HUYNH</span>
@@ -2810,7 +2810,7 @@ export const ReportsDataView: React.FC<ReportsDataViewProps> = ({ defaultTab = '
                         <Sparkles className="w-4 h-4 text-amber-600 shrink-0" />
                         <span>Cơ chế làm mới năm học an toàn:</span>
                       </div>
-                      <ul className="list-disc list-inside space-y-1 text-slate-700 text-[11px]">
+                      <ul className="list-disc list-inside space-y-1 text-slate-700 text-[12px]">
                         <li>Hệ thống tự động khởi tạo lại khung lớp học cho năm học mới.</li>
                         <li>Danh sách học sinh, điểm số thi đua, nhật ký khen thưởng và thời khóa biểu cũ sẽ được xóa sạch về 0.</li>
                         <li>Giúp thầy cô sẵn sàng nhập danh sách học sinh mới ngay lập tức.</li>

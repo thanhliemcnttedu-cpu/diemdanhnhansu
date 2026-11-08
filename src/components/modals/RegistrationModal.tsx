@@ -123,7 +123,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
               }}>
                 ĐĂNG KÝ SỬ DỤNG ỨNG DỤNG PHẦN MỀM LỚP HỌC HẠNH PHÚC
               </h1>
-              <p className="text-[10px] sm:text-xs text-white font-medium mt-0.5 hidden sm:block">
+              <p className="text-[12px] sm:text-xs text-white font-medium mt-0.5 hidden sm:block">
                 Cấp tài khoản chính thức • Khởi tạo cơ sở dữ liệu riêng • Hỗ trợ kỹ thuật 24/7
               </p>
             </div>
@@ -176,11 +176,11 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                       Tổ Chức Nhà Trường
                     </span>
                   </div>
-                  <p className="text-[11px] text-slate-600 leading-relaxed">
+                  <p className="text-[12px] text-slate-600 leading-relaxed">
                     Dành cho Trường Tiểu học, THCS, THPT. Khởi tạo kho dữ liệu tổng hợp riêng cho toàn trường, quản lý không giới hạn lớp học và giáo viên.
                   </p>
                   <div className="mt-3 pt-2.5 border-t border-slate-200/80 flex flex-col justify-between">
-                    <span className="text-[11px] font-bold text-slate-500 mb-1">Phí dịch vụ 1 năm:</span>
+                    <span className="text-[12px] font-bold text-slate-500 mb-1">Phí dịch vụ 1 năm:</span>
                     <div className="flex items-center justify-between">
                       <span className="text-xs font-bold text-slate-400 line-through">3.000.000 VNĐ</span>
                       <span className="text-lg font-black text-red-600 font-mono">1.000.000 VNĐ</span>
@@ -209,11 +209,11 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                       Cá Nhân Thầy / Cô
                     </span>
                   </div>
-                  <p className="text-[11px] text-slate-600 leading-relaxed">
+                  <p className="text-[12px] text-slate-600 leading-relaxed">
                     Dành cho các Thầy/Cô giáo viên độc lập, giáo viên vãng lai ở các tỉnh thành trên toàn quốc muốn sử dụng phần mềm cho lớp học của mình.
                   </p>
                   <div className="mt-3 pt-2.5 border-t border-slate-200/80 flex items-baseline justify-between">
-                    <span className="text-[11px] font-bold text-slate-500">Phí dịch vụ 1 năm:</span>
+                    <span className="text-[12px] font-bold text-slate-500">Phí dịch vụ 1 năm:</span>
                     <span className="text-lg font-black text-indigo-600 font-mono">50.000 VNĐ</span>
                   </div>
                 </button>
@@ -372,7 +372,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                     <span>QUÉT MÃ QR THANH TOÁN</span>
                   </h2>
                 </div>
-                <span className="px-2 py-1 rounded-full font-black text-[10px] uppercase font-mono" style={{
+                <span className="px-2 py-1 rounded-full font-black text-[12px] uppercase font-mono" style={{
                   background: 'linear-gradient(135deg, #dc2626, #f97316)',
                   color: 'white'
                 }}>
@@ -393,7 +393,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                     alt="VietQR Chuyển khoản" 
                     className="w-full h-full object-contain transition-transform group-hover:scale-105"
                   />
-                  <div className="absolute inset-x-0 bottom-0 bg-white/70 text-slate-800 text-[9px] font-black uppercase text-center py-1 flex items-center justify-center gap-1 opacity-80 group-hover:opacity-100">
+                  <div className="absolute inset-x-0 bottom-0 bg-white/70 text-slate-800 text-[12px] font-black uppercase text-center py-1 flex items-center justify-center gap-1 opacity-80 group-hover:opacity-100">
                     <ZoomIn className="w-2.5 h-2.5 text-amber-600" />
                     <span>NHẤP PHÓNG TO</span>
                   </div>
@@ -402,21 +402,21 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                 {/* Bank Info */}
                 <div className="w-full space-y-1.5 text-xs">
                   <div>
-                    <span className="text-[10px] text-slate-500 uppercase font-black">Ngân Hàng:</span>
+                    <span className="text-[12px] text-slate-500 uppercase font-black">Ngân Hàng:</span>
                     <div className="font-bold text-slate-800">BIDV - PGD Tân Uyên</div>
                   </div>
                   <div>
-                    <span className="text-[10px] text-slate-500 uppercase font-black">Chủ Tài Khoản:</span>
+                    <span className="text-[12px] text-slate-500 uppercase font-black">Chủ Tài Khoản:</span>
                     <div className="font-black text-slate-900 uppercase">NGUYEN THANH LIEM</div>
                   </div>
                   <div>
-                    <span className="text-[10px] text-slate-500 uppercase font-black">Số Tài Khoản:</span>
+                    <span className="text-[12px] text-slate-500 uppercase font-black">Số Tài Khoản:</span>
                     <div className="flex items-center gap-2">
                       <span className="font-mono font-black text-sm text-indigo-700">3627058363</span>
                       <button
                         type="button"
                         onClick={() => handleCopy('3627058363', 'stk')}
-                        className="px-2 py-0.5 rounded bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-[10px] font-bold flex items-center gap-1 cursor-pointer transition-colors"
+                        className="px-2 py-0.5 rounded bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-[12px] font-bold flex items-center gap-1 cursor-pointer transition-colors"
                       >
                         {copiedField === 'stk' ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
                         <span>{copiedField === 'stk' ? 'Đã copy' : 'Copy'}</span>
@@ -424,15 +424,15 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                     </div>
                   </div>
                   <div>
-                    <span className="text-[10px] text-slate-500 uppercase font-black">Nội Dung CK:</span>
+                    <span className="text-[12px] text-slate-500 uppercase font-black">Nội Dung CK:</span>
                     <div className="flex items-center gap-2 mt-0.5">
-                      <span className="font-mono font-bold text-[11px] text-red-600 bg-red-50 px-1.5 py-0.5 rounded border border-red-200">
+                      <span className="font-mono font-bold text-[12px] text-red-600 bg-red-50 px-1.5 py-0.5 rounded border border-red-200">
                         {currentTransferContent}
                       </span>
                       <button
                         type="button"
                         onClick={() => handleCopy(currentTransferContent, 'nd')}
-                        className="px-2 py-0.5 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 text-[10px] font-bold flex items-center gap-1 cursor-pointer transition-colors"
+                        className="px-2 py-0.5 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 text-[12px] font-bold flex items-center gap-1 cursor-pointer transition-colors"
                       >
                         {copiedField === 'nd' ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
                         <span>{copiedField === 'nd' ? 'Đã copy' : 'Copy'}</span>
@@ -470,7 +470,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                   href="https://zalo.me/0888358363"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="py-2.5 px-2 rounded-xl text-white font-bold text-[10px] sm:text-[11px] uppercase flex items-center justify-center gap-1.5 shadow-lg transition-all hover:scale-[1.02] active:scale-[0.98]"
+                  className="py-2.5 px-2 rounded-xl text-white font-bold text-[12px] sm:text-[12px] uppercase flex items-center justify-center gap-1.5 shadow-lg transition-all hover:scale-[1.02] active:scale-[0.98]"
                   style={{ backgroundColor: '#185df1' }}
                 >
                   <MessageSquare className="w-3.5 h-3.5 shrink-0" />
@@ -481,7 +481,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                 </a>
                 <a
                   href="tel:0888358363"
-                  className="py-2.5 px-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[10px] sm:text-[11px] uppercase flex items-center justify-center gap-1.5 shadow-lg transition-all hover:scale-[1.02] active:scale-[0.98]"
+                  className="py-2.5 px-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-[12px] sm:text-[12px] uppercase flex items-center justify-center gap-1.5 shadow-lg transition-all hover:scale-[1.02] active:scale-[0.98]"
                 >
                   <Phone className="w-3.5 h-3.5 shrink-0" />
                   <div className="flex flex-col items-center leading-tight">
@@ -514,7 +514,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                   <h4 className="font-black text-xs md:text-sm uppercase text-slate-900 leading-tight">
                     Mã QR Chuyển Khoản Chi Tiết
                   </h4>
-                  <span className="text-[10px] text-slate-500 font-bold">
+                  <span className="text-[12px] text-slate-500 font-bold">
                     Quét nhanh bằng ứng dụng ngân hàng bất kỳ
                   </span>
                 </div>
@@ -539,42 +539,42 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
 
             <div className="w-full bg-slate-50 rounded-2xl p-3.5 space-y-2 text-xs border border-slate-200/80">
               <div className="flex items-center justify-between">
-                <span className="text-slate-500 font-bold uppercase text-[10px]">Ngân hàng:</span>
+                <span className="text-slate-500 font-bold uppercase text-[12px]">Ngân hàng:</span>
                 <span className="font-black text-slate-900">BIDV - PGD Tân Uyên</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-slate-500 font-bold uppercase text-[10px]">Chủ tài khoản:</span>
+                <span className="text-slate-500 font-bold uppercase text-[12px]">Chủ tài khoản:</span>
                 <span className="font-black text-slate-900 uppercase">NGUYEN THANH LIEM</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-slate-500 font-bold uppercase text-[10px]">Số tài khoản:</span>
+                <span className="text-slate-500 font-bold uppercase text-[12px]">Số tài khoản:</span>
                 <div className="flex items-center gap-1.5">
                   <span className="font-mono font-black text-sm text-indigo-700">3627058363</span>
                   <button
                     type="button"
                     onClick={() => handleCopy('3627058363', 'stk')}
-                    className="px-2 py-0.5 rounded bg-indigo-100 text-indigo-700 text-[10px] font-bold cursor-pointer hover:bg-indigo-200 transition-colors"
+                    className="px-2 py-0.5 rounded bg-indigo-100 text-indigo-700 text-[12px] font-bold cursor-pointer hover:bg-indigo-200 transition-colors"
                   >
                     {copiedField === 'stk' ? '✓ Đã copy' : 'Copy'}
                   </button>
                 </div>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-slate-500 font-bold uppercase text-[10px]">Số tiền:</span>
+                <span className="text-slate-500 font-bold uppercase text-[12px]">Số tiền:</span>
                 <span className="font-mono font-black text-sm text-rose-600 bg-rose-50 px-2 py-0.5 rounded border border-rose-200">
                   {currentAmountFormatted}
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-slate-500 font-bold uppercase text-[10px]">Nội dung:</span>
+                <span className="text-slate-500 font-bold uppercase text-[12px]">Nội dung:</span>
                 <div className="flex items-center gap-1.5">
-                  <span className="font-mono font-bold text-[11px] text-slate-800 bg-white px-2 py-0.5 rounded border border-slate-200">
+                  <span className="font-mono font-bold text-[12px] text-slate-800 bg-white px-2 py-0.5 rounded border border-slate-200">
                     {currentTransferContent}
                   </span>
                   <button
                     type="button"
                     onClick={() => handleCopy(currentTransferContent, 'nd')}
-                    className="px-2 py-0.5 rounded bg-slate-200 text-slate-700 text-[10px] font-bold cursor-pointer hover:bg-slate-300 transition-colors"
+                    className="px-2 py-0.5 rounded bg-slate-200 text-slate-700 text-[12px] font-bold cursor-pointer hover:bg-slate-300 transition-colors"
                   >
                     {copiedField === 'nd' ? '✓ Đã copy' : 'Copy'}
                   </button>

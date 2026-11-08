@@ -333,7 +333,7 @@ export const AttendanceChartsView: React.FC<AttendanceChartsProps> = ({
       <div className="pb-3 border-b border-slate-100">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
           <div className="flex items-center gap-3 min-w-0">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center font-bold text-lg shadow-xs shrink-0">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-600 to-purple-600 text-white flex items-center justify-center font-bold text-lg shadow-xs shrink-0">
               <BarChart3 className="w-5 h-5 text-white" />
             </div>
             <div>
@@ -341,7 +341,7 @@ export const AttendanceChartsView: React.FC<AttendanceChartsProps> = ({
                 <h3 className="text-sm md:text-base font-black uppercase text-slate-900 tracking-wide">
                   THỐNG KÊ & BIỂU ĐỒ ĐỐI CHIẾU CHUYÊN CẦN - BÁN TRÚ
                 </h3>
-                <span className="px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200 text-[11px] font-bold">
+                <span className="px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200 text-[12px] font-bold">
                   Tổng hợp 4 kỳ
                 </span>
               </div>
@@ -353,7 +353,7 @@ export const AttendanceChartsView: React.FC<AttendanceChartsProps> = ({
 
           {/* Chọn khổ giấy xuất PDF */}
           <div className="flex items-center gap-2 self-start md:self-auto shrink-0 bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200">
-            <span className="text-[11px] font-bold text-slate-500">Khổ PDF:</span>
+            <span className="text-[12px] font-bold text-slate-500">Khổ PDF:</span>
             <div className="flex items-center bg-white p-0.5 rounded-lg border border-slate-200">
               <button
                 type="button"
@@ -446,7 +446,7 @@ export const AttendanceChartsView: React.FC<AttendanceChartsProps> = ({
             type="button"
             onClick={() => handleExportChartsPng()}
             disabled={isExportingPng || isExportingPdf}
-            className="px-3.5 py-2 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 disabled:opacity-50 text-white rounded-xl text-xs font-black flex items-center gap-1.5 shadow-xs transition-all hover-zoom-btn cursor-pointer uppercase"
+            className="px-3.5 py-2 bg-gradient-to-r from-teal-700 to-emerald-700 hover:from-teal-800 hover:to-emerald-800 disabled:opacity-50 text-white rounded-xl text-xs font-black flex items-center gap-1.5 shadow-xs transition-all hover-zoom-btn cursor-pointer uppercase"
             title={`Xuất biểu đồ & bảng đối chiếu ra file ảnh PNG độ nét cao (${pdfOrientation === 'landscape' ? 'Khổ Ngang' : 'Khổ Dọc'})`}
           >
             <ImageIcon className="w-3.5 h-3.5" />
@@ -498,7 +498,7 @@ export const AttendanceChartsView: React.FC<AttendanceChartsProps> = ({
       {/* 3. Dải Thông Tin Công Thức & Số Liệu Nhanh Gọn Gàng */}
       <div className="bg-gradient-to-r from-emerald-50/80 via-teal-50/60 to-blue-50/60 border border-emerald-200/80 rounded-2xl p-3.5 flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-2xs">
         <div className="space-y-1">
-          <div className="text-[10px] font-black uppercase text-emerald-900 tracking-wider flex items-center gap-1.5">
+          <div className="text-[12px] font-black uppercase text-emerald-900 tracking-wider flex items-center gap-1.5">
             <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
             <span>CÔNG THỨC HIỂN THỊ TỶ LỆ CHUYÊN CẦN CHUẨN:</span>
           </div>
@@ -509,13 +509,13 @@ export const AttendanceChartsView: React.FC<AttendanceChartsProps> = ({
 
         <div className="flex flex-wrap items-center gap-2.5 text-xs shrink-0">
           <div className="bg-white px-3 py-1.5 rounded-xl border border-emerald-200 shadow-2xs flex items-center gap-2">
-            <span className="text-[11px] font-bold text-slate-500">Chuyên cần hôm nay:</span>
+            <span className="text-[12px] font-bold text-slate-500">Chuyên cần hôm nay:</span>
             <span className="font-mono font-black text-emerald-800 text-sm">
               {stats.today.present}/{stats.today.totalStudents} em ({stats.today.attendanceRate}%)
             </span>
           </div>
           <div className="bg-white px-3 py-1.5 rounded-xl border border-indigo-200 shadow-2xs flex items-center gap-2">
-            <span className="text-[11px] font-bold text-slate-500">Bán trú hôm nay:</span>
+            <span className="text-[12px] font-bold text-slate-500">Bán trú hôm nay:</span>
             <span className="font-mono font-black text-indigo-800 text-sm">
               {stats.today.boardingEating}/{stats.today.totalStudents} suất ({stats.today.boardingRate}%)
             </span>
@@ -535,7 +535,7 @@ export const AttendanceChartsView: React.FC<AttendanceChartsProps> = ({
                 <span className="text-xs font-black text-slate-800 uppercase tracking-wide block">
                   Biểu Đồ Cột So Sánh 4 Kỳ (Chuyên Cần & Bán Trú):
                 </span>
-                <span className="text-[10px] font-bold bg-indigo-100 text-indigo-800 px-2 py-0.5 rounded-full">
+                <span className="text-[12px] font-bold bg-indigo-100 text-indigo-800 px-2 py-0.5 rounded-full">
                   Cột đứng %
                 </span>
               </div>
@@ -547,7 +547,7 @@ export const AttendanceChartsView: React.FC<AttendanceChartsProps> = ({
                     <div className="h-44 w-full bg-slate-100/90 rounded-2xl p-2 flex items-end justify-center gap-2 border border-slate-200 shadow-inner">
                       {/* Bar 1: Đi học */}
                       <div className="w-1/2 h-full flex flex-col justify-end items-center">
-                        <span className="text-[10px] font-mono font-black text-emerald-800 mb-1">{p.data.attendanceRate}%</span>
+                        <span className="text-[12px] font-mono font-black text-emerald-800 mb-1">{p.data.attendanceRate}%</span>
                         <div 
                           className="w-full bg-gradient-to-t from-emerald-600 to-teal-400 rounded-t-xl transition-all duration-700 shadow-sm"
                           style={{ height: `${Math.max(12, p.data.attendanceRate)}%` }}
@@ -556,7 +556,7 @@ export const AttendanceChartsView: React.FC<AttendanceChartsProps> = ({
                       </div>
                       {/* Bar 2: Bán trú */}
                       <div className="w-1/2 h-full flex flex-col justify-end items-center">
-                        <span className="text-[10px] font-mono font-black text-indigo-800 mb-1">{p.data.boardingRate}%</span>
+                        <span className="text-[12px] font-mono font-black text-indigo-800 mb-1">{p.data.boardingRate}%</span>
                         <div 
                           className="w-full bg-gradient-to-t from-indigo-600 to-purple-400 rounded-t-xl transition-all duration-700 shadow-sm"
                           style={{ height: `${Math.max(12, p.data.boardingRate)}%` }}
@@ -564,12 +564,12 @@ export const AttendanceChartsView: React.FC<AttendanceChartsProps> = ({
                         />
                       </div>
                     </div>
-                    <span className="text-[11px] font-black text-slate-800 uppercase">{p.title}</span>
+                    <span className="text-[12px] font-black text-slate-800 uppercase">{p.title}</span>
                   </div>
                 ))}
               </div>
 
-              <div className="flex items-center justify-center gap-6 pt-1 text-[11px] font-bold">
+              <div className="flex items-center justify-center gap-6 pt-1 text-[12px] font-bold">
                 <span className="flex items-center gap-1.5 text-emerald-700">
                   <span className="w-3.5 h-3.5 rounded-md bg-emerald-500 shadow-2xs" />
                   <span>% Đi học chuyên cần</span>
@@ -608,7 +608,7 @@ export const AttendanceChartsView: React.FC<AttendanceChartsProps> = ({
                 </div>
               </div>
 
-              <div className="text-[11px] text-slate-600 bg-white p-3 rounded-xl border border-slate-200 text-center font-medium mt-3 shadow-2xs">
+              <div className="text-[12px] text-slate-600 bg-white p-3 rounded-xl border border-slate-200 text-center font-medium mt-3 shadow-2xs">
                 💡 Tổ có tỷ lệ chuyên cần 100% xứng đáng được nhận xu thi đua cuối tuần!
               </div>
             </div>
@@ -668,7 +668,7 @@ export const AttendanceChartsView: React.FC<AttendanceChartsProps> = ({
                   <span className="text-2xl font-black font-mono text-slate-900 leading-none">
                     {stats.today.attendanceRate}%
                   </span>
-                  <span className="text-[10px] font-bold text-slate-500 uppercase mt-0.5">
+                  <span className="text-[12px] font-bold text-slate-500 uppercase mt-0.5">
                     Có mặt
                   </span>
                 </div>
@@ -738,7 +738,7 @@ export const AttendanceChartsView: React.FC<AttendanceChartsProps> = ({
                   <span className="text-2xl font-black font-mono text-emerald-800 leading-none">
                     {stats.today.boardingRate}%
                   </span>
-                  <span className="text-[10px] font-bold text-emerald-600 uppercase mt-0.5">
+                  <span className="text-[12px] font-bold text-emerald-700 uppercase mt-0.5">
                     Ăn Bán Trú
                   </span>
                 </div>
@@ -772,7 +772,7 @@ export const AttendanceChartsView: React.FC<AttendanceChartsProps> = ({
             <span className="text-xs font-black text-slate-800 uppercase tracking-wide">
               Biểu Đồ Đường Diễn Biến Tỷ Lệ Đi Học & Ăn Bán Trú (Từ Thứ 2 đến Thứ 6):
             </span>
-            <span className="text-[11px] font-bold text-emerald-800 bg-emerald-100 px-2.5 py-0.5 rounded-full">
+            <span className="text-[12px] font-bold text-emerald-800 bg-emerald-100 px-2.5 py-0.5 rounded-full">
               Tuần hiện tại
             </span>
           </div>
@@ -898,7 +898,7 @@ export const AttendanceChartsView: React.FC<AttendanceChartsProps> = ({
             <span className="text-xs font-black text-slate-800 uppercase tracking-wide">
               Đối Chiếu Chuyên Cần & Bán Trú Giữa Các Lớp Trong Trường:
             </span>
-            <span className="text-[11px] font-bold text-indigo-800 bg-indigo-100 px-2.5 py-0.5 rounded-full">
+            <span className="text-[12px] font-bold text-indigo-800 bg-indigo-100 px-2.5 py-0.5 rounded-full">
               {classes.length} Lớp học
             </span>
           </div>

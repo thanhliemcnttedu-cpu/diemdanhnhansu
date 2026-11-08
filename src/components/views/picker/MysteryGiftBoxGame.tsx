@@ -191,7 +191,7 @@ export const MysteryGiftBoxGame: React.FC = () => {
           <button
             type="button"
             onClick={() => setCallMode('random')}
-            className={`px-2 sm:px-3 py-1.5 rounded-xl text-[11px] sm:text-xs font-black transition-all cursor-pointer uppercase text-center ${
+            className={`px-2 sm:px-3 py-1.5 rounded-xl text-[12px] sm:text-xs font-black transition-all cursor-pointer uppercase text-center ${
               callMode === 'random' ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'
             }`}
           >
@@ -201,8 +201,8 @@ export const MysteryGiftBoxGame: React.FC = () => {
           <button
             type="button"
             onClick={() => setCallMode('coins')}
-            className={`px-2 sm:px-3 py-1.5 rounded-xl text-[11px] sm:text-xs font-black transition-all cursor-pointer uppercase text-center ${
-              callMode === 'coins' ? 'bg-amber-600 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'
+            className={`px-2 sm:px-3 py-1.5 rounded-xl text-[12px] sm:text-xs font-black transition-all cursor-pointer uppercase text-center ${
+              callMode === 'coins' ? 'bg-amber-700 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'
             }`}
           >
             <span className="hidden sm:inline">2. Gọi + Tặng Xu</span>
@@ -211,7 +211,7 @@ export const MysteryGiftBoxGame: React.FC = () => {
           <button
             type="button"
             onClick={() => setCallMode('quiz')}
-            className={`px-2 sm:px-3 py-1.5 rounded-xl text-[11px] sm:text-xs font-black transition-all cursor-pointer uppercase text-center ${
+            className={`px-2 sm:px-3 py-1.5 rounded-xl text-[12px] sm:text-xs font-black transition-all cursor-pointer uppercase text-center ${
               callMode === 'quiz' ? 'bg-purple-600 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'
             }`}
           >
@@ -222,7 +222,7 @@ export const MysteryGiftBoxGame: React.FC = () => {
 
         {/* Duration selection (4s) */}
         <div className="flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-2xl border border-slate-200">
-          <span className="text-[11px] font-bold text-slate-500">Thời gian mở:</span>
+          <span className="text-[12px] font-bold text-slate-500">Thời gian mở:</span>
           <select
             value={spinDuration}
             onChange={(e) => setSpinDuration(parseInt(e.target.value) || 4)}
@@ -269,7 +269,7 @@ export const MysteryGiftBoxGame: React.FC = () => {
                   <div className="absolute inset-x-0 h-4 bg-amber-300/80 shadow-xs" />
 
                   {/* Ribbon Bow on top */}
-                  <div className="absolute -top-3 w-8 h-6 bg-amber-300 rounded-full shadow-md flex items-center justify-center text-amber-900 text-[10px] font-black">
+                  <div className="absolute -top-3 w-8 h-6 bg-amber-300 rounded-full shadow-md flex items-center justify-center text-amber-900 text-[12px] font-black">
                     🎀
                   </div>
 
@@ -292,7 +292,7 @@ export const MysteryGiftBoxGame: React.FC = () => {
                 </div>
 
                 <div className="mt-2.5 text-center">
-                  <div className="text-[11px] font-black text-white truncate max-w-[110px] drop-shadow">
+                  <div className="text-[12px] font-black text-white truncate max-w-[110px] drop-shadow">
                     {isWinningBox && winner ? winner.name : box.label}
                   </div>
                 </div>
@@ -306,7 +306,7 @@ export const MysteryGiftBoxGame: React.FC = () => {
           <button
             onClick={startOpenGift}
             disabled={isOpening || activeList.length === 0}
-            className="w-full py-4 px-6 bg-gradient-to-r from-rose-500 via-amber-600 to-indigo-600 hover:from-rose-600 hover:to-indigo-700 text-white font-black text-sm md:text-base rounded-2xl shadow-lg shadow-rose-500/30 flex items-center justify-center gap-2.5 transition-all hover-zoom-btn disabled:opacity-50 uppercase cursor-pointer"
+            className="w-full py-4 px-6 bg-gradient-to-r from-rose-600 via-amber-700 to-indigo-600 hover:from-rose-700 hover:to-indigo-700 text-white font-black text-sm md:text-base rounded-2xl shadow-lg shadow-rose-500/30 flex items-center justify-center gap-2.5 transition-all hover-zoom-btn disabled:opacity-50 uppercase cursor-pointer"
           >
             <Gift className={`w-5 h-5 ${isOpening ? 'animate-spin' : ''}`} />
             <span>{isOpening ? `🎁 ĐANG MỞ HỘP QUÀ BÍ MẬT (${spinDuration}S)...` : `🎁 BẤM MỞ HỘP QUÀ BÍ MẬT (${spinDuration} GIÂY)`}</span>
@@ -325,7 +325,7 @@ export const MysteryGiftBoxGame: React.FC = () => {
                   alt={winner.name} 
                   className="w-16 h-16 md:w-20 md:h-20 rounded-full aspect-square object-cover object-center border-4 border-rose-400 bg-white shadow-lg"
                 />
-                <span className="absolute -bottom-1 -right-1 px-2 py-0.5 bg-rose-600 text-white font-black text-[10px] rounded-full">
+                <span className="absolute -bottom-1 -right-1 px-2 py-0.5 bg-rose-600 text-white font-black text-[12px] rounded-full">
                   #{winner.stt}
                 </span>
               </div>
@@ -365,8 +365,8 @@ export const MysteryGiftBoxGame: React.FC = () => {
                     disabled={hasAwarded}
                     className={`px-5 py-2.5 rounded-2xl text-xs font-black shadow-md flex items-center gap-1.5 transition-all hover-zoom-btn uppercase ${
                       hasAwarded
-                        ? 'bg-emerald-600 text-white'
-                        : 'bg-rose-500 hover:bg-rose-600 text-white'
+                        ? 'bg-emerald-700 text-white'
+                        : 'bg-rose-600 hover:bg-rose-700 text-white'
                     }`}
                   >
                     {hasAwarded ? <Check className="w-4 h-4" /> : <Award className="w-4 h-4" />}
@@ -396,11 +396,11 @@ export const MysteryGiftBoxGame: React.FC = () => {
             <div className="bg-white rounded-2xl p-4 md:p-5 border border-rose-200 shadow-sm space-y-3 mt-3">
               <div className="flex items-center justify-between pb-2 border-b border-slate-100">
                 <div className="flex items-center gap-2">
-                  <span className="px-2 py-0.5 rounded-md bg-rose-100 text-rose-800 text-[10px] font-black uppercase">
+                  <span className="px-2 py-0.5 rounded-md bg-rose-100 text-rose-800 text-[12px] font-black uppercase">
                     {currentQuestion.type === 'multiple_choice' ? '📝 Câu hỏi Trắc nghiệm' : '🗣️ Câu hỏi Bằng lời'}
                   </span>
                   <span className="text-xs font-bold text-slate-600">{currentQuestion.subject || 'Tổng hợp'}</span>
-                  <span className="text-xs font-bold text-amber-600">Thưởng +{currentQuestion.pointsReward || 2} xu</span>
+                  <span className="text-xs font-bold text-amber-700">Thưởng +{currentQuestion.pointsReward || 2} xu</span>
                 </div>
 
                 <div className="flex items-center gap-1.5">
@@ -410,7 +410,7 @@ export const MysteryGiftBoxGame: React.FC = () => {
                       setEditTargetQuestion(currentQuestion);
                       setIsQuestionBankOpen(true);
                     }}
-                    className="text-[11px] font-bold text-amber-800 hover:text-amber-950 bg-amber-50 hover:bg-amber-100 border border-amber-200 px-2 py-1 rounded-lg flex items-center gap-1 cursor-pointer transition-colors"
+                    className="text-[12px] font-bold text-amber-800 hover:text-amber-950 bg-amber-50 hover:bg-amber-100 border border-amber-200 px-2 py-1 rounded-lg flex items-center gap-1 cursor-pointer transition-colors"
                   >
                     <Edit3 className="w-3 h-3 text-amber-600" />
                     <span>Sửa câu hỏi</span>
@@ -418,7 +418,7 @@ export const MysteryGiftBoxGame: React.FC = () => {
                   <button
                     type="button"
                     onClick={handlePickAnotherQuestion}
-                    className="text-[11px] font-bold text-rose-600 hover:underline px-2 py-1 cursor-pointer"
+                    className="text-[12px] font-bold text-rose-600 hover:underline px-2 py-1 cursor-pointer"
                   >
                     Đổi câu khác
                   </button>
@@ -428,7 +428,7 @@ export const MysteryGiftBoxGame: React.FC = () => {
                       setEditTargetQuestion(null);
                       setIsQuestionBankOpen(true);
                     }}
-                    className="text-[11px] font-bold text-slate-500 hover:text-slate-800 px-2 py-1 cursor-pointer"
+                    className="text-[12px] font-bold text-slate-500 hover:text-slate-800 px-2 py-1 cursor-pointer"
                   >
                     Kho đề
                   </button>
@@ -495,7 +495,7 @@ export const MysteryGiftBoxGame: React.FC = () => {
                       )}
                       {currentQuestion.answerImage && (
                         <div className="pt-1">
-                          <span className="text-[10px] font-black uppercase text-slate-600 block mb-1">Ảnh minh họa đáp án:</span>
+                          <span className="text-[12px] font-black uppercase text-slate-600 block mb-1">Ảnh minh họa đáp án:</span>
                           <img
                             src={currentQuestion.answerImage}
                             alt="Ảnh đáp án"
@@ -524,7 +524,7 @@ export const MysteryGiftBoxGame: React.FC = () => {
                       onClick={() => handleAwardCoins(currentQuestion.pointsReward || 2)}
                       disabled={hasAwarded}
                       className={`px-4 py-1.5 rounded-xl text-xs font-black shadow-xs flex items-center gap-1 transition-all ${
-                        hasAwarded ? 'bg-emerald-600 text-white' : 'bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer'
+                        hasAwarded ? 'bg-emerald-700 text-white' : 'bg-emerald-700 hover:bg-emerald-800 text-white cursor-pointer'
                       }`}
                     >
                       <Check className="w-3.5 h-3.5" />
@@ -541,7 +541,7 @@ export const MysteryGiftBoxGame: React.FC = () => {
                       )}
                       {currentQuestion.answerImage && (
                         <div className="pt-1">
-                          <span className="text-[10px] font-black uppercase text-amber-900 block mb-1">Ảnh minh họa đáp án giáo viên:</span>
+                          <span className="text-[12px] font-black uppercase text-amber-900 block mb-1">Ảnh minh họa đáp án giáo viên:</span>
                           <img
                             src={currentQuestion.answerImage}
                             alt="Ảnh đáp án giáo viên"

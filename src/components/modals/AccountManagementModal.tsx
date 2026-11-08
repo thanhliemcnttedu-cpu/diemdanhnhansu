@@ -1491,10 +1491,10 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="bg-gradient-to-r from-sky-600 via-indigo-600 to-indigo-500 p-5 md:px-7 md:py-5 text-white flex items-center justify-between shrink-0">
+        <div className="bg-gradient-to-r from-sky-700 via-indigo-600 to-indigo-600 p-5 md:px-7 md:py-5 text-white flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
             <div className={`w-11 h-11 rounded-2xl flex items-center justify-center shadow-lg font-black shrink-0 ${
-              isSuperAdmin ? 'bg-amber-400 text-slate-950' : (isSchoolAdmin ? 'bg-blue-500 text-white' : 'bg-purple-500 text-white')
+              isSuperAdmin ? 'bg-amber-400 text-slate-950' : (isSchoolAdmin ? 'bg-blue-600 text-white' : 'bg-purple-600 text-white')
             }`}>
               {isSuperAdmin ? <Crown className="w-6 h-6" /> : (isSchoolAdmin ? <School className="w-6 h-6" /> : <Users className="w-6 h-6" />)}
             </div>
@@ -1505,8 +1505,8 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                     ? 'Quản Trị Hệ Thống Cấp Cao (Admin Super)' 
                     : (isSchoolAdmin ? `Quản Trị Nhà Trường: ${currentSchoolScope}` : 'Quản Trị Tài Khoản Cá Nhân')}
                 </h2>
-                <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-full tracking-wider ${
-                  isSuperAdmin ? 'bg-rose-500 text-white' : (isSchoolAdmin ? 'bg-blue-600 text-white' : 'bg-purple-600 text-white')
+                <span className={`text-[12px] font-black uppercase px-2 py-0.5 rounded-full tracking-wider ${
+                  isSuperAdmin ? 'bg-rose-600 text-white' : (isSchoolAdmin ? 'bg-blue-600 text-white' : 'bg-purple-600 text-white')
                 }`}>
                   {isSuperAdmin ? 'Admin Super' : (isSchoolAdmin ? 'Quản Trị Trường' : 'Quản Trị Cá Nhân')}
                 </span>
@@ -1589,7 +1589,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
               onClick={() => setActiveTab('import')}
               className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 uppercase ${
                 activeTab === 'import'
-                  ? 'bg-emerald-600 text-white shadow-xs shadow-emerald-600/20'
+                  ? 'bg-emerald-700 text-white shadow-xs shadow-emerald-600/20'
                   : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
               }`}
             >
@@ -1629,7 +1629,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                 }}
                 className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 uppercase ${
                   activeTab === 'registrations'
-                    ? 'bg-amber-600 text-white shadow-xs shadow-amber-600/20'
+                    ? 'bg-amber-700 text-white shadow-xs shadow-amber-600/20'
                     : 'text-amber-800 bg-amber-50 hover:bg-amber-100 border border-amber-200'
                 }`}
               >
@@ -1669,7 +1669,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                 showNotify(res.success ? 'success' : 'error', res.success ? `☁️ ${res.message}` : `☁️ ${res.message}`);
                 onRefreshUsers();
               }}
-              className="px-3 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-[11px] font-black shrink-0"
+              className="px-3 py-1.5 rounded-xl bg-amber-700 hover:bg-amber-800 text-white text-[12px] font-black shrink-0"
             >
               LƯU LÊN DRIVE NGAY
             </button>
@@ -1746,7 +1746,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
             <div className="flex flex-col lg:flex-row gap-5 flex-1 min-h-0">
               {/* Left Column: Tree View */}
               <div className="lg:w-1/3 flex flex-col p-4 rounded-2xl bg-white text-slate-800 border border-slate-200 space-y-3 overflow-y-auto">
-                <div className="text-xs font-black text-amber-600 uppercase flex items-center gap-2">
+                <div className="text-xs font-black text-amber-700 uppercase flex items-center gap-2">
                   <FolderTree className="w-4 h-4" />
                   <span>SƠ ĐỒ CÂY QUẢN TRỊ (SUPER ADMIN)</span>
                 </div>
@@ -1771,12 +1771,12 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                           <span>📁 Nhánh 1: Nhà Trường ({schoolsList.length})</span>
                         </span>
                         {selectedAdminBranch === 'branch1' && (
-                          <span className="text-[9px] bg-blue-600 text-white px-1.5 py-0.2 rounded-full font-sans font-bold">ĐANG CHỌN</span>
+                          <span className="text-[12px] bg-blue-600 text-white px-1.5 py-0.2 rounded-full font-sans font-bold">ĐANG CHỌN</span>
                         )}
                       </div>
-                      <div className="pl-4 space-y-1 text-slate-300 text-[11px]">
+                      <div className="pl-4 space-y-1 text-slate-300 text-[12px]">
                         {schoolsList.length === 0 ? (
-                          <div className="py-1 text-[10.5px] text-slate-400 italic">
+                          <div className="py-1 text-[12px] text-slate-400 italic">
                             Chưa có trường học nào. Nhấn "+ Khởi tạo CSDL Trường Mới".
                           </div>
                         ) : (
@@ -1788,7 +1788,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                                   <span>├── 🏫</span>
                                   <span className="font-bold text-slate-200 truncate" title={s.name}>{s.name}</span>
                                 </div>
-                                <div className="pl-5 text-[10px] text-slate-400">
+                                <div className="pl-5 text-[12px] text-slate-400">
                                   Mã: {s.code} • GV: {countGV}
                                 </div>
                               </div>
@@ -1812,15 +1812,15 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                           <span>👤 Nhánh 2: GV Cá Nhân ({guestUsers.length})</span>
                         </span>
                         {selectedAdminBranch === 'branch2' && (
-                          <span className="text-[9px] bg-purple-600 text-white px-1.5 py-0.2 rounded-full font-sans font-bold">ĐANG CHỌN</span>
+                          <span className="text-[12px] bg-purple-600 text-white px-1.5 py-0.2 rounded-full font-sans font-bold">ĐANG CHỌN</span>
                         )}
                       </div>
-                      <div className="pl-4 space-y-1 text-slate-300 text-[11px]">
+                      <div className="pl-4 space-y-1 text-slate-300 text-[12px]">
                         <div className="flex flex-col py-1">
                           <span>└── 🛡️ Phụ trách: <span className="text-amber-300 font-bold">@adminquantri</span></span>
                         </div>
                         {guestUsers.length === 0 ? (
-                          <div className="py-1 text-[10.5px] text-slate-400 italic">
+                          <div className="py-1 text-[12px] text-slate-400 italic">
                             Chưa có GV cá nhân nào. Nhấn "+ Thêm GV Cá Nhân" để tạo.
                           </div>
                         ) : (
@@ -1831,7 +1831,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                                   <span>├── 👨‍🏫</span>
                                   <span className="font-bold text-slate-200 truncate" title={u.fullName}>{u.fullName}</span>
                                 </div>
-                                <div className="pl-5 text-[10px] text-slate-400">
+                                <div className="pl-5 text-[12px] text-slate-400">
                                   TK: @{u.username} • {u.subjectName || (u.role === 'homeroom' ? `CN ${u.assignedClassName || ''}` : 'GV Bộ môn')}
                                 </div>
                               </div>
@@ -1880,7 +1880,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                   <div className="flex-1 border border-slate-200 rounded-2xl overflow-hidden shadow-2xs bg-white flex flex-col min-h-[250px]">
                     <div className="flex-1 overflow-auto">
                       <table className="w-full text-left border-collapse text-xs">
-                        <thead className="bg-slate-50 border-b border-slate-200 text-[11px] font-black text-slate-500 uppercase tracking-wider sticky top-0 z-10">
+                        <thead className="bg-slate-50 border-b border-slate-200 text-[12px] font-black text-slate-500 uppercase tracking-wider sticky top-0 z-10">
                           <tr>
                             <th className="py-2 px-2 text-center w-12">STT</th>
                             <th className="py-2 px-2">Tên Trường Học</th>
@@ -1894,7 +1894,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                             <tr>
                               <td colSpan={5} className="py-12 px-4 text-center">
                                 <div className="flex flex-col items-center justify-center max-w-sm mx-auto text-center space-y-3">
-                                  <div className="w-12 h-12 rounded-2xl bg-rose-50 border border-rose-200 text-rose-500 flex items-center justify-center shadow-xs">
+                                  <div className="w-12 h-12 rounded-2xl bg-rose-50 border border-rose-200 text-rose-600 flex items-center justify-center shadow-xs">
                                     <School className="w-6 h-6" />
                                   </div>
                                   <div>
@@ -1929,20 +1929,20 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                                   </div>
                                   <div className="mt-0.5 flex items-center gap-1.5 flex-wrap">
                                     {hasAdminAccount ? (
-                                      <span className="inline-flex items-center gap-1 text-[10px] font-mono font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-md px-1.5 py-0.5">
+                                      <span className="inline-flex items-center gap-1 text-[12px] font-mono font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-md px-1.5 py-0.5">
                                         <CheckCircle2 className="w-3 h-3" />
                                         TK: @{school.adminUsername}
                                       </span>
                                     ) : (
                                       <>
-                                        <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-200 rounded-md px-1.5 py-0.5">
+                                        <span className="inline-flex items-center gap-1 text-[12px] font-bold text-amber-700 bg-amber-50 border border-amber-200 rounded-md px-1.5 py-0.5">
                                           <AlertCircle className="w-3 h-3" />
                                           Chưa cấp tài khoản BGH
                                         </span>
                                         <button
                                           type="button"
                                           onClick={() => handleOpenProvisionModal(school)}
-                                          className="inline-flex items-center gap-0.5 text-[10px] font-black text-white bg-rose-500 hover:bg-rose-600 rounded-md px-1.5 py-0.5 transition-colors shadow-sm cursor-pointer"
+                                          className="inline-flex items-center gap-0.5 text-[12px] font-black text-white bg-rose-600 hover:bg-rose-700 rounded-md px-1.5 py-0.5 transition-colors shadow-sm cursor-pointer"
                                           title="Cấp tài khoản Quản trị BGH cho trường này"
                                         >
                                           <Plus className="w-3 h-3" />
@@ -1960,7 +1960,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                                       <button
                                         type="button"
                                         onClick={() => handleOpenProvisionModal(school)}
-                                        className="p-1.5 rounded-lg text-rose-500 hover:bg-rose-50 border border-transparent hover:border-rose-200 transition-colors"
+                                        className="p-1.5 rounded-lg text-rose-600 hover:bg-rose-50 border border-transparent hover:border-rose-200 transition-colors"
                                         title="Cấp tài khoản Ban Giám Hiệu"
                                       >
                                         <UserPlus className="w-3.5 h-3.5" />
@@ -1993,12 +1993,12 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                                       className={`p-1.5 rounded-lg border transition-all ${
                                         deletingSchoolId === school.id
                                           ? 'bg-amber-50 text-amber-700 border-amber-300 cursor-not-allowed shadow-none'
-                                          : 'text-rose-500 hover:bg-rose-50 border-transparent hover:border-rose-200'
+                                          : 'text-rose-600 hover:bg-rose-50 border-transparent hover:border-rose-200'
                                       }`}
                                       title={deletingSchoolId === school.id ? "Đang dọn dẹp dữ liệu..." : "Xóa CSDL trường này"}
                                     >
                                       {deletingSchoolId === school.id ? (
-                                        <span className="flex items-center gap-1.5 text-[11px] font-bold text-amber-700 px-1.5 py-0.5 animate-pulse">
+                                        <span className="flex items-center gap-1.5 text-[12px] font-bold text-amber-700 px-1.5 py-0.5 animate-pulse">
                                           <RefreshCw className="w-3.5 h-3.5 animate-spin" />
                                           <span>Đang dọn dẹp...</span>
                                         </span>
@@ -2021,7 +2021,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                   <div className="flex-1 border border-slate-200 rounded-2xl overflow-hidden shadow-2xs bg-white flex flex-col min-h-[250px]">
                     <div className="flex-1 overflow-auto">
                       <table className="w-full text-left border-collapse text-xs">
-                        <thead className="bg-slate-50 border-b border-slate-200 text-[11px] font-black text-slate-500 uppercase tracking-wider sticky top-0 z-10">
+                        <thead className="bg-slate-50 border-b border-slate-200 text-[12px] font-black text-slate-500 uppercase tracking-wider sticky top-0 z-10">
                           <tr>
                             <th className="py-2 px-2 text-center w-12">STT</th>
                             <th className="py-2 px-2">Họ & Tên Giáo Viên</th>
@@ -2045,7 +2045,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                                       Chưa có Giáo Viên Cá Nhân nào (Nhánh 2)
                                     </h4>
                                     <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-                                      Tài khoản quản trị phụ trách: <strong className="text-amber-600">@adminquantri</strong>. Hãy thêm giáo viên cá nhân đầu tiên để bắt đầu vận hành Nhánh 2!
+                                      Tài khoản quản trị phụ trách: <strong className="text-amber-700">@adminquantri</strong>. Hãy thêm giáo viên cá nhân đầu tiên để bắt đầu vận hành Nhánh 2!
                                     </p>
                                   </div>
                                   <button
@@ -2072,17 +2072,17 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                                     />
                                     <div>
                                       <div className="font-black text-slate-900">{u.fullName}</div>
-                                      <div className="text-[10px] text-purple-600 font-bold">Nhánh 2: GV Cá nhân</div>
+                                      <div className="text-[12px] text-purple-600 font-bold">Nhánh 2: GV Cá nhân</div>
                                     </div>
                                   </div>
                                 </td>
                                 <td className="py-2 px-2">
-                                  <code className="px-2 py-0.5 rounded-lg bg-slate-100 text-slate-800 font-mono font-bold text-[11px] border border-slate-200">
+                                  <code className="px-2 py-0.5 rounded-lg bg-slate-100 text-slate-800 font-mono font-bold text-[12px] border border-slate-200">
                                     @{u.username}
                                   </code>
                                 </td>
                                 <td className="py-2 px-2">
-                                  <code className="px-2 py-0.5 rounded-lg bg-red-50 text-red-700 font-mono font-bold text-[11px] border border-red-200">
+                                  <code className="px-2 py-0.5 rounded-lg bg-red-50 text-red-700 font-mono font-bold text-[12px] border border-red-200">
                                     {displayPassword(u)}
                                   </code>
                                 </td>
@@ -2097,7 +2097,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                                     <button
                                       type="button"
                                       onClick={() => handleQuickSwitch(u.username)}
-                                      className="px-2 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-[10.5px] border border-indigo-200 transition-colors"
+                                      className="px-2 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-[12px] border border-indigo-200 transition-colors"
                                       title="Đăng nhập trực tiếp vào không gian làm việc của GV"
                                     >
                                       Đăng nhập
@@ -2121,7 +2121,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                                     <button
                                       type="button"
                                       onClick={() => handleResetPassword(u)}
-                                      className="p-1.5 rounded-lg text-amber-600 hover:bg-amber-50 border border-transparent hover:border-amber-200 transition-colors"
+                                      className="p-1.5 rounded-lg text-amber-700 hover:bg-amber-50 border border-transparent hover:border-amber-200 transition-colors"
                                       title="Đặt lại mật khẩu cho giáo viên"
                                     >
                                       <KeyRound className="w-3.5 h-3.5" />
@@ -2129,7 +2129,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                                     <button
                                       type="button"
                                       onClick={() => handleDeleteUser(u)}
-                                      className="p-1.5 rounded-lg text-rose-500 hover:bg-rose-50 border border-transparent hover:border-rose-200 transition-colors"
+                                      className="p-1.5 rounded-lg text-rose-600 hover:bg-rose-50 border border-transparent hover:border-rose-200 transition-colors"
                                       title="Xóa tài khoản giáo viên này"
                                     >
                                       <Trash2 className="w-3.5 h-3.5" />
@@ -2192,7 +2192,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
               <div className="flex flex-wrap items-center gap-2">
                 <button
                   onClick={() => handleExportUsersToExcel(filteredUsers, 'TaiKhoan_TabHienTai')}
-                  className="flex items-center gap-1.5 px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl text-xs font-black uppercase shadow-xs transition-all hover-zoom-btn"
+                  className="flex items-center gap-1.5 px-3 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-2xl text-xs font-black uppercase shadow-xs transition-all hover-zoom-btn"
                   title="Xuất danh sách tài khoản theo Tab hiện tại thành file Excel"
                 >
                   <FileSpreadsheet className="w-3.5 h-3.5" />
@@ -2201,7 +2201,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
 
                 <button
                   onClick={() => handleExportUsersToExcel(allUsers, 'TaiKhoan_TatCa')}
-                  className="flex items-center gap-1.5 px-3 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-2xl text-xs font-black uppercase shadow-xs transition-all hover-zoom-btn"
+                  className="flex items-center gap-1.5 px-3 py-2 bg-teal-700 hover:bg-teal-800 text-white rounded-2xl text-xs font-black uppercase shadow-xs transition-all hover-zoom-btn"
                   title="Xuất danh sách toàn bộ tài khoản thành file Excel"
                 >
                   <FileSpreadsheet className="w-3.5 h-3.5" />
@@ -2277,7 +2277,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                       className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 cursor-pointer ${
                         isSelected
                           ? isDemo
-                            ? 'bg-amber-600 text-white shadow-xs'
+                            ? 'bg-amber-700 text-white shadow-xs'
                             : 'bg-blue-600 text-white shadow-xs'
                           : isDemo
                             ? 'text-slate-600 hover:text-amber-700'
@@ -2317,7 +2317,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                     Phạm vi quản trị: <strong>{currentSchoolScope}</strong> ({scopedUsers.length} tài khoản) • Bạn có toàn quyền quản lý, sắp xếp và lọc tài khoản giáo viên thuộc trường của mình.
                   </span>
                 </div>
-                <span className="text-[10px] uppercase font-black px-2 py-0.5 rounded-full bg-blue-200 text-blue-800 shrink-0">
+                <span className="text-[12px] uppercase font-black px-2 py-0.5 rounded-full bg-blue-200 text-blue-800 shrink-0">
                   Nội Bộ Trường
                 </span>
               </div>
@@ -2328,7 +2328,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
               <div className="flex flex-wrap items-center justify-between gap-3">
                 {/* 1. LỌC THEO KHỐI (1 ĐẾN 5) */}
                 <div className="flex flex-wrap items-center gap-1.5">
-                  <span className="text-[11px] font-black uppercase text-slate-400 flex items-center gap-1 mr-1">
+                  <span className="text-[12px] font-black uppercase text-slate-400 flex items-center gap-1 mr-1">
                     <Layers className="w-3.5 h-3.5 text-indigo-500" />
                     Lọc Khối:
                   </span>
@@ -2359,7 +2359,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                         title={`Lọc danh sách chỉ hiển thị giáo viên phụ trách Khối ${g}`}
                       >
                         <span>Khối {g}</span>
-                        <span className={`text-[10px] px-1 py-0.2 rounded-full font-bold ${
+                        <span className={`text-[12px] px-1 py-0.2 rounded-full font-bold ${
                           isActive ? 'bg-blue-700 text-white' : 'bg-slate-200 text-slate-600'
                         }`}>
                           {countInGrade}
@@ -2378,7 +2378,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                     title="Lọc tài khoản Giáo viên bộ môn, Ban Giám Hiệu, Quản trị không gán theo khối lớp cụ thể"
                   >
                     <span>Bộ Môn / Khác</span>
-                    <span className={`text-[10px] px-1 py-0.2 rounded-full font-bold ${
+                    <span className={`text-[12px] px-1 py-0.2 rounded-full font-bold ${
                       gradeFilter === 'other' ? 'bg-slate-100 text-slate-800' : 'bg-slate-200 text-slate-600'
                     }`}>
                       {scopedUsers.filter(u => getUserGrade(u) === null).length}
@@ -2388,7 +2388,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
 
                 {/* 2. SẮP XẾP DANH SÁCH (SORT BY) */}
                 <div className="flex items-center gap-2 ml-auto">
-                  <span className="text-[11px] font-black uppercase text-slate-400 flex items-center gap-1">
+                  <span className="text-[12px] font-black uppercase text-slate-400 flex items-center gap-1">
                     <ArrowUpDown className="w-3.5 h-3.5 text-emerald-500" />
                     Sắp xếp:
                   </span>
@@ -2409,7 +2409,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
               {/* 3. LỌC THEO VAI TRÒ (ROLE) & NÚT RESET */}
               <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100">
                 <div className="flex flex-wrap items-center gap-1.5">
-                  <span className="text-[11px] font-black uppercase text-slate-400 flex items-center gap-1 mr-1">
+                  <span className="text-[12px] font-black uppercase text-slate-400 flex items-center gap-1 mr-1">
                     <Filter className="w-3.5 h-3.5 text-amber-500" />
                     Vai Trò:
                   </span>
@@ -2418,7 +2418,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                     onClick={() => setRoleFilter('all')}
                     className={`px-2.5 py-1 rounded-xl text-xs font-black transition-all cursor-pointer ${
                       roleFilter === 'all'
-                        ? 'bg-amber-600 text-white shadow-xs'
+                        ? 'bg-amber-700 text-white shadow-xs'
                         : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                     }`}
                   >
@@ -2441,7 +2441,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                     onClick={() => setRoleFilter(roleFilter === 'subject' ? 'all' : 'subject')}
                     className={`px-2.5 py-1 rounded-xl text-xs font-black transition-all flex items-center gap-1 cursor-pointer ${
                       roleFilter === 'subject'
-                        ? 'bg-emerald-600 text-white shadow-xs'
+                        ? 'bg-emerald-700 text-white shadow-xs'
                         : 'bg-slate-100 text-slate-700 hover:bg-emerald-50 hover:text-emerald-700'
                     }`}
                   >
@@ -2491,7 +2491,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
             <div className="flex-1 border border-slate-200 rounded-2xl overflow-hidden shadow-2xs bg-white">
               <div className="overflow-x-auto h-full">
                 <table className="w-full text-left border-collapse text-xs">
-                  <thead className="bg-slate-50 border-b border-slate-200 text-[11px] font-black text-slate-500 uppercase tracking-wider sticky top-0 z-10">
+                  <thead className="bg-slate-50 border-b border-slate-200 text-[12px] font-black text-slate-500 uppercase tracking-wider sticky top-0 z-10">
                     <tr>
                       <th className="py-2.5 px-2 text-center w-10 whitespace-nowrap">
                         <input
@@ -2587,75 +2587,75 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                                 <div className="font-black text-slate-900 flex items-center gap-1.5">
                                   <span className="whitespace-nowrap">{u.fullName}</span>
                                   {isSelf && (
-                                    <span className="text-[10px] font-black text-indigo-600 bg-indigo-50 px-1.5 py-0.2 rounded border border-indigo-200 whitespace-nowrap">
+                                    <span className="text-[12px] font-black text-indigo-600 bg-indigo-50 px-1.5 py-0.2 rounded border border-indigo-200 whitespace-nowrap">
                                       BẠN
                                     </span>
                                   )}
                                 </div>
-                                <div className="text-[10px] text-slate-400 whitespace-nowrap">{u.email || u.schoolName}</div>
+                                <div className="text-[12px] text-slate-400 whitespace-nowrap">{u.email || u.schoolName}</div>
                               </div>
                             </div>
                           </td>
                           <td className="py-2 px-2">
-                            <code className="px-2 py-0.5 rounded-lg bg-slate-100 text-slate-800 font-mono font-bold text-[11px] border border-slate-200 whitespace-nowrap">
+                            <code className="px-2 py-0.5 rounded-lg bg-slate-100 text-slate-800 font-mono font-bold text-[12px] border border-slate-200 whitespace-nowrap">
                               {u.username}
                             </code>
                           </td>
                           <td className="py-2 px-2">
-                            <code className="px-2 py-0.5 rounded-lg bg-red-50 text-red-700 font-mono font-bold text-[11px] border border-red-200 whitespace-nowrap inline-block">
+                            <code className="px-2 py-0.5 rounded-lg bg-red-50 text-red-700 font-mono font-bold text-[12px] border border-red-200 whitespace-nowrap inline-block">
                               {displayPassword(u)}
                             </code>
                           </td>
                           <td className="py-2 px-2 text-center">
                             <div className="flex flex-col items-center gap-1">
                               {u.role === 'admin' && (
-                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-rose-100 text-rose-700 border border-rose-200 whitespace-nowrap">
+                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[12px] font-black uppercase bg-rose-100 text-rose-700 border border-rose-200 whitespace-nowrap">
                                   <ShieldCheck className="w-3 h-3" />
                                   Quản trị tối cao
                                 </span>
                               )}
                               {u.role === 'school_admin' && (
-                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-blue-100 text-blue-700 border border-blue-200 whitespace-nowrap">
+                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[12px] font-black uppercase bg-blue-100 text-blue-700 border border-blue-200 whitespace-nowrap">
                                   <Building2 className="w-3 h-3" />
                                   Quản trị trong nhà trường
                                 </span>
                               )}
                               {(u.role === 'bgh' || u.isBgh) && u.role !== 'school_admin' && (
-                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-purple-100 text-purple-700 border border-purple-200 whitespace-nowrap">
+                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[12px] font-black uppercase bg-purple-100 text-purple-700 border border-purple-200 whitespace-nowrap">
                                   <ShieldAlert className="w-3 h-3" />
                                   Ban Giám Hiệu
                                 </span>
                               )}
                               {u.role === 'homeroom' && (
-                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-indigo-100 text-indigo-700 border border-indigo-200 whitespace-nowrap">
+                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[12px] font-black uppercase bg-indigo-100 text-indigo-700 border border-indigo-200 whitespace-nowrap">
                                   <School className="w-3 h-3" />
                                   Giáo viên chủ nhiệm
                                 </span>
                               )}
                               {u.role === 'subject' && (
-                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-emerald-100 text-emerald-700 border border-emerald-200 whitespace-nowrap">
+                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[12px] font-black uppercase bg-emerald-100 text-emerald-700 border border-emerald-200 whitespace-nowrap">
                                   <Laptop className="w-3 h-3" />
                                   Giáo viên bộ môn
                                 </span>
                               )}
                               {u.role === 'guest_admin' && (
-                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-fuchsia-100 text-fuchsia-700 border border-fuchsia-200 whitespace-nowrap">
+                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[12px] font-black uppercase bg-fuchsia-100 text-fuchsia-700 border border-fuchsia-200 whitespace-nowrap">
                                   <Users className="w-3 h-3" />
                                   Quản trị cá nhân
                                 </span>
                               )}
                               <div className="flex items-center gap-1">
                                 {u.isDemo && (
-                                  <span className="px-1.5 py-0.2 rounded bg-amber-100 text-amber-800 font-black text-[9px] border border-amber-300">
+                                  <span className="px-1.5 py-0.2 rounded bg-amber-100 text-amber-800 font-black text-[12px] border border-amber-300">
                                     DEMO (10 HS)
                                   </span>
                                 )}
                                 {u.tenantType === 'guest' ? (
-                                  <span className="px-1.5 py-0.2 rounded bg-fuchsia-100 text-fuchsia-800 font-bold text-[9px] border border-fuchsia-200">
+                                  <span className="px-1.5 py-0.2 rounded bg-fuchsia-100 text-fuchsia-800 font-bold text-[12px] border border-fuchsia-200">
                                     Vãng lai
                                   </span>
                                 ) : (
-                                  <span className="px-1.5 py-0.2 rounded bg-slate-100 text-slate-700 font-bold text-[9px] border border-slate-200">
+                                  <span className="px-1.5 py-0.2 rounded bg-slate-100 text-slate-700 font-bold text-[12px] border border-slate-200">
                                     Nhà trường
                                   </span>
                                 )}
@@ -2667,35 +2667,35 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                           <td className="py-2 px-2 text-center">
                             {u.role === 'homeroom' ? (
                               <div className="inline-flex flex-col items-center gap-1">
-                                <span className="px-2.5 py-1 rounded-xl bg-indigo-50 text-indigo-700 font-black text-[11px] border border-indigo-200 whitespace-nowrap shadow-2xs flex items-center gap-1.5">
+                                <span className="px-2.5 py-1 rounded-xl bg-indigo-50 text-indigo-700 font-black text-[12px] border border-indigo-200 whitespace-nowrap shadow-2xs flex items-center gap-1.5">
                                   <GraduationCap className="w-3.5 h-3.5 text-indigo-600" />
                                   {uGrade ? `Khối ${uGrade} • ` : ''}{u.assignedClassName || 'Chưa gán lớp'}
                                 </span>
                               </div>
                             ) : u.role === 'subject' ? (
                               <div className="inline-flex flex-col items-center gap-1">
-                                <span className="px-2.5 py-1 rounded-xl bg-emerald-50 text-emerald-700 font-bold text-[11px] border border-emerald-200 whitespace-nowrap shadow-2xs flex items-center gap-1.5">
+                                <span className="px-2.5 py-1 rounded-xl bg-emerald-50 text-emerald-700 font-bold text-[12px] border border-emerald-200 whitespace-nowrap shadow-2xs flex items-center gap-1.5">
                                   <Laptop className="w-3.5 h-3.5 text-emerald-600" />
                                   Môn: {u.subjectName || 'Bộ môn'}
                                 </span>
                               </div>
                             ) : (u.role === 'school_admin' || u.role === 'bgh' || u.isBgh) ? (
-                              <span className="px-2.5 py-1 rounded-xl bg-purple-50 text-purple-700 font-bold text-[11px] border border-purple-200 whitespace-nowrap shadow-2xs flex items-center gap-1.5 justify-center">
+                              <span className="px-2.5 py-1 rounded-xl bg-purple-50 text-purple-700 font-bold text-[12px] border border-purple-200 whitespace-nowrap shadow-2xs flex items-center gap-1.5 justify-center">
                                 <Building2 className="w-3.5 h-3.5 text-purple-600" />
                                 Quản trị Toàn Trường
                               </span>
                             ) : u.role === 'admin' ? (
-                              <span className="px-2.5 py-1 rounded-xl bg-rose-50 text-rose-700 font-bold text-[11px] border border-rose-200 whitespace-nowrap shadow-2xs flex items-center gap-1.5 justify-center">
+                              <span className="px-2.5 py-1 rounded-xl bg-rose-50 text-rose-700 font-bold text-[12px] border border-rose-200 whitespace-nowrap shadow-2xs flex items-center gap-1.5 justify-center">
                                 <Crown className="w-3.5 h-3.5 text-rose-600" />
                                 Toàn Hệ Thống
                               </span>
                             ) : (
-                              <span className="text-[11px] text-slate-400 font-medium">Chưa gán</span>
+                              <span className="text-[12px] text-slate-400 font-medium">Chưa gán</span>
                             )}
                           </td>
 
                           <td className="py-2 px-2 text-center">
-                            <span className="px-2 py-1 rounded-lg bg-orange-100 text-orange-800 font-black text-[11px] border border-orange-200 whitespace-nowrap shadow-xs">
+                            <span className="px-2 py-1 rounded-lg bg-orange-100 text-orange-800 font-black text-[12px] border border-orange-200 whitespace-nowrap shadow-xs">
                               {accountLevel}
                             </span>
                           </td>
@@ -2714,7 +2714,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                                 ].join('\n');
                                 window.alert(`THÔNG TIN TÀI KHOẢN\n\n${details}`);
                               }}
-                              className="px-2.5 py-1 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-[10px] border border-indigo-200 transition-colors flex items-center gap-1 mx-auto whitespace-nowrap shadow-xs cursor-pointer"
+                              className="px-2.5 py-1 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-[12px] border border-indigo-200 transition-colors flex items-center gap-1 mx-auto whitespace-nowrap shadow-xs cursor-pointer"
                             >
                               <FileText className="w-3.5 h-3.5" />
                               Chi Tiết
@@ -2726,7 +2726,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                               {isSuperAdmin && !isDefaultAdmin && (u.tenantType === 'guest' || !u.tenantType || u.role !== 'admin') && (
                                 <button
                                   onClick={() => handleOpenTransferModal(u)}
-                                  className={`flex items-center gap-1 px-2.5 py-1 rounded-xl font-black text-[11px] border transition-colors shadow-2xs hover-zoom-btn ${
+                                  className={`flex items-center gap-1 px-2.5 py-1 rounded-xl font-black text-[12px] border transition-colors shadow-2xs hover-zoom-btn ${
                                     u.tenantType === 'guest'
                                       ? 'bg-purple-50 hover:bg-purple-100 text-purple-700 border-purple-200'
                                       : 'bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200'
@@ -2741,7 +2741,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                               {/* Switch / View as user */}
                               <button
                                 onClick={() => handleQuickSwitch(u.username)}
-                                className="px-2.5 py-1 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-black text-[11px] border border-indigo-200 transition-colors"
+                                className="px-2.5 py-1 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-black text-[12px] border border-indigo-200 transition-colors"
                                 title="Đăng nhập / Xem không gian làm việc của tài khoản này"
                               >
                                 Đăng nhập
@@ -2759,7 +2759,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                               {/* Reset password */}
                               <button
                                 onClick={() => handleResetPassword(u)}
-                                className="p-1.5 rounded-xl hover:bg-amber-50 text-amber-600 hover:text-amber-800 border border-transparent hover:border-amber-200 transition-colors"
+                                className="p-1.5 rounded-xl hover:bg-amber-50 text-amber-700 hover:text-amber-800 border border-transparent hover:border-amber-200 transition-colors"
                                 title="Đặt lại mật khẩu cho tài khoản này"
                               >
                                 <KeyRound className="w-4 h-4" />
@@ -2769,7 +2769,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                               {!isDefaultAdmin && (
                                 <button
                                   onClick={() => handleDeleteUser(u)}
-                                  className="p-1.5 rounded-xl hover:bg-rose-50 text-rose-500 hover:text-rose-700 border border-transparent hover:border-rose-200 transition-colors"
+                                  className="p-1.5 rounded-xl hover:bg-rose-50 text-rose-600 hover:text-rose-700 border border-transparent hover:border-rose-200 transition-colors"
                                   title="Xóa tài khoản này"
                                 >
                                   <Trash2 className="w-4 h-4" />
@@ -2804,9 +2804,9 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                 {/* Username */}
                 <div>
                   <label className="block text-xs font-black text-slate-700 uppercase mb-1.5 flex items-center justify-between">
-                    <span>Tên Đăng Nhập <span className="text-rose-500">*</span></span>
+                    <span>Tên Đăng Nhập <span className="text-rose-600">*</span></span>
                     {editingUser && isSuperAdmin && (
-                      <span className="text-[10px] text-emerald-600 font-bold bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                      <span className="text-[12px] text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
                         Admin Super được đổi
                       </span>
                     )}
@@ -2821,7 +2821,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                     required
                   />
                   {editingUser && !isSuperAdmin && (
-                    <span className="text-[10px] text-slate-400">Chỉ Admin Super mới có thể đổi tên đăng nhập</span>
+                    <span className="text-[12px] text-slate-400">Chỉ Admin Super mới có thể đổi tên đăng nhập</span>
                   )}
                 </div>
 
@@ -2842,7 +2842,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                 {/* Full name */}
                 <div className="md:col-span-2">
                   <label className="block text-xs font-black text-slate-700 uppercase mb-1.5">
-                    Họ Và Tên Giáo Viên <span className="text-rose-500">*</span>
+                    Họ Và Tên Giáo Viên <span className="text-rose-600">*</span>
                   </label>
                   <input
                     type="text"
@@ -2858,16 +2858,16 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                 <div className="md:col-span-2">
                   <div className="flex items-center justify-between mb-2">
                     <label className="text-xs font-black text-slate-700 uppercase">
-                      Gán Vai Trò & Phân Quyền Hoạt Động <span className="text-rose-500">*</span>
+                      Gán Vai Trò & Phân Quyền Hoạt Động <span className="text-rose-600">*</span>
                     </label>
-                    <span className="text-[10px] text-slate-500 font-bold bg-slate-100 px-2 py-0.5 rounded-full border border-slate-200">
+                    <span className="text-[12px] text-slate-500 font-bold bg-slate-100 px-2 py-0.5 rounded-full border border-slate-200">
                       {isSuperAdmin ? 'Admin Super: Toàn quyền tạo cho mọi trường' : 'Phân quyền trong đơn vị'}
                     </span>
                   </div>
 
                   {/* 🏛️ 4 VAI TRÒ TRỰC THUỘC NHÀ TRƯỜNG */}
                   <div className="mb-3">
-                    <div className="text-[11px] font-black text-indigo-700 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                    <div className="text-[12px] font-black text-indigo-700 uppercase tracking-wider mb-2 flex items-center gap-1.5">
                       <School className="w-3.5 h-3.5" />
                       <span>Vai Trò Trực Thuộc Nhà Trường</span>
                     </div>
@@ -2892,11 +2892,11 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                               className="w-4 h-4 text-blue-600 shrink-0"
                             />
                           </div>
-                          <p className="text-[10.5px] text-slate-500 leading-snug">
+                          <p className="text-[12px] text-slate-500 leading-snug">
                             Toàn quyền quản lý CSDL, giáo viên, học sinh và phân hiệu của trường.
                           </p>
                         </div>
-                        <span className="text-[9px] font-black text-blue-700 bg-blue-100/80 px-1.5 py-0.5 rounded mt-2 self-start uppercase">
+                        <span className="text-[12px] font-black text-blue-700 bg-blue-100/80 px-1.5 py-0.5 rounded mt-2 self-start uppercase">
                           Cấp Trường
                         </span>
                       </label>
@@ -2921,11 +2921,11 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                               className="w-4 h-4 text-purple-600 shrink-0"
                             />
                           </div>
-                          <p className="text-[10.5px] text-slate-500 leading-snug">
+                          <p className="text-[12px] text-slate-500 leading-snug">
                             Quan sát, xem số liệu, báo cáo, đánh giá và thống kê toàn trường.
                           </p>
                         </div>
-                        <span className="text-[9px] font-black text-purple-700 bg-purple-100/80 px-1.5 py-0.5 rounded mt-2 self-start uppercase">
+                        <span className="text-[12px] font-black text-purple-700 bg-purple-100/80 px-1.5 py-0.5 rounded mt-2 self-start uppercase">
                           Ban Giám Hiệu
                         </span>
                       </label>
@@ -2950,11 +2950,11 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                               className="w-4 h-4 text-indigo-600 shrink-0"
                             />
                           </div>
-                          <p className="text-[10.5px] text-slate-500 leading-snug">
+                          <p className="text-[12px] text-slate-500 leading-snug">
                             Quản lý toàn diện lớp chủ nhiệm, học sinh, điểm danh và thi đua.
                           </p>
                         </div>
-                        <span className="text-[9px] font-black text-indigo-700 bg-indigo-100/80 px-1.5 py-0.5 rounded mt-2 self-start uppercase">
+                        <span className="text-[12px] font-black text-indigo-700 bg-indigo-100/80 px-1.5 py-0.5 rounded mt-2 self-start uppercase">
                           Lớp Chủ Nhiệm
                         </span>
                       </label>
@@ -2976,14 +2976,14 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                               name="role"
                               checked={formData.role === 'subject'}
                               onChange={() => setFormData({ ...formData, role: 'subject', tenantType: 'school' })}
-                              className="w-4 h-4 text-emerald-600 shrink-0"
+                              className="w-4 h-4 text-emerald-700 shrink-0"
                             />
                           </div>
-                          <p className="text-[10.5px] text-slate-500 leading-snug">
+                          <p className="text-[12px] text-slate-500 leading-snug">
                             Giảng dạy bộ môn (Tin học, Tiếng Anh...), chấm điểm, đánh giá.
                           </p>
                         </div>
-                        <span className="text-[9px] font-black text-emerald-700 bg-emerald-100/80 px-1.5 py-0.5 rounded mt-2 self-start uppercase">
+                        <span className="text-[12px] font-black text-emerald-700 bg-emerald-100/80 px-1.5 py-0.5 rounded mt-2 self-start uppercase">
                           Bộ Môn
                         </span>
                       </label>
@@ -2993,7 +2993,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                   {/* 👑 VAI TRÒ HỆ THỐNG (CHỈ SUPER ADMIN THẤY) */}
                   {isSuperAdmin && (
                     <div>
-                      <div className="text-[11px] font-black text-rose-700 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                      <div className="text-[12px] font-black text-rose-700 uppercase tracking-wider mb-2 flex items-center gap-1.5">
                         <Crown className="w-3.5 h-3.5" />
                         <span>Vai Trò Quản Trị Hệ Thống (Cấp Cao)</span>
                       </div>
@@ -3007,7 +3007,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                             <Users className="w-4 h-4 text-fuchsia-600 shrink-0" />
                             <div>
                               <div className="font-black text-xs text-slate-900 uppercase">Quản trị tài khoản cá nhân</div>
-                              <div className="text-[10.5px] text-slate-500">Quản trị khối giáo viên tự do, vãng lai không thuộc trường</div>
+                              <div className="text-[12px] text-slate-500">Quản trị khối giáo viên tự do, vãng lai không thuộc trường</div>
                             </div>
                           </div>
                           <input
@@ -3028,7 +3028,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                             <ShieldCheck className="w-4 h-4 text-rose-600 shrink-0" />
                             <div>
                               <div className="font-black text-xs text-slate-900 uppercase">Quản trị tối cao (Super Admin)</div>
-                              <div className="text-[10.5px] text-slate-500">Toàn quyền cây CSDL trường, tất cả tài khoản, hệ thống</div>
+                              <div className="text-[12px] text-slate-500">Toàn quyền cây CSDL trường, tất cả tài khoản, hệ thống</div>
                             </div>
                           </div>
                           <input
@@ -3047,7 +3047,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                 {/* Phân vùng lưu trữ: Nhà trường vs Giáo viên cá nhân */}
                 <div className="md:col-span-2">
                   <label className="block text-xs font-black text-slate-700 uppercase mb-2">
-                    Phân Vùng Triển Khai & Quản Lý Dữ Liệu <span className="text-rose-500">*</span>
+                    Phân Vùng Triển Khai & Quản Lý Dữ Liệu <span className="text-rose-600">*</span>
                   </label>
                   {isSuperAdmin ? (
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -3060,7 +3060,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                           <School className="w-4 h-4 text-blue-600" />
                           <div>
                             <div className="text-xs font-black text-slate-900 uppercase">Cấp Cho Tổ Chức Nhà Trường</div>
-                            <div className="text-[11px] text-slate-500">Lưu trong cơ sở dữ liệu dùng chung của trường</div>
+                            <div className="text-[12px] text-slate-500">Lưu trong cơ sở dữ liệu dùng chung của trường</div>
                           </div>
                         </div>
                         <input
@@ -3081,7 +3081,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                           <Users className="w-4 h-4 text-purple-600" />
                           <div>
                             <div className="text-xs font-black text-slate-900 uppercase">Cấp Cho Giáo Viên Cá Nhân</div>
-                            <div className="text-[11px] text-slate-500">Thuộc quản lý của Quản trị Tài khoản Cá nhân</div>
+                            <div className="text-[12px] text-slate-500">Thuộc quản lý của Quản trị Tài khoản Cá nhân</div>
                           </div>
                         </div>
                         <input
@@ -3098,7 +3098,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                       <School className="w-5 h-5 text-blue-600 shrink-0" />
                       <div>
                         <div className="text-xs font-black uppercase">Phân Vùng Nhà Trường: {currentSchoolScope}</div>
-                        <div className="text-[11px] text-blue-800">Tài khoản này được lưu trong CSDL của nhà trường và chịu sự quản trị của Quản trị Trường</div>
+                        <div className="text-[12px] text-blue-800">Tài khoản này được lưu trong CSDL của nhà trường và chịu sự quản trị của Quản trị Trường</div>
                       </div>
                     </div>
                   ) : (
@@ -3106,7 +3106,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                       <Users className="w-5 h-5 text-purple-600 shrink-0" />
                       <div>
                         <div className="text-xs font-black uppercase">Phân Vùng: Khối Giáo Viên Cá Nhân / Vãng Lai</div>
-                        <div className="text-[11px] text-purple-800">Tài khoản này thuộc quyền quản lý của Quản trị Tài khoản Cá nhân</div>
+                        <div className="text-[12px] text-purple-800">Tài khoản này thuộc quyền quản lý của Quản trị Tài khoản Cá nhân</div>
                       </div>
                     </div>
                   )}
@@ -3228,7 +3228,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
         {activeTab === 'import' && (
           <div className="flex-1 overflow-y-auto p-5 md:p-8 flex flex-col space-y-6">
             {/* Intro banner */}
-            <div className="bg-gradient-to-r from-emerald-600 via-teal-600 to-indigo-700 rounded-3xl p-6 text-white shadow-md">
+            <div className="bg-gradient-to-r from-emerald-700 via-teal-700 to-indigo-700 rounded-3xl p-6 text-white shadow-md">
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center font-black">
                   <FileSpreadsheet className="w-7 h-7 text-amber-300" />
@@ -3292,7 +3292,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                 </div>
 
                 <div className="mt-5">
-                  <label className="w-full py-2.5 px-4 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs uppercase shadow-md shadow-emerald-600/20 transition-all flex items-center justify-center gap-2 cursor-pointer text-center hover-zoom-btn">
+                  <label className="w-full py-2.5 px-4 rounded-2xl bg-emerald-700 hover:bg-emerald-800 text-white font-black text-xs uppercase shadow-md shadow-emerald-600/20 transition-all flex items-center justify-center gap-2 cursor-pointer text-center hover-zoom-btn">
                     <Upload className="w-4 h-4" />
                     <span>CHỌN TỆP EXCEL ĐỂ PHÂN TÍCH</span>
                     <input
@@ -3333,7 +3333,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                 {/* Preview Table */}
                 <div className="border border-slate-200 rounded-2xl overflow-hidden max-h-[300px] overflow-y-auto">
                   <table className="w-full text-left text-xs border-collapse">
-                    <thead className="bg-slate-50 border-b border-slate-200 text-[11px] font-black text-slate-500 uppercase sticky top-0">
+                    <thead className="bg-slate-50 border-b border-slate-200 text-[12px] font-black text-slate-500 uppercase sticky top-0">
                       <tr>
                         <th className="py-2.5 px-3 text-center w-12">STT</th>
                         <th className="py-2.5 px-3">Tên Đăng Nhập</th>
@@ -3351,7 +3351,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                           <td className="py-2 px-3 font-mono font-bold text-slate-800">{item.username || '—'}</td>
                           <td className="py-2 px-3 font-bold text-slate-900">{item.fullName}</td>
                           <td className="py-2 px-3 text-center">
-                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase ${
+                            <span className={`px-2 py-0.5 rounded-full text-[12px] font-black uppercase ${
                               item.role === 'homeroom'
                                 ? 'bg-indigo-100 text-indigo-700'
                                 : 'bg-emerald-100 text-emerald-700'
@@ -3365,11 +3365,11 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                           <td className="py-2 px-3 text-slate-500 font-mono">{item.phone || '—'}</td>
                           <td className="py-2 px-3 text-right">
                             {item.isValid ? (
-                              <span className="inline-flex items-center gap-1 text-[11px] font-black text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-lg border border-emerald-200">
+                              <span className="inline-flex items-center gap-1 text-[12px] font-black text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-lg border border-emerald-200">
                                 <Check className="w-3 h-3" /> Hợp lệ
                               </span>
                             ) : (
-                              <span className="inline-flex items-center gap-1 text-[11px] font-black text-rose-700 bg-rose-50 px-2 py-0.5 rounded-lg border border-rose-200">
+                              <span className="inline-flex items-center gap-1 text-[12px] font-black text-rose-700 bg-rose-50 px-2 py-0.5 rounded-lg border border-rose-200">
                                 <AlertTriangle className="w-3 h-3" /> {item.statusText}
                               </span>
                             )}
@@ -3392,7 +3392,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                   <button
                     onClick={handleConfirmBulkCreate}
                     disabled={loading || importPreviewList.filter(i => i.isValid).length === 0}
-                    className="py-2.5 px-6 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs uppercase shadow-md shadow-emerald-600/25 flex items-center gap-2 disabled:opacity-50 hover-zoom-btn"
+                    className="py-2.5 px-6 rounded-2xl bg-emerald-700 hover:bg-emerald-800 text-white font-black text-xs uppercase shadow-md shadow-emerald-600/25 flex items-center gap-2 disabled:opacity-50 hover-zoom-btn"
                   >
                     <CheckCircle2 className="w-4 h-4" />
                     <span>XÁC NHẬN TẠO ({importPreviewList.filter(i => i.isValid).length}) TÀI KHOẢN GIÁO VIÊN</span>
@@ -3431,25 +3431,25 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
             {/* Quick Metrics */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               <div className="bg-white border border-slate-200 rounded-2xl p-3.5 shadow-2xs">
-                <div className="text-[10px] font-black text-slate-400 uppercase tracking-wider">
+                <div className="text-[12px] font-black text-slate-400 uppercase tracking-wider">
                   {isSchoolAdmin ? 'GV Thuộc Trường' : (isGuestAdmin ? 'GV Khối Cá Nhân' : 'Tổng Giáo Viên')}
                 </div>
                 <div className="text-lg font-black text-slate-800 mt-1">{scopedUsers.length} tài khoản</div>
               </div>
               <div className="bg-white border border-slate-200 rounded-2xl p-3.5 shadow-2xs">
-                <div className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Tổng Lớp Đang Dạy</div>
+                <div className="text-[12px] font-black text-slate-400 uppercase tracking-wider">Tổng Lớp Đang Dạy</div>
                 <div className="text-lg font-black text-blue-600 mt-1">
                   {scopedSummaries.reduce((sum, u) => sum + (u.classCount || 0), 0)} lớp
                 </div>
               </div>
               <div className="bg-white border border-slate-200 rounded-2xl p-3.5 shadow-2xs">
-                <div className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Tổng Học Sinh Thực Tế</div>
-                <div className="text-lg font-black text-emerald-600 mt-1">
+                <div className="text-[12px] font-black text-slate-400 uppercase tracking-wider">Tổng Học Sinh Thực Tế</div>
+                <div className="text-lg font-black text-emerald-700 mt-1">
                   {scopedSummaries.reduce((sum, u) => sum + (u.studentCount || 0), 0)} học sinh
                 </div>
               </div>
               <div className="bg-white border border-slate-200 rounded-2xl p-3.5 shadow-2xs">
-                <div className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Phạm Vi Quản Lý</div>
+                <div className="text-[12px] font-black text-slate-400 uppercase tracking-wider">Phạm Vi Quản Lý</div>
                 <div className="text-xs font-black text-violet-600 mt-2 truncate">
                   {isSchoolAdmin ? currentSchoolScope : (isGuestAdmin ? 'Khối Giáo Viên Cá Nhân' : 'Toàn Bộ Hệ Thống')}
                 </div>
@@ -3460,7 +3460,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
             <div className="flex-1 border border-slate-200 rounded-2xl overflow-hidden shadow-2xs bg-white">
               <div className="overflow-x-auto h-full">
                 <table className="w-full text-left border-collapse text-xs">
-                  <thead className="bg-slate-50 border-b border-slate-200 text-[11px] font-black text-slate-500 uppercase tracking-wider sticky top-0 z-10">
+                  <thead className="bg-slate-50 border-b border-slate-200 text-[12px] font-black text-slate-500 uppercase tracking-wider sticky top-0 z-10">
                     <tr>
                       <th className="py-2 px-2 text-center w-12">STT</th>
                       <th className="py-2 px-2">Giáo Viên & Tài Khoản</th>
@@ -3490,38 +3490,38 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                                 <div className="font-black text-slate-900 flex items-center gap-1.5">
                                   <span>{u.fullName}</span>
                                   {isCurrent && (
-                                    <span className="text-[9px] font-black text-emerald-700 bg-emerald-100 px-1.5 py-0.2 rounded border border-emerald-200 uppercase">
+                                    <span className="text-[12px] font-black text-emerald-700 bg-emerald-100 px-1.5 py-0.2 rounded border border-emerald-200 uppercase">
                                       ĐANG XEM
                                     </span>
                                   )}
                                 </div>
-                                <div className="text-[11px] text-slate-500 font-mono">@{u.username}</div>
+                                <div className="text-[12px] text-slate-500 font-mono">@{u.username}</div>
                               </div>
                             </div>
                           </td>
                           <td className="py-2 px-2 text-center">
                             {u.role === 'admin' ? (
-                              <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-rose-100 text-rose-700 border border-rose-200 whitespace-nowrap">
+                              <span className="inline-block px-2.5 py-0.5 rounded-full text-[12px] font-black uppercase bg-rose-100 text-rose-700 border border-rose-200 whitespace-nowrap">
                                 Quản trị tối cao
                               </span>
                             ) : u.role === 'school_admin' ? (
-                              <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-blue-100 text-blue-700 border border-blue-200 whitespace-nowrap">
+                              <span className="inline-block px-2.5 py-0.5 rounded-full text-[12px] font-black uppercase bg-blue-100 text-blue-700 border border-blue-200 whitespace-nowrap">
                                 Quản trị trong nhà trường
                               </span>
                             ) : (u.role === 'bgh' || (u as any).isBgh) ? (
-                              <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-purple-100 text-purple-700 border border-purple-200 whitespace-nowrap">
+                              <span className="inline-block px-2.5 py-0.5 rounded-full text-[12px] font-black uppercase bg-purple-100 text-purple-700 border border-purple-200 whitespace-nowrap">
                                 Ban Giám Hiệu
                               </span>
                             ) : u.role === 'homeroom' ? (
-                              <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-indigo-100 text-indigo-700 border border-indigo-200 whitespace-nowrap">
+                              <span className="inline-block px-2.5 py-0.5 rounded-full text-[12px] font-black uppercase bg-indigo-100 text-indigo-700 border border-indigo-200 whitespace-nowrap">
                                 Giáo viên chủ nhiệm
                               </span>
                             ) : u.role === 'subject' ? (
-                              <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-emerald-100 text-emerald-700 border border-emerald-200 whitespace-nowrap">
+                              <span className="inline-block px-2.5 py-0.5 rounded-full text-[12px] font-black uppercase bg-emerald-100 text-emerald-700 border border-emerald-200 whitespace-nowrap">
                                 Giáo viên bộ môn
                               </span>
                             ) : (
-                              <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-fuchsia-100 text-fuchsia-700 border border-fuchsia-200 whitespace-nowrap">
+                              <span className="inline-block px-2.5 py-0.5 rounded-full text-[12px] font-black uppercase bg-fuchsia-100 text-fuchsia-700 border border-fuchsia-200 whitespace-nowrap">
                                 Quản trị cá nhân
                               </span>
                             )}
@@ -3532,28 +3532,28 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                                 u.classes.map((c, cIdx) => (
                                   <span 
                                     key={c.id || cIdx} 
-                                    className="px-2 py-0.5 rounded-md bg-slate-100 border border-slate-200 text-[11px] font-bold text-slate-700"
+                                    className="px-2 py-0.5 rounded-md bg-slate-100 border border-slate-200 text-[12px] font-bold text-slate-700"
                                     title={`Lớp ${c.name} - ${c.studentCount} học sinh`}
                                   >
                                     {c.name} ({c.studentCount} HS)
                                   </span>
                                 ))
                               ) : (
-                                <span className="text-slate-400 italic text-[11px]">Chưa khởi tạo lớp</span>
+                                <span className="text-slate-400 italic text-[12px]">Chưa khởi tạo lớp</span>
                               )}
                             </div>
                           </td>
                           <td className="py-2 px-2 text-center font-black text-slate-800">
                             {u.studentCount || 0}
                           </td>
-                          <td className="py-2 px-2 text-slate-500 text-[11px]">
+                          <td className="py-2 px-2 text-slate-500 text-[12px]">
                             {u.lastUpdated ? new Date(u.lastUpdated).toLocaleString('vi-VN') : 'Mặc định'}
                           </td>
                           <td className="py-2 px-2 text-right space-x-1.5 whitespace-nowrap">
                             <button
                               onClick={() => handleQuickSwitch(u.username)}
                               disabled={loading || isCurrent}
-                              className="px-2.5 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 text-[11px] font-black uppercase transition-colors inline-flex items-center gap-1 disabled:opacity-40 cursor-pointer"
+                              className="px-2.5 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 text-[12px] font-black uppercase transition-colors inline-flex items-center gap-1 disabled:opacity-40 cursor-pointer"
                               title="Chuyển vào xem trực tiếp toàn bộ dữ liệu, lớp và học sinh của giáo viên này"
                             >
                               <Eye className="w-3 h-3" />
@@ -3561,7 +3561,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                             </button>
                             <button
                               onClick={() => handleDownloadTeacherData(u)}
-                              className="px-2.5 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 text-[11px] font-black uppercase transition-colors inline-flex items-center gap-1 cursor-pointer"
+                              className="px-2.5 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 text-[12px] font-black uppercase transition-colors inline-flex items-center gap-1 cursor-pointer"
                               title="Tải về file JSON sao lưu dữ liệu của riêng giáo viên này"
                             >
                               <Download className="w-3 h-3" />
@@ -3662,7 +3662,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
             <div className="flex-1 border border-slate-200 rounded-2xl overflow-hidden shadow-2xs bg-white">
               <div className="overflow-x-auto h-full">
                 <table className="w-full text-left border-collapse text-xs">
-                  <thead className="bg-slate-50 border-b border-slate-200 text-[11px] font-black text-slate-500 uppercase tracking-wider sticky top-0 z-10">
+                  <thead className="bg-slate-50 border-b border-slate-200 text-[12px] font-black text-slate-500 uppercase tracking-wider sticky top-0 z-10">
                     <tr>
                       <th className="py-2 px-2 text-center w-12">STT</th>
                       <th className="py-2 px-2 w-40">Thời Gian</th>
@@ -3710,7 +3710,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                             <td className="py-2.5 px-3.5 text-center font-bold text-slate-400">
                               {idx + 1}
                             </td>
-                            <td className="py-2.5 px-3.5 font-mono text-[11px] text-slate-600 whitespace-nowrap">
+                            <td className="py-2.5 px-3.5 font-mono text-[12px] text-slate-600 whitespace-nowrap">
                               <div className="flex items-center gap-1.5">
                                 <Clock className="w-3 h-3 text-slate-400 shrink-0" />
                                 <span>{new Date(log.timestamp).toLocaleString('vi-VN')}</span>
@@ -3720,12 +3720,12 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                               <div className="font-bold text-slate-900 leading-tight">
                                 {log.userFullName}
                               </div>
-                              <div className="text-[10px] text-slate-400 font-mono">
+                              <div className="text-[12px] text-slate-400 font-mono">
                                 @{log.username} ({log.role === 'admin' ? 'Quản trị' : log.role === 'subject' ? 'GV Bộ môn' : 'GVCN'})
                               </div>
                             </td>
                             <td className="py-2.5 px-3.5 text-center whitespace-nowrap">
-                              <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-black uppercase border ${actionColor}`}>
+                              <span className={`inline-block px-2 py-0.5 rounded-full text-[12px] font-black uppercase border ${actionColor}`}>
                                 {actionLabel}
                               </span>
                             </td>
@@ -3753,10 +3753,10 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
         {activeTab === 'database' && (
           <div className="flex-1 overflow-y-auto p-5 md:p-8 space-y-6">
             {/* Database Storage & System Quota Stats Card (Yêu cầu 4) */}
-            <div className="bg-gradient-to-br from-sky-600 via-indigo-600 to-indigo-600 text-white rounded-3xl p-6 md:p-7 shadow-xl border border-slate-800 space-y-6">
+            <div className="bg-gradient-to-br from-sky-700 via-indigo-600 to-indigo-600 text-white rounded-3xl p-6 md:p-7 shadow-xl border border-slate-800 space-y-6">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div className="flex items-center gap-3.5">
-                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-600 to-teal-600 text-white flex items-center justify-center font-black shadow-lg shadow-emerald-500/20 shrink-0">
+                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-700 to-teal-700 text-white flex items-center justify-center font-black shadow-lg shadow-emerald-500/20 shrink-0">
                     <Database className="w-6 h-6" />
                   </div>
                   <div>
@@ -3764,8 +3764,8 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                       <h3 className="text-base md:text-lg font-black uppercase tracking-tight">
                         Thống Kê Toàn Bộ Dung Lượng Database Hệ Thống
                       </h3>
-                      <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[10px] font-black uppercase flex items-center gap-1.5">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse" />
+                      <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[12px] font-black uppercase flex items-center gap-1.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-700 animate-pulse" />
                         Trực Tuyến
                       </span>
                     </div>
@@ -3789,7 +3789,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                   <button
                     type="button"
                     onClick={handleCompactDatabase}
-                    className="px-3.5 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white text-xs font-black rounded-xl shadow-md shadow-emerald-600/25 transition-all hover-zoom-btn flex items-center gap-1.5 uppercase"
+                    className="px-3.5 py-2 bg-gradient-to-r from-emerald-700 to-teal-700 hover:from-emerald-800 hover:to-teal-800 text-white text-xs font-black rounded-xl shadow-md shadow-emerald-600/25 transition-all hover-zoom-btn flex items-center gap-1.5 uppercase"
                     title="Nén và tối ưu hóa tệp dữ liệu database"
                   >
                     <Sparkles className="w-3.5 h-3.5 text-amber-300" />
@@ -3802,56 +3802,56 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
                 {/* Total File Size */}
                 <div className="bg-white/5 backdrop-blur-md rounded-2xl p-4 border border-white/10 hover:border-white/20 transition-colors">
-                  <div className="text-[11px] text-slate-400 uppercase font-black flex items-center justify-between">
+                  <div className="text-[12px] text-slate-400 uppercase font-black flex items-center justify-between">
                     <span>Tổng Tệp Database</span>
                     <span>💾</span>
                   </div>
                   <div className="text-2xl font-black text-amber-400 mt-1 font-mono">
                     {stats?.formattedSize || `${stats?.fileSizeKB || 0} KB`}
                   </div>
-                  <div className="text-[10px] text-slate-400 mt-1">
+                  <div className="text-[12px] text-slate-400 mt-1">
                     {stats?.fileSizeBytes ? `${stats.fileSizeBytes.toLocaleString()} bytes` : 'data/classroom_database.json'}
                   </div>
                 </div>
 
                 {/* User Classroom Data Size */}
                 <div className="bg-white/5 backdrop-blur-md rounded-2xl p-4 border border-white/10 hover:border-white/20 transition-colors">
-                  <div className="text-[11px] text-slate-400 uppercase font-black flex items-center justify-between">
+                  <div className="text-[12px] text-slate-400 uppercase font-black flex items-center justify-between">
                     <span>Dữ Liệu Giáo Viên</span>
                     <span>👥</span>
                   </div>
                   <div className="text-2xl font-black text-emerald-400 mt-1 font-mono">
                     {stats?.storageBreakdown?.userData.sizeKB || 0} KB
                   </div>
-                  <div className="text-[10px] text-emerald-300 font-bold mt-1">
+                  <div className="text-[12px] text-emerald-300 font-bold mt-1">
                     Chiếm {stats?.storageBreakdown?.userData.percent || 0}% dung lượng
                   </div>
                 </div>
 
                 {/* Audit Logs Size */}
                 <div className="bg-white/5 backdrop-blur-md rounded-2xl p-4 border border-white/10 hover:border-white/20 transition-colors">
-                  <div className="text-[11px] text-slate-400 uppercase font-black flex items-center justify-between">
+                  <div className="text-[12px] text-slate-400 uppercase font-black flex items-center justify-between">
                     <span>Nhật Ký Thao Tác</span>
                     <span>📜</span>
                   </div>
                   <div className="text-2xl font-black text-violet-400 mt-1 font-mono">
                     {stats?.storageBreakdown?.auditLogs.sizeKB || 0} KB
                   </div>
-                  <div className="text-[10px] text-violet-300 font-bold mt-1">
+                  <div className="text-[12px] text-violet-300 font-bold mt-1">
                     {stats?.storageBreakdown?.auditLogs.count || 0} bản ghi thao tác
                   </div>
                 </div>
 
                 {/* Browser LocalStorage Cache */}
                 <div className="bg-white/5 backdrop-blur-md rounded-2xl p-4 border border-white/10 hover:border-white/20 transition-colors">
-                  <div className="text-[11px] text-slate-400 uppercase font-black flex items-center justify-between">
+                  <div className="text-[12px] text-slate-400 uppercase font-black flex items-center justify-between">
                     <span>Bộ Nhớ Trình Duyệt</span>
                     <span>⚡</span>
                   </div>
                   <div className="text-2xl font-black text-cyan-400 mt-1 font-mono">
                     {localUsage?.formatted || '0 KB'}
                   </div>
-                  <div className="text-[10px] text-cyan-300 font-bold mt-1">
+                  <div className="text-[12px] text-cyan-300 font-bold mt-1">
                     Cache offline trình duyệt
                   </div>
                 </div>
@@ -3874,40 +3874,40 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                 {/* Multi-segment Progress Bar */}
                 <div className="w-full h-3 rounded-full bg-slate-100 overflow-hidden flex shadow-inner">
                   <div 
-                    className="h-full bg-emerald-600 transition-all duration-500" 
+                    className="h-full bg-emerald-700 transition-all duration-500" 
                     style={{ width: `${Math.max(stats?.storageBreakdown?.userData.percent || 60, 5)}%` }}
                     title={`Dữ liệu Giáo viên: ${stats?.storageBreakdown?.userData.sizeKB || 0} KB`}
                   />
                   <div 
-                    className="h-full bg-violet-500 transition-all duration-500" 
+                    className="h-full bg-violet-600 transition-all duration-500" 
                     style={{ width: `${Math.max(stats?.storageBreakdown?.auditLogs.percent || 25, 5)}%` }}
                     title={`Nhật ký Audit: ${stats?.storageBreakdown?.auditLogs.sizeKB || 0} KB`}
                   />
                   <div 
-                    className="h-full bg-amber-600 transition-all duration-500" 
+                    className="h-full bg-amber-700 transition-all duration-500" 
                     style={{ width: `${Math.max(stats?.storageBreakdown?.users.percent || 15, 3)}%` }}
                     title={`Tài khoản người dùng: ${stats?.storageBreakdown?.users.sizeKB || 0} KB`}
                   />
                 </div>
 
                 {/* Legend */}
-                <div className="flex flex-wrap items-center justify-between text-[11px] text-slate-400 pt-1">
+                <div className="flex flex-wrap items-center justify-between text-[12px] text-slate-400 pt-1">
                   <div className="flex flex-wrap items-center gap-4">
                     <span className="flex items-center gap-1.5">
-                      <span className="w-2.5 h-2.5 rounded-full bg-emerald-600" />
+                      <span className="w-2.5 h-2.5 rounded-full bg-emerald-700" />
                       <span>Dữ liệu học tập các lớp ({stats?.storageBreakdown?.userData.percent || 0}%)</span>
                     </span>
                     <span className="flex items-center gap-1.5">
-                      <span className="w-2.5 h-2.5 rounded-full bg-violet-500" />
+                      <span className="w-2.5 h-2.5 rounded-full bg-violet-600" />
                       <span>Nhật ký Audit Logs ({stats?.storageBreakdown?.auditLogs.percent || 0}%)</span>
                     </span>
                     <span className="flex items-center gap-1.5">
-                      <span className="w-2.5 h-2.5 rounded-full bg-amber-600" />
+                      <span className="w-2.5 h-2.5 rounded-full bg-amber-700" />
                       <span>Hồ sơ Tài khoản ({stats?.storageBreakdown?.users.percent || 0}%)</span>
                     </span>
                   </div>
 
-                  <span className="text-[10px] text-slate-400 font-mono">
+                  <span className="text-[12px] text-slate-400 font-mono">
                     Đồng bộ lần cuối: <strong className="text-slate-200">{stats?.lastSync ? new Date(stats.lastSync).toLocaleString('vi-VN') : 'Vừa xong'}</strong>
                   </span>
                 </div>
@@ -3933,7 +3933,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
 
               <div className="flex-1 overflow-x-auto border border-slate-200 rounded-2xl bg-white min-h-[250px]">
                 <table className="w-full text-left text-xs">
-                  <thead className="bg-slate-50 text-slate-700 font-black uppercase text-[11px] border-b border-slate-200 sticky top-0 z-10">
+                  <thead className="bg-slate-50 text-slate-700 font-black uppercase text-[12px] border-b border-slate-200 sticky top-0 z-10">
                     <tr>
                       <th className="py-2 px-2">Tài Khoản / Họ Tên</th>
                       <th className="py-3 px-3">Vai Trò</th>
@@ -3950,10 +3950,10 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                         <tr key={item.username} className="hover:bg-slate-50/80 transition-colors">
                           <td className="py-2 px-2">
                             <div className="font-black text-slate-900">{item.fullName}</div>
-                            <div className="text-[11px] font-mono text-indigo-600">@{item.username}</div>
+                            <div className="text-[12px] font-mono text-indigo-600">@{item.username}</div>
                           </td>
                           <td className="py-3 px-3">
-                            <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase inline-block ${
+                            <span className={`px-2.5 py-0.5 rounded-full text-[12px] font-black uppercase inline-block ${
                               item.role === 'admin'
                                 ? 'bg-rose-100 text-rose-800 border border-rose-200'
                                 : item.role === 'homeroom'
@@ -3973,7 +3973,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                             {item.sizeKB} KB
                           </td>
                           <td className="py-3 px-3 text-center">
-                            <span className="px-2 py-0.5 rounded-lg bg-slate-100 text-slate-800 font-bold font-mono text-[11px]">
+                            <span className="px-2 py-0.5 rounded-lg bg-slate-100 text-slate-800 font-bold font-mono text-[12px]">
                               {item.percentOfTotal}%
                             </span>
                           </td>
@@ -3990,7 +3990,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                               <button
                                 type="button"
                                 onClick={() => handleQuickSwitch(item.username)}
-                                className="px-2 py-1 text-[11px] font-black text-slate-700 hover:bg-slate-100 rounded-lg border border-slate-300 transition-colors uppercase"
+                                className="px-2 py-1 text-[12px] font-black text-slate-700 hover:bg-slate-100 rounded-lg border border-slate-300 transition-colors uppercase"
                                 title="Chuyển sang tài khoản này"
                               >
                                 Xem
@@ -4004,10 +4004,10 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                         <tr key={u.id} className="hover:bg-slate-50/80 transition-colors">
                           <td className="py-2 px-2">
                             <div className="font-black text-slate-900">{u.fullName}</div>
-                            <div className="text-[11px] font-mono text-indigo-600">@{u.username}</div>
+                            <div className="text-[12px] font-mono text-indigo-600">@{u.username}</div>
                           </td>
                           <td className="py-3 px-3">
-                            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-slate-100 text-slate-700">
+                            <span className="px-2.5 py-0.5 rounded-full text-[12px] font-black uppercase bg-slate-100 text-slate-700">
                               {u.role}
                             </span>
                           </td>
@@ -4019,7 +4019,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                             <button
                               type="button"
                               onClick={() => handleQuickSwitch(u.username)}
-                              className="px-2 py-1 text-[11px] font-black text-slate-700 hover:bg-slate-100 rounded-lg border border-slate-300 transition-colors uppercase"
+                              className="px-2 py-1 text-[12px] font-black text-slate-700 hover:bg-slate-100 rounded-lg border border-slate-300 transition-colors uppercase"
                             >
                               Xem
                             </button>
@@ -4065,7 +4065,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
               <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-2xs flex flex-col justify-between">
                 <div>
                   <div className="flex items-center gap-3 mb-2.5">
-                    <div className="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-black">
+                    <div className="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-700 flex items-center justify-center font-black">
                       <Upload className="w-5 h-5" />
                     </div>
                     <div>
@@ -4093,7 +4093,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
             </div>
 
             {/* KHU VỰC QUẢN LÝ DỮ LIỆU & CHUẨN BỊ NĂM HỌC MỚI (Yêu cầu c, d, e) */}
-            <div className="bg-gradient-to-br from-indigo-500 via-blue-600 to-indigo-500 border-2 border-indigo-500/30 rounded-3xl p-6 text-white shadow-xl space-y-4">
+            <div className="bg-gradient-to-br from-indigo-600 via-blue-600 to-indigo-600 border-2 border-indigo-500/30 rounded-3xl p-6 text-white shadow-xl space-y-4">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
                   <div className="w-12 h-12 rounded-2xl bg-indigo-500/20 border border-indigo-400 text-indigo-300 flex items-center justify-center font-black">
@@ -4108,7 +4108,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                             ? `Khởi Động & Chuẩn Bị Năm Học Mới (Khối Cá Nhân)`
                             : `Khởi Động & Chuẩn Bị Cho Năm Học Mới`}
                       </h4>
-                      <span className="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-[10px] font-black uppercase border border-amber-500/30">
+                      <span className="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-[12px] font-black uppercase border border-amber-500/30">
                         {isSchoolAdmin ? 'Cấp Trường' : isGuestAdmin ? 'Khối Cá Nhân' : 'Phân Vùng Hệ Thống'}
                       </span>
                     </div>
@@ -4135,7 +4135,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                     setSchoolResetConfirmCode('');
                     setSchoolResetModalOpen(true);
                   }}
-                  className="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-rose-600 to-amber-600 hover:from-rose-700 hover:to-amber-700 text-white font-black text-xs uppercase shadow-lg shadow-rose-600/30 transition-all flex items-center gap-2 shrink-0 cursor-pointer hover:scale-102"
+                  className="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-rose-600 to-amber-700 hover:from-rose-700 hover:to-amber-800 text-white font-black text-xs uppercase shadow-lg shadow-rose-600/30 transition-all flex items-center gap-2 shrink-0 cursor-pointer hover:scale-102"
                 >
                   <Trash2 className="w-4 h-4" />
                   <span>Dọn Dẹp Dữ Liệu Năm Học Mới</span>
@@ -4148,7 +4148,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                   <div className="p-3.5 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-between">
                     <div>
                       <div className="text-xs font-black text-white">Xuất Data JSON Khối Cá Nhân</div>
-                      <div className="text-[11px] text-slate-300">Tải về toàn bộ thông tin lớp & học sinh của GV cá nhân</div>
+                      <div className="text-[12px] text-slate-300">Tải về toàn bộ thông tin lớp & học sinh của GV cá nhân</div>
                     </div>
                     <button
                       onClick={() => handleExportScoped('guest')}
@@ -4162,9 +4162,9 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                   <div className="p-3.5 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-between">
                     <div>
                       <div className="text-xs font-black text-white">Nhập Data JSON Khối Cá Nhân</div>
-                      <div className="text-[11px] text-slate-300">Khôi phục danh sách GV cá nhân từ file đã lưu</div>
+                      <div className="text-[12px] text-slate-300">Khôi phục danh sách GV cá nhân từ file đã lưu</div>
                     </div>
-                    <label className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black uppercase transition-colors flex items-center gap-1.5 cursor-pointer">
+                    <label className="px-3 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-black uppercase transition-colors flex items-center gap-1.5 cursor-pointer">
                       <Upload className="w-3.5 h-3.5" />
                       <span>Upload</span>
                       <input type="file" accept=".json" onChange={(e) => handleImportScoped(e, 'guest')} className="hidden" />
@@ -4176,7 +4176,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                   <div className="p-3.5 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-between">
                     <div>
                       <div className="text-xs font-black text-white">Xuất Data JSON Nhà Trường</div>
-                      <div className="text-[11px] text-slate-300">Tải về toàn bộ thông tin lớp & học sinh của {currentSchoolScope}</div>
+                      <div className="text-[12px] text-slate-300">Tải về toàn bộ thông tin lớp & học sinh của {currentSchoolScope}</div>
                     </div>
                     <button
                       onClick={() => handleExportScoped('school')}
@@ -4190,9 +4190,9 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                   <div className="p-3.5 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-between">
                     <div>
                       <div className="text-xs font-black text-white">Nhập Data JSON Nhà Trường</div>
-                      <div className="text-[11px] text-slate-300">Khôi phục danh sách trường từ file backup</div>
+                      <div className="text-[12px] text-slate-300">Khôi phục danh sách trường từ file backup</div>
                     </div>
-                    <label className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black uppercase transition-colors flex items-center gap-1.5 cursor-pointer">
+                    <label className="px-3 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-black uppercase transition-colors flex items-center gap-1.5 cursor-pointer">
                       <Upload className="w-3.5 h-3.5" />
                       <span>Upload</span>
                       <input type="file" accept=".json" onChange={(e) => handleImportScoped(e, 'school')} className="hidden" />
@@ -4205,7 +4205,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                     <div className="p-3.5 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-between">
                       <div>
                         <div className="text-xs font-black text-white">Xuất Data JSON Khối Nhà Trường</div>
-                        <div className="text-[11px] text-slate-300">Tải về dữ liệu các trường học đã cấu hình</div>
+                        <div className="text-[12px] text-slate-300">Tải về dữ liệu các trường học đã cấu hình</div>
                       </div>
                       <button
                         onClick={() => handleExportScoped('school')}
@@ -4219,7 +4219,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                     <div className="p-3.5 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-between">
                       <div>
                         <div className="text-xs font-black text-white">Xuất Data JSON Khối Cá Nhân</div>
-                        <div className="text-[11px] text-slate-300">Tải về dữ liệu khối giáo viên vãng lai</div>
+                        <div className="text-[12px] text-slate-300">Tải về dữ liệu khối giáo viên vãng lai</div>
                       </div>
                       <button
                         onClick={() => handleExportScoped('guest')}
@@ -4251,7 +4251,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
           <div className="flex-1 overflow-y-auto p-5 md:p-7 flex flex-col space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-gradient-to-r from-amber-50 to-orange-50 p-4 rounded-2xl border border-amber-200">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-amber-600 text-white flex items-center justify-center font-black shrink-0">
+                <div className="w-10 h-10 rounded-2xl bg-amber-700 text-white flex items-center justify-center font-black shrink-0">
                   <Sparkles className="w-5 h-5" />
                 </div>
                 <div>
@@ -4273,7 +4273,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                   <RefreshCw className={`w-3.5 h-3.5 text-amber-600 ${loadingRegistrations ? 'animate-spin' : ''}`} />
                   <span>Làm Mới</span>
                 </button>
-                <span className="px-3 py-1.5 rounded-xl bg-amber-600 text-white font-black text-xs uppercase shadow-xs">
+                <span className="px-3 py-1.5 rounded-xl bg-amber-700 text-white font-black text-xs uppercase shadow-xs">
                   {registrations.length} Đơn Đăng Ký
                 </span>
               </div>
@@ -4283,7 +4283,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
             <div className="flex-1 border border-slate-200 rounded-2xl overflow-hidden shadow-2xs bg-white">
               <div className="overflow-x-auto h-full">
                 <table className="w-full text-left border-collapse text-xs">
-                  <thead className="bg-white border-b-2 border-slate-300 text-[11px] font-black text-emerald-600 tracking-wider sticky top-0 z-10">
+                  <thead className="bg-white border-b-2 border-slate-300 text-[12px] font-black text-emerald-700 tracking-wider sticky top-0 z-10">
                     <tr>
                       <th rowSpan={2} className="py-2 px-2 text-center w-12 border-r border-slate-300 border-l border-slate-300 border-t border-slate-300">STT</th>
                       <th rowSpan={2} className="py-2 px-2 border-r border-slate-300 border-t border-slate-300 text-center">Họ và tên Thầy / Cô</th>
@@ -4298,7 +4298,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                       <th rowSpan={2} className="py-2 px-2 text-center border-r border-slate-300 border-t border-slate-300 w-20">Thao tác</th>
                     </tr>
                     <tr>
-                      <th className="py-1 px-2 text-center text-green-600 border-r border-slate-300">Đã giải quyết</th>
+                      <th className="py-1 px-2 text-center text-green-700 border-r border-slate-300">Đã giải quyết</th>
                       <th className="py-1 px-2 text-center text-red-600 border-r border-slate-300">Chưa giải quyết</th>
                     </tr>
                   </thead>
@@ -4327,7 +4327,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                           <button
                             onClick={() => { if (reg.status !== 'approved') handleApproveRegistration(reg); }}
                             className={`w-4 h-4 mx-auto rounded-sm flex items-center justify-center transition-colors border ${
-                              reg.status === 'approved' ? 'bg-green-600 border-green-500 text-white' : 'bg-white border-slate-400 hover:border-green-500'
+                              reg.status === 'approved' ? 'bg-green-700 border-green-500 text-white' : 'bg-white border-slate-400 hover:border-green-500'
                             }`}
                             title="Đánh dấu Đã giải quyết (Duyệt)"
                           >
@@ -4338,7 +4338,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                           <button
                             onClick={() => { if (reg.status === 'approved') handleOpenRejectModal(reg.id); }}
                             className={`w-4 h-4 mx-auto rounded-sm flex items-center justify-center transition-colors border ${
-                              reg.status !== 'approved' ? 'bg-red-500 border-red-500 text-white' : 'bg-white border-slate-400 hover:border-red-500'
+                              reg.status !== 'approved' ? 'bg-red-600 border-red-500 text-white' : 'bg-white border-slate-400 hover:border-red-500'
                             }`}
                             title={reg.status !== 'approved' ? "Đang Chưa giải quyết" : "Hủy duyệt / Đánh dấu Chưa giải quyết"}
                           >
@@ -4438,7 +4438,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                   </div>
                   {targetResetScope === 'school' && (
                     <div className="pt-1">
-                      <label className="text-[11px] font-bold text-slate-600 block mb-1">Chọn Trường Cần Dọn Dẹp:</label>
+                      <label className="text-[12px] font-bold text-slate-600 block mb-1">Chọn Trường Cần Dọn Dẹp:</label>
                       <select
                         value={selectedResetSchoolName}
                         onChange={(e) => setSelectedResetSchoolName(e.target.value)}
@@ -4470,14 +4470,14 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                   <span className="text-xs font-black text-indigo-900 uppercase">
                     Phương án 1 (Khuyên Dùng)
                   </span>
-                  <span className="px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800 text-[10px] font-black uppercase">
+                  <span className="px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800 text-[12px] font-black uppercase">
                     Bảo Toàn User
                   </span>
                 </div>
                 <div className="text-xs text-slate-700 mt-1 font-bold">
                   Xóa dữ liệu lớp học, học sinh, điểm thi đua để nhập lớp mới.
                 </div>
-                <div className="text-[11px] text-emerald-700 font-bold mt-0.5">
+                <div className="text-[12px] text-emerald-700 font-bold mt-0.5">
                   ✓ GIỮ NGUYÊN tài khoản đăng nhập của các giáo viên thuộc phạm vi này.
                 </div>
               </div>
@@ -4495,14 +4495,14 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                   <span className="text-xs font-black text-rose-900 uppercase">
                     Phương án 2 (Triệt để)
                   </span>
-                  <span className="px-2 py-0.5 rounded-md bg-rose-100 text-rose-800 text-[10px] font-black uppercase">
+                  <span className="px-2 py-0.5 rounded-md bg-rose-100 text-rose-800 text-[12px] font-black uppercase">
                     Xóa Hết
                   </span>
                 </div>
                 <div className="text-xs text-slate-700 mt-1 font-bold">
                   Xóa toàn bộ thông tin lớp học, học sinh VÀ toàn bộ tài khoản giáo viên thuộc phạm vi này.
                 </div>
-                <div className="text-[11px] text-slate-500 mt-0.5">
+                <div className="text-[12px] text-slate-500 mt-0.5">
                   (Chỉ giữ lại tài khoản Quản trị Admin và các tài khoản Demo).
                 </div>
               </div>
@@ -4552,7 +4552,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
             {provisionedSchoolInfo ? (
               <div className="space-y-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-11 h-11 rounded-2xl bg-emerald-600 text-white flex items-center justify-center font-black shadow-md shadow-emerald-600/20 shrink-0">
+                  <div className="w-11 h-11 rounded-2xl bg-emerald-700 text-white flex items-center justify-center font-black shadow-md shadow-emerald-600/20 shrink-0">
                     <CheckCircle2 className="w-6 h-6" />
                   </div>
                   <div>
@@ -4592,7 +4592,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                   </div>
                 </div>
 
-                <div className="bg-blue-50 border border-blue-200 rounded-2xl p-3 text-[11px] text-blue-900 flex items-start gap-2">
+                <div className="bg-blue-50 border border-blue-200 rounded-2xl p-3 text-[12px] text-blue-900 flex items-start gap-2">
                   <ShieldCheck className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
                   <div>
                     <strong>Quy trình bàn giao phân cấp SaaS:</strong> Bàn giao tài khoản này cho Ban Giám Hiệu nhà trường. BGH đăng nhập bằng tài khoản trên để tự tạo danh sách GVCN, GVBM. Sau đó các giáo viên đăng nhập tự mở lớp và cập nhật học sinh.
@@ -4635,7 +4635,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                       <h3 className="text-sm font-black text-slate-900 uppercase">
                         {editingSchool ? 'Chỉnh Sửa Thông Tin CSDL Trường' : 'Khởi Tạo Cơ Sở Dữ Liệu Trường Mới (Nhánh 1)'}
                       </h3>
-                      <p className="text-[11px] text-slate-500">
+                      <p className="text-[12px] text-slate-500">
                         Khởi tạo danh mục & cơ sở dữ liệu trường học mới trong hệ thống
                       </p>
                     </div>
@@ -4652,14 +4652,14 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                 <form onSubmit={handleSaveSchool} className="space-y-4 pt-2">
                   {/* Thông tin trường học */}
                   <div className="space-y-3">
-                    <div className="text-[11px] font-black uppercase text-slate-500 flex items-center gap-1.5">
+                    <div className="text-[12px] font-black uppercase text-slate-500 flex items-center gap-1.5">
                       <School className="w-3.5 h-3.5 text-blue-600" />
                       <span>THÔNG TIN CƠ SỞ DỮ LIỆU TRƯỜNG HỌC</span>
                     </div>
 
                     <div>
                       <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
-                        Tên Trường Học <span className="text-rose-500">*</span>
+                        Tên Trường Học <span className="text-rose-600">*</span>
                       </label>
                       <input
                         type="text"
@@ -4674,7 +4674,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                     <div className="grid grid-cols-2 gap-3">
                       <div>
                         <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
-                          Mã Trường <span className="text-rose-500">*</span>
+                          Mã Trường <span className="text-rose-600">*</span>
                         </label>
                         <input
                           type="text"
@@ -4735,13 +4735,13 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="text-xs font-black text-slate-800">Đồng thời khởi tạo tài khoản Quản trị BGH</div>
-                          <div className="text-[10px] text-slate-500 mt-0.5">
+                          <div className="text-[12px] text-slate-500 mt-0.5">
                             {createAdminAccount
                               ? 'Sẽ tạo tài khoản Ban Giám Hiệu ngay bây giờ'
                               : 'Có thể cấp tài khoản sau tại danh mục trường học'}
                           </div>
                         </div>
-                        <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${
+                        <span className={`text-[12px] font-black px-2 py-0.5 rounded-full ${
                           createAdminAccount
                             ? 'bg-indigo-600 text-white'
                             : 'bg-slate-200 text-slate-500'
@@ -4752,14 +4752,14 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
 
                       {createAdminAccount && (
                         <div className="p-4 space-y-3 bg-indigo-50/50">
-                          <div className="text-[11px] font-black uppercase text-indigo-700 flex items-center gap-1.5">
+                          <div className="text-[12px] font-black uppercase text-indigo-700 flex items-center gap-1.5">
                             <Crown className="w-3.5 h-3.5" />
                             <span>THÔNG TIN TÀI KHOẢN BAN GIÁM HIỆU</span>
                           </div>
                           <div className="grid grid-cols-2 gap-3">
                             <div>
                               <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
-                                Tên Đăng Nhập BGH <span className="text-rose-500">*</span>
+                                Tên Đăng Nhập BGH <span className="text-rose-600">*</span>
                               </label>
                               <input
                                 type="text"
@@ -4847,7 +4847,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
         <div className="fixed inset-0 z-[70] flex items-center justify-center p-3 md:p-4 bg-sky-900/20 backdrop-blur-xs animate-in fade-in duration-150">
           <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-xl overflow-hidden animate-in zoom-in-95 duration-150">
             {/* Header */}
-            <div className="bg-gradient-to-r from-purple-500 via-indigo-500 to-blue-500 p-5 text-white flex items-center justify-between">
+            <div className="bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 p-5 text-white flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-2xl bg-purple-500/30 border border-purple-300/40 text-white flex items-center justify-center font-black shadow-inner">
                   <Building2 className="w-5 h-5 text-purple-200" />
@@ -4855,7 +4855,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                 <div>
                   <h4 className="text-sm font-black uppercase tracking-tight flex items-center gap-2">
                     <span>GÁN CSDL GIÁO VIÊN VÀO NHÀ TRƯỜNG</span>
-                    <span className="text-[10px] bg-purple-400/30 text-white px-2 py-0.5 rounded-full border border-purple-300/30 font-bold">
+                    <span className="text-[12px] bg-purple-400/30 text-white px-2 py-0.5 rounded-full border border-purple-300/30 font-bold">
                       Bảo Toàn 100%
                     </span>
                   </h4>
@@ -4884,11 +4884,11 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between">
                     <div className="font-black text-slate-900 text-sm">{userToTransfer.fullName}</div>
-                    <code className="px-2 py-0.5 rounded-lg bg-indigo-50 text-indigo-700 font-mono font-bold text-[11px] border border-indigo-200">
+                    <code className="px-2 py-0.5 rounded-lg bg-indigo-50 text-indigo-700 font-mono font-bold text-[12px] border border-indigo-200">
                       @{userToTransfer.username}
                     </code>
                   </div>
-                  <div className="text-slate-500 mt-0.5 flex flex-wrap items-center gap-2 text-[11px]">
+                  <div className="text-slate-500 mt-0.5 flex flex-wrap items-center gap-2 text-[12px]">
                     <span className="font-bold text-slate-700">
                       {userToTransfer.role === 'homeroom' ? `GV Chủ nhiệm (${userToTransfer.assignedClassName || 'Lớp chưa gán'})` : `GV Bộ môn (${userToTransfer.subjectName || 'Môn chưa gán'})`}
                     </span>
@@ -4900,13 +4900,13 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                     const summary = userSummaries.find(s => s.username.toLowerCase() === userToTransfer.username.toLowerCase());
                     return (
                       <div className="mt-2 flex items-center gap-2">
-                        <span className="px-2 py-0.5 rounded-lg bg-purple-100 text-purple-800 font-black text-[10px] border border-purple-200">
+                        <span className="px-2 py-0.5 rounded-lg bg-purple-100 text-purple-800 font-black text-[12px] border border-purple-200">
                           {userToTransfer.tenantType === 'guest' ? '📍 Đang là: Vãng Lai Tỉnh Lẻ' : `📍 Trường cũ: ${userToTransfer.schoolName || 'Chưa có'}`}
                         </span>
-                        <span className="px-2 py-0.5 rounded-lg bg-emerald-50 text-emerald-800 font-bold text-[10px] border border-emerald-200">
+                        <span className="px-2 py-0.5 rounded-lg bg-emerald-50 text-emerald-800 font-bold text-[12px] border border-emerald-200">
                           📚 {summary ? summary.classCount : 1} Lớp học
                         </span>
-                        <span className="px-2 py-0.5 rounded-lg bg-blue-50 text-blue-800 font-bold text-[10px] border border-blue-200">
+                        <span className="px-2 py-0.5 rounded-lg bg-blue-50 text-blue-800 font-bold text-[12px] border border-blue-200">
                           🎒 {summary ? summary.studentCount : 0} Học sinh
                         </span>
                       </div>
@@ -4918,8 +4918,8 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
               {/* Chọn Trường học đích cần gán */}
               <div className="space-y-1.5">
                 <label className="block text-xs font-black text-slate-800 uppercase flex items-center justify-between">
-                  <span>CHỌN ĐƠN VỊ TRƯỜNG HỌC ĐÍCH ĐƯỢC GÁN <span className="text-rose-500">*</span></span>
-                  <span className="text-[10px] text-blue-600 font-bold">({schoolsList.length} trường khả dụng)</span>
+                  <span>CHỌN ĐƠN VỊ TRƯỜNG HỌC ĐÍCH ĐƯỢC GÁN <span className="text-rose-600">*</span></span>
+                  <span className="text-[12px] text-blue-600 font-bold">({schoolsList.length} trường khả dụng)</span>
                 </label>
                 <select
                   value={targetSchoolName}
@@ -4951,11 +4951,11 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
 
               {/* Cam kết nghiệp vụ & Bảo toàn dữ liệu (Zero Data Loss Protocol) */}
               <div className="p-3.5 bg-gradient-to-br from-emerald-50/70 to-blue-50/70 border border-emerald-200 rounded-2xl space-y-2">
-                <div className="text-[11px] font-black text-emerald-900 uppercase flex items-center gap-1.5">
+                <div className="text-[12px] font-black text-emerald-900 uppercase flex items-center gap-1.5">
                   <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
                   <span>CAM KẾT BẢO TOÀN DỮ LIỆU & PHÂN QUYỀN ĐƠN VỊ (CHUẨN HÓA)</span>
                 </div>
-                <ul className="space-y-1.5 text-[11px] text-slate-700 font-medium">
+                <ul className="space-y-1.5 text-[12px] text-slate-700 font-medium">
                   <li className="flex items-start gap-1.5">
                     <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
                     <span><strong>Bảo toàn tài khoản:</strong> Mật khẩu và thông tin đăng nhập của cô giáo giữ nguyên 100%, cô giáo vẫn đăng nhập bình thường.</span>
@@ -5032,7 +5032,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
             
             <form onSubmit={handleConfirmReject} className="p-5 space-y-4">
               <div className="space-y-1.5">
-                <label className="text-xs font-black text-slate-700 uppercase">Lý Do Từ Chối <span className="text-rose-500">*</span></label>
+                <label className="text-xs font-black text-slate-700 uppercase">Lý Do Từ Chối <span className="text-rose-600">*</span></label>
                 <textarea
                   required
                   value={rejectReason}
@@ -5093,7 +5093,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
             
             <form onSubmit={handleConfirmEditRegistration} className="p-5 space-y-4">
               <div className="space-y-1.5">
-                <label className="text-xs font-black text-slate-700 uppercase">Trạng Thái Hồ Sơ <span className="text-rose-500">*</span></label>
+                <label className="text-xs font-black text-slate-700 uppercase">Trạng Thái Hồ Sơ <span className="text-rose-600">*</span></label>
                 <div className="flex gap-4 mt-2">
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input 
@@ -5102,7 +5102,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                       value="approved" 
                       checked={editRegStatus === 'approved'} 
                       onChange={() => setEditRegStatus('approved')}
-                      className="w-4 h-4 text-green-600 focus:ring-green-500" 
+                      className="w-4 h-4 text-green-700 focus:ring-green-500" 
                     />
                     <span className="text-sm font-medium text-slate-700">Đã giải quyết</span>
                   </label>
@@ -5171,7 +5171,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
               <p className="text-xs text-rose-800 mt-1.5 leading-relaxed font-bold">
                 Xác nhận xóa trường: <strong className="text-rose-900 font-black">"{schoolToDelete.name}"</strong>
               </p>
-              <p className="text-[11px] text-slate-500 mt-1 leading-relaxed">
+              <p className="text-[12px] text-slate-500 mt-1 leading-relaxed">
                 Hành động này sẽ xóa sạch toàn bộ CSDL về nhà trường, mô hình lớp học, học sinh và các tài khoản thuộc trường.
               </p>
             </div>
@@ -5218,7 +5218,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
               <p className="text-xs text-rose-800 mt-1.5 leading-relaxed font-bold">
                 Xác nhận xóa tài khoản: <strong className="text-rose-900 font-black">@{userToDelete.username}</strong>
               </p>
-              <p className="text-[11px] text-slate-500 mt-1 leading-relaxed">
+              <p className="text-[12px] text-slate-500 mt-1 leading-relaxed">
                 Người dùng: {userToDelete.fullName} • Vai trò: {userToDelete.role}. Dữ liệu lớp học của giáo viên này sẽ được dọn dẹp.
               </p>
             </div>
@@ -5263,7 +5263,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
               </div>
               <div className="flex-1 min-w-0">
                 <h3 className="text-sm font-black text-slate-900 uppercase tracking-tight">Cấp Tài Khoản Ban Giám Hiệu</h3>
-                <p className="text-[11px] text-slate-500 mt-0.5 truncate">Trường: <strong className="text-slate-700">{provisioningSchool.name}</strong></p>
+                <p className="text-[12px] text-slate-500 mt-0.5 truncate">Trường: <strong className="text-slate-700">{provisioningSchool.name}</strong></p>
               </div>
               <button
                 type="button"
@@ -5278,34 +5278,34 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
               {provisionedResult ? (
                 /* Trạng thái đã cấp thành công - hiển thị thông tin bàn giao */
                 <div className="space-y-4">
-                  <div className="flex items-center justify-center w-12 h-12 mx-auto rounded-2xl bg-emerald-100 text-emerald-600">
+                  <div className="flex items-center justify-center w-12 h-12 mx-auto rounded-2xl bg-emerald-100 text-emerald-700">
                     <CheckCircle2 className="w-6 h-6" />
                   </div>
                   <div className="text-center">
                     <div className="text-sm font-black text-slate-900">Cấp tài khoản thành công! 🎉</div>
-                    <div className="text-[11px] text-slate-500 mt-1">Bàn giao thông tin dưới đây cho Ban Giám Hiệu</div>
+                    <div className="text-[12px] text-slate-500 mt-1">Bàn giao thông tin dưới đây cho Ban Giám Hiệu</div>
                   </div>
 
                   <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-2.5">
                     <div className="flex items-center gap-2.5">
-                      <div className="text-[11px] font-black uppercase text-slate-500 w-28 shrink-0">Đơn vị</div>
+                      <div className="text-[12px] font-black uppercase text-slate-500 w-28 shrink-0">Đơn vị</div>
                       <div className="text-xs font-bold text-slate-800">{provisionedResult.schoolName}</div>
                     </div>
                     <div className="flex items-center gap-2.5">
-                      <div className="text-[11px] font-black uppercase text-slate-500 w-28 shrink-0">Mã trường</div>
+                      <div className="text-[12px] font-black uppercase text-slate-500 w-28 shrink-0">Mã trường</div>
                       <div className="text-xs font-mono font-bold text-blue-700">{provisionedResult.code}</div>
                     </div>
                     <div className="h-px bg-slate-200" />
                     <div className="flex items-center gap-2.5">
-                      <div className="text-[11px] font-black uppercase text-slate-500 w-28 shrink-0">Tài khoản BGH</div>
+                      <div className="text-[12px] font-black uppercase text-slate-500 w-28 shrink-0">Tài khoản BGH</div>
                       <div className="text-xs font-mono font-black text-indigo-700">@{provisionedResult.username}</div>
                     </div>
                     <div className="flex items-center gap-2.5">
-                      <div className="text-[11px] font-black uppercase text-slate-500 w-28 shrink-0">Mật khẩu</div>
+                      <div className="text-[12px] font-black uppercase text-slate-500 w-28 shrink-0">Mật khẩu</div>
                       <div className="text-xs font-mono font-bold text-rose-700 tracking-widest">{provisionedResult.password || '123456'}</div>
                     </div>
                     <div className="flex items-center gap-2.5">
-                      <div className="text-[11px] font-black uppercase text-slate-500 w-28 shrink-0">Họ tên</div>
+                      <div className="text-[12px] font-black uppercase text-slate-500 w-28 shrink-0">Họ tên</div>
                       <div className="text-xs font-bold text-slate-700">{provisionedResult.fullName}</div>
                     </div>
                   </div>
@@ -5335,14 +5335,14 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
               ) : (
                 /* Form nhập thông tin tài khoản BGH */
                 <form onSubmit={handleProvisionAdmin} className="space-y-4">
-                  <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 flex items-start gap-2.5 text-[11px] text-amber-800">
+                  <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 flex items-start gap-2.5 text-[12px] text-amber-800">
                     <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
                     <span>Trường này <strong>chưa có tài khoản BGH</strong>. Điền thông tin bên dưới để cấp tài khoản bàn giao cho Ban Giám Hiệu.</span>
                   </div>
 
                   <div>
                     <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
-                      Tên Đăng Nhập BGH <span className="text-rose-500">*</span>
+                      Tên Đăng Nhập BGH <span className="text-rose-600">*</span>
                     </label>
                     <input
                       type="text"
@@ -5390,7 +5390,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                     />
                   </div>
 
-                  <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 flex items-start gap-2 text-[11px] text-blue-800">
+                  <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 flex items-start gap-2 text-[12px] text-blue-800">
                     <ShieldCheck className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
                     <span>Sau khi cấp, BGH đăng nhập bằng tài khoản trên để tự tạo GVCN, GVBM. Thực hiện <strong>đổi mật khẩu</strong> sau lần đăng nhập đầu tiên.</span>
                   </div>

@@ -254,7 +254,7 @@ export const TimetableConfigModal: React.FC<TimetableConfigModalProps> = ({
               <div className="p-3 bg-indigo-50/60 rounded-2xl border border-indigo-200/80 flex items-center justify-between">
                 <div>
                   <label className="block text-indigo-900 font-bold">Học Thứ Bảy:</label>
-                  <span className="text-[11px] text-slate-500">Bật nếu có lịch dạy cuối tuần</span>
+                  <span className="text-[12px] text-slate-500">Bật nếu có lịch dạy cuối tuần</span>
                 </div>
                 <input
                   type="checkbox"
@@ -319,13 +319,13 @@ export const TimetableConfigModal: React.FC<TimetableConfigModalProps> = ({
 
               {/* Morning times */}
               <div className="space-y-2">
-                <span className="text-[11px] font-black text-amber-700 uppercase tracking-wider block">
+                <span className="text-[12px] font-black text-amber-700 uppercase tracking-wider block">
                   BUỔI SÁNG (Tiết 1 đến Tiết {morningPeriods}):
                 </span>
                 <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-xs">
                   {Array.from({ length: morningPeriods }).map((_, idx) => (
                     <div key={`m-time-${idx}`} className="bg-amber-50/40 p-2 rounded-xl border border-amber-200/60">
-                      <span className="text-[10px] font-bold text-amber-800 block mb-1">Tiết {idx + 1}:</span>
+                      <span className="text-[12px] font-bold text-amber-800 block mb-1">Tiết {idx + 1}:</span>
                       <input
                         type="text"
                         value={localSettings.morningTimes[idx] || ''}
@@ -341,13 +341,13 @@ export const TimetableConfigModal: React.FC<TimetableConfigModalProps> = ({
               {/* Afternoon times */}
               {afternoonPeriods > 0 && (
                 <div className="space-y-2 pt-2">
-                  <span className="text-[11px] font-black text-blue-700 uppercase tracking-wider block">
+                  <span className="text-[12px] font-black text-blue-700 uppercase tracking-wider block">
                     BUỔI CHIỀU (Tiết 1 đến Tiết {afternoonPeriods}):
                   </span>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
                     {Array.from({ length: afternoonPeriods }).map((_, idx) => (
                       <div key={`a-time-${idx}`} className="bg-blue-50/40 p-2 rounded-xl border border-blue-200/60">
-                        <span className="text-[10px] font-bold text-blue-800 block mb-1">Tiết {idx + 1}:</span>
+                        <span className="text-[12px] font-bold text-blue-800 block mb-1">Tiết {idx + 1}:</span>
                         <input
                           type="text"
                           value={localSettings.afternoonTimes[idx] || ''}

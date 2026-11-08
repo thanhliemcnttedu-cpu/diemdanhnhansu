@@ -162,7 +162,7 @@ export const DesktopRoleSetupModal: React.FC<DesktopRoleSetupModalProps> = ({ is
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header 3D Công nghệ */}
-        <div className="p-4 sm:p-5 bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-600 text-white flex items-center justify-between border-b border-white/20">
+        <div className="p-4 sm:p-5 bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-700 text-white flex items-center justify-between border-b border-white/20">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-2xl bg-white/15 backdrop-blur-md flex items-center justify-center shadow-inner border border-white/30 text-xl">
               💻
@@ -172,7 +172,7 @@ export const DesktopRoleSetupModal: React.FC<DesktopRoleSetupModalProps> = ({ is
                 <h3 className="text-base sm:text-lg font-black tracking-tight leading-tight uppercase">
                   LỰA CHỌN VAI TRÒ SỬ DỤNG
                 </h3>
-                <span className="px-2 py-0.5 rounded-full bg-cyan-400 text-slate-900 text-[10px] font-black uppercase shadow-xs">
+                <span className="px-2 py-0.5 rounded-full bg-cyan-400 text-slate-900 text-[12px] font-black uppercase shadow-xs">
                   CSDL_LHHP.exe
                 </span>
               </div>
@@ -195,12 +195,12 @@ export const DesktopRoleSetupModal: React.FC<DesktopRoleSetupModalProps> = ({ is
             <div className="p-3 bg-gradient-to-r from-sky-50 to-blue-50 rounded-2xl border border-sky-200 flex items-center justify-between text-xs font-bold text-sky-950">
               <div className="flex items-center gap-2">
                 <span>⚙️ Vai trò đã chọn khi cài đặt:</span>
-                <span className="px-2 py-0.5 rounded-full bg-blue-600 text-white font-black text-[11px] uppercase">
+                <span className="px-2 py-0.5 rounded-full bg-blue-600 text-white font-black text-[12px] uppercase">
                   {installedInfo.roleTitle || installedInfo.role}
                 </span>
               </div>
               {installedInfo.installedAt && (
-                <span className="text-[10px] text-slate-500 font-mono">
+                <span className="text-[12px] text-slate-500 font-mono">
                   {installedInfo.installedAt}
                 </span>
               )}
@@ -228,14 +228,14 @@ export const DesktopRoleSetupModal: React.FC<DesktopRoleSetupModalProps> = ({ is
                       <span className="font-black text-xs sm:text-sm text-slate-900 uppercase">
                         {opt.title}
                       </span>
-                      <span className="px-2 py-0.2 rounded-md bg-slate-100 text-slate-700 text-[9.5px] font-black uppercase border border-slate-200">
+                      <span className="px-2 py-0.2 rounded-md bg-slate-100 text-slate-700 text-[12px] font-black uppercase border border-slate-200">
                         {opt.badge}
                       </span>
                     </div>
-                    <p className="text-[11px] sm:text-xs text-slate-600 font-medium leading-relaxed mb-1.5">
+                    <p className="text-[12px] sm:text-xs text-slate-600 font-medium leading-relaxed mb-1.5">
                       {opt.description}
                     </p>
-                    <div className="flex items-center gap-1.5 text-[10px] sm:text-[11px] font-mono text-blue-700 font-bold">
+                    <div className="flex items-center gap-1.5 text-[12px] sm:text-[12px] font-mono text-blue-700 font-bold">
                       <HardDrive className="w-3.5 h-3.5 text-blue-600" />
                       <span>Tệp lưu trữ:</span>
                       <strong className="px-1.5 py-0.2 rounded bg-blue-100 text-blue-900 border border-blue-200">

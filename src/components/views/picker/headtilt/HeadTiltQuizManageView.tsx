@@ -166,11 +166,11 @@ export const HeadTiltQuizManageView: React.FC<HeadTiltQuizManageViewProps> = ({
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-1.5 flex-wrap">
                       {quiz.isTrial && (
-                        <span className="px-2.5 py-0.5 rounded-lg bg-purple-100 text-purple-700 font-black text-[10px] uppercase">
+                        <span className="px-2.5 py-0.5 rounded-lg bg-purple-100 text-purple-700 font-black text-[12px] uppercase">
                           Bản chạy thử
                         </span>
                       )}
-                      <span className="px-2.5 py-0.5 rounded-lg bg-indigo-50 text-indigo-700 font-black text-[10px]">
+                      <span className="px-2.5 py-0.5 rounded-lg bg-indigo-50 text-indigo-700 font-black text-[12px]">
                         {quiz.questions.length} câu hỏi
                       </span>
                     </div>

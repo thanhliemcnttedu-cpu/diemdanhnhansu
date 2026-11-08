@@ -632,6 +632,14 @@ export const AttendanceView: React.FC = () => {
     };
   }, [currentClassStudents, currentStatusMap, currentBoardingMap]);
 
+  // Không hiển thị tỷ lệ giả (100% / 0%) khi chưa có học sinh hoặc chưa có buổi điểm danh nào trong kỳ
+  const hasPeriodData = (st: { sessions?: number; totalStudents?: number }) =>
+    (st.totalStudents || 0) > 0 && (st.sessions || 0) > 0;
+  const fmtRate = (st: { sessions?: number; totalStudents?: number; attendanceRate: number }) =>
+    hasPeriodData(st) ? `${st.attendanceRate}%` : '—';
+  const fmtBoarding = (st: { sessions?: number; totalStudents?: number; boardingEating: number; boardingRate: number }) =>
+    hasPeriodData(st) ? `${st.boardingEating} suất (${st.boardingRate}%)` : 'chưa có số liệu';
+
   // Group stats for class
   const groupStats = useMemo(() => {
     const groups = ['Tổ 1', 'Tổ 2', 'Tổ 3', 'Tổ 4'];
@@ -710,17 +718,17 @@ export const AttendanceView: React.FC = () => {
       {/* Top Banner & Mode Toggle: Chuyên Cần vs Ăn Bán Trú vs Thống Kê Biểu Đồ */}
       <div className="bg-white p-3 sm:p-3.5 rounded-2xl border border-slate-200/90 shadow-xs flex flex-col lg:flex-row lg:items-center justify-between gap-3 hover-zoom-card">
         <div className="flex items-center gap-2.5">
-          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-gradient-to-br from-emerald-600 to-teal-600 text-white flex items-center justify-center font-bold shadow-md shadow-emerald-500/20 shrink-0">
+          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-gradient-to-br from-emerald-700 to-teal-700 text-white flex items-center justify-center font-bold shadow-md shadow-emerald-500/20 shrink-0">
             {activeTab === 'daily' ? <CheckSquare className="w-5 h-5" /> : activeTab === 'boarding' ? <Utensils className="w-5 h-5" /> : <BarChart3 className="w-5 h-5" />}
           </div>
           <div>
             <h2 className="text-sm sm:text-base font-black text-slate-900 leading-tight uppercase flex items-center gap-2">
               <span>ĐIỂM DANH & CHUYÊN CẦN LỚP {activeClass?.name}</span>
-              <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[11px] font-black">
+              <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[12px] font-black">
                 {currentClassStudents.length} học sinh
               </span>
             </h2>
-            <p className="text-[11px] text-slate-500 mt-0.5 font-medium">
+            <p className="text-[12px] text-slate-500 mt-0.5 font-medium">
               {formatDateDisplay(selectedDate)} • GVCN: {activeClass?.teacherName || teacherProfile.name}
             </p>
           </div>
@@ -768,7 +776,7 @@ export const AttendanceView: React.FC = () => {
 
       {saveToast && (
         <div className="bg-emerald-50 border-2 border-emerald-400 text-emerald-950 p-4 rounded-2xl text-xs flex items-center gap-3 shadow-md animate-in fade-in duration-150">
-          <div className="w-7 h-7 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-bold shrink-0">
+          <div className="w-7 h-7 rounded-xl bg-emerald-700 text-white flex items-center justify-center font-bold shrink-0">
             <Check className="w-4 h-4" />
           </div>
           <span className="font-bold leading-relaxed">{saveToast}</span>
@@ -789,7 +797,7 @@ export const AttendanceView: React.FC = () => {
               <span className="text-xs font-black text-slate-900 uppercase">
                 CHỌN NGÀY ĐIỂM DANH & ĐIỂM DANH BỔ SUNG CÁC NGÀY TRƯỚC:
               </span>
-              <p className="text-[11px] text-slate-500 font-medium">
+              <p className="text-[12px] text-slate-500 font-medium">
                 Cho phép điểm danh lại hoặc bổ sung ngày quá khứ. Bấm <strong>Xác nhận điểm danh</strong> để tự động nhảy số liệu báo cáo 4 kỳ.
               </p>
             </div>
@@ -876,7 +884,7 @@ export const AttendanceView: React.FC = () => {
         {isPastDateSelected && (
           <div className="p-3.5 bg-amber-50 border-2 border-amber-300 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs animate-in fade-in duration-150">
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-xl bg-amber-600 text-white flex items-center justify-center font-bold shrink-0 shadow-2xs">
+              <div className="w-8 h-8 rounded-xl bg-amber-700 text-white flex items-center justify-center font-bold shrink-0 shadow-2xs">
                 <History className="w-4 h-4" />
               </div>
               <div>
@@ -885,7 +893,7 @@ export const AttendanceView: React.FC = () => {
                     ? `🕒 ĐANG Ở CHẾ ĐỘ ĐIỂM DANH BÁN TRÚ BỔ SUNG NGÀY: ${formatDateDisplay(selectedDate)}`
                     : `🕒 ĐANG Ở CHẾ ĐỘ ĐIỂM DANH CHUYÊN CẦN BỔ SUNG NGÀY: ${formatDateDisplay(selectedDate)}`}
                 </span>
-                <span className="text-[11px] text-amber-800 font-medium">
+                <span className="text-[12px] text-amber-800 font-medium">
                   {activeTab === 'boarding'
                     ? 'Kiểm tra danh sách học sinh ăn bán trú, sau đó bấm "XÁC NHẬN ĐIỂM DANH BÁN TRÚ" để hệ thống lưu và tự động nhảy tổng hợp số liệu 4 kỳ.'
                     : 'Đánh dấu các học sinh vắng, sau đó bấm "XÁC NHẬN ĐIỂM DANH" để hệ thống tự động ghi nhận Có mặt cho các em còn lại và tự động nhảy tổng hợp số liệu cho Hôm nay, Tuần này, Tuần trước, Cả tháng.'}
@@ -905,11 +913,11 @@ export const AttendanceView: React.FC = () => {
         {/* 4 PERIODS KPI CARDS: HÔM NAY • TUẦN NÀY • TUẦN TRƯỚC • CẢ THÁNG (User Request) */}
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-black uppercase text-slate-700 tracking-wider">
+            <span className="text-[12px] font-black uppercase text-slate-700 tracking-wider">
               TỔNG HỢP BÁO CÁO 4 KỲ (TỰ ĐỘNG NHẢY KHI XÁC NHẬN ĐIỂM DANH):
             </span>
             {statsJustUpdated && (
-              <span className="animate-pulse bg-emerald-600 text-white px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase flex items-center gap-1 shadow-xs">
+              <span className="animate-pulse bg-emerald-700 text-white px-2.5 py-0.5 rounded-full text-[12px] font-black uppercase flex items-center gap-1 shadow-xs">
                 <Sparkles className="w-3 h-3" />
                 <span>✨ Vừa tự động nhảy số liệu mới!</span>
               </span>
@@ -925,21 +933,21 @@ export const AttendanceView: React.FC = () => {
             }`}>
               <div className="flex items-center justify-between">
                 <span className="text-xs font-black uppercase text-emerald-800">HÔM NAY</span>
-                <span className="px-2 py-0.5 rounded-full bg-emerald-600 text-white font-mono font-black text-xs shadow-2xs">
-                  {periodStats.today.attendanceRate}%
+                <span className="px-2 py-0.5 rounded-full bg-emerald-700 text-white font-mono font-black text-xs shadow-2xs">
+                  {fmtRate(periodStats.today)}
                 </span>
               </div>
               <div>
                 <div className="text-2xl font-black font-mono text-emerald-950">
                   {periodStats.today.present} <span className="text-xs font-bold text-emerald-700">/ {currentClassStudents.length} em có mặt</span>
                 </div>
-                <div className="text-[11px] text-emerald-800 mt-1 font-medium">
+                <div className="text-[12px] text-emerald-800 mt-1 font-medium">
                   Vắng: <strong className="text-rose-700">{periodStats.today.totalAbsent} em</strong> ({periodStats.today.sick} ốm, {periodStats.today.excused} phép, {periodStats.today.unexcused} không phép)
                 </div>
               </div>
               <div className="pt-2 border-t border-emerald-200 flex items-center justify-between text-xs font-bold text-indigo-900">
                 <span>Ăn bán trú:</span>
-                <span className="font-mono font-black">{periodStats.today.boardingEating} suất ({periodStats.today.boardingRate}%)</span>
+                <span className="font-mono font-black">{fmtBoarding(periodStats.today)}</span>
               </div>
             </div>
 
@@ -952,20 +960,20 @@ export const AttendanceView: React.FC = () => {
               <div className="flex items-center justify-between">
                 <span className="text-xs font-black uppercase text-blue-800">TUẦN NÀY</span>
                 <span className="px-2 py-0.5 rounded-full bg-blue-600 text-white font-mono font-black text-xs shadow-2xs">
-                  {periodStats.thisWeek.attendanceRate}%
+                  {fmtRate(periodStats.thisWeek)}
                 </span>
               </div>
               <div>
                 <div className="text-2xl font-black font-mono text-blue-950">
-                  {periodStats.thisWeek.attendanceRate}% <span className="text-xs font-bold text-blue-700">chuyên cần</span>
+                  {fmtRate(periodStats.thisWeek)} <span className="text-xs font-bold text-blue-700">chuyên cần</span>
                 </div>
-                <div className="text-[11px] text-blue-800 mt-1 font-medium">
+                <div className="text-[12px] text-blue-800 mt-1 font-medium">
                   Tổng lượt có mặt: <strong className="text-blue-900">{periodStats.thisWeek.present} lượt</strong> ({periodStats.thisWeek.sessions} buổi)
                 </div>
               </div>
               <div className="pt-2 border-t border-blue-200 flex items-center justify-between text-xs font-bold text-indigo-900">
                 <span>Ăn bán trú:</span>
-                <span className="font-mono font-black">{periodStats.thisWeek.boardingEating} suất ({periodStats.thisWeek.boardingRate}%)</span>
+                <span className="font-mono font-black">{fmtBoarding(periodStats.thisWeek)}</span>
               </div>
             </div>
 
@@ -978,20 +986,20 @@ export const AttendanceView: React.FC = () => {
               <div className="flex items-center justify-between">
                 <span className="text-xs font-black uppercase text-indigo-800">TUẦN TRƯỚC</span>
                 <span className="px-2 py-0.5 rounded-full bg-indigo-600 text-white font-mono font-black text-xs shadow-2xs">
-                  {periodStats.lastWeek.attendanceRate}%
+                  {fmtRate(periodStats.lastWeek)}
                 </span>
               </div>
               <div>
                 <div className="text-2xl font-black font-mono text-indigo-950">
-                  {periodStats.lastWeek.attendanceRate}% <span className="text-xs font-bold text-indigo-700">chuyên cần</span>
+                  {fmtRate(periodStats.lastWeek)} <span className="text-xs font-bold text-indigo-700">chuyên cần</span>
                 </div>
-                <div className="text-[11px] text-indigo-800 mt-1 font-medium">
+                <div className="text-[12px] text-indigo-800 mt-1 font-medium">
                   Tổng lượt có mặt: <strong className="text-indigo-900">{periodStats.lastWeek.present} lượt</strong> ({periodStats.lastWeek.sessions} buổi)
                 </div>
               </div>
               <div className="pt-2 border-t border-indigo-200 flex items-center justify-between text-xs font-bold text-indigo-900">
                 <span>Ăn bán trú:</span>
-                <span className="font-mono font-black">{periodStats.lastWeek.boardingEating} suất ({periodStats.lastWeek.boardingRate}%)</span>
+                <span className="font-mono font-black">{fmtBoarding(periodStats.lastWeek)}</span>
               </div>
             </div>
 
@@ -1004,20 +1012,20 @@ export const AttendanceView: React.FC = () => {
               <div className="flex items-center justify-between">
                 <span className="text-xs font-black uppercase text-purple-800">CẢ THÁNG</span>
                 <span className="px-2 py-0.5 rounded-full bg-purple-600 text-white font-mono font-black text-xs shadow-2xs">
-                  {periodStats.thisMonth.attendanceRate}%
+                  {fmtRate(periodStats.thisMonth)}
                 </span>
               </div>
               <div>
                 <div className="text-2xl font-black font-mono text-purple-950">
-                  {periodStats.thisMonth.attendanceRate}% <span className="text-xs font-bold text-purple-700">toàn tháng</span>
+                  {fmtRate(periodStats.thisMonth)} <span className="text-xs font-bold text-purple-700">toàn tháng</span>
                 </div>
-                <div className="text-[11px] text-purple-800 mt-1 font-medium">
+                <div className="text-[12px] text-purple-800 mt-1 font-medium">
                   Tổng lượt có mặt: <strong className="text-purple-900">{periodStats.thisMonth.present} lượt</strong> ({periodStats.thisMonth.sessions} buổi)
                 </div>
               </div>
               <div className="pt-2 border-t border-purple-200 flex items-center justify-between text-xs font-bold text-indigo-900">
                 <span>Ăn bán trú:</span>
-                <span className="font-mono font-black">{periodStats.thisMonth.boardingEating} suất ({periodStats.thisMonth.boardingRate}%)</span>
+                <span className="font-mono font-black">{fmtBoarding(periodStats.thisMonth)}</span>
               </div>
             </div>
           </div>
@@ -1044,16 +1052,6 @@ export const AttendanceView: React.FC = () => {
 
             {/* Main Action Buttons */}
             <div className="flex flex-wrap items-center gap-2.5 shrink-0">
-              {/* NÚT CỐT LÕI THEO YÊU CẦU: XÁC NHẬN ĐIỂM DANH (TỰ ĐỘNG CÒN LẠI CÓ MẶT & NHẢY BÁO CÁO) */}
-              <button
-                onClick={handleConfirmAndCompleteAttendance}
-                className="px-5 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-xl text-xs font-black flex items-center gap-2 shadow-md shadow-emerald-600/30 transition-all hover-zoom-btn uppercase cursor-pointer"
-                title="Bấm để xác nhận điểm danh: Tự động ghi nhận Có mặt cho tất cả học sinh chưa đánh dấu vắng và tự động nhảy báo cáo 4 kỳ"
-              >
-                <Sparkles className="w-4 h-4 text-emerald-200" />
-                <span>⚡ XÁC NHẬN ĐIỂM DANH (TỰ ĐỘNG NHẢY BÁO CÁO)</span>
-              </button>
-
               {/* Nút Cả lớp có mặt */}
               <button
                 onClick={handleSelectAllPresent}
@@ -1077,37 +1075,37 @@ export const AttendanceView: React.FC = () => {
           {/* KPI Summary Strip for Selected Date */}
           <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-3">
             <div className="bg-emerald-50/80 border border-emerald-200 rounded-2xl p-3.5 shadow-2xs hover-zoom-card">
-              <span className="text-[10px] font-black uppercase text-emerald-700">Có mặt</span>
+              <span className="text-[12px] font-black uppercase text-emerald-700">Có mặt</span>
               <div className="text-2xl font-black font-mono text-emerald-800 mt-1">
-                {selectedDateStats.present} <span className="text-xs font-bold text-emerald-600">/ {currentClassStudents.length}</span>
+                {selectedDateStats.present} <span className="text-xs font-bold text-emerald-700">/ {currentClassStudents.length}</span>
               </div>
             </div>
 
             <div className="bg-blue-50/80 border border-blue-200 rounded-2xl p-3.5 shadow-2xs hover-zoom-card">
-              <span className="text-[10px] font-black uppercase text-blue-700">Vắng có phép</span>
+              <span className="text-[12px] font-black uppercase text-blue-700">Vắng có phép</span>
               <div className="text-2xl font-black font-mono text-blue-800 mt-1">
                 {selectedDateStats.excused} <span className="text-xs font-bold text-blue-600">em</span>
               </div>
             </div>
 
             <div className="bg-rose-50/80 border border-rose-200 rounded-2xl p-3.5 shadow-2xs hover-zoom-card">
-              <span className="text-[10px] font-black uppercase text-rose-700">Vắng không phép</span>
+              <span className="text-[12px] font-black uppercase text-rose-700">Vắng không phép</span>
               <div className="text-2xl font-black font-mono text-rose-800 mt-1">
                 {selectedDateStats.unexcused} <span className="text-xs font-bold text-rose-600">em</span>
               </div>
             </div>
 
             <div className="bg-purple-50/80 border border-purple-200 rounded-2xl p-3.5 shadow-2xs hover-zoom-card">
-              <span className="text-[10px] font-black uppercase text-purple-700">Nghỉ ốm</span>
+              <span className="text-[12px] font-black uppercase text-purple-700">Nghỉ ốm</span>
               <div className="text-2xl font-black font-mono text-purple-800 mt-1">
                 {selectedDateStats.sick} <span className="text-xs font-bold text-purple-600">em</span>
               </div>
             </div>
 
             <div className="bg-amber-50/80 border border-amber-200 rounded-2xl p-3.5 shadow-2xs hover-zoom-card col-span-2 sm:col-span-1">
-              <span className="text-[10px] font-black uppercase text-amber-700">Đi muộn</span>
+              <span className="text-[12px] font-black uppercase text-amber-700">Đi muộn</span>
               <div className="text-2xl font-black font-mono text-amber-800 mt-1">
-                {selectedDateStats.late} <span className="text-xs font-bold text-amber-600">em</span>
+                {selectedDateStats.late} <span className="text-xs font-bold text-amber-700">em</span>
               </div>
             </div>
           </div>
@@ -1196,11 +1194,11 @@ export const AttendanceView: React.FC = () => {
                       <div className="truncate">
                         <div className="text-xs md:text-sm font-black text-slate-900 truncate flex items-center gap-2">
                           <span>{student.name}</span>
-                          <span className={`px-2 py-0.5 rounded-md text-[10px] font-black border ${statusCfg.badgeClass}`}>
+                          <span className={`px-2 py-0.5 rounded-md text-[12px] font-black border ${statusCfg.badgeClass}`}>
                             {statusCfg.label}
                           </span>
                         </div>
-                        <div className="text-[10px] text-slate-500 flex items-center gap-2 mt-0.5 font-medium">
+                        <div className="text-[12px] text-slate-500 flex items-center gap-2 mt-0.5 font-medium">
                           <span>{student.gender}</span>
                           <span>• {student.group || 'Tổ 1'}</span>
                           {student.birthDate && <span>• NS: {student.birthDate}</span>}
@@ -1232,6 +1230,39 @@ export const AttendanceView: React.FC = () => {
               })}
             </div>
           </div>
+
+          {/* ✅ Thanh xác nhận cố định ở đáy: điểm danh xong danh sách là nút nằm ngay dưới tay */}
+          <div className="sticky bottom-24 sm:bottom-20 lg:bottom-3 z-20">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl border border-emerald-300 bg-white/95 px-4 py-3 shadow-lg">
+              <div className="text-sm text-slate-700">
+                {currentClassStudents.length === 0 ? (
+                  <span className="font-semibold">Lớp chưa có học sinh để điểm danh.</span>
+                ) : (
+                  <>
+                    <span className="font-bold text-emerald-700">Có mặt {currentClassStudents.length - selectedDateStats.totalAbsent}/{currentClassStudents.length}</span>
+                    <span className="mx-2 text-slate-400">•</span>
+                    <span className="font-semibold">Vắng {selectedDateStats.totalAbsent}</span>
+                    {selectedDateStats.late > 0 && (
+                      <>
+                        <span className="mx-2 text-slate-400">•</span>
+                        <span className="font-semibold">Đi muộn {selectedDateStats.late}</span>
+                      </>
+                    )}
+                    <span className="block text-xs text-slate-600 mt-0.5">Các em chưa đánh dấu sẽ được ghi là có mặt.</span>
+                  </>
+                )}
+              </div>
+              <button
+                onClick={handleConfirmAndCompleteAttendance}
+                disabled={currentClassStudents.length === 0}
+                className="btn-3d btn-3d-emerald px-5 py-3 text-sm gap-2 shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
+                title="Ghi nhận điểm danh và gửi ngay lên báo cáo của Ban Giám Hiệu"
+              >
+                <CheckCircle2 className="w-5 h-5" />
+                <span>Xác nhận điểm danh</span>
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
@@ -1245,7 +1276,7 @@ export const AttendanceView: React.FC = () => {
             {/* Hàng 1: Tiêu đề, Badge ngày & Nút xác nhận cốt lõi */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-3 border-b border-slate-100">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-600 to-teal-600 text-white flex items-center justify-center font-bold text-lg shadow-xs shrink-0">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-700 to-teal-700 text-white flex items-center justify-center font-bold text-lg shadow-xs shrink-0">
                   <Utensils className="w-5 h-5 text-white" />
                 </div>
                 <div>
@@ -1254,12 +1285,12 @@ export const AttendanceView: React.FC = () => {
                       ĐIỂM DANH ĂN BÁN TRÚ
                     </h3>
                     {isPastDateSelected ? (
-                      <span className="px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300 text-[11px] font-black flex items-center gap-1">
+                      <span className="px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300 text-[12px] font-black flex items-center gap-1">
                         <Clock className="w-3 h-3 text-amber-700" />
                         <span>Bổ sung ngày {selectedDate}</span>
                       </span>
                     ) : (
-                      <span className="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 text-[11px] font-black flex items-center gap-1">
+                      <span className="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 text-[12px] font-black flex items-center gap-1">
                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
                         <span>Hôm nay • {selectedDate}</span>
                       </span>
@@ -1271,22 +1302,13 @@ export const AttendanceView: React.FC = () => {
                 </div>
               </div>
 
-              {/* NÚT LỆNH CỐT LÕI: XÁC NHẬN BÁN TRÚ (TỰ ĐỘNG NHẢY BÁO CÁO) */}
-              <button
-                onClick={handleConfirmAndCompleteBoarding}
-                className="px-4 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-xl text-xs font-black flex items-center gap-2 shadow-md shadow-emerald-600/25 transition-all hover-zoom-btn uppercase cursor-pointer shrink-0 self-start md:self-auto"
-                title="Bấm để xác nhận điểm danh bán trú: Tự động lưu suất ăn và tự động nhảy tổng hợp báo cáo 4 kỳ"
-              >
-                <Sparkles className="w-4 h-4 text-emerald-200 shrink-0" />
-                <span>⚡ XÁC NHẬN BÁN TRÚ (NHẢY BÁO CÁO)</span>
-              </button>
             </div>
 
             {/* Hàng 2: Các nút lệnh phụ gom nhóm gọn gàng & trực quan */}
             <div className="flex flex-wrap items-center justify-between gap-2.5 pt-0.5">
               {/* Nhóm thao tác nhanh toàn lớp */}
               <div className="flex flex-wrap items-center gap-2">
-                <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mr-1 hidden sm:inline">
+                <span className="text-[12px] font-bold text-slate-400 uppercase tracking-wider mr-1 hidden sm:inline">
                   Thao tác nhanh:
                 </span>
                 <button
@@ -1312,7 +1334,7 @@ export const AttendanceView: React.FC = () => {
               <div className="flex flex-wrap items-center gap-2">
                 <button
                   onClick={handleCopyKitchenReport}
-                  className="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-2xs transition-all hover-zoom-btn cursor-pointer"
+                  className="px-3 py-1.5 bg-amber-700 hover:bg-amber-800 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-2xs transition-all hover-zoom-btn cursor-pointer"
                   title="Sao chép nội dung báo suất ăn gửi Zalo cho nhà bếp"
                 >
                   <Copy className="w-3.5 h-3.5 shrink-0" />
@@ -1337,17 +1359,17 @@ export const AttendanceView: React.FC = () => {
             <div className="bg-gradient-to-br from-emerald-500/10 via-teal-500/5 to-transparent border border-emerald-200 rounded-2xl p-3.5 shadow-2xs flex items-center justify-between gap-3 hover-zoom-card">
               <div className="space-y-0.5 min-w-0">
                 <div className="flex items-center gap-1.5">
-                  <span className="text-[10px] font-black uppercase text-emerald-800 tracking-wider">
+                  <span className="text-[12px] font-black uppercase text-emerald-800 tracking-wider">
                     Ăn bán trú tại trường
                   </span>
-                  <span className="px-1.5 py-0.5 rounded-md bg-emerald-600 text-white text-[10px] font-mono font-bold">
+                  <span className="px-1.5 py-0.5 rounded-md bg-emerald-700 text-white text-[12px] font-mono font-bold">
                     {selectedDateStats.bRate}%
                   </span>
                 </div>
                 <div className="text-2xl font-black font-mono text-emerald-950">
                   {selectedDateStats.eating} <span className="text-xs font-bold text-slate-500 font-sans">/ {currentClassStudents.length} học sinh</span>
                 </div>
-                <p className="text-[11px] text-emerald-700 font-medium truncate">
+                <p className="text-[12px] text-emerald-700 font-medium truncate">
                   Đã đăng ký ăn bán trú ngày {selectedDate}
                 </p>
               </div>
@@ -1359,13 +1381,13 @@ export const AttendanceView: React.FC = () => {
             {/* Thẻ 2: Về nhà buổi trưa */}
             <div className="bg-slate-50 border border-slate-200 rounded-2xl p-3.5 shadow-2xs flex items-center justify-between gap-3 hover-zoom-card">
               <div className="space-y-0.5 min-w-0">
-                <span className="text-[10px] font-black uppercase text-slate-600 tracking-wider">
+                <span className="text-[12px] font-black uppercase text-slate-600 tracking-wider">
                   Không ăn / Về nhà
                 </span>
                 <div className="text-2xl font-black font-mono text-slate-800">
                   {currentClassStudents.length - selectedDateStats.eating} <span className="text-xs font-bold text-slate-500 font-sans">học sinh</span>
                 </div>
-                <p className="text-[11px] text-slate-500 font-medium truncate">
+                <p className="text-[12px] text-slate-500 font-medium truncate">
                   Gia đình đón về ăn trưa hoặc vắng mặt
                 </p>
               </div>
@@ -1378,17 +1400,17 @@ export const AttendanceView: React.FC = () => {
             <div className="bg-rose-50/70 border border-rose-200 rounded-2xl p-3.5 shadow-2xs flex items-center justify-between gap-3 hover-zoom-card">
               <div className="space-y-0.5 min-w-0">
                 <div className="flex items-center gap-1">
-                  <span className="text-[10px] font-black uppercase text-rose-700 tracking-wider">
+                  <span className="text-[12px] font-black uppercase text-rose-700 tracking-wider">
                     Vắng chuyên cần
                   </span>
-                  <span className="px-1.5 py-0.5 rounded-md bg-rose-100 text-rose-700 border border-rose-200 text-[10px] font-bold">
+                  <span className="px-1.5 py-0.5 rounded-md bg-rose-100 text-rose-700 border border-rose-200 text-[12px] font-bold">
                     Khóa bán trú
                   </span>
                 </div>
                 <div className="text-2xl font-black font-mono text-rose-700">
                   {selectedDateStats.totalAbsent} <span className="text-xs font-bold text-slate-500 font-sans">học sinh</span>
                 </div>
-                <p className="text-[11px] text-rose-600 font-medium truncate">
+                <p className="text-[12px] text-rose-600 font-medium truncate">
                   Đã vắng, tự động khóa không báo ăn
                 </p>
               </div>
@@ -1464,7 +1486,7 @@ export const AttendanceView: React.FC = () => {
                     <span className="text-xs font-black text-indigo-950 block">
                       Đang chọn {selectedBoardingStudentIds.length} học sinh
                     </span>
-                    <span className="text-[10px] text-indigo-700 font-medium">
+                    <span className="text-[12px] text-indigo-700 font-medium">
                       Đổi nhanh trạng thái bán trú đồng loạt (tự động loại trừ các em vắng chuyên cần):
                     </span>
                   </div>
@@ -1473,7 +1495,7 @@ export const AttendanceView: React.FC = () => {
                 <div className="flex flex-wrap items-center gap-2">
                   <button
                     onClick={() => handleBatchSetSelectedBoarding('eating')}
-                    className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black flex items-center gap-1.5 shadow-sm transition-all hover-zoom-btn cursor-pointer"
+                    className="px-3.5 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-black flex items-center gap-1.5 shadow-sm transition-all hover-zoom-btn cursor-pointer"
                   >
                     <span>🍱</span>
                     <span>Đánh dấu Ăn bán trú</span>
@@ -1537,13 +1559,13 @@ export const AttendanceView: React.FC = () => {
                         <div className="text-xs md:text-sm font-black text-slate-900 truncate flex items-center gap-2">
                           <span>{student.name}</span>
                           {isAbsent && (
-                            <span className="px-2 py-0.5 rounded-md bg-rose-100 text-rose-700 font-extrabold text-[10px] border border-rose-200 flex items-center gap-1">
+                            <span className="px-2 py-0.5 rounded-md bg-rose-100 text-rose-700 font-extrabold text-[12px] border border-rose-200 flex items-center gap-1">
                               <Lock className="w-3 h-3" />
                               <span>Vắng chuyên cần: {absentReason}</span>
                             </span>
                           )}
                         </div>
-                        <div className="text-[10px] text-slate-500 flex items-center gap-2 mt-0.5 font-medium">
+                        <div className="text-[12px] text-slate-500 flex items-center gap-2 mt-0.5 font-medium">
                           <span>{student.gender}</span>
                           <span>• {student.group || 'Tổ 1'}</span>
                           {student.birthDate && <span>• NS: {student.birthDate}</span>}
@@ -1581,6 +1603,33 @@ export const AttendanceView: React.FC = () => {
                   </div>
                 );
               })}
+            </div>
+          </div>
+
+          {/* ✅ Thanh xác nhận bán trú cố định ở đáy */}
+          <div className="sticky bottom-24 sm:bottom-20 lg:bottom-3 z-20">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl border border-emerald-300 bg-white/95 px-4 py-3 shadow-lg">
+              <div className="text-sm text-slate-700">
+                {currentClassStudents.length === 0 ? (
+                  <span className="font-semibold">Lớp chưa có học sinh.</span>
+                ) : (
+                  <>
+                    <span className="font-bold text-emerald-700">Ăn bán trú {selectedDateStats.eating} suất</span>
+                    <span className="mx-2 text-slate-400">•</span>
+                    <span className="font-semibold">Về nhà / vắng {currentClassStudents.length - selectedDateStats.eating}</span>
+                    <span className="block text-xs text-slate-600 mt-0.5">Học sinh vắng chuyên cần tự động không tính suất ăn.</span>
+                  </>
+                )}
+              </div>
+              <button
+                onClick={handleConfirmAndCompleteBoarding}
+                disabled={currentClassStudents.length === 0}
+                className="btn-3d btn-3d-emerald px-5 py-3 text-sm gap-2 shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
+                title="Ghi nhận suất ăn bán trú và gửi ngay lên báo cáo của Ban Giám Hiệu"
+              >
+                <CheckCircle2 className="w-5 h-5" />
+                <span>Xác nhận bán trú</span>
+              </button>
             </div>
           </div>
         </div>

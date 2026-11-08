@@ -177,7 +177,7 @@ export const RewardsShopView: React.FC = () => {
                     <span>Kho: {reward.stock} món</span>
                   </div>
 
-                  <div className="absolute bottom-3 left-3 bg-amber-600 text-white px-3 py-1 rounded-xl text-xs font-bold font-mono shadow-sm flex items-center gap-1">
+                  <div className="absolute bottom-3 left-3 bg-amber-700 text-white px-3 py-1 rounded-xl text-xs font-bold font-mono shadow-sm flex items-center gap-1">
                     <Sparkles className="w-3 h-3 text-amber-200" />
                     <span>{reward.cost} xu</span>
                   </div>
@@ -219,7 +219,7 @@ export const RewardsShopView: React.FC = () => {
 
                   {/* Auto-activation notification */}
                   <div className="pt-2 text-xs text-slate-600 flex items-center justify-between border-t border-slate-100">
-                    <span className="text-[11px] text-slate-500">Đủ điều kiện đổi:</span>
+                    <span className="text-[12px] text-slate-500">Đủ điều kiện đổi:</span>
                     <span className="font-bold text-indigo-600 font-mono">
                       {eligibleStudents.length} học sinh
                     </span>
@@ -268,7 +268,7 @@ export const RewardsShopView: React.FC = () => {
           <div className="overflow-x-auto">
             <table className="w-full text-xs text-left">
               <thead>
-                <tr className="border-b border-slate-100 text-slate-400 font-semibold uppercase text-[10px]">
+                <tr className="border-b border-slate-100 text-slate-400 font-semibold uppercase text-[12px]">
                   <th className="py-2.5 px-3">Thời gian</th>
                   <th className="py-2.5 px-3">Học sinh</th>
                   <th className="py-2.5 px-3">Món quà</th>
@@ -292,7 +292,7 @@ export const RewardsShopView: React.FC = () => {
                       -{rdm.cost} xu
                     </td>
                     <td className="py-2.5 px-3 text-center">
-                      <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md">
+                      <span className="inline-flex items-center gap-1 text-[12px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md">
                         <Check className="w-3 h-3" />
                         <span>Đã trừ xu & trao quà</span>
                       </span>
@@ -315,7 +315,7 @@ export const RewardsShopView: React.FC = () => {
                   Xác nhận đổi quà: {selectedRewardToRedeem.name}
                 </h3>
                 <p className="text-xs text-slate-500">
-                  Chi phí: <strong className="text-amber-600 font-mono">{selectedRewardToRedeem.cost} xu</strong> · Kho còn: <strong className="text-slate-700 font-mono">{selectedRewardToRedeem.stock}</strong>
+                  Chi phí: <strong className="text-amber-700 font-mono">{selectedRewardToRedeem.cost} xu</strong> · Kho còn: <strong className="text-slate-700 font-mono">{selectedRewardToRedeem.stock}</strong>
                 </p>
               </div>
               <button
@@ -359,7 +359,7 @@ export const RewardsShopView: React.FC = () => {
                         />
                         <div>
                           <div className="font-semibold text-slate-800">{student.name}</div>
-                          <div className="text-[11px] font-mono text-slate-500">Hiện có: {student.points} xu</div>
+                          <div className="text-[12px] font-mono text-slate-500">Hiện có: {student.points} xu</div>
                         </div>
                       </div>
 
@@ -455,7 +455,7 @@ export const RewardsShopView: React.FC = () => {
                         <Crop className="w-3.5 h-3.5" />
                         <span>{image ? 'Chỉnh sửa / Cắt lại ảnh' : 'Tải lên & Cắt ảnh quà'}</span>
                       </button>
-                      <div className="text-[10px] text-slate-500">
+                      <div className="text-[12px] text-slate-500">
                         Tải ảnh từ máy, zoom, xoay, kéo vị trí và cắt ảnh sắc nét, siêu nhẹ.
                       </div>
                     </div>
@@ -467,7 +467,7 @@ export const RewardsShopView: React.FC = () => {
                     placeholder="Hoặc dán trực tiếp đường link ảnh (URL)..."
                     value={image}
                     onChange={(e) => setImage(e.target.value)}
-                    className="w-full px-2.5 py-1.5 border border-slate-200 rounded-xl text-[11px] bg-white text-slate-600"
+                    className="w-full px-2.5 py-1.5 border border-slate-200 rounded-xl text-[12px] bg-white text-slate-600"
                   />
                 </div>
               </div>
@@ -579,7 +579,7 @@ export const RewardsShopView: React.FC = () => {
                         <Crop className="w-3.5 h-3.5" />
                         <span>Chỉnh sửa / Cắt lại ảnh</span>
                       </button>
-                      <div className="text-[10px] text-slate-500">
+                      <div className="text-[12px] text-slate-500">
                         Zoom, xoay góc, kéo vị trí và cắt ảnh theo đúng chuẩn hiển thị.
                       </div>
                     </div>
@@ -590,7 +590,7 @@ export const RewardsShopView: React.FC = () => {
                     type="text"
                     value={editingReward.image}
                     onChange={(e) => setEditingReward({ ...editingReward, image: e.target.value })}
-                    className="w-full px-2.5 py-1.5 border border-slate-200 rounded-xl text-[11px] bg-white text-slate-600"
+                    className="w-full px-2.5 py-1.5 border border-slate-200 rounded-xl text-[12px] bg-white text-slate-600"
                     placeholder="Đường link URL ảnh..."
                   />
                 </div>

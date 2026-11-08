@@ -142,7 +142,7 @@ export const TopBar: React.FC<TopBarProps> = ({
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
   // Kiểu "chip" hiện đại cho các tiện ích ở thanh trên cùng
-  const chipBase = 'inline-flex items-center gap-1.5 h-8 px-2.5 rounded-xl text-[11px] font-bold border transition-colors shrink-0 cursor-pointer';
+  const chipBase = 'inline-flex items-center gap-1.5 h-8 px-2.5 rounded-xl text-[12px] font-bold border transition-colors shrink-0 cursor-pointer';
   const [currentTimeStr, setCurrentTimeStr] = useState('13:13');
   const [driveSyncState, setDriveSyncState] = useState<{ status: string; lastSyncTime?: string }>({ 
     status: googleDriveService.getConfig().syncStatus || 'idle',
@@ -278,14 +278,14 @@ export const TopBar: React.FC<TopBarProps> = ({
   return (
     <>
       {demoWarningMessage && (
-        <div className="bg-gradient-to-r from-amber-600 via-orange-600 to-rose-500 text-white text-[11px] md:text-xs font-black py-1 px-3.5 flex items-center justify-between shadow-xs sticky top-0 z-31 animate-in slide-in-from-top duration-300">
+        <div className="bg-gradient-to-r from-amber-700 via-orange-700 to-rose-600 text-white text-[12px] md:text-xs font-black py-1 px-3.5 flex items-center justify-between shadow-xs sticky top-0 z-31 animate-in slide-in-from-top duration-300">
           <div className="flex items-center gap-2 truncate">
-            <span className="animate-bounce">⚠️</span>
+            <span>⚠️</span>
             <span className="truncate">{demoWarningMessage}</span>
           </div>
           <button
             onClick={() => setIsRegistrationModalOpen(true)}
-            className="px-2.5 py-0.5 rounded-full bg-white text-slate-900 hover:bg-amber-100 font-black text-[10px] md:text-[11px] uppercase shrink-0 transition-transform active:scale-95 shadow-2xs ml-2 cursor-pointer"
+            className="px-2.5 py-0.5 rounded-full bg-white text-slate-900 hover:bg-amber-100 font-black text-[12px] md:text-[12px] uppercase shrink-0 transition-transform active:scale-95 shadow-2xs ml-2 cursor-pointer"
           >
             ĐĂNG KÝ BẢN FULL
           </button>
@@ -294,16 +294,16 @@ export const TopBar: React.FC<TopBarProps> = ({
 
       {/* ⚠️ Cảnh Báo Chế Độ Dùng Thử (Trial Mode) - Chuẩn Ảnh 3 & 8 */}
       {!isCdKeyActivated && (
-        <div className="bg-gradient-to-r from-orange-600 via-orange-700 to-red-600 text-white text-[11px] md:text-xs font-black py-1 px-3.5 flex items-center justify-between shadow-xs sticky top-0 z-31 animate-in slide-in-from-top duration-300">
+        <div className="bg-gradient-to-r from-orange-700 via-orange-700 to-red-600 text-white text-[12px] md:text-xs font-black py-1 px-3.5 flex items-center justify-between shadow-xs sticky top-0 z-31 animate-in slide-in-from-top duration-300">
           <div className="flex items-center gap-2 truncate">
-            <span className="animate-bounce">⚠️</span>
+            <span>⚠️</span>
             <span className="truncate">
               Bản Dùng Thử: Giới hạn tối đa 01 lớp và 10 học sinh/lớp. Vui lòng nhập CDKEY bản quyền để mở khóa Full!
             </span>
           </div>
           <button
             onClick={() => setIsCdKeyModalOpen(true)}
-            className="px-2.5 py-0.5 rounded-lg bg-yellow-400 hover:bg-yellow-300 text-amber-950 font-black text-[10.5px] uppercase shadow-xs transition-transform active:scale-95 shrink-0 cursor-pointer ml-2"
+            className="px-2.5 py-0.5 rounded-lg bg-yellow-400 hover:bg-yellow-300 text-amber-950 font-black text-[12px] uppercase shadow-xs transition-transform active:scale-95 shrink-0 cursor-pointer ml-2"
           >
             NHẬP CDKEY BẢN FULL
           </button>
@@ -340,7 +340,7 @@ export const TopBar: React.FC<TopBarProps> = ({
               ) : null
             )}
           </h2>
-          <p className="text-[9.5px] sm:text-[10.5px] text-slate-500 font-medium leading-tight truncate hidden sm:block mt-0.5">
+          <p className="text-[12px] sm:text-[12px] text-slate-500 font-medium leading-tight truncate hidden sm:block mt-0.5">
             {viewInfo.subtitle}
           </p>
         </div>
@@ -355,7 +355,7 @@ export const TopBar: React.FC<TopBarProps> = ({
             className={`${chipBase} ${driveChipClass}`}
             title="Cầu nối Google Drive: Tự động sao lưu dữ liệu lớp và liên thông BGH"
           >
-            <Cloud className={`w-4 h-4 ${driveSyncState.status === 'syncing' ? 'animate-bounce' : ''}`} />
+            <Cloud className={`w-4 h-4 ${driveSyncState.status === 'syncing' ? 'animate-pulse' : ''}`} />
             <span className="hidden xl:inline">{driveLabel}</span>
           </button>
 
@@ -415,7 +415,7 @@ export const TopBar: React.FC<TopBarProps> = ({
           <button
             onClick={handleRefreshAllData}
             disabled={isRefreshingAll}
-            className={`${chipBase} bg-emerald-600 text-white border-emerald-600 hover:bg-emerald-700 disabled:opacity-80 disabled:cursor-wait`}
+            className={`${chipBase} bg-emerald-700 text-white border-emerald-600 hover:bg-emerald-800 disabled:opacity-80 disabled:cursor-wait`}
             title={`Cập nhật ngay dữ liệu mới nhất từ tất cả tài khoản giáo viên (lớp, học sinh, điểm danh, bán trú)${lastRefreshAllAt ? ` • Lần cuối: ${lastRefreshAllAt}` : ''}`}
             aria-label="Cập nhật dữ liệu mới nhất từ tất cả giáo viên"
           >
@@ -448,7 +448,7 @@ export const TopBar: React.FC<TopBarProps> = ({
                   <School className="w-3 h-3 text-white" />
                 </div>
                 <span>{activeClass?.name}</span>
-                <span className="text-[9.5px] text-white font-bold hidden 2xl:inline uppercase">
+                <span className="text-[12px] text-white font-bold hidden 2xl:inline uppercase">
                   {activeClass?.grade} • {currentClassStudents.length} HS
                 </span>
                 <ChevronDown className="w-3 h-3 text-sky-200" />
@@ -459,7 +459,7 @@ export const TopBar: React.FC<TopBarProps> = ({
                   className="absolute right-0 top-full mt-2 w-64 bg-white rounded-2xl shadow-xl border border-slate-200 py-2 z-50 animate-in fade-in zoom-in-95 duration-100"
                   onMouseLeave={() => setIsClassDropdownOpen(false)}
                 >
-                  <div className="px-3.5 py-1 text-[11px] font-black text-slate-400 uppercase tracking-wider">
+                  <div className="px-3.5 py-1 text-[12px] font-black text-slate-400 uppercase tracking-wider">
                     CHỌN LỚP HỌC
                   </div>
                   {classes.map(cls => (
@@ -482,7 +482,7 @@ export const TopBar: React.FC<TopBarProps> = ({
                         <span className="text-xs text-slate-400 font-normal">· {cls.grade}</span>
                       </div>
                       {cls.id === activeClassId && (
-                        <span className="text-[11px] font-bold text-sky-600 bg-sky-100 px-2 py-0.5 rounded-full uppercase">
+                        <span className="text-[12px] font-bold text-sky-700 bg-sky-100 px-2 py-0.5 rounded-full uppercase">
                           ĐANG CHỌN
                         </span>
                       )}
@@ -494,7 +494,7 @@ export const TopBar: React.FC<TopBarProps> = ({
                         setIsClassDropdownOpen(false);
                         onNavigate('classes');
                       }}
-                      className="w-full text-left px-2 py-1.5 text-xs text-sky-600 hover:bg-sky-50 font-black rounded-xl transition-colors uppercase"
+                      className="w-full text-left px-2 py-1.5 text-xs text-sky-700 hover:bg-sky-50 font-black rounded-xl transition-colors uppercase"
                     >
                       + QUẢN LÝ HOẶC TẠO LỚP MỚI
                     </button>
@@ -508,7 +508,7 @@ export const TopBar: React.FC<TopBarProps> = ({
         {/* Chuông trật tự */}
         <button
           onClick={handleQuickAlarm}
-          className="w-8 h-8 rounded-xl bg-rose-500 hover:bg-rose-600 text-white flex items-center justify-center shrink-0 shadow-sm"
+          className="w-8 h-8 rounded-xl bg-rose-600 hover:bg-rose-700 text-white flex items-center justify-center shrink-0 shadow-sm"
           title="Phát chuông ổn định trật tự lớp học ngay lập tức"
         >
           <ShieldAlert className="w-4 h-4" />
@@ -574,11 +574,11 @@ export const TopBar: React.FC<TopBarProps> = ({
               referrerPolicy="no-referrer"
             />
             <div className="hidden md:block text-left">
-              <div className="text-[10.5px] font-black text-slate-800 leading-tight flex items-center gap-1">
+              <div className="text-[12px] font-black text-slate-800 leading-tight flex items-center gap-1">
                 <span className="truncate max-w-[120px]">{getOfficialDisplayName(currentUser, allUsers) || teacherProfile.name}</span>
                 <ChevronDown className="w-2.5 h-2.5 text-slate-500 group-hover:text-slate-800 shrink-0" />
               </div>
-              <div className="text-[9px] text-sky-700 font-bold leading-none truncate max-w-[120px]">
+              <div className="text-[12px] text-sky-700 font-bold leading-none truncate max-w-[120px]">
                 {getOfficialRoleTitle(currentUser)}
               </div>
             </div>
@@ -601,10 +601,10 @@ export const TopBar: React.FC<TopBarProps> = ({
                     <div className="text-xs font-black text-slate-900 truncate">
                       {getOfficialDisplayName(currentUser, allUsers) || teacherProfile.name}
                     </div>
-                    <div className="text-[11px] font-mono text-slate-500 font-bold truncate">
+                    <div className="text-[12px] font-mono text-slate-500 font-bold truncate">
                       @{currentUser?.username}
                     </div>
-                    <span className={`inline-block mt-1 px-2 py-0.5 rounded-full text-[9px] font-black uppercase ${
+                    <span className={`inline-block mt-1 px-2 py-0.5 rounded-full text-[12px] font-black uppercase ${
                       currentUser?.role === 'admin' 
                         ? 'bg-rose-100 text-rose-700 border border-rose-200' 
                         : (currentUser?.role === 'bgh' || currentUser?.isBgh)
@@ -627,7 +627,7 @@ export const TopBar: React.FC<TopBarProps> = ({
 
               {/* For TEACHERS: Notice that account is locked by role and requires explicit logout */}
               {!isAdmin && (
-                <div className="p-3 bg-amber-50/80 border border-amber-200/90 rounded-2xl mb-2 text-[11px] text-amber-900 leading-snug">
+                <div className="p-3 bg-amber-50/80 border border-amber-200/90 rounded-2xl mb-2 text-[12px] text-amber-900 leading-snug">
                   <div className="font-bold flex items-center gap-1.5 text-amber-950 mb-1">
                     <span>🔒</span>
                     <span>VAI TRÒ CỐ ĐỊNH THEO TÀI KHOẢN</span>

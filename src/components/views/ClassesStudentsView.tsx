@@ -1680,7 +1680,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
             <h2 className="text-sm sm:text-base font-black text-indigo-950 tracking-tight leading-tight">
               {activeTabMode === 'classes' ? 'Quản Lý Lớp Học & Thống Kê Sĩ Số' : `Không Gian Học Sinh Lớp ${activeClass?.name || ''}`}
             </h2>
-            <p className="text-[10px] sm:text-[11px] text-indigo-700/80 font-medium leading-none mt-0.5">
+            <p className="text-[12px] sm:text-[12px] text-indigo-700/80 font-medium leading-none mt-0.5">
               {activeTabMode === 'classes' 
                 ? 'Ảnh đại diện lớp học, thống kê số lượng lớp và sĩ số học sinh từng lớp.' 
                 : 'Thẻ 3D to rõ nét, đánh giá thi đua theo môn học, nhập Excel và điểm thưởng.'}
@@ -1724,17 +1724,17 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
           {/* STATS OVERVIEW: Thống kê số lớp đang quản lý, mỗi lớp bao nhiêu học sinh */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5 sm:gap-3">
             {/* Card 1: Tổng số lớp đang quản lý */}
-            <div className="bg-gradient-to-br from-indigo-600 via-blue-600 to-cyan-600 rounded-2xl p-3 sm:p-3.5 text-white shadow-sm shadow-indigo-500/20 hover-zoom-card flex items-center gap-3">
+            <div className="bg-gradient-to-br from-indigo-600 via-blue-600 to-cyan-700 rounded-2xl p-3 sm:p-3.5 text-white shadow-sm shadow-indigo-500/20 hover-zoom-card flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-md text-white flex items-center justify-center font-black shadow-xs shrink-0">
                 <School className="w-5 h-5" />
               </div>
               <div>
-                <span className="text-[10px] font-black text-white uppercase tracking-wider block">TỔNG LỚP ĐANG QUẢN LÝ</span>
+                <span className="text-[12px] font-black text-white uppercase tracking-wider block">TỔNG LỚP ĐANG QUẢN LÝ</span>
                 <div className="text-xl sm:text-2xl font-black text-white font-mono mt-0.5">
                   {allSchoolHomeroomClasses.length} <span className="text-xs font-bold text-white uppercase">LỚP HỌC</span>
                 </div>
                 {statsHomeroomClasses.length !== allSchoolHomeroomClasses.length && (
-                  <div className="text-[10px] font-bold text-white mt-0.5 flex items-center gap-1">
+                  <div className="text-[12px] font-bold text-white mt-0.5 flex items-center gap-1">
                     <span>⚡ Đang hiển thị:</span>
                     <span className="bg-white/20 px-1.5 py-0.2 rounded-md">{statsHomeroomClasses.length} lớp</span>
                   </div>
@@ -1743,17 +1743,17 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
             </div>
 
             {/* Card 2: Tổng số học sinh toàn trường */}
-            <div className="bg-gradient-to-br from-emerald-600 via-teal-600 to-green-600 rounded-2xl p-3 sm:p-3.5 text-white shadow-sm shadow-emerald-500/20 hover-zoom-card flex items-center gap-3">
+            <div className="bg-gradient-to-br from-emerald-700 via-teal-700 to-green-700 rounded-2xl p-3 sm:p-3.5 text-white shadow-sm shadow-emerald-500/20 hover-zoom-card flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-md text-white flex items-center justify-center font-black shadow-xs shrink-0">
                 <Users className="w-5 h-5" />
               </div>
               <div>
-                <span className="text-[10px] font-black text-white uppercase tracking-wider block">TỔNG SỐ HỌC SINH CÁC LỚP</span>
+                <span className="text-[12px] font-black text-white uppercase tracking-wider block">TỔNG SỐ HỌC SINH CÁC LỚP</span>
                 <div className="text-xl sm:text-2xl font-black text-white font-mono mt-0.5">
                   {totalSchoolStudentsCount} <span className="text-xs font-bold text-white uppercase">EM HỌC SINH</span>
                 </div>
                 {statsHomeroomClasses.length !== allSchoolHomeroomClasses.length && (
-                  <div className="text-[10px] font-bold text-white mt-0.5 flex items-center gap-1">
+                  <div className="text-[12px] font-bold text-white mt-0.5 flex items-center gap-1">
                     <span>⚡ Đang lọc:</span>
                     <span className="bg-white/20 px-1.5 py-0.2 rounded-md">{statsTotalStudents} em</span>
                   </div>
@@ -1762,9 +1762,9 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
             </div>
 
             {/* Card 3: Thống kê nhanh sĩ số từng lớp */}
-            <div className="bg-gradient-to-br from-amber-600 via-orange-600 to-rose-500 rounded-2xl p-3 sm:p-3.5 text-white shadow-sm shadow-orange-500/20 hover-zoom-card flex flex-col justify-between h-full space-y-2">
+            <div className="bg-gradient-to-br from-amber-700 via-orange-700 to-rose-600 rounded-2xl p-3 sm:p-3.5 text-white shadow-sm shadow-orange-500/20 hover-zoom-card flex flex-col justify-between h-full space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-[10px] font-black text-white uppercase tracking-wider block">CHI TIẾT SĨ SỐ TỪNG LỚP</span>
+                <span className="text-[12px] font-black text-white uppercase tracking-wider block">CHI TIẾT SĨ SỐ TỪNG LỚP</span>
                 <div className="p-1.5 rounded-lg bg-white/20 backdrop-blur-md text-white font-black shadow-xs shrink-0">
                   <BarChart3 className="w-4 h-4" />
                 </div>
@@ -1772,14 +1772,14 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
               <div className="flex items-center justify-between mt-auto pt-1">
                 <div>
                   <div className="text-lg font-black text-white mt-1">Bảng Tổng Hợp</div>
-                  <div className="text-[11px] text-white font-semibold">
+                  <div className="text-[12px] text-white font-semibold">
                     {allSchoolHomeroomClasses.length} lớp học đang hoạt động
                     {statsHomeroomClasses.length !== allSchoolHomeroomClasses.length && ` (Lọc: ${statsHomeroomClasses.length})`}
                   </div>
                 </div>
                 <button
                   onClick={() => setIsClassStatsModalOpen(true)}
-                  className="px-3 py-2 bg-white text-orange-600 hover:bg-orange-50 rounded-xl text-xs font-black flex items-center gap-1.5 shadow-md transition-all hover:-translate-y-0.5"
+                  className="px-3 py-2 bg-white text-orange-700 hover:bg-orange-50 rounded-xl text-xs font-black flex items-center gap-1.5 shadow-md transition-all hover:-translate-y-0.5"
                 >
                   <Eye className="w-3.5 h-3.5" />
                   XEM CHI TIẾT
@@ -1800,12 +1800,12 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                     <span className="text-xs font-black text-indigo-950 uppercase tracking-tight">
                       QUẢN TRỊ TỐI CAO • LỌC THEO TRƯỜNG HỌC
                     </span>
-                    <span className="text-[10px] text-slate-500 font-medium ml-2 hidden sm:inline">
+                    <span className="text-[12px] text-slate-500 font-medium ml-2 hidden sm:inline">
                       (Phân bổ không gian lớp học theo từng đơn vị trường)
                     </span>
                   </div>
                 </div>
-                <div className="text-[11px] text-indigo-900 font-bold uppercase bg-white/90 px-2.5 py-0.5 rounded-lg border border-indigo-200 shadow-2xs">
+                <div className="text-[12px] text-indigo-900 font-bold uppercase bg-white/90 px-2.5 py-0.5 rounded-lg border border-indigo-200 shadow-2xs">
                   Hiển thị: <strong className="text-indigo-700">{displayedClasses.length}</strong> / <strong className="text-slate-600">{classes.length} lớp</strong>
                 </div>
               </div>
@@ -1863,7 +1863,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
               {/* Tiêu đề & Công cụ đặt lại */}
               <div className="flex flex-wrap items-center justify-between gap-2.5 pb-2 border-b border-teal-200/60">
                 <div className="flex items-center gap-2">
-                  <span className="p-1.5 bg-gradient-to-r from-teal-600 to-emerald-600 text-white rounded-xl shadow-xs">
+                  <span className="p-1.5 bg-gradient-to-r from-teal-700 to-emerald-700 text-white rounded-xl shadow-xs">
                     <SlidersHorizontal className="w-4 h-4" />
                   </span>
                   <div>
@@ -1871,11 +1871,11 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                       <span className="text-xs sm:text-sm font-black text-teal-950 uppercase tracking-tight">
                         QUẢN TRỊ TRƯỜNG • BỘ LỌC & SẮP XẾP LỚP HỌC
                       </span>
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-teal-100 text-teal-800 border border-teal-300">
+                      <span className="text-[12px] font-bold px-2 py-0.5 rounded-full bg-teal-100 text-teal-800 border border-teal-300">
                         {displayedClasses.length} / {classes.length} Lớp
                       </span>
                     </div>
-                    <p className="text-[10.5px] text-teal-800 font-semibold">
+                    <p className="text-[12px] text-teal-800 font-semibold">
                       Lọc và sắp xếp các lớp theo Phân hiệu, Điểm trường và Khối lớp
                     </p>
                   </div>
@@ -1906,7 +1906,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                 {/* 1. Lọc theo Phân hiệu */}
                 {(availableBranches.length > 0 || hasUnassignedBranch) && (
                   <div className="flex items-center gap-2 overflow-x-auto scrollbar-thin py-0.5">
-                    <div className="flex items-center gap-1 min-w-[95px] shrink-0 text-[11px] font-black text-teal-900 uppercase">
+                    <div className="flex items-center gap-1 min-w-[95px] shrink-0 text-[12px] font-black text-teal-900 uppercase">
                       <span>🏛️</span>
                       <span>Phân hiệu:</span>
                     </div>
@@ -1916,7 +1916,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                         onClick={() => setSelectedBranchFilter('all')}
                         className={`px-2.5 py-1 rounded-xl text-xs font-bold whitespace-nowrap transition-all shadow-2xs ${
                           selectedBranchFilter === 'all'
-                            ? 'bg-gradient-to-r from-teal-600 to-emerald-600 text-white shadow-xs ring-2 ring-teal-300'
+                            ? 'bg-gradient-to-r from-teal-700 to-emerald-700 text-white shadow-xs ring-2 ring-teal-300'
                             : 'bg-white text-slate-700 hover:bg-teal-50 border border-slate-200'
                         }`}
                       >
@@ -1931,12 +1931,12 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                             onClick={() => setSelectedBranchFilter(br)}
                             className={`px-2.5 py-1 rounded-xl text-xs font-bold whitespace-nowrap transition-all shadow-2xs ${
                               selectedBranchFilter === br
-                                ? 'bg-gradient-to-r from-teal-600 to-emerald-600 text-white shadow-xs ring-2 ring-teal-300'
+                                ? 'bg-gradient-to-r from-teal-700 to-emerald-700 text-white shadow-xs ring-2 ring-teal-300'
                                 : 'bg-white text-slate-700 hover:bg-teal-50 border border-slate-200'
                             }`}
                           >
                             <span>{br}</span>
-                            <span className="ml-1 opacity-80 text-[10.5px]">({countInBranch})</span>
+                            <span className="ml-1 opacity-80 text-[12px]">({countInBranch})</span>
                           </button>
                         );
                       })}
@@ -1948,12 +1948,12 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                             onClick={() => setSelectedBranchFilter('__unassigned__')}
                             className={`px-2.5 py-1 rounded-xl text-xs font-bold whitespace-nowrap transition-all shadow-2xs ${
                               selectedBranchFilter === '__unassigned__'
-                                ? 'bg-amber-600 text-white shadow-xs ring-2 ring-amber-300'
+                                ? 'bg-amber-700 text-white shadow-xs ring-2 ring-amber-300'
                                 : 'bg-amber-50 text-amber-800 hover:bg-amber-100 border border-amber-200'
                             }`}
                           >
                             <span>⚠️ Chưa gán</span>
-                            <span className="ml-1 text-[10.5px]">({countUnassigned})</span>
+                            <span className="ml-1 text-[12px]">({countUnassigned})</span>
                           </button>
                         );
                       })()}
@@ -1964,7 +1964,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                 {/* 2. Lọc theo Điểm trường */}
                 {(availableCampuses.length > 0 || hasUnassignedCampus) && (
                   <div className="flex items-center gap-2 overflow-x-auto scrollbar-thin py-0.5">
-                    <div className="flex items-center gap-1 min-w-[95px] shrink-0 text-[11px] font-black text-sky-900 uppercase">
+                    <div className="flex items-center gap-1 min-w-[95px] shrink-0 text-[12px] font-black text-sky-900 uppercase">
                       <span>📍</span>
                       <span>Điểm trường:</span>
                     </div>
@@ -1974,7 +1974,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                         onClick={() => setSelectedCampusFilter('all')}
                         className={`px-2.5 py-1 rounded-xl text-xs font-bold whitespace-nowrap transition-all shadow-2xs ${
                           selectedCampusFilter === 'all'
-                            ? 'bg-gradient-to-r from-sky-600 to-blue-600 text-white shadow-xs ring-2 ring-sky-300'
+                            ? 'bg-gradient-to-r from-sky-700 to-blue-600 text-white shadow-xs ring-2 ring-sky-300'
                             : 'bg-white text-slate-700 hover:bg-sky-50 border border-slate-200'
                         }`}
                       >
@@ -1992,12 +1992,12 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                             onClick={() => setSelectedCampusFilter(cp)}
                             className={`px-2.5 py-1 rounded-xl text-xs font-bold whitespace-nowrap transition-all shadow-2xs ${
                               selectedCampusFilter === cp
-                                ? 'bg-gradient-to-r from-sky-600 to-blue-600 text-white shadow-xs ring-2 ring-sky-300'
+                                ? 'bg-gradient-to-r from-sky-700 to-blue-600 text-white shadow-xs ring-2 ring-sky-300'
                                 : 'bg-white text-slate-700 hover:bg-sky-50 border border-slate-200'
                             }`}
                           >
                             <span>{cp}</span>
-                            <span className="ml-1 opacity-80 text-[10.5px]">({countInCampus})</span>
+                            <span className="ml-1 opacity-80 text-[12px]">({countInCampus})</span>
                           </button>
                         );
                       })}
@@ -2012,12 +2012,12 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                             onClick={() => setSelectedCampusFilter('__unassigned__')}
                             className={`px-2.5 py-1 rounded-xl text-xs font-bold whitespace-nowrap transition-all shadow-2xs ${
                               selectedCampusFilter === '__unassigned__'
-                                ? 'bg-amber-600 text-white shadow-xs ring-2 ring-amber-300'
+                                ? 'bg-amber-700 text-white shadow-xs ring-2 ring-amber-300'
                                 : 'bg-amber-50 text-amber-800 hover:bg-amber-100 border border-amber-200'
                             }`}
                           >
                             <span>⚠️ Chưa gán</span>
-                            <span className="ml-1 text-[10.5px]">({countUnassignedCp})</span>
+                            <span className="ml-1 text-[12px]">({countUnassignedCp})</span>
                           </button>
                         );
                       })()}
@@ -2028,7 +2028,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                 {/* 3. Lọc theo Khối lớp (MỚI THEO YÊU CẦU) */}
                 {availableGrades.length > 0 && (
                   <div className="flex items-center gap-2 overflow-x-auto scrollbar-thin py-0.5">
-                    <div className="flex items-center gap-1 min-w-[95px] shrink-0 text-[11px] font-black text-indigo-900 uppercase">
+                    <div className="flex items-center gap-1 min-w-[95px] shrink-0 text-[12px] font-black text-indigo-900 uppercase">
                       <span>🎓</span>
                       <span>Khối lớp:</span>
                     </div>
@@ -2071,7 +2071,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                             }`}
                           >
                             <span>{gr}</span>
-                            <span className="ml-1 opacity-80 text-[10.5px]">({countInGrade})</span>
+                            <span className="ml-1 opacity-80 text-[12px]">({countInGrade})</span>
                           </button>
                         );
                       })}
@@ -2083,7 +2083,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
               {/* KHỐI 2: CÔNG CỤ SẮP XẾP LỚP HỌC (THEO PHÂN HIỆU, ĐIỂM TRƯỜNG, KHỐI LỚP) */}
               <div className="pt-2.5 border-t border-teal-200/60 flex flex-wrap items-center justify-between gap-2.5">
                 <div className="flex flex-wrap items-center gap-2">
-                  <div className="flex items-center gap-1 text-[11px] font-black text-teal-950 uppercase shrink-0">
+                  <div className="flex items-center gap-1 text-[12px] font-black text-teal-950 uppercase shrink-0">
                     <ArrowUpDown className="w-3.5 h-3.5 text-teal-700" />
                     <span>Sắp xếp theo:</span>
                   </div>
@@ -2110,7 +2110,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                       <span>🎓</span>
                       <span>Khối lớp</span>
                       {classSortBy === 'grade' && (
-                        <span className="text-[10px]">{classSortOrder === 'asc' ? '▲' : '▼'}</span>
+                        <span className="text-[12px]">{classSortOrder === 'asc' ? '▲' : '▼'}</span>
                       )}
                     </button>
 
@@ -2127,7 +2127,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                       }}
                       className={`px-2.5 py-1 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1 shadow-2xs ${
                         classSortBy === 'branch'
-                          ? 'bg-gradient-to-r from-teal-600 to-emerald-600 text-white ring-2 ring-teal-300 shadow-xs'
+                          ? 'bg-gradient-to-r from-teal-700 to-emerald-700 text-white ring-2 ring-teal-300 shadow-xs'
                           : 'bg-white text-slate-700 hover:bg-teal-50 border border-slate-200'
                       }`}
                       title="Sắp xếp lớp theo Phân hiệu"
@@ -2135,7 +2135,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                       <span>🏛️</span>
                       <span>Phân hiệu</span>
                       {classSortBy === 'branch' && (
-                        <span className="text-[10px]">{classSortOrder === 'asc' ? '▲' : '▼'}</span>
+                        <span className="text-[12px]">{classSortOrder === 'asc' ? '▲' : '▼'}</span>
                       )}
                     </button>
 
@@ -2152,7 +2152,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                       }}
                       className={`px-2.5 py-1 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1 shadow-2xs ${
                         classSortBy === 'campus'
-                          ? 'bg-gradient-to-r from-sky-600 to-blue-600 text-white ring-2 ring-sky-300 shadow-xs'
+                          ? 'bg-gradient-to-r from-sky-700 to-blue-600 text-white ring-2 ring-sky-300 shadow-xs'
                           : 'bg-white text-slate-700 hover:bg-sky-50 border border-slate-200'
                       }`}
                       title="Sắp xếp lớp theo Điểm trường"
@@ -2160,7 +2160,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                       <span>📍</span>
                       <span>Điểm trường</span>
                       {classSortBy === 'campus' && (
-                        <span className="text-[10px]">{classSortOrder === 'asc' ? '▲' : '▼'}</span>
+                        <span className="text-[12px]">{classSortOrder === 'asc' ? '▲' : '▼'}</span>
                       )}
                     </button>
 
@@ -2185,7 +2185,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                       <span>🔤</span>
                       <span>Tên lớp</span>
                       {classSortBy === 'name' && (
-                        <span className="text-[10px]">{classSortOrder === 'asc' ? '▲' : '▼'}</span>
+                        <span className="text-[12px]">{classSortOrder === 'asc' ? '▲' : '▼'}</span>
                       )}
                     </button>
                   </div>
@@ -2246,11 +2246,11 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                         <span className="text-xs font-black text-indigo-950 uppercase tracking-tight">
                           QUẢN TRỊ VIÊN TOÀN TRƯỜNG • ĐỒNG BỘ DỮ LIỆU GIÁO VIÊN
                         </span>
-                        <span className="text-[10px] font-bold px-2 py-0.2 rounded-full bg-indigo-100 text-indigo-800 border border-indigo-200">
+                        <span className="text-[12px] font-bold px-2 py-0.2 rounded-full bg-indigo-100 text-indigo-800 border border-indigo-200">
                           {relevantTeachers.length} GV
                         </span>
                       </div>
-                      <div className="text-[10px] text-slate-500 font-medium">
+                      <div className="text-[12px] text-slate-500 font-medium">
                         {adminTeacherFilter === 'all' ? (
                           <>
                             Tổng số: <strong className="text-indigo-700">{allSchoolHomeroomClasses.length} lớp</strong> • <strong className="text-emerald-700">{totalSchoolStudentsCount} học sinh</strong>
@@ -2348,7 +2348,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                             }`}
                           >
                             <span>👥 Tất cả</span>
-                            <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-slate-200 text-slate-700">
+                            <span className="text-[12px] px-1.5 py-0.2 rounded-full bg-slate-200 text-slate-700">
                               {relevantTeachers.length}
                             </span>
                           </button>
@@ -2363,7 +2363,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                             }`}
                           >
                             <span>🏫 Thuộc nhà trường</span>
-                            <span className={`text-[10px] px-1.5 py-0.2 rounded-full ${teacherGroupTab === 'school' ? 'bg-indigo-700 text-white' : 'bg-slate-200 text-slate-700'}`}>
+                            <span className={`text-[12px] px-1.5 py-0.2 rounded-full ${teacherGroupTab === 'school' ? 'bg-indigo-700 text-white' : 'bg-slate-200 text-slate-700'}`}>
                               {schoolTeachers.length}
                             </span>
                           </button>
@@ -2373,12 +2373,12 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                             onClick={() => setTeacherGroupTab('guest')}
                             className={`px-2.5 py-1 text-xs font-bold rounded-lg transition-all flex items-center gap-1 ${
                               teacherGroupTab === 'guest'
-                                ? 'bg-emerald-600 text-white shadow-2xs font-black'
+                                ? 'bg-emerald-700 text-white shadow-2xs font-black'
                                 : 'text-slate-600 hover:text-slate-900'
                             }`}
                           >
                             <span>🌱 Giáo viên vãng lai</span>
-                            <span className={`text-[10px] px-1.5 py-0.2 rounded-full ${teacherGroupTab === 'guest' ? 'bg-emerald-700 text-white' : 'bg-slate-200 text-slate-700'}`}>
+                            <span className={`text-[12px] px-1.5 py-0.2 rounded-full ${teacherGroupTab === 'guest' ? 'bg-emerald-700 text-white' : 'bg-slate-200 text-slate-700'}`}>
                               {guestTeachers.length}
                             </span>
                           </button>
@@ -2447,9 +2447,9 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                               }`}
                               title={`Tài khoản: ${t.username} • Đơn vị: ${t.schoolName || 'Chưa rõ'} • Số lớp: ${tClasses.length} • Sĩ số: ${tStudentsCount} học sinh`}
                             >
-                              <span className="text-[11px]">{isSelected ? '✓' : isGuest ? '🌱' : '🏫'}</span>
+                              <span className="text-[12px]">{isSelected ? '✓' : isGuest ? '🌱' : '🏫'}</span>
                               <span>{t.fullName}</span>
-                              <span className={`text-[10px] px-1.5 py-0.2 rounded-md ${isSelected ? 'bg-indigo-700 text-white' : 'bg-slate-100 text-slate-600'}`}>
+                              <span className={`text-[12px] px-1.5 py-0.2 rounded-md ${isSelected ? 'bg-indigo-700 text-white' : 'bg-slate-100 text-slate-600'}`}>
                                 {tClasses.length} lớp{tStudentsCount > 0 ? ` • ${tStudentsCount} HS` : ''}
                               </span>
                             </button>
@@ -2480,12 +2480,12 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                   {displayedClasses.length} LỚP
                 </span>
                 {isAdmin && adminTeacherFilter !== 'all' && (
-                  <span className="text-[11px] font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-lg border border-amber-200">
+                  <span className="text-[12px] font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-lg border border-amber-200">
                     Đang lọc theo giáo viên
                   </span>
                 )}
               </div>
-              <p className="text-[11px] text-indigo-700 font-semibold">
+              <p className="text-[12px] text-indigo-700 font-semibold">
                 Năm học 2026–2027 • Mỗi lớp có ảnh đại diện, giáo viên và thời khóa biểu riêng cố định
               </p>
             </div>
@@ -2505,7 +2505,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                   className={`px-4 py-2.5 rounded-2xl font-black text-xs md:text-sm flex items-center gap-2 transition-all uppercase ${
                     isClassLimitReached
                       ? 'bg-slate-300 text-slate-500 cursor-not-allowed opacity-60 shadow-none'
-                      : 'bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 hover:from-emerald-700 hover:to-cyan-700 text-white hover-zoom-btn shadow-md shadow-emerald-600/25'
+                      : 'bg-gradient-to-r from-emerald-700 via-teal-700 to-cyan-700 hover:from-emerald-800 hover:to-cyan-800 text-white hover-zoom-btn shadow-md shadow-emerald-600/25'
                   }`}
                   title={isClassLimitReached ? 'Tài khoản trải nghiệm (DEMO) chỉ được tạo tối đa 01 lớp học. Vui lòng liên hệ Quản trị viên để nâng cấp!' : 'Khởi tạo nhanh danh sách các lớp dạy bộ môn, điền thông tin lớp và số lượng học sinh'}
                 >
@@ -2541,10 +2541,10 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                 <button
                   type="button"
                   onClick={handleOpenSchoolBranchModal}
-                  className="btn-3d btn-3d-sm btn-3d-indigo gap-1.5 shrink-0"
+                  className="btn-3d btn-3d-sm btn-3d-light gap-1.5 shrink-0"
                   title="Khai báo và quản lý danh mục Phân hiệu, Điểm trường trực thuộc nhà trường"
                 >
-                  <Building2 className="w-3.5 h-3.5 text-sky-200" />
+                  <Building2 className="w-3.5 h-3.5 text-sky-700" />
                   <span>PHÂN HIỆU & ĐIỂM TRƯỜNG</span>
                 </button>
               )}
@@ -2552,7 +2552,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
               <button
                 type="button"
                 onClick={handleDownloadClassExcelTemplate}
-                className="btn-3d btn-3d-sm btn-3d-emerald gap-1.5"
+                className="btn-3d btn-3d-sm btn-3d-light gap-1.5"
                 title="Tải file Excel mẫu danh sách lớp học để điền thông tin và tạo hàng loạt"
               >
                 <Download className="w-3.5 h-3.5" />
@@ -2777,7 +2777,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                   className={`px-3.5 py-2 rounded-xl font-black text-xs inline-flex items-center gap-1.5 uppercase transition-all ${
                     isClassLimitReached
                       ? 'bg-slate-300 text-slate-500 cursor-not-allowed opacity-60 shadow-none'
-                      : 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs hover-zoom-btn'
+                      : 'bg-emerald-700 hover:bg-emerald-800 text-white shadow-xs hover-zoom-btn'
                   }`}
                   title={isClassLimitReached ? 'Tài khoản trải nghiệm (DEMO) chỉ được tạo tối đa 01 lớp học. Vui lòng liên hệ Quản trị viên để nâng cấp!' : 'Tải lên file Excel để tạo hàng loạt lớp học'}
                 >
@@ -2853,7 +2853,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                         style={{ backgroundColor: cls.color || '#6366F1' }}
                       >
                         <span>{cls.name}</span>
-                        <span className="text-[10px] font-semibold text-slate-600 mt-0.5 uppercase">CHƯA CÀI ĐẶT ẢNH LỚP</span>
+                        <span className="text-[12px] font-semibold text-slate-600 mt-0.5 uppercase">CHƯA CÀI ĐẶT ẢNH LỚP</span>
                       </div>
                     )}
 
@@ -2863,7 +2863,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                     {/* Top Badges */}
                     <div className="absolute top-2 left-2 right-2 flex items-center justify-between gap-1.5">
                       <span 
-                        className="px-2 py-0.5 rounded-full text-slate-800 text-[10px] sm:text-[11px] font-black shadow-sm flex items-center gap-1.5 backdrop-blur-md uppercase"
+                        className="px-2 py-0.5 rounded-full text-slate-800 text-[12px] sm:text-[12px] font-black shadow-sm flex items-center gap-1.5 backdrop-blur-md uppercase"
                         style={{ backgroundColor: cls.color ? `${cls.color}ee` : '#6366F1ee' }}
                       >
                         <span className="w-1.5 h-1.5 rounded-full bg-white ring-2 ring-white/40" />
@@ -2871,14 +2871,14 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                       </span>
 
                       {isSelected ? (
-                        <span className="px-2 py-0.5 rounded-full bg-emerald-600 text-white font-black text-[10px] sm:text-[11px] tracking-wide shadow-sm flex items-center gap-1 backdrop-blur-md uppercase">
+                        <span className="px-2 py-0.5 rounded-full bg-emerald-700 text-white font-black text-[12px] sm:text-[12px] tracking-wide shadow-sm flex items-center gap-1 backdrop-blur-md uppercase">
                           <Check className="w-3 h-3" />
                           <span>✓ ĐANG CHỌN</span>
                         </span>
                       ) : (
                         <button
                           onClick={() => setActiveClassId(cls.id)}
-                          className="px-2 py-0.5 rounded-full bg-white hover:bg-indigo-50 text-indigo-700 font-black text-[10px] sm:text-[11px] transition-all shadow-sm hover-zoom-btn backdrop-blur-md uppercase"
+                          className="px-2 py-0.5 rounded-full bg-white hover:bg-indigo-50 text-indigo-700 font-black text-[12px] sm:text-[12px] transition-all shadow-sm hover-zoom-btn backdrop-blur-md uppercase"
                         >
                           CHỌN LỚP NÀY
                         </button>
@@ -2895,7 +2895,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                             prev.includes(cls.id) ? prev.filter(id => id !== cls.id) : [...prev, cls.id]
                           );
                         }}
-                        className={`px-2 py-1 rounded-lg text-[10px] sm:text-[11px] font-black flex items-center gap-1.5 shadow-md backdrop-blur-md border transition-all hover-zoom-btn uppercase ${
+                        className={`px-2 py-1 rounded-lg text-[12px] sm:text-[12px] font-black flex items-center gap-1.5 shadow-md backdrop-blur-md border transition-all hover-zoom-btn uppercase ${
                           isClassChecked
                             ? 'bg-amber-400 text-amber-950 border-amber-300 ring-2 ring-amber-300/60 font-black'
                             : 'bg-indigo-600/85 hover:bg-indigo-900 text-white border-white/25'
@@ -2903,7 +2903,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                         title="Tích chọn lớp này để thao tác đồng loạt (xóa, sửa)"
                       >
                         <div className={`w-3 h-3 rounded border flex items-center justify-center ${
-                          isClassChecked ? 'bg-amber-600 border-amber-600 text-white' : 'border-white/60 bg-white/20'
+                          isClassChecked ? 'bg-amber-700 border-amber-600 text-white' : 'border-white/60 bg-white/20'
                         }`}>
                           {isClassChecked && <Check className="w-2.5 h-2.5 stroke-[3]" />}
                         </div>
@@ -2915,7 +2915,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                       <div className="absolute bottom-2 right-2 flex items-center gap-1.5">
                         <button
                           onClick={() => setAvatarEditingClass(cls)}
-                          className="px-2 py-1 bg-indigo-600/85 hover:bg-indigo-950 text-white rounded-lg text-[10px] sm:text-[11px] font-black flex items-center gap-1.5 shadow-md backdrop-blur-md border border-white/25 transition-all hover-zoom-btn uppercase"
+                          className="px-2 py-1 bg-indigo-600/85 hover:bg-indigo-950 text-white rounded-lg text-[12px] sm:text-[12px] font-black flex items-center gap-1.5 shadow-md backdrop-blur-md border border-white/25 transition-all hover-zoom-btn uppercase"
                           title="Phóng to, thu nhỏ và căn chỉnh vị trí ảnh lớp học"
                         >
                           <ZoomIn className="w-3 h-3 text-amber-300" />
@@ -2932,30 +2932,30 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                         <h3 className="text-lg sm:text-xl font-black text-indigo-950 leading-tight uppercase">
                           {displayName}
                         </h3>
-                        <p className="text-[11px] sm:text-xs text-blue-700 font-black mt-0.5 flex items-center gap-1 uppercase">
+                        <p className="text-[12px] sm:text-xs text-blue-700 font-black mt-0.5 flex items-center gap-1 uppercase">
                           <span>🏫</span>
                           <span>GVCN: <strong className="text-indigo-800 font-black">{cls.teacherName || allUsers.find(u => u.username?.toLowerCase() === cls.teacherUsername?.toLowerCase())?.fullName || teacherProfile.name}</strong></span>
                         </p>
-                        <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-50 text-[10px] sm:text-[10.5px] font-black text-amber-800 border border-amber-200 shadow-2xs mt-0.5 uppercase">
+                        <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-50 text-[12px] sm:text-[12px] font-black text-amber-800 border border-amber-200 shadow-2xs mt-0.5 uppercase">
                           <span>📅</span>
                           <span>NĂM HỌC: <strong className="text-amber-950 font-black">{cls.academicYear || '2026–2027'}</strong></span>
                         </div>
                         {(cls.branch || cls.campus) ? (
                           <div className="flex flex-wrap items-center gap-1 mt-1">
                             {cls.branch && (
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-purple-50 text-[9.5px] font-black text-purple-800 border border-purple-200 shadow-2xs uppercase">
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-purple-50 text-[12px] font-black text-purple-800 border border-purple-200 shadow-2xs uppercase">
                                 🏛️ {cls.branch}
                               </span>
                             )}
                             {cls.campus && (
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-sky-50 text-[9.5px] font-black text-sky-800 border border-sky-200 shadow-2xs uppercase">
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-sky-50 text-[12px] font-black text-sky-800 border border-sky-200 shadow-2xs uppercase">
                                 📍 {cls.campus}
                               </span>
                             )}
                           </div>
                         ) : (
                           <div className="mt-1">
-                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-slate-100 text-[9px] font-bold text-slate-400 border border-slate-200">
+                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-slate-100 text-[12px] font-bold text-slate-400 border border-slate-200">
                               🏛️ Chưa gán phân hiệu (Null)
                             </span>
                           </div>
@@ -2994,21 +2994,21 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                     {/* Sĩ số & Phân loại học sinh */}
                     <div className="grid grid-cols-2 gap-1.5 p-2 bg-gradient-to-r from-blue-50/90 via-indigo-50/80 to-purple-50/80 rounded-xl border border-indigo-200">
                       <div>
-                        <span className="text-[9.5px] font-black text-indigo-600 uppercase tracking-wider block">SĨ SỐ HỌC SINH</span>
+                        <span className="text-[12px] font-black text-indigo-600 uppercase tracking-wider block">SĨ SỐ HỌC SINH</span>
                         <span className="text-xs sm:text-sm font-black text-indigo-900 font-mono">
                           👥 {count} EM HỌC SINH
                         </span>
                       </div>
                       <div>
-                        <span className="text-[9.5px] font-black text-indigo-600 uppercase tracking-wider block">CƠ CẤU GIỚI TÍNH</span>
-                        <span className="text-[10px] sm:text-[11px] font-black text-blue-800 uppercase">
+                        <span className="text-[12px] font-black text-indigo-600 uppercase tracking-wider block">CƠ CẤU GIỚI TÍNH</span>
+                        <span className="text-[12px] sm:text-[12px] font-black text-blue-800 uppercase">
                           ♂ {maleCount} NAM • ♀ {femaleCount} NỮ
                         </span>
                       </div>
                     </div>
 
                     {cls.slogan && (
-                      <div className="text-[10px] sm:text-[10.5px] text-amber-800 font-bold italic bg-amber-50/80 p-1.5 rounded-lg border border-amber-200/80">
+                      <div className="text-[12px] sm:text-[12px] text-amber-800 font-bold italic bg-amber-50/80 p-1.5 rounded-lg border border-amber-200/80">
                         ⭐ « {cls.slogan} »
                       </div>
                     )}
@@ -3021,7 +3021,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                         setActiveClassId(cls.id);
                         if (onNavigate) onNavigate('schedule');
                       }}
-                      className="btn-3d btn-3d-cyan py-2 px-2 text-[11px] sm:text-xs gap-1.5"
+                      className="btn-3d btn-3d-cyan py-2 px-2 text-[12px] sm:text-xs gap-1.5"
                       title={`Thiết lập thời khóa biểu riêng cho lớp ${cls.name}`}
                     >
                       <Calendar className="w-3.5 h-3.5" />
@@ -3059,21 +3059,21 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
           <div className="bg-gradient-to-r from-teal-50 via-emerald-50 to-indigo-50/70 rounded-2xl border border-emerald-200/70 p-2.5 px-3.5 shadow-2xs space-y-1.5 hover-zoom-card">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div className="flex items-center gap-2 flex-wrap">
-                <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-amber-600 to-yellow-600 text-white flex items-center justify-center shadow-xs">
+                <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-amber-700 to-yellow-700 text-white flex items-center justify-center shadow-xs">
                   <Sparkles className="w-3.5 h-3.5" />
                 </div>
                 <div>
-                  <span className="text-[11px] font-black text-emerald-950 uppercase tracking-wider inline-block mr-1.5">
+                  <span className="text-[12px] font-black text-emerald-950 uppercase tracking-wider inline-block mr-1.5">
                     MÔN HỌC ĐÁNH GIÁ NHẬN XU:
                   </span>
-                  <span className="text-[10.5px] text-emerald-800 font-semibold">
+                  <span className="text-[12px] text-emerald-800 font-semibold">
                     Đang chấm cho: <strong className="text-indigo-800 font-black">{activeEvalSubject}</strong>
                   </span>
                 </div>
                 <span className="px-2.5 py-0.5 rounded-full bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-black text-xs shadow-xs shadow-indigo-500/25">
                   {activeEvalSubject}
                 </span>
-                <span className="text-[10px] font-bold text-emerald-800 bg-white/90 px-2 py-0.5 rounded-full border border-emerald-200 shadow-2xs">
+                <span className="text-[12px] font-bold text-emerald-800 bg-white/90 px-2 py-0.5 rounded-full border border-emerald-200 shadow-2xs">
                   ✓ Áp dụng {appliedSubjects.length}/{subjects.length} môn
                 </span>
               </div>
@@ -3082,7 +3082,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
               {canConfigureCoinSubjects && (
                 <button
                   onClick={() => setIsSubjectConfigOpen(true)}
-                  className="px-3 py-1 bg-gradient-to-r from-amber-400 to-yellow-500 hover:from-amber-500 hover:to-yellow-600 text-amber-950 border border-amber-300 rounded-xl text-[11px] font-black flex items-center gap-1.5 shadow-xs transition-all hover-zoom-btn self-start sm:self-auto uppercase tracking-wide cursor-pointer"
+                  className="px-3 py-1 bg-gradient-to-r from-amber-400 to-yellow-500 hover:from-amber-500 hover:to-yellow-600 text-amber-950 border border-amber-300 rounded-xl text-[12px] font-black flex items-center gap-1.5 shadow-xs transition-all hover-zoom-btn self-start sm:self-auto uppercase tracking-wide cursor-pointer"
                   title="Mở bảng cấu hình nhận xu: Thêm, sửa, xóa và thiết lập danh sách môn học áp dụng"
                 >
                   <Settings className="w-3.5 h-3.5 text-amber-950" />
@@ -3100,7 +3100,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                   <button
                     key={sub.id}
                     onClick={() => setActiveEvalSubject(sub.name)}
-                    className={`px-2.5 py-1 rounded-xl text-[11px] font-bold transition-all flex items-center gap-1.5 shrink-0 hover-zoom-btn uppercase cursor-pointer ${
+                    className={`px-2.5 py-1 rounded-xl text-[12px] font-bold transition-all flex items-center gap-1.5 shrink-0 hover-zoom-btn uppercase cursor-pointer ${
                       isSelected
                         ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-sm shadow-indigo-600/30 scale-102 font-black ring-2 ring-indigo-400'
                         : 'bg-white text-indigo-900 border border-indigo-100 hover:bg-indigo-50 hover:border-indigo-300 font-bold'
@@ -3108,7 +3108,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                   >
                     <span className="w-2 h-2 rounded-full ring-2 ring-white/60 shrink-0" style={{ backgroundColor: sub.color || '#3B82F6' }} />
                     <span className="whitespace-nowrap">{sub.name}</span>
-                    {isCore && <span className="text-[9px] text-amber-300 font-black">★</span>}
+                    {isCore && <span className="text-[12px] text-amber-300 font-black">★</span>}
                   </button>
                 );
               })}
@@ -3242,7 +3242,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
 
                 <button
                   onClick={handleDownloadExcelTemplate}
-                  className="btn-3d btn-3d-sm btn-3d-emerald gap-1 shrink-0"
+                  className="btn-3d btn-3d-sm btn-3d-light gap-1 shrink-0"
                   title="Tải file mẫu Excel danh sách học sinh: Họ và tên, Ngày sinh, Giới tính, Tổ, Chức vụ"
                 >
                   <Download className="w-3.5 h-3.5" />
@@ -3259,10 +3259,10 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                       setAutoAssignInitialType('default');
                       setIsAutoAssignAvatarModalOpen(true);
                     }}
-                    className="btn-3d btn-3d-sm btn-3d-cyan gap-1 shrink-0"
+                    className="btn-3d btn-3d-sm btn-3d-light gap-1 shrink-0"
                     title="Tự động chèn Avatar mặc định hoạt hình phân loại Nam/Nữ cho học sinh"
                   >
-                    <Sparkles className="w-3.5 h-3.5 text-yellow-200" />
+                    <Sparkles className="w-3.5 h-3.5 text-amber-600" />
                     <span>AVATAR MẪU</span>
                   </button>
 
@@ -3272,7 +3272,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                       setAutoAssignInitialType('real_demo');
                       setIsAutoAssignAvatarModalOpen(true);
                     }}
-                    className="btn-3d btn-3d-sm btn-3d-sky gap-1 shrink-0"
+                    className="btn-3d btn-3d-sm btn-3d-light gap-1 shrink-0"
                     title="Tự động chèn Avatar ảnh thẻ thật demo từ kho thư mục máy tính cho học sinh"
                   >
                     <Camera className="w-3.5 h-3.5" />
@@ -3282,7 +3282,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                   <button
                     type="button"
                     onClick={() => setIsGroupPhotoModalOpen(true)}
-                    className="btn-3d btn-3d-sm btn-3d-blue gap-1 shrink-0"
+                    className="btn-3d btn-3d-sm btn-3d-light gap-1 shrink-0"
                     title="Tải lên ảnh chụp tập thể cả lớp, khoanh chọn từng khuôn mặt và ghép với học sinh trong danh sách"
                   >
                     <Crop className="w-3.5 h-3.5" />
@@ -3296,7 +3296,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                 {canConfigureCoinSubjects && (
                   <button
                     onClick={() => setIsSubjectConfigOpen(true)}
-                    className="btn-3d btn-3d-sm btn-3d-amber gap-1 shrink-0"
+                    className="btn-3d btn-3d-sm btn-3d-light gap-1 shrink-0"
                     title="Cấu hình nhận xu: Thêm, sửa, xóa môn học và thiết lập danh sách áp dụng"
                   >
                     <Settings className="w-3.5 h-3.5" />
@@ -3306,7 +3306,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
 
                 <button
                   onClick={() => setIsExportStudentListOpen(true)}
-                  className="btn-3d btn-3d-sm btn-3d-emerald gap-1 shrink-0"
+                  className="btn-3d btn-3d-sm btn-3d-light gap-1 shrink-0"
                   title="Xuất danh sách học sinh ra file Excel hoặc in ấn bản A4"
                 >
                   <FileSpreadsheet className="w-3.5 h-3.5" />
@@ -3316,10 +3316,10 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                 {onNavigate && teacherRole !== 'subject' && canCreateClassInfographic && (
                   <button
                     onClick={() => onNavigate('infographic')}
-                    className="btn-3d btn-3d-sm btn-3d-indigo gap-1 shrink-0"
+                    className="btn-3d btn-3d-sm btn-3d-light gap-1 shrink-0"
                     title="Tạo bản Infographic khổ dọc A4 xuất PDF cho lớp"
                   >
-                    <Sparkles className="w-3.5 h-3.5 text-amber-200" />
+                    <Sparkles className="w-3.5 h-3.5 text-amber-600" />
                     <span>INFOGRAPHIC A4</span>
                   </button>
                 )}
@@ -3363,7 +3363,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
 
           {/* Sticky Floating Bulk Action Bar when Students are selected (Yêu cầu 3 & 4) */}
           {selectedStudentIds.length > 0 && (
-            <div className="sticky top-20 z-30 bg-gradient-to-r from-indigo-500 via-indigo-500 to-violet-500 text-white rounded-3xl p-3 md:p-4 shadow-2xl border-2 border-indigo-400/40 flex flex-wrap items-center justify-between gap-3 animate-in fade-in slide-in-from-top-2 backdrop-blur-md">
+            <div className="sticky top-20 z-30 bg-gradient-to-r from-indigo-600 via-indigo-600 to-violet-600 text-white rounded-3xl p-3 md:p-4 shadow-2xl border-2 border-indigo-400/40 flex flex-wrap items-center justify-between gap-3 animate-in fade-in slide-in-from-top-2 backdrop-blur-md">
               <div className="flex items-center gap-2.5">
                 <div className="w-9 h-9 rounded-2xl bg-amber-400 text-indigo-950 flex items-center justify-center font-black shadow-md">
                   <CheckSquare className="w-5 h-5" />
@@ -3372,7 +3372,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                   <span className="text-xs md:text-sm font-black text-amber-300 uppercase tracking-wide block">
                     ĐÃ CHỌN {selectedStudentIds.length} HỌC SINH
                   </span>
-                  <span className="text-[11px] text-white font-medium">
+                  <span className="text-[12px] text-white font-medium">
                     Chọn các thao tác nhanh hàng loạt bên cạnh:
                   </span>
                 </div>
@@ -3388,7 +3388,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                       setBulkAwardReason('');
                       setIsBulkAwardOpen(true);
                     }}
-                    className="px-3.5 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-xl text-xs font-black flex items-center gap-1.5 shadow-md shadow-emerald-500/25 transition-all hover-zoom-btn uppercase"
+                    className="px-3.5 py-2 bg-gradient-to-r from-emerald-700 to-teal-700 hover:from-emerald-800 hover:to-teal-800 text-white rounded-xl text-xs font-black flex items-center gap-1.5 shadow-md shadow-emerald-500/25 transition-all hover-zoom-btn uppercase"
                     title="Gán xu hoặc trừ xu đồng loạt cho các học sinh đã chọn"
                   >
                     <Coins className="w-3.5 h-3.5" />
@@ -3400,7 +3400,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                   onClick={() => {
                     if (onNavigate) onNavigate('certificate');
                   }}
-                  className="px-3.5 py-2 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white rounded-xl text-xs font-black flex items-center gap-1.5 shadow-md shadow-blue-500/25 transition-all hover-zoom-btn uppercase"
+                  className="px-3.5 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl text-xs font-black flex items-center gap-1.5 shadow-md shadow-blue-500/25 transition-all hover-zoom-btn uppercase"
                   title="Tạo Thư Khen điện tử cho các học sinh đã chọn"
                 >
                   <Wand2 className="w-3.5 h-3.5" />
@@ -3522,16 +3522,16 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                             className="w-3.5 h-3.5 rounded text-indigo-600 focus:ring-indigo-500 cursor-pointer"
                           />
                           <span className="px-2 py-0.5 rounded-full bg-gradient-to-r from-indigo-700 to-violet-700 text-amber-300 font-black text-xs shadow-xs ring-1 ring-indigo-500 shrink-0 flex items-center gap-1">
-                            <span className="text-[9.5px] text-white font-bold uppercase tracking-tight">STT</span>
+                            <span className="text-[12px] text-white font-bold uppercase tracking-tight">STT</span>
                             <span className="font-mono">{student.stt}</span>
                           </span>
-                          <span className={`px-2 py-0.5 rounded-full border font-black text-[9.5px] ${groupClass}`}>
+                          <span className={`px-2 py-0.5 rounded-full border font-black text-[12px] ${groupClass}`}>
                             {student.group || 'Tổ 1'}
                           </span>
                         </div>
 
                         {/* Gender Badge */}
-                        <span className={`px-2 py-0.5 rounded-full text-[11px] font-black shadow-2xs border ${
+                        <span className={`px-2 py-0.5 rounded-full text-[12px] font-black shadow-2xs border ${
                           student.gender === 'Nam' 
                             ? 'bg-blue-50 text-blue-700 border-blue-200' 
                             : 'bg-rose-50 text-rose-700 border-rose-200'
@@ -3554,19 +3554,19 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                                     setQuickRoleStudent(student);
                                     setStudentSelectedRoles(studentRoles);
                                   }}
-                                  className={`px-2 py-0.5 rounded-lg text-[9.5px] md:text-[10px] font-black shadow-2xs border flex items-center gap-0.5 transition-all hover-zoom-btn ${rDef?.badgeBg || 'bg-amber-100'} ${rDef?.badgeText || 'text-amber-900'} ${rDef?.badgeBorder || 'border-amber-300'}`}
+                                  className={`px-2 py-0.5 rounded-lg text-[12px] md:text-[12px] font-black shadow-2xs border flex items-center gap-0.5 transition-all hover-zoom-btn ${rDef?.badgeBg || 'bg-amber-100'} ${rDef?.badgeText || 'text-amber-900'} ${rDef?.badgeBorder || 'border-amber-300'}`}
                                   title={`Chức vụ: ${rName} (Bấm để chỉnh sửa tối đa 3 chức vụ)`}
                                 >
-                                  <span className="text-[11px]">{rDef?.icon || '👑'}</span>
+                                  <span className="text-[12px]">{rDef?.icon || '👑'}</span>
                                   <span className="uppercase tracking-tight font-black">{rName}</span>
                                 </button>
                               ) : (
                                 <div
                                   key={rIdx}
-                                  className={`px-2 py-0.5 rounded-lg text-[9.5px] md:text-[10px] font-black shadow-2xs border flex items-center gap-0.5 cursor-default ${rDef?.badgeBg || 'bg-amber-100'} ${rDef?.badgeText || 'text-amber-900'} ${rDef?.badgeBorder || 'border-amber-300'}`}
+                                  className={`px-2 py-0.5 rounded-lg text-[12px] md:text-[12px] font-black shadow-2xs border flex items-center gap-0.5 cursor-default ${rDef?.badgeBg || 'bg-amber-100'} ${rDef?.badgeText || 'text-amber-900'} ${rDef?.badgeBorder || 'border-amber-300'}`}
                                   title={`Chức vụ: ${rName}`}
                                 >
-                                  <span className="text-[11px]">{rDef?.icon || '👑'}</span>
+                                  <span className="text-[12px]">{rDef?.icon || '👑'}</span>
                                   <span className="uppercase tracking-tight font-black">{rName}</span>
                                 </div>
                               );
@@ -3578,7 +3578,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                                   setQuickRoleStudent(student);
                                   setStudentSelectedRoles(studentRoles);
                                 }}
-                                className="px-1.5 py-0.5 rounded-lg text-[9.5px] font-black text-indigo-700 hover:text-indigo-900 bg-indigo-50/80 hover:bg-indigo-100 border border-dashed border-indigo-400 transition-colors flex items-center gap-0.5 hover-zoom-btn shadow-2xs"
+                                className="px-1.5 py-0.5 rounded-lg text-[12px] font-black text-indigo-700 hover:text-indigo-900 bg-indigo-50/80 hover:bg-indigo-100 border border-dashed border-indigo-400 transition-colors flex items-center gap-0.5 hover-zoom-btn shadow-2xs"
                                 title={`Đã gán ${studentRoles.length}/3 chức vụ. Bấm để thêm chức vụ.`}
                               >
                                 <Plus className="w-2.5 h-2.5 text-indigo-600" />
@@ -3594,7 +3594,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                                 setQuickRoleStudent(student);
                                 setStudentSelectedRoles([]);
                               }}
-                              className="px-2 py-0.5 rounded-lg text-[9.5px] md:text-[10px] font-black text-indigo-700 hover:text-indigo-900 bg-indigo-50/80 hover:bg-indigo-100 border border-dashed border-indigo-400 transition-colors flex items-center gap-1 hover-zoom-btn shadow-2xs"
+                              className="px-2 py-0.5 rounded-lg text-[12px] md:text-[12px] font-black text-indigo-700 hover:text-indigo-900 bg-indigo-50/80 hover:bg-indigo-100 border border-dashed border-indigo-400 transition-colors flex items-center gap-1 hover-zoom-btn shadow-2xs"
                               title="Bấm để gán chức vụ cán bộ lớp (Tối đa 3 chức vụ)"
                             >
                               <Crown className="w-3 h-3 text-amber-500" />
@@ -3630,7 +3630,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
 
                           {canEditStudentAvatar && (
                             <>
-                              <div className="absolute inset-0 bg-indigo-600/65 text-white text-[9px] font-black flex flex-col items-center justify-center opacity-0 group-hover/avatar:opacity-100 transition-opacity">
+                              <div className="absolute inset-0 bg-indigo-600/65 text-white text-[12px] font-black flex flex-col items-center justify-center opacity-0 group-hover/avatar:opacity-100 transition-opacity">
                                 <Camera className="w-3.5 h-3.5 mb-0.5 text-amber-300" />
                                 <span>CHỈNH ẢNH</span>
                               </div>
@@ -3658,13 +3658,13 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                           {student.name}
                         </h4>
 
-                        <div className="flex items-center gap-1 text-[11px] text-indigo-600 font-medium">
+                        <div className="flex items-center gap-1 text-[12px] text-indigo-600 font-medium">
                           <Calendar className="w-3 h-3 text-indigo-500 shrink-0" />
                           <span className="font-bold text-indigo-700">{student.birthDate ? student.birthDate : 'Chưa có ngày sinh'}</span>
                         </div>
 
                         <div className="pt-0.5 space-y-0.5">
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-gradient-to-r from-amber-400 via-amber-300 to-yellow-400 text-amber-950 font-black text-[11px] rounded-lg shadow-xs shadow-amber-400/25 border border-amber-300 shrink-0">
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-gradient-to-r from-amber-400 via-amber-300 to-yellow-400 text-amber-950 font-black text-[12px] rounded-lg shadow-xs shadow-amber-400/25 border border-amber-300 shrink-0">
                             <Coins className="w-3.5 h-3.5 text-amber-950 fill-amber-500 shrink-0" />
                             <span>{student.points} xu thi đua</span>
                           </span>
@@ -3680,7 +3680,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                                   return (
                                     <span
                                       key={subName}
-                                      className="inline-flex items-center gap-0.5 px-1.5 py-0.2 rounded-md bg-indigo-50/90 text-[9.5px] font-bold text-indigo-900 border border-indigo-100"
+                                      className="inline-flex items-center gap-0.5 px-1.5 py-0.2 rounded-md bg-indigo-50/90 text-[12px] font-bold text-indigo-900 border border-indigo-100"
                                       title={`Môn ${subName}: ${pts} xu`}
                                     >
                                       <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: subObj?.color || '#3B82F6' }} />
@@ -3691,7 +3691,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                                 })}
                               {Object.entries(student.subjectPoints).filter(([_, pts]) => pts > 0).length > 3 && (
                                 <span 
-                                  className="px-1.5 py-0.2 rounded-md bg-slate-100 text-[9.5px] font-bold text-slate-600 cursor-help"
+                                  className="px-1.5 py-0.2 rounded-md bg-slate-100 text-[12px] font-bold text-slate-600 cursor-help"
                                   title={Object.entries(student.subjectPoints).filter(([_, pts]) => pts > 0).map(([k, v]) => `${k}: ${v} xu`).join('\n')}
                                 >
                                   +{Object.entries(student.subjectPoints).filter(([_, pts]) => pts > 0).length - 3} môn
@@ -3710,7 +3710,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                           <>
                             <button
                               onClick={() => handleQuickAdd(student)}
-                              className="w-7.5 h-7.5 rounded-lg bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-black text-xs flex items-center justify-center shadow-xs shadow-emerald-500/25 transition-all hover-zoom-btn shrink-0"
+                              className="w-7.5 h-7.5 rounded-lg bg-gradient-to-r from-emerald-700 to-teal-700 hover:from-emerald-800 hover:to-teal-800 text-white font-black text-xs flex items-center justify-center shadow-xs shadow-emerald-500/25 transition-all hover-zoom-btn shrink-0"
                               title={`Cộng xu khen thưởng cho học sinh theo môn ${activeEvalSubject}`}
                             >
                               <Plus className="w-3.5 h-3.5" />
@@ -3718,7 +3718,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
 
                             <button
                               onClick={() => handleQuickDeduct(student)}
-                              className="w-7.5 h-7.5 rounded-lg bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 text-white font-black text-xs flex items-center justify-center shadow-xs shadow-rose-500/25 transition-all hover-zoom-btn shrink-0"
+                              className="w-7.5 h-7.5 rounded-lg bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-700 hover:to-pink-700 text-white font-black text-xs flex items-center justify-center shadow-xs shadow-rose-500/25 transition-all hover-zoom-btn shrink-0"
                               title={`Trừ xu nề nếp cho học sinh theo môn ${activeEvalSubject}`}
                             >
                               <Minus className="w-3.5 h-3.5" />
@@ -3732,7 +3732,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                                 setCustomCoins(1);
                                 setSelectedSubjectForAward(activeEvalSubject || appliedSubjects[0]?.name || 'GHI CHUNG / NỀ NẾP');
                               }}
-                              className="w-8 h-8 sm:w-8.5 sm:h-8.5 rounded-xl bg-gradient-to-r from-amber-600 to-yellow-600 hover:from-amber-700 hover:to-yellow-700 text-white font-black text-xs sm:text-sm flex items-center justify-center shadow-xs shadow-amber-500/30 transition-all hover-zoom-btn shrink-0"
+                              className="w-8 h-8 sm:w-8.5 sm:h-8.5 rounded-xl bg-gradient-to-r from-amber-700 to-yellow-700 hover:from-amber-800 hover:to-yellow-800 text-white font-black text-xs sm:text-sm flex items-center justify-center shadow-xs shadow-amber-500/30 transition-all hover-zoom-btn shrink-0"
                               title="Tặng sao thi đua cho học sinh theo môn học"
                             >
                               <Star className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-white text-white" />
@@ -3849,15 +3849,15 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-1.5">
                       <span className="text-sm">👑</span>
-                      <span className="text-[11px] font-black text-amber-950 uppercase tracking-wide">
+                      <span className="text-[12px] font-black text-amber-950 uppercase tracking-wide">
                         MÔN MẶC ĐỊNH GVCN THƯỜNG DẠY:
                       </span>
                     </div>
-                    <span className="text-[9px] font-black text-amber-900 bg-amber-200/80 px-2 py-0.5 rounded-full border border-amber-300">
+                    <span className="text-[12px] font-black text-amber-900 bg-amber-200/80 px-2 py-0.5 rounded-full border border-amber-300">
                       Cốt lõi tiểu học
                     </span>
                   </div>
-                  <p className="text-[10px] text-amber-800 font-semibold leading-tight">
+                  <p className="text-[12px] text-amber-800 font-semibold leading-tight">
                     Mặc định: Toán, Tiếng Việt, Đạo Đức, TN&XH, Lịch sử & Địa lí, Khoa học & Ghi chung / Nề nếp.
                   </p>
                   <div className="flex flex-wrap gap-1 pt-1">
@@ -3872,7 +3872,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                     ].map(c => (
                       <span
                         key={c.name}
-                        className="px-2 py-0.5 rounded-lg bg-white/90 border border-amber-200 text-[10px] font-bold text-slate-800 flex items-center gap-1 shadow-2xs"
+                        className="px-2 py-0.5 rounded-lg bg-white/90 border border-amber-200 text-[12px] font-bold text-slate-800 flex items-center gap-1 shadow-2xs"
                       >
                         <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: c.color }} />
                         <span>{c.name}</span>
@@ -3883,7 +3883,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
 
                 {/* 2. THIẾT LẬP NHANH MÔN ÁP DỤNG CHO LỚP */}
                 <div className="p-3 bg-indigo-50/70 rounded-2xl border border-indigo-100 space-y-2">
-                  <span className="text-[11px] font-black text-indigo-950 uppercase tracking-wide flex items-center gap-1.5">
+                  <span className="text-[12px] font-black text-indigo-950 uppercase tracking-wide flex items-center gap-1.5">
                     <CheckSquare className="w-3.5 h-3.5 text-indigo-600" />
                     <span>THIẾT LẬP NHANH ÁP DỤNG CHO LỚP:</span>
                   </span>
@@ -3892,7 +3892,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                     <button
                       type="button"
                       onClick={handleApplyAllSubjects}
-                      className="px-2.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-[10px] font-black transition-all hover-zoom-btn uppercase shadow-xs cursor-pointer text-center"
+                      className="px-2.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-[12px] font-black transition-all hover-zoom-btn uppercase shadow-xs cursor-pointer text-center"
                       title="Áp dụng tất cả các môn có trong hệ thống"
                     >
                       ✓ Tất Cả ({subjects.length})
@@ -3900,7 +3900,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                     <button
                       type="button"
                       onClick={handleApplyOnlyCoreSubjects}
-                      className="px-2.5 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-[10px] font-black transition-all hover-zoom-btn uppercase shadow-xs cursor-pointer text-center"
+                      className="px-2.5 py-1.5 bg-amber-700 hover:bg-amber-800 text-white rounded-xl text-[12px] font-black transition-all hover-zoom-btn uppercase shadow-xs cursor-pointer text-center"
                       title="Chỉ áp dụng các môn GVCN thường dạy (Toán, TV, Đạo đức, TNXH, LS&ĐL, Khoa học...)"
                     >
                       ⚡ Mặc Định GVCN
@@ -3908,7 +3908,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                     <button
                       type="button"
                       onClick={handleResetDefaultSubjects}
-                      className="px-2.5 py-1.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-xl text-[10px] font-bold transition-all hover-zoom-btn uppercase cursor-pointer text-center"
+                      className="px-2.5 py-1.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-xl text-[12px] font-bold transition-all hover-zoom-btn uppercase cursor-pointer text-center"
                       title="Khôi phục danh sách môn chuẩn hệ thống"
                     >
                       🔄 Danh Mục Gốc
@@ -3918,7 +3918,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
 
                 {/* 3. FORM THÊM MÔN HỌC MỚI */}
                 <form onSubmit={handleAddNewSubject} className="p-3 bg-indigo-50/40 rounded-2xl border border-indigo-100/90 space-y-2">
-                  <span className="text-[11px] font-black text-indigo-950 uppercase tracking-wider flex items-center gap-1.5">
+                  <span className="text-[12px] font-black text-indigo-950 uppercase tracking-wider flex items-center gap-1.5">
                     <Plus className="w-3.5 h-3.5 text-indigo-600" />
                     <span>+ THÊM MÔN HỌC MỚI VÀO HỆ THỐNG:</span>
                   </span>
@@ -3949,7 +3949,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
 
                   {/* Bảng màu gợi ý */}
                   <div className="flex items-center gap-1 pt-0.5">
-                    <span className="text-[10px] font-bold text-slate-500">Màu gợi ý:</span>
+                    <span className="text-[12px] font-bold text-slate-500">Màu gợi ý:</span>
                     {['#3B82F6', '#10B981', '#EF4444', '#F59E0B', '#8B5CF6', '#EC4899', '#06B6D4', '#F97316'].map(c => (
                       <button
                         key={c}
@@ -3965,7 +3965,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                 {/* 4. FORM SỬA MÔN HỌC (NẾU CÓ CHỌN) */}
                 {editingSubject && (
                   <form onSubmit={handleSaveEditSubject} className="p-3 bg-amber-50/90 border-2 border-amber-300 rounded-2xl space-y-2 animate-in fade-in">
-                    <span className="text-[11px] font-black text-amber-950 uppercase tracking-wide block">
+                    <span className="text-[12px] font-black text-amber-950 uppercase tracking-wide block">
                       ✏️ Chỉnh Sửa Môn: {editingSubject.name}
                     </span>
                     <div className="flex items-center gap-2">
@@ -4008,7 +4008,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                   <span className="text-xs font-black text-indigo-950 uppercase tracking-wider block">
                     Danh Sách Môn Học ({subjects.length} môn) • Tick chọn áp dụng:
                   </span>
-                  <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                  <span className="text-[12px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
                     {appliedSubjects.length} môn đang kích hoạt
                   </span>
                 </div>
@@ -4042,12 +4042,12 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                           </label>
 
                           {isCore && (
-                            <span className="px-1.5 py-0.2 rounded bg-amber-100 text-amber-900 border border-amber-300 text-[9px] font-black shrink-0">
+                            <span className="px-1.5 py-0.2 rounded bg-amber-100 text-amber-900 border border-amber-300 text-[12px] font-black shrink-0">
                               👑 GVCN
                             </span>
                           )}
 
-                          <span className={`text-[9px] font-bold px-1.5 py-0.2 rounded shrink-0 hidden sm:inline-block ${
+                          <span className={`text-[12px] font-bold px-1.5 py-0.2 rounded shrink-0 hidden sm:inline-block ${
                             isEnabled ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' : 'bg-slate-200 text-slate-600'
                           }`}>
                             {isEnabled ? 'Áp dụng' : 'Tạm tắt'}
@@ -4179,7 +4179,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                     setCustomCoins(1);
                   }}
                   className={`py-2.5 px-3 rounded-2xl text-xs font-black flex items-center justify-center gap-1.5 transition-all hover-zoom-btn ${
-                    rewardMode === 'xu' ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/25 scale-102' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                    rewardMode === 'xu' ? 'bg-emerald-700 text-white shadow-md shadow-emerald-600/25 scale-102' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                   }`}
                 >
                   <Plus className="w-4 h-4" />
@@ -4205,7 +4205,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                     setCustomCoins(1);
                   }}
                   className={`py-2.5 px-3 rounded-2xl text-xs font-black flex items-center justify-center gap-1.5 transition-all hover-zoom-btn ${
-                    rewardMode === 'sao' ? 'bg-amber-600 text-white shadow-md shadow-amber-500/25 scale-102' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                    rewardMode === 'sao' ? 'bg-amber-700 text-white shadow-md shadow-amber-500/25 scale-102' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                   }`}
                 >
                   <Star className="w-4 h-4 fill-current" />
@@ -4221,7 +4221,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                   <BookOpen className="w-3.5 h-3.5 text-indigo-600" />
                   <span>2. CHỌN MÔN HỌC CỤ THỂ ({selectedSubjectForAward}):</span>
                 </label>
-                <span className="text-[11px] font-black text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-lg border border-indigo-200">
+                <span className="text-[12px] font-black text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-lg border border-indigo-200">
                   Đang chọn: {selectedSubjectForAward}
                 </span>
               </div>
@@ -4235,7 +4235,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                       key={sub.id}
                       type="button"
                       onClick={() => setSelectedSubjectForAward(sub.name)}
-                      className={`px-2 py-2 rounded-xl text-[11px] sm:text-xs font-bold text-left transition-all hover-zoom-btn flex items-center gap-1.5 cursor-pointer min-h-[38px] ${
+                      className={`px-2 py-2 rounded-xl text-[12px] sm:text-xs font-bold text-left transition-all hover-zoom-btn flex items-center gap-1.5 cursor-pointer min-h-[38px] ${
                         isChosen
                           ? 'bg-indigo-600 text-white shadow-sm ring-2 ring-indigo-600/40 font-black'
                           : 'bg-white text-slate-700 border border-slate-200 hover:bg-indigo-50/50 hover:border-indigo-300'
@@ -4244,7 +4244,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                     >
                       <span className="w-2.5 h-2.5 rounded-full shrink-0 ring-1 ring-white/60" style={{ backgroundColor: sub.color || '#3B82F6' }} />
                       <span className="truncate flex-1 leading-tight">{sub.name}</span>
-                      {isCore && <span className="text-[10px] text-amber-400 shrink-0">★</span>}
+                      {isCore && <span className="text-[12px] text-amber-400 shrink-0">★</span>}
                     </button>
                   );
                 })}
@@ -4265,7 +4265,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                       onClick={() => setCustomCoins(num)}
                       className={`py-2.5 rounded-2xl text-xs font-black transition-all hover-zoom-btn ${
                         customCoins === num 
-                          ? 'bg-amber-600 text-white shadow-md shadow-amber-500/25' 
+                          ? 'bg-amber-700 text-white shadow-md shadow-amber-500/25' 
                           : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
                       }`}
                     >
@@ -4284,7 +4284,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                         customCoins === num 
                           ? rewardMode === 'minus'
                             ? 'bg-rose-600 text-white shadow-md shadow-rose-600/25'
-                            : 'bg-emerald-600 text-white shadow-md shadow-emerald-600/25' 
+                            : 'bg-emerald-700 text-white shadow-md shadow-emerald-600/25' 
                           : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
                       }`}
                     >
@@ -4321,7 +4321,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                     key={rIdx}
                     type="button"
                     onClick={() => setCustomReason(reason)}
-                    className="px-2.5 py-1 bg-slate-100 hover:bg-indigo-50 hover:text-indigo-700 rounded-xl text-[11px] font-bold text-slate-600 transition-colors"
+                    className="px-2.5 py-1 bg-slate-100 hover:bg-indigo-50 hover:text-indigo-700 rounded-xl text-[12px] font-bold text-slate-600 transition-colors"
                   >
                     {reason}
                   </button>
@@ -4355,8 +4355,8 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                   rewardMode === 'minus'
                     ? 'bg-rose-600 hover:bg-rose-700 shadow-rose-600/20'
                     : rewardMode === 'sao'
-                    ? 'bg-amber-600 hover:bg-amber-700 shadow-amber-500/25'
-                    : 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-600/20'
+                    ? 'bg-amber-700 hover:bg-amber-800 shadow-amber-500/25'
+                    : 'bg-emerald-700 hover:bg-emerald-800 shadow-emerald-600/20'
                 }`}
               >
                 {rewardMode === 'minus' ? <Minus className="w-4 h-4" /> : rewardMode === 'sao' ? <Star className="w-4 h-4 fill-white" /> : <Plus className="w-4 h-4" />}
@@ -4410,7 +4410,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                 <div className="flex items-center justify-between">
                   <label className="block text-xs font-bold text-slate-700">Ảnh đại diện của lớp (To, rõ nét)</label>
                   {!canEditClassAvatar && (
-                    <span className="text-[10.5px] text-indigo-700 italic font-semibold">(Chỉ GVCN có quyền đổi ảnh lớp)</span>
+                    <span className="text-[12px] text-indigo-700 italic font-semibold">(Chỉ GVCN có quyền đổi ảnh lớp)</span>
                   )}
                 </div>
                 
@@ -4430,7 +4430,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
 
                   {canEditClassAvatar ? (
                     <div className="space-y-1.5 flex-1 min-w-0">
-                      <span className="text-[11px] font-bold text-slate-600 block">
+                      <span className="text-[12px] font-bold text-slate-600 block">
                         Tải ảnh đại diện lớp từ máy tính lên:
                       </span>
                       <div className="flex flex-wrap items-center gap-2">
@@ -4445,7 +4445,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                         <button
                           type="button"
                           onClick={() => setIsNewClassAvatarEditorOpen(true)}
-                          className="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-xs transition-all hover-zoom-btn"
+                          className="px-3 py-1.5 bg-amber-700 hover:bg-amber-800 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-xs transition-all hover-zoom-btn"
                           title="Thu phóng và căn chỉnh góc nhìn ảnh lớp"
                         >
                           <ZoomIn className="w-3.5 h-3.5" />
@@ -4459,14 +4459,14 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                         onChange={handleUploadNewClassAvatar}
                         className="hidden"
                       />
-                      <span className="text-[10px] text-slate-400 block">
+                      <span className="text-[12px] text-slate-400 block">
                         Hoặc chọn nhanh từ các mẫu hoạt hình dưới đây:
                       </span>
                     </div>
                   ) : (
                     <div className="flex-1 min-w-0 space-y-1">
                       <span className="text-xs font-bold text-slate-700 block">Ảnh đại diện mặc định của lớp</span>
-                      <p className="text-[11px] text-slate-500">Tài khoản Quản trị / Ban giám hiệu không có quyền tùy biến hoặc thay đổi ảnh đại diện lớp.</p>
+                      <p className="text-[12px] text-slate-500">Tài khoản Quản trị / Ban giám hiệu không có quyền tùy biến hoặc thay đổi ảnh đại diện lớp.</p>
                     </div>
                   )}
                 </div>
@@ -4511,7 +4511,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                     </label>
                   </div>
                   {canAssignHomeroomTeacher && (
-                    <span className="text-[10px] font-black text-amber-900 bg-amber-100 border border-amber-300 px-2 py-0.5 rounded-full">
+                    <span className="text-[12px] font-black text-amber-900 bg-amber-100 border border-amber-300 px-2 py-0.5 rounded-full">
                       {currentUser?.role === 'bgh' || currentUser?.isBgh ? 'Ban Giám Hiệu' : (currentUser?.role === 'school_admin' || currentUser?.isSchoolAdmin ? 'Quản Trị Nhà Trường' : 'Quản Trị Viên')}
                     </span>
                   )}
@@ -4521,8 +4521,8 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                   <div className="p-3 bg-gradient-to-r from-amber-50/90 via-orange-50/70 to-amber-50/90 border border-amber-300 rounded-2xl space-y-2.5 shadow-xs">
                     <div>
                       <div className="flex items-center justify-between mb-1">
-                        <span className="text-[11px] font-bold text-amber-950">Chọn tài khoản giáo viên nhận lớp:</span>
-                        <span className="text-[10px] font-bold text-amber-800 bg-amber-200/70 px-1.5 py-0.5 rounded">
+                        <span className="text-[12px] font-bold text-amber-950">Chọn tài khoản giáo viên nhận lớp:</span>
+                        <span className="text-[12px] font-bold text-amber-800 bg-amber-200/70 px-1.5 py-0.5 rounded">
                           {assignableTeachers.length} GV trong trường
                         </span>
                       </div>
@@ -4542,7 +4542,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                     </div>
 
                     <div>
-                      <span className="block text-[11px] font-bold text-amber-950 mb-1">Tên giáo viên hiển thị trên lớp:</span>
+                      <span className="block text-[12px] font-bold text-amber-950 mb-1">Tên giáo viên hiển thị trên lớp:</span>
                       <input
                         type="text"
                         placeholder="Ví dụ: Thầy/Cô Nguyễn Văn A..."
@@ -4552,7 +4552,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                         required
                       />
                     </div>
-                    <p className="text-[10px] text-amber-850 font-medium italic">
+                    <p className="text-[12px] text-amber-850 font-medium italic">
                       ✨ Tài khoản được chọn sẽ chính thức là GVCN quản lý học sinh và dữ liệu lớp.
                     </p>
                   </div>
@@ -4573,7 +4573,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                 {/* --- CỘT 2: TỔ CHỨC & BAN PHỤ HUYNH --- */}
                 <div className="space-y-5">
                   <div className="flex items-center gap-2 pb-1 border-b border-slate-100">
-                    <div className="w-6 h-6 rounded-lg bg-emerald-100 flex items-center justify-center text-emerald-600">
+                    <div className="w-6 h-6 rounded-lg bg-emerald-100 flex items-center justify-center text-emerald-700">
                       <Users2 className="w-3.5 h-3.5" />
                     </div>
                     <span className="text-xs font-black text-slate-800 uppercase tracking-wide">Tổ chức & Ban phụ huynh</span>
@@ -4625,7 +4625,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                         <button
                           type="button"
                           onClick={() => setIsCustomNewBranch(!isCustomNewBranch)}
-                          className="text-[10px] text-indigo-600 hover:underline font-bold"
+                          className="text-[12px] text-indigo-600 hover:underline font-bold"
                         >
                           {isCustomNewBranch ? '📋 Danh mục' : '✏️ Tự nhập'}
                         </button>
@@ -4670,7 +4670,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                         <button
                           type="button"
                           onClick={() => setIsCustomNewCampus(!isCustomNewCampus)}
-                          className="text-[10px] text-indigo-600 hover:underline font-bold"
+                          className="text-[12px] text-indigo-600 hover:underline font-bold"
                         >
                           {isCustomNewCampus ? '📋 Danh mục' : '✏️ Tự nhập'}
                         </button>
@@ -4724,7 +4724,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                     ⭐ Slogan của lớp học
                   </label>
                   {!canEditClassSlogan && (
-                    <span className="text-[10.5px] text-amber-700 italic font-semibold">(Chỉ GVCN có quyền cấu hình)</span>
+                    <span className="text-[12px] text-amber-700 italic font-semibold">(Chỉ GVCN có quyền cấu hình)</span>
                   )}
                 </div>
                 <input
@@ -4754,7 +4754,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
                     {/* Trưởng ban */}
                     <div className="space-y-1 p-2 rounded-xl bg-white border border-indigo-100">
-                      <label className="block font-bold text-indigo-700 text-[11px]">Trưởng ban phụ huynh:</label>
+                      <label className="block font-bold text-indigo-700 text-[12px]">Trưởng ban phụ huynh:</label>
                       <input
                         type="text"
                         placeholder="Họ và tên..."
@@ -4773,7 +4773,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
 
                     {/* Phó ban */}
                     <div className="space-y-1 p-2 rounded-xl bg-white border border-indigo-100">
-                      <label className="block font-bold text-indigo-700 text-[11px]">Phó ban phụ huynh:</label>
+                      <label className="block font-bold text-indigo-700 text-[12px]">Phó ban phụ huynh:</label>
                       <input
                         type="text"
                         placeholder="Họ và tên..."
@@ -4792,7 +4792,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
 
                     {/* Ủy viên 1 */}
                     <div className="space-y-1 p-2 rounded-xl bg-white border border-indigo-100">
-                      <label className="block font-bold text-slate-700 text-[11px]">Ủy viên phụ huynh 1:</label>
+                      <label className="block font-bold text-slate-700 text-[12px]">Ủy viên phụ huynh 1:</label>
                       <input
                         type="text"
                         placeholder="Họ và tên..."
@@ -4811,7 +4811,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
 
                     {/* Ủy viên 2 */}
                     <div className="space-y-1 p-2 rounded-xl bg-white border border-indigo-100">
-                      <label className="block font-bold text-slate-700 text-[11px]">Ủy viên phụ huynh 2:</label>
+                      <label className="block font-bold text-slate-700 text-[12px]">Ủy viên phụ huynh 2:</label>
                       <input
                         type="text"
                         placeholder="Họ và tên..."
@@ -4835,7 +4835,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                     <Heart className="w-4 h-4 text-slate-400" />
                     <span>Ban Đại Diện Cha Mẹ Học Sinh</span>
                   </div>
-                  <p className="text-[11px] text-slate-400 italic">Chỉ Giáo viên chủ nhiệm lớp mới có quyền cấu hình Ban đại diện cha mẹ học sinh.</p>
+                  <p className="text-[12px] text-slate-400 italic">Chỉ Giáo viên chủ nhiệm lớp mới có quyền cấu hình Ban đại diện cha mẹ học sinh.</p>
                 </div>
               )}
 
@@ -4888,7 +4888,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
             {/* Header */}
             <div className="flex items-center justify-between pb-3 border-b border-indigo-100 shrink-0">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center border border-emerald-200 shadow-xs">
+                <div className="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-700 flex items-center justify-center border border-emerald-200 shadow-xs">
                   <FileSpreadsheet className="w-5 h-5" />
                 </div>
                 <div>
@@ -4915,7 +4915,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
             {/* Bảng xem trước danh sách lớp học */}
             <div className="flex-1 overflow-y-auto border border-slate-200 rounded-2xl bg-slate-50/50">
               <table className="w-full text-left text-xs">
-                <thead className="bg-indigo-50/80 text-indigo-950 font-black uppercase text-[11px] sticky top-0 border-b border-indigo-100 z-10">
+                <thead className="bg-indigo-50/80 text-indigo-950 font-black uppercase text-[12px] sticky top-0 border-b border-indigo-100 z-10">
                   <tr>
                     <th className="px-3 py-2.5 w-12 text-center">STT</th>
                     <th className="px-3 py-2.5">Tên lớp</th>
@@ -4980,7 +4980,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                 <button
                   type="button"
                   onClick={handleConfirmBulkAddClasses}
-                  className="px-5 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white text-xs font-black rounded-xl shadow-md shadow-emerald-600/20 hover-zoom-btn uppercase flex items-center gap-1.5"
+                  className="px-5 py-2.5 bg-gradient-to-r from-emerald-700 to-teal-700 hover:from-emerald-800 hover:to-teal-800 text-white text-xs font-black rounded-xl shadow-md shadow-emerald-600/20 hover-zoom-btn uppercase flex items-center gap-1.5"
                 >
                   <CheckSquare className="w-4 h-4" />
                   <span>Xác nhận tạo hàng loạt ngay</span>
@@ -5065,7 +5065,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                     {/* Header Phân hiệu */}
                     <div className="flex items-center justify-between gap-3">
                       <div className="flex items-center gap-2 flex-1">
-                        <span className="w-6 h-6 rounded-lg bg-purple-600 text-white text-[11px] font-black flex items-center justify-center shrink-0">
+                        <span className="w-6 h-6 rounded-lg bg-purple-600 text-white text-[12px] font-black flex items-center justify-center shrink-0">
                           {bIdx + 1}
                         </span>
                         <input
@@ -5075,14 +5075,14 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                           placeholder="Tên phân hiệu..."
                           className="font-black text-sm text-purple-950 bg-white px-2.5 py-1 rounded-lg border border-slate-200 focus:border-purple-500 flex-1 max-w-sm"
                         />
-                        <span className="text-[11px] text-slate-500 font-bold">
+                        <span className="text-[12px] text-slate-500 font-bold">
                           ({branch.campuses?.length || 0} điểm trường)
                         </span>
                       </div>
                       <button
                         type="button"
                         onClick={() => handleRemoveTempBranch(branch.id)}
-                        className="p-1.5 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-lg transition-colors"
+                        className="p-1.5 text-rose-600 hover:text-rose-700 hover:bg-rose-50 rounded-lg transition-colors"
                         title="Xóa phân hiệu này"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -5091,7 +5091,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
 
                     {/* Danh sách Điểm trường trực thuộc phân hiệu này */}
                     <div className="pl-8 space-y-2">
-                      <div className="text-[11px] font-bold text-slate-600 uppercase flex items-center gap-1">
+                      <div className="text-[12px] font-bold text-slate-600 uppercase flex items-center gap-1">
                         <MapPin className="w-3.5 h-3.5 text-sky-600" />
                         <span>Các điểm trường thuộc phân hiệu này:</span>
                       </div>
@@ -5138,7 +5138,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                         <button
                           type="button"
                           onClick={() => handleAddTempCampus(branch.id)}
-                          className="px-3 py-1.5 bg-sky-600 hover:bg-sky-700 text-white rounded-lg text-xs font-black shadow-2xs hover-zoom-btn flex items-center gap-1 whitespace-nowrap"
+                          className="px-3 py-1.5 bg-sky-700 hover:bg-sky-800 text-white rounded-lg text-xs font-black shadow-2xs hover-zoom-btn flex items-center gap-1 whitespace-nowrap"
                         >
                           <Plus className="w-3.5 h-3.5" />
                           <span>Thêm Điểm</span>
@@ -5203,13 +5203,13 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                   <div className="flex items-center gap-2">
                     <h3 className="text-base font-black text-indigo-950">Sửa Thông Tin Lớp Học</h3>
                     <span 
-                      className="px-2 py-0.5 rounded-lg text-[10px] font-black text-white"
+                      className="px-2 py-0.5 rounded-lg text-[12px] font-black text-white"
                       style={{ backgroundColor: editingClass.color || '#6366F1' }}
                     >
                       LỚP {editingClass.name}
                     </span>
                   </div>
-                  <p className="text-[11px] text-indigo-700">
+                  <p className="text-[12px] text-indigo-700">
                     Bố cục ngang toàn diện: Thông tin lớp, giáo viên, ban phụ huynh & ảnh đại diện
                   </p>
                 </div>
@@ -5225,7 +5225,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
 
             <form onSubmit={handleSaveEditClass} className="space-y-3.5">
               {isSchoolAdminOrBgh && (
-                <div className="px-3 py-2 rounded-xl bg-amber-50 border border-amber-300 text-[11px] font-semibold text-amber-900">
+                <div className="px-3 py-2 rounded-xl bg-amber-50 border border-amber-300 text-[12px] font-semibold text-amber-900">
                   🔒 Ban Giám Hiệu / Quản trị nhà trường chỉ gán <strong>phân hiệu – điểm trường</strong> cho lớp. Tên lớp, khối, năm học, giáo viên do Quản trị tối cao hoặc Giáo viên chủ nhiệm điều chỉnh.
                 </div>
               )}
@@ -5237,11 +5237,11 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                   {/* Khối 1: Ảnh đại diện lớp học */}
                   <div className="p-3 bg-slate-50/90 rounded-2xl border border-slate-200/90 space-y-2">
                     <div className="flex items-center justify-between">
-                      <label className="block text-[11px] font-bold text-slate-700">
+                      <label className="block text-[12px] font-bold text-slate-700">
                         Ảnh đại diện lớp học:
                       </label>
                       {!canEditClassAvatar && (
-                        <span className="text-[10px] text-indigo-700 italic font-semibold">(Chỉ GVCN có quyền đổi ảnh lớp)</span>
+                        <span className="text-[12px] text-indigo-700 italic font-semibold">(Chỉ GVCN có quyền đổi ảnh lớp)</span>
                       )}
                     </div>
                     <div className="flex items-center gap-3">
@@ -5264,7 +5264,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                             <button
                               type="button"
                               onClick={() => editClassAvatarInputRef.current?.click()}
-                              className="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-[11px] font-bold flex items-center gap-1 shadow-xs transition-all hover-zoom-btn"
+                              className="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-[12px] font-bold flex items-center gap-1 shadow-xs transition-all hover-zoom-btn"
                             >
                               <Upload className="w-3 h-3" />
                               <span>Tải từ máy tính</span>
@@ -5272,7 +5272,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                             <button
                               type="button"
                               onClick={() => setAvatarEditingClass(editingClass)}
-                              className="px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-[11px] font-bold flex items-center gap-1 shadow-xs transition-all hover-zoom-btn"
+                              className="px-2.5 py-1 bg-amber-700 hover:bg-amber-800 text-white rounded-xl text-[12px] font-bold flex items-center gap-1 shadow-xs transition-all hover-zoom-btn"
                               title="Thu phóng và căn chỉnh góc nhìn ảnh lớp"
                             >
                               <ZoomIn className="w-3 h-3" />
@@ -5286,14 +5286,14 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                             onChange={handleUploadEditClassAvatar}
                             className="hidden"
                           />
-                          <span className="text-[9.5px] text-slate-400 block truncate">
+                          <span className="text-[12px] text-slate-400 block truncate">
                             Hoặc bấm chọn nhanh mẫu hoạt hình bên dưới:
                           </span>
                         </div>
                       ) : (
                         <div className="flex-1 min-w-0 space-y-0.5">
                           <span className="text-xs font-bold text-slate-700 block">Ảnh đại diện hiện tại</span>
-                          <p className="text-[10.5px] text-slate-500">Tài khoản Quản trị / Ban giám hiệu không có quyền thay đổi ảnh đại diện lớp.</p>
+                          <p className="text-[12px] text-slate-500">Tài khoản Quản trị / Ban giám hiệu không có quyền thay đổi ảnh đại diện lớp.</p>
                         </div>
                       )}
                     </div>
@@ -5320,7 +5320,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                   {/* Khối 2: Tên lớp, Khối, Năm học (3 cột trên 1 hàng ngang) */}
                   <div className="grid grid-cols-3 gap-2">
                     <div>
-                      <label className="block text-[11px] font-bold text-slate-700 mb-1">Tên lớp *</label>
+                      <label className="block text-[12px] font-bold text-slate-700 mb-1">Tên lớp *</label>
                       <input
                         type="text"
                         disabled={isSchoolAdminOrBgh}
@@ -5332,7 +5332,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                       />
                     </div>
                     <div>
-                      <label className="block text-[11px] font-bold text-slate-700 mb-1">Khối lớp</label>
+                      <label className="block text-[12px] font-bold text-slate-700 mb-1">Khối lớp</label>
                       <select
                         disabled={isSchoolAdminOrBgh}
                         value={editingClass.grade}
@@ -5345,7 +5345,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                       </select>
                     </div>
                     <div>
-                      <label className="block text-[11px] font-bold text-slate-700 mb-1">Năm học</label>
+                      <label className="block text-[12px] font-bold text-slate-700 mb-1">Năm học</label>
                       <input
                         type="text"
                         disabled={isSchoolAdminOrBgh}
@@ -5360,7 +5360,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                   {/* Khối 2.1: Phân hiệu & Điểm trường (Đồng nhất dữ liệu chuẩn - Không mặc định Khu chính, Null nếu chưa cấu hình) */}
                   <div className="space-y-1.5">
                     {effectiveSchoolBranches.length === 0 && !canManageSchoolBranches && (
-                      <div className="p-2 bg-amber-50 border border-amber-200 rounded-xl text-amber-900 text-[11px] font-medium flex items-center gap-1.5">
+                      <div className="p-2 bg-amber-50 border border-amber-200 rounded-xl text-amber-900 text-[12px] font-medium flex items-center gap-1.5">
                         <AlertTriangle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
                         <span>Nhà trường chưa cấu hình danh mục Phân hiệu & Điểm trường. Lớp sẽ được lưu trạng thái chưa cấu hình (Null).</span>
                       </div>
@@ -5370,12 +5370,12 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                       {/* Phân hiệu */}
                       <div>
                         <div className="flex items-center justify-between mb-1">
-                          <label className="block text-[11px] font-bold text-slate-700">🏛️ Phân hiệu</label>
+                          <label className="block text-[12px] font-bold text-slate-700">🏛️ Phân hiệu</label>
                           {canManageSchoolBranches && effectiveSchoolBranches.length > 0 && (
                             <button
                               type="button"
                               onClick={() => setIsCustomEditBranch(!isCustomEditBranch)}
-                              className="text-[9.5px] text-indigo-600 hover:underline font-bold"
+                              className="text-[12px] text-indigo-600 hover:underline font-bold"
                             >
                               {isCustomEditBranch ? '📋 Danh mục' : '✏️ Tự nhập'}
                             </button>
@@ -5416,12 +5416,12 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                       {/* Điểm trường */}
                       <div>
                         <div className="flex items-center justify-between mb-1">
-                          <label className="block text-[11px] font-bold text-slate-700">📍 Điểm trường</label>
+                          <label className="block text-[12px] font-bold text-slate-700">📍 Điểm trường</label>
                           {canManageSchoolBranches && (
                             <button
                               type="button"
                               onClick={() => setIsCustomEditCampus(!isCustomEditCampus)}
-                              className="text-[9.5px] text-indigo-600 hover:underline font-bold"
+                              className="text-[12px] text-indigo-600 hover:underline font-bold"
                             >
                               {isCustomEditCampus ? '📋 Danh mục' : '✏️ Tự nhập'}
                             </button>
@@ -5471,10 +5471,10 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                   {/* Khối 3: Tên giáo viên chủ nhiệm */}
                   <div>
                     <div className="flex items-center justify-between mb-1">
-                      <label className="block text-[11px] font-bold text-slate-700">
+                      <label className="block text-[12px] font-bold text-slate-700">
                         Tên giáo viên chủ nhiệm / phụ trách:
                       </label>
-                      <span className="text-[9.5px] text-indigo-600 font-semibold bg-indigo-50 px-1.5 py-0.5 rounded">
+                      <span className="text-[12px] text-indigo-600 font-semibold bg-indigo-50 px-1.5 py-0.5 rounded">
                         Đồng bộ Hồ sơ GV
                       </span>
                     </div>
@@ -5494,11 +5494,11 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-1.5">
                           <span className="text-sm">🏛️</span>
-                          <label className="block text-[11px] font-black text-amber-950 uppercase tracking-wide">
+                          <label className="block text-[12px] font-black text-amber-950 uppercase tracking-wide">
                             Gán Nhiệm Vụ Giáo Viên Chủ Nhiệm:
                           </label>
                         </div>
-                        <span className="text-[9.5px] bg-amber-200 text-amber-900 px-2 py-0.5 rounded-full font-black border border-amber-300">
+                        <span className="text-[12px] bg-amber-200 text-amber-900 px-2 py-0.5 rounded-full font-black border border-amber-300">
                           {currentUser?.role === 'bgh' || currentUser?.isBgh ? 'Ban Giám Hiệu' : (currentUser?.role === 'school_admin' || currentUser?.isSchoolAdmin ? 'Quản Trị Nhà Trường' : 'Quản Trị Viên')}
                         </span>
                       </div>
@@ -5525,7 +5525,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                           />
                         );
                       })()}
-                      <p className="text-[10px] text-amber-850 font-medium italic flex items-center gap-1">
+                      <p className="text-[12px] text-amber-850 font-medium italic flex items-center gap-1">
                         <span>ℹ️</span>
                         <span>Tài khoản giáo viên được gán sẽ là GVCN chính thức, toàn quyền quản lý học sinh và các chức năng của lớp học này.</span>
                       </p>
@@ -5534,7 +5534,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
 
                   {/* Khối 5: Màu sắc nhận diện lớp */}
                   <div>
-                    <label className="block text-[11px] font-bold text-slate-700 mb-1.5">
+                    <label className="block text-[12px] font-bold text-slate-700 mb-1.5">
                       Màu sắc nhận diện lớp:
                     </label>
                     <div className="flex items-center gap-2">
@@ -5558,12 +5558,12 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                   {/* Slogan của lớp học */}
                   <div>
                     <div className="flex items-center justify-between mb-1">
-                      <label className="text-[11px] font-bold text-slate-700 flex items-center gap-1">
+                      <label className="text-[12px] font-bold text-slate-700 flex items-center gap-1">
                         <Sparkles className="w-3.5 h-3.5 text-amber-500" />
                         <span>Slogan / Khẩu hiệu lớp học (Hiển thị trên Infographic):</span>
                       </label>
                       {!canEditClassSlogan && (
-                        <span className="text-[10px] text-amber-700 italic font-semibold">(Chỉ GVCN có quyền sửa Slogan)</span>
+                        <span className="text-[12px] text-amber-700 italic font-semibold">(Chỉ GVCN có quyền sửa Slogan)</span>
                       )}
                     </div>
                     <input
@@ -5590,7 +5590,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                           Ban Đại Diện Cha Mẹ Học Sinh (4 Vị Trí)
                         </span>
                       </div>
-                      <span className="text-[9.5px] text-indigo-700 font-bold bg-white px-2 py-0.5 rounded-full border border-indigo-200/80 shadow-2xs">
+                      <span className="text-[12px] text-indigo-700 font-bold bg-white px-2 py-0.5 rounded-full border border-indigo-200/80 shadow-2xs">
                         ⚡ Đồng bộ 2 chiều với Cài đặt
                       </span>
                     </div>
@@ -5599,10 +5599,10 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                       {/* 1. Trưởng ban */}
                       <div className="space-y-1 p-2 rounded-xl bg-white border border-indigo-100 shadow-2xs">
                         <div className="flex items-center justify-between">
-                          <label className="block font-black text-indigo-800 text-[11px]">
+                          <label className="block font-black text-indigo-800 text-[12px]">
                             1. Trưởng ban phụ huynh:
                           </label>
-                          <span className="text-[9px] bg-indigo-50 text-indigo-600 px-1 rounded font-bold">Trưởng ban</span>
+                          <span className="text-[12px] bg-indigo-50 text-indigo-600 px-1 rounded font-bold">Trưởng ban</span>
                         </div>
                         <input
                           type="text"
@@ -5632,17 +5632,17 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                               member2: editingClass.parentCommittee?.member2 || { name: '', phone: '' }
                             }
                           })}
-                          className="w-full px-2.5 py-1 bg-slate-50 border border-slate-200 rounded-lg text-[11px] font-mono"
+                          className="w-full px-2.5 py-1 bg-slate-50 border border-slate-200 rounded-lg text-[12px] font-mono"
                         />
                       </div>
 
                       {/* 2. Phó ban */}
                       <div className="space-y-1 p-2 rounded-xl bg-white border border-indigo-100 shadow-2xs">
                         <div className="flex items-center justify-between">
-                          <label className="block font-black text-indigo-800 text-[11px]">
+                          <label className="block font-black text-indigo-800 text-[12px]">
                             2. Phó ban phụ huynh:
                           </label>
-                          <span className="text-[9px] bg-purple-50 text-purple-600 px-1 rounded font-bold">Phó ban</span>
+                          <span className="text-[12px] bg-purple-50 text-purple-600 px-1 rounded font-bold">Phó ban</span>
                         </div>
                         <input
                           type="text"
@@ -5672,17 +5672,17 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                               member2: editingClass.parentCommittee?.member2 || { name: '', phone: '' }
                             }
                           })}
-                          className="w-full px-2.5 py-1 bg-slate-50 border border-slate-200 rounded-lg text-[11px] font-mono"
+                          className="w-full px-2.5 py-1 bg-slate-50 border border-slate-200 rounded-lg text-[12px] font-mono"
                         />
                       </div>
 
                       {/* 3. Ủy viên 1 */}
                       <div className="space-y-1 p-2 rounded-xl bg-white border border-indigo-100 shadow-2xs">
                         <div className="flex items-center justify-between">
-                          <label className="block font-bold text-slate-700 text-[11px]">
+                          <label className="block font-bold text-slate-700 text-[12px]">
                             3. Ủy viên phụ huynh 1:
                           </label>
-                          <span className="text-[9px] bg-slate-100 text-slate-600 px-1 rounded font-medium">Ủy viên</span>
+                          <span className="text-[12px] bg-slate-100 text-slate-600 px-1 rounded font-medium">Ủy viên</span>
                         </div>
                         <input
                           type="text"
@@ -5712,17 +5712,17 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                               member2: editingClass.parentCommittee?.member2 || { name: '', phone: '' }
                             }
                           })}
-                          className="w-full px-2.5 py-1 bg-slate-50 border border-slate-200 rounded-lg text-[11px] font-mono"
+                          className="w-full px-2.5 py-1 bg-slate-50 border border-slate-200 rounded-lg text-[12px] font-mono"
                         />
                       </div>
 
                       {/* 4. Ủy viên 2 */}
                       <div className="space-y-1 p-2 rounded-xl bg-white border border-indigo-100 shadow-2xs">
                         <div className="flex items-center justify-between">
-                          <label className="block font-bold text-slate-700 text-[11px]">
+                          <label className="block font-bold text-slate-700 text-[12px]">
                             4. Ủy viên phụ huynh 2:
                           </label>
-                          <span className="text-[9px] bg-slate-100 text-slate-600 px-1 rounded font-medium">Ủy viên</span>
+                          <span className="text-[12px] bg-slate-100 text-slate-600 px-1 rounded font-medium">Ủy viên</span>
                         </div>
                         <input
                           type="text"
@@ -5752,7 +5752,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                               member2: { name: editingClass.parentCommittee?.member2?.name || '', phone: e.target.value, roleTitle: 'Ủy viên ban phụ huynh' }
                             }
                           })}
-                          className="w-full px-2.5 py-1 bg-slate-50 border border-slate-200 rounded-lg text-[11px] font-mono"
+                          className="w-full px-2.5 py-1 bg-slate-50 border border-slate-200 rounded-lg text-[12px] font-mono"
                         />
                       </div>
                     </div>
@@ -5763,7 +5763,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                         <Heart className="w-4 h-4 text-slate-400" />
                         <span>Ban Đại Diện Cha Mẹ Học Sinh (4 Vị Trí)</span>
                       </div>
-                      <p className="text-[11px] text-slate-500 italic">Chỉ Giáo viên chủ nhiệm lớp mới có quyền cấu hình thông tin Ban đại diện cha mẹ học sinh.</p>
+                      <p className="text-[12px] text-slate-500 italic">Chỉ Giáo viên chủ nhiệm lớp mới có quyền cấu hình thông tin Ban đại diện cha mẹ học sinh.</p>
                       {editingClass.parentCommittee?.head?.name && (
                         <div className="pt-2 text-left text-xs text-slate-600 bg-white p-2.5 rounded-xl border border-slate-200 space-y-1">
                           <div><strong>Trưởng ban:</strong> {editingClass.parentCommittee.head.name} {editingClass.parentCommittee.head.phone && `(${editingClass.parentCommittee.head.phone})`}</div>
@@ -5807,7 +5807,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
             <div className="text-center">
               <h3 className="text-base font-black text-rose-950">Xóa Lớp {deleteConfirmClass.name}?</h3>
               {isSuperAdmin && (
-                <div className="mt-2.5 p-2.5 bg-rose-50 border border-rose-300 rounded-xl text-rose-900 text-[11px] font-bold text-left leading-relaxed">
+                <div className="mt-2.5 p-2.5 bg-rose-50 border border-rose-300 rounded-xl text-rose-900 text-[12px] font-bold text-left leading-relaxed">
                   👑 <strong>QUYỀN QUẢN TRỊ TỐI CAO:</strong> Bạn đang thực thi xóa Lớp học này trên toàn bộ hệ thống CSDL. Mọi học sinh và dữ liệu thuộc lớp này sẽ bị xóa vĩnh viễn khỏi toàn bộ tài khoản giáo viên/nhà trường.
                 </div>
               )}
@@ -5853,7 +5853,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
               <span className="font-black text-rose-950 block">Các lớp sẽ bị xóa:</span>
               <div className="flex flex-wrap gap-1.5">
                 {classes.map(c => (
-                  <span key={c.id} className="px-2.5 py-1 bg-white border border-rose-200 text-rose-900 rounded-xl font-bold text-[11px] shadow-2xs">
+                  <span key={c.id} className="px-2.5 py-1 bg-white border border-rose-200 text-rose-900 rounded-xl font-bold text-[12px] shadow-2xs">
                     Lớp {c.name} ({c.grade})
                   </span>
                 ))}
@@ -5925,7 +5925,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                         <td className="p-2.5 font-bold text-indigo-950">{st.name}</td>
                         <td className="p-2.5 text-indigo-700 font-medium">{st.birthDate || '—'}</td>
                         <td className="p-2.5 text-center">
-                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
+                          <span className={`px-2 py-0.5 rounded-full text-[12px] font-black ${
                             st.gender === 'Nam' ? 'bg-blue-100 text-blue-800' : 'bg-pink-100 text-pink-800'
                           }`}>
                             {st.gender}
@@ -5934,11 +5934,11 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                         <td className="p-2.5 text-center text-indigo-900 font-bold">{st.group || 'Tổ 1'}</td>
                         <td className="p-2.5 text-center">
                           {st.role ? (
-                            <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300 font-black text-[10px]">
+                            <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300 font-black text-[12px]">
                               {st.role}
                             </span>
                           ) : (
-                            <span className="text-slate-400 text-[10px]">Thành viên</span>
+                            <span className="text-slate-400 text-[12px]">Thành viên</span>
                           )}
                         </td>
                       </tr>
@@ -5959,7 +5959,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
               <button
                 type="button"
                 onClick={handleConfirmExcelImport}
-                className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black rounded-xl shadow-md shadow-emerald-600/20 hover-zoom-btn flex items-center gap-1.5"
+                className="px-6 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-black rounded-xl shadow-md shadow-emerald-600/20 hover-zoom-btn flex items-center gap-1.5"
               >
                 <Check className="w-4 h-4" />
                 <span>Nạp {excelParsedStudents.length} Học Sinh Vào Lớp</span>
@@ -6055,12 +6055,12 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                   return (
                     <div key={c.id} className="text-xs font-bold text-rose-900 flex items-center justify-between">
                       <span>• Lớp {c.name} ({c.grade})</span>
-                      <span className="text-[11px] font-mono text-rose-700">{studentCount} học sinh</span>
+                      <span className="text-[12px] font-mono text-rose-700">{studentCount} học sinh</span>
                     </div>
                   );
                 })}
               </div>
-              <p className="text-[11px] text-slate-500 font-bold">
+              <p className="text-[12px] text-slate-500 font-bold">
                 ⚠️ Dữ liệu học sinh và các tiết dạy tương ứng trong thời khóa biểu sẽ tự động được dọn dẹp và đồng bộ trực tuyến.
               </p>
             </div>
@@ -6098,7 +6098,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                   <h3 className="text-base font-black text-indigo-950 uppercase">
                     Sửa Thông Tin Đồng Loạt ({selectedClassIds.length} Lớp)
                   </h3>
-                  <p className="text-[11px] text-slate-500 font-medium">
+                  <p className="text-[12px] text-slate-500 font-medium">
                     Áp dụng thay đổi cho tất cả các lớp đang được tích chọn
                   </p>
                 </div>
@@ -6113,7 +6113,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
 
             {/* Selected Classes Preview Pill list */}
             <div className="p-3 bg-indigo-50/70 rounded-2xl border border-indigo-200">
-              <span className="text-[11px] font-black text-indigo-700 uppercase block mb-1.5">
+              <span className="text-[12px] font-black text-indigo-700 uppercase block mb-1.5">
                 Các lớp đang được chọn:
               </span>
               <div className="flex flex-wrap gap-1.5">
@@ -6128,7 +6128,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
             <div className="space-y-3.5 text-xs font-bold text-slate-700">
               {/* Khối Lớp */}
               <div>
-                <label className="block text-[11px] font-black uppercase text-indigo-900 mb-1">
+                <label className="block text-[12px] font-black uppercase text-indigo-900 mb-1">
                   1. Cập nhật Khối Lớp:
                 </label>
                 <select
@@ -6147,7 +6147,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
 
               {/* Năm học */}
               <div>
-                <label className="block text-[11px] font-black uppercase text-indigo-900 mb-1">
+                <label className="block text-[12px] font-black uppercase text-indigo-900 mb-1">
                   2. Cập nhật Năm Học:
                 </label>
                 <select
@@ -6164,7 +6164,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
 
               {/* Tên Giáo viên */}
               <div>
-                <label className="block text-[11px] font-black uppercase text-indigo-900 mb-1">
+                <label className="block text-[12px] font-black uppercase text-indigo-900 mb-1">
                   3. Giáo viên Phụ trách / Chủ nhiệm (Để trống nếu giữ nguyên):
                 </label>
                 <input
@@ -6178,7 +6178,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
 
               {/* Màu Nhận Diện */}
               <div>
-                <label className="block text-[11px] font-black uppercase text-indigo-900 mb-1">
+                <label className="block text-[12px] font-black uppercase text-indigo-900 mb-1">
                   4. Màu sắc nhận diện:
                 </label>
                 <div className="flex flex-wrap items-center gap-2 pt-1">
@@ -6208,7 +6208,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
               {/* Khẩu hiệu lớp */}
               {canEditClassSlogan && (
                 <div>
-                  <label className="block text-[11px] font-black uppercase text-indigo-900 mb-1">
+                  <label className="block text-[12px] font-black uppercase text-indigo-900 mb-1">
                     5. Khẩu hiệu chung của lớp (Để trống nếu giữ nguyên):
                   </label>
                   <input
@@ -6324,7 +6324,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                       <Crown className="w-3.5 h-3.5 text-amber-500" />
                       <span>Chức vụ cán bộ lớp (Tối đa 3)</span>
                     </label>
-                    <span className="text-[11px] font-black text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-lg border border-indigo-200">
+                    <span className="text-[12px] font-black text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-lg border border-indigo-200">
                       Đã chọn: {singleRoles.length}/3
                     </span>
                   </div>
@@ -6347,7 +6347,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                               setSingleRoles(prev => [...prev, opt.value]);
                             }
                           }}
-                          className={`p-2 rounded-xl text-[11px] font-bold text-left transition-all flex items-center justify-between truncate ${
+                          className={`p-2 rounded-xl text-[12px] font-bold text-left transition-all flex items-center justify-between truncate ${
                             isSelected
                               ? 'bg-indigo-600 text-white font-black shadow-xs'
                               : 'bg-white text-slate-700 border border-slate-200 hover:bg-indigo-50/50'
@@ -6448,18 +6448,18 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="text-xs font-black text-indigo-950 truncate">Ảnh đại diện học sinh</div>
-                      <p className="text-[10.5px] text-indigo-600">Đổi ảnh thật hoặc căn chỉnh khung hình</p>
+                      <p className="text-[12px] text-indigo-600">Đổi ảnh thật hoặc căn chỉnh khung hình</p>
                       {canEditStudentAvatar ? (
                         <button
                           type="button"
                           onClick={() => setAvatarEditingStudent(editingStudent)}
-                          className="mt-1 px-2.5 py-1 bg-white hover:bg-indigo-50 border border-indigo-300 rounded-lg text-[11px] font-bold text-indigo-700 flex items-center gap-1 transition-colors shadow-2xs hover-zoom-btn cursor-pointer"
+                          className="mt-1 px-2.5 py-1 bg-white hover:bg-indigo-50 border border-indigo-300 rounded-lg text-[12px] font-bold text-indigo-700 flex items-center gap-1 transition-colors shadow-2xs hover-zoom-btn cursor-pointer"
                         >
                           <Camera className="w-3 h-3 text-indigo-600" />
                           <span>Thu phóng & Cắt ảnh</span>
                         </button>
                       ) : (
-                        <span className="inline-block mt-1 text-[10px] text-slate-500 font-semibold italic">
+                        <span className="inline-block mt-1 text-[12px] text-slate-500 font-semibold italic">
                           (Chỉ GVCN có quyền đổi ảnh)
                         </span>
                       )}
@@ -6468,7 +6468,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
 
                   {/* Lớp học */}
                   <div>
-                    <label className="block text-[11px] font-bold text-slate-700 mb-0.5">
+                    <label className="block text-[12px] font-bold text-slate-700 mb-0.5">
                       Lớp học ({classes.length} lớp):
                     </label>
                     <select
@@ -6486,7 +6486,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
 
                   {/* Họ và tên */}
                   <div>
-                    <label className="block text-[11px] font-bold text-slate-700 mb-0.5">Họ và tên học sinh *</label>
+                    <label className="block text-[12px] font-bold text-slate-700 mb-0.5">Họ và tên học sinh *</label>
                     <input
                       type="text"
                       value={editingStudent.name}
@@ -6500,7 +6500,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                   {/* Ngày sinh & Giới tính xếp cùng 1 hàng */}
                   <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <label className="block text-[11px] font-bold text-slate-700 mb-0.5 flex items-center gap-1">
+                      <label className="block text-[12px] font-bold text-slate-700 mb-0.5 flex items-center gap-1">
                         <Calendar className="w-3 h-3 text-indigo-600" />
                         <span>Ngày sinh</span>
                       </label>
@@ -6514,7 +6514,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                     </div>
 
                     <div>
-                      <label className="block text-[11px] font-bold text-slate-700 mb-0.5">Giới tính</label>
+                      <label className="block text-[12px] font-bold text-slate-700 mb-0.5">Giới tính</label>
                       <select
                         value={editingStudent.gender}
                         onChange={(e) => setEditingStudent({ ...editingStudent, gender: e.target.value as 'Nam' | 'Nữ' })}
@@ -6529,7 +6529,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                   {/* Tổ & Số xu thi đua xếp cùng 1 hàng */}
                   <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <label className="block text-[11px] font-bold text-slate-700 mb-0.5">Tổ</label>
+                      <label className="block text-[12px] font-bold text-slate-700 mb-0.5">Tổ</label>
                       <select
                         value={editingStudent.group || 'Tổ 1'}
                         onChange={(e) => setEditingStudent({ ...editingStudent, group: e.target.value })}
@@ -6542,7 +6542,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                     </div>
 
                     <div>
-                      <label className="block text-[11px] font-bold text-slate-700 mb-0.5">Số xu thi đua</label>
+                      <label className="block text-[12px] font-bold text-slate-700 mb-0.5">Số xu thi đua</label>
                       <input
                         type="number"
                         disabled={!canResetOrAssignCoins}
@@ -6563,16 +6563,16 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                 <div className="md:col-span-6 flex flex-col justify-between bg-slate-50/80 p-3 rounded-2xl border border-slate-200">
                   <div>
                     <div className="flex items-center justify-between mb-2">
-                      <label className="text-[11px] font-black text-slate-800 flex items-center gap-1.5 uppercase">
+                      <label className="text-[12px] font-black text-slate-800 flex items-center gap-1.5 uppercase">
                         <Crown className="w-3.5 h-3.5 text-amber-500" />
                         <span>Chức vụ cán bộ lớp (Tối đa 3)</span>
                       </label>
                       {canAssignClassOfficer ? (
-                        <span className="text-[10px] font-black text-indigo-700 bg-indigo-100/80 px-2 py-0.5 rounded-full border border-indigo-200">
+                        <span className="text-[12px] font-black text-indigo-700 bg-indigo-100/80 px-2 py-0.5 rounded-full border border-indigo-200">
                           Đã chọn: {editingRoles.length}/3
                         </span>
                       ) : (
-                        <span className="text-[9.5px] font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">
+                        <span className="text-[12px] font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">
                           Chỉ đọc
                         </span>
                       )}
@@ -6597,7 +6597,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                                   setEditingRoles(prev => [...prev, opt.value]);
                                 }
                               }}
-                              className={`p-2 rounded-xl text-[11px] font-bold text-left transition-all flex items-center justify-between truncate cursor-pointer ${
+                              className={`p-2 rounded-xl text-[12px] font-bold text-left transition-all flex items-center justify-between truncate cursor-pointer ${
                                 isSelected
                                   ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-black shadow-xs ring-1 ring-indigo-400'
                                   : 'bg-white text-slate-700 border border-slate-200 hover:bg-indigo-50/60'
@@ -6611,7 +6611,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                       </div>
                     ) : (
                       <div className="space-y-2 p-3 bg-white rounded-xl border border-slate-200">
-                        <p className="text-[11px] font-bold text-slate-600">Chức vụ hiện tại của học sinh:</p>
+                        <p className="text-[12px] font-bold text-slate-600">Chức vụ hiện tại của học sinh:</p>
                         {getStudentRolesList(editingStudent).length > 0 ? (
                           <div className="flex flex-wrap gap-1.5">
                             {getStudentRolesList(editingStudent).map((r, idx) => {
@@ -6628,9 +6628,9 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                             })}
                           </div>
                         ) : (
-                          <p className="text-[11px] text-slate-400 italic">Chưa gán chức vụ nào</p>
+                          <p className="text-[12px] text-slate-400 italic">Chưa gán chức vụ nào</p>
                         )}
-                        <p className="text-[10px] text-slate-400 italic pt-1 border-t border-slate-100">
+                        <p className="text-[12px] text-slate-400 italic pt-1 border-t border-slate-100">
                           (Chỉ Giáo viên chủ nhiệm mới có quyền thay đổi chức vụ cán bộ lớp)
                         </p>
                       </div>
@@ -6638,7 +6638,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                   </div>
 
                   {canAssignClassOfficer && (
-                    <p className="text-[10px] text-slate-500 mt-2 font-medium italic">
+                    <p className="text-[12px] text-slate-500 mt-2 font-medium italic">
                       * Bấm chọn để gán chức vụ cho học sinh (Ví dụ: Lớp trưởng, Tổ trưởng tổ 1, Ban văn nghệ...).
                     </p>
                   )}
@@ -6740,7 +6740,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
 
               {/* Danh sách 11 chức vụ */}
               <div className="mt-3 space-y-1.5">
-                <span className="text-[11px] font-black text-slate-500 uppercase tracking-wider block">
+                <span className="text-[12px] font-black text-slate-500 uppercase tracking-wider block">
                   Bấm để chọn / bỏ chọn (Tối đa 3 chức vụ):
                 </span>
 
@@ -6774,11 +6774,11 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                         </div>
                         <div className="shrink-0 ml-1">
                           {isSelected ? (
-                            <span className="w-5 h-5 rounded-full bg-indigo-600 text-white flex items-center justify-center text-[10px] font-black shadow-2xs">
+                            <span className="w-5 h-5 rounded-full bg-indigo-600 text-white flex items-center justify-center text-[12px] font-black shadow-2xs">
                               ✓
                             </span>
                           ) : (
-                            <span className="w-5 h-5 rounded-full border border-slate-300 flex items-center justify-center text-[10px] text-transparent hover:text-slate-400">
+                            <span className="w-5 h-5 rounded-full border border-slate-300 flex items-center justify-center text-[12px] text-transparent hover:text-slate-400">
                               +
                             </span>
                           )}
@@ -6881,7 +6881,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                     setBulkAwardCoins(1);
                   }}
                   className={`py-2.5 px-3 rounded-2xl text-xs font-black flex items-center justify-center gap-1.5 transition-all hover-zoom-btn ${
-                    bulkAwardMode === 'xu' ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/25 scale-102' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                    bulkAwardMode === 'xu' ? 'bg-emerald-700 text-white shadow-md shadow-emerald-600/25 scale-102' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                   }`}
                 >
                   <Plus className="w-4 h-4" />
@@ -6907,7 +6907,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                     setBulkAwardCoins(1);
                   }}
                   className={`py-2.5 px-3 rounded-2xl text-xs font-black flex items-center justify-center gap-1.5 transition-all hover-zoom-btn ${
-                    bulkAwardMode === 'sao' ? 'bg-amber-600 text-white shadow-md shadow-amber-500/25 scale-102' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                    bulkAwardMode === 'sao' ? 'bg-amber-700 text-white shadow-md shadow-amber-500/25 scale-102' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                   }`}
                 >
                   <Star className="w-4 h-4 fill-current" />
@@ -6923,7 +6923,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                   <BookOpen className="w-3.5 h-3.5 text-indigo-600" />
                   <span>2. CHỌN MÔN HỌC ĐÁNH GIÁ:</span>
                 </label>
-                <span className="text-[11px] font-black text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-lg border border-indigo-200">
+                <span className="text-[12px] font-black text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-lg border border-indigo-200">
                   Đang chọn: {bulkAwardSubject}
                 </span>
               </div>
@@ -6946,7 +6946,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                     >
                       <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: sub.color || '#3B82F6' }} />
                       <span className="truncate">{sub.name}</span>
-                      {isCore && <span className="text-[10px] text-amber-400 shrink-0">★</span>}
+                      {isCore && <span className="text-[12px] text-amber-400 shrink-0">★</span>}
                     </button>
                   );
                 })}
@@ -6966,7 +6966,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                       type="button"
                       onClick={() => setBulkAwardCoins(num)}
                       className={`py-2.5 rounded-2xl text-xs font-black transition-all hover-zoom-btn ${
-                        bulkAwardCoins === num ? 'bg-amber-600 text-white shadow-md shadow-amber-500/25' : 'bg-slate-100 text-slate-700'
+                        bulkAwardCoins === num ? 'bg-amber-700 text-white shadow-md shadow-amber-500/25' : 'bg-slate-100 text-slate-700'
                       }`}
                     >
                       {num === 1 ? '⭐ 1 Sao (+5 xu)' : num === 2 ? '⭐⭐ 2 Sao (+10 xu)' : '⭐⭐⭐ 3 Sao (+15 xu)'}
@@ -6982,7 +6982,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                       onClick={() => setBulkAwardCoins(num)}
                       className={`flex-1 py-2.5 rounded-2xl text-xs font-black transition-all hover-zoom-btn ${
                         bulkAwardCoins === num 
-                          ? bulkAwardMode === 'minus' ? 'bg-rose-600 text-white shadow-md shadow-rose-600/25' : 'bg-emerald-600 text-white shadow-md shadow-emerald-600/25'
+                          ? bulkAwardMode === 'minus' ? 'bg-rose-600 text-white shadow-md shadow-rose-600/25' : 'bg-emerald-700 text-white shadow-md shadow-emerald-600/25'
                           : 'bg-slate-100 text-slate-700'
                       }`}
                     >
@@ -7019,7 +7019,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                 type="button"
                 onClick={handleConfirmBulkAward}
                 className={`px-5 py-2.5 text-white text-xs font-black rounded-xl shadow-md transition-all hover-zoom-btn flex items-center gap-1.5 ${
-                  bulkAwardMode === 'minus' ? 'bg-rose-600 hover:bg-rose-700 shadow-rose-600/20' : bulkAwardMode === 'sao' ? 'bg-amber-600 hover:bg-amber-700 shadow-amber-500/25' : 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-600/20'
+                  bulkAwardMode === 'minus' ? 'bg-rose-600 hover:bg-rose-700 shadow-rose-600/20' : bulkAwardMode === 'sao' ? 'bg-amber-700 hover:bg-amber-800 shadow-amber-500/25' : 'bg-emerald-700 hover:bg-emerald-800 shadow-emerald-600/20'
                 }`}
               >
                 {bulkAwardMode === 'minus' ? <Minus className="w-4 h-4" /> : bulkAwardMode === 'sao' ? <Star className="w-4 h-4 fill-white" /> : <Plus className="w-4 h-4" />}
@@ -7144,11 +7144,11 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                       </div>
                       <div className="shrink-0 ml-1">
                         {isSelected ? (
-                          <span className="w-5 h-5 rounded-full bg-indigo-600 text-white flex items-center justify-center text-[10px] font-black">
+                          <span className="w-5 h-5 rounded-full bg-indigo-600 text-white flex items-center justify-center text-[12px] font-black">
                             ✓
                           </span>
                         ) : (
-                          <span className="w-5 h-5 rounded-full border border-slate-300 flex items-center justify-center text-[10px] text-transparent hover:text-slate-400">
+                          <span className="w-5 h-5 rounded-full border border-slate-300 flex items-center justify-center text-[12px] text-transparent hover:text-slate-400">
                             +
                           </span>
                         )}
@@ -7219,7 +7219,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
               <button
                 type="button"
                 onClick={handleConfirmBulkResetCoins}
-                className="flex-1 py-2.5 bg-amber-600 hover:bg-amber-700 text-white font-black text-xs rounded-xl shadow-md shadow-amber-500/20 hover-zoom-btn flex items-center justify-center gap-1.5"
+                className="flex-1 py-2.5 bg-amber-700 hover:bg-amber-800 text-white font-black text-xs rounded-xl shadow-md shadow-amber-500/20 hover-zoom-btn flex items-center justify-center gap-1.5"
               >
                 <RotateCcw className="w-4 h-4" />
                 <span>Đặt Về 0 Xu</span>
@@ -7258,7 +7258,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
               <button
                 type="button"
                 onClick={handleConfirmClassResetCoins}
-                className="flex-1 py-2.5 bg-amber-600 hover:bg-amber-700 text-white font-black text-xs rounded-xl shadow-md shadow-amber-500/20 hover-zoom-btn flex items-center justify-center gap-1.5"
+                className="flex-1 py-2.5 bg-amber-700 hover:bg-amber-800 text-white font-black text-xs rounded-xl shadow-md shadow-amber-500/20 hover-zoom-btn flex items-center justify-center gap-1.5"
               >
                 <RotateCcw className="w-4 h-4" />
                 <span>Reset Cả Lớp Về 0</span>
@@ -7428,7 +7428,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
           <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 max-w-3xl w-full p-6 animate-in fade-in zoom-in-95 duration-150 max-h-[90vh] flex flex-col overflow-hidden">
             <div className="flex items-center justify-between pb-4 border-b border-slate-100 shrink-0">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-amber-600 to-orange-600 text-white flex items-center justify-center shadow-sm">
+                <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-amber-700 to-orange-700 text-white flex items-center justify-center shadow-sm">
                   <BarChart3 className="w-5 h-5" />
                 </div>
                 <div>
@@ -7506,11 +7506,11 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
               <div className="text-sm font-black text-slate-800">
                 {statsHomeroomClasses.length !== allSchoolHomeroomClasses.length ? (
                   <>
-                    Đang hiển thị: <span className="text-indigo-600">{statsTotalStudents} Em</span> • Toàn trường: <span className="text-emerald-600">{totalSchoolStudentsCount} Em</span>
+                    Đang hiển thị: <span className="text-indigo-600">{statsTotalStudents} Em</span> • Toàn trường: <span className="text-emerald-700">{totalSchoolStudentsCount} Em</span>
                   </>
                 ) : (
                   <>
-                    Tổng số học sinh toàn trường: <span className="text-emerald-600">{totalSchoolStudentsCount} Em</span>
+                    Tổng số học sinh toàn trường: <span className="text-emerald-700">{totalSchoolStudentsCount} Em</span>
                   </>
                 )}
               </div>

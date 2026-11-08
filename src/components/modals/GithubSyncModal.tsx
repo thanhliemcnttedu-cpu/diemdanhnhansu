@@ -157,7 +157,7 @@ export const GithubSyncModal: React.FC<GithubSyncModalProps> = ({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-sky-900/20 backdrop-blur-xs animate-in fade-in duration-200">
       <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-2xl overflow-hidden flex flex-col max-h-[92vh]">
         {/* Header */}
-        <div className="bg-gradient-to-r from-sky-600 via-indigo-600 to-indigo-500 text-white p-5 flex items-center justify-between border-b border-slate-800">
+        <div className="bg-gradient-to-r from-sky-700 via-indigo-600 to-indigo-600 text-white p-5 flex items-center justify-between border-b border-slate-800">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-2xl bg-indigo-500/20 border border-indigo-400/40 flex items-center justify-center text-indigo-300">
               <GitBranch className="w-5 h-5 animate-pulse" />
@@ -220,29 +220,29 @@ export const GithubSyncModal: React.FC<GithubSyncModalProps> = ({
 
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               <div className="bg-white p-3 rounded-xl border border-slate-200/80 shadow-2xs">
-                <span className="text-[10px] uppercase font-bold text-slate-400 block mb-1">Máy chủ Git</span>
-                <div className="flex items-center gap-1.5 text-xs font-black text-emerald-600">
+                <span className="text-[12px] uppercase font-bold text-slate-400 block mb-1">Máy chủ Git</span>
+                <div className="flex items-center gap-1.5 text-xs font-black text-emerald-700">
                   <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
                   <span>SẴN SÀNG</span>
                 </div>
               </div>
 
               <div className="bg-white p-3 rounded-xl border border-slate-200/80 shadow-2xs">
-                <span className="text-[10px] uppercase font-bold text-slate-400 block mb-1">Nhánh (Branch)</span>
+                <span className="text-[12px] uppercase font-bold text-slate-400 block mb-1">Nhánh (Branch)</span>
                 <span className="text-xs font-black text-slate-800 font-mono">
                   {gitStatus?.branch || 'master'}
                 </span>
               </div>
 
               <div className="bg-white p-3 rounded-xl border border-slate-200/80 shadow-2xs">
-                <span className="text-[10px] uppercase font-bold text-slate-400 block mb-1">Tự động đẩy (Push)</span>
+                <span className="text-[12px] uppercase font-bold text-slate-400 block mb-1">Tự động đẩy (Push)</span>
                 <span className="text-xs font-black text-emerald-700">
                   {gitStatus?.autoPushEnabled !== false ? '🟢 BẬT LIÊN TỤC' : 'TẮT'}
                 </span>
               </div>
 
               <div className="bg-white p-3 rounded-xl border border-slate-200/80 shadow-2xs">
-                <span className="text-[10px] uppercase font-bold text-slate-400 block mb-1">Thiết bị trực tuyến</span>
+                <span className="text-[12px] uppercase font-bold text-slate-400 block mb-1">Thiết bị trực tuyến</span>
                 <span className="text-xs font-black text-indigo-700">
                   {gitStatus?.connectedClients || 1} trình duyệt
                 </span>
@@ -255,7 +255,7 @@ export const GithubSyncModal: React.FC<GithubSyncModalProps> = ({
                 <span className="font-bold flex items-center gap-1">
                   <Clock className="w-3 h-3" /> Điểm sao lưu gần nhất:
                 </span>
-                <span className="font-mono text-[11px] font-bold text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded">
+                <span className="font-mono text-[12px] font-bold text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded">
                   {gitStatus?.lastCommitHash || '5f4c65c'}
                 </span>
               </div>
@@ -263,7 +263,7 @@ export const GithubSyncModal: React.FC<GithubSyncModalProps> = ({
                 {gitStatus?.lastCommitMessage || 'feat: he thong dong bo du lieu may chu va github'}
               </p>
               {gitStatus?.lastPushTime > 0 && (
-                <p className="text-[11px] text-emerald-600 font-bold">
+                <p className="text-[12px] text-emerald-700 font-bold">
                   ✓ Đã đẩy lên GitHub lúc: {new Date(gitStatus.lastPushTime).toLocaleTimeString('vi-VN')}
                 </p>
               )}
@@ -271,7 +271,7 @@ export const GithubSyncModal: React.FC<GithubSyncModalProps> = ({
           </div>
 
           {/* 🛡️ TÍNH NĂNG BẢO TOÀN DỮ LIỆU ĐỘC QUYỀN: NÂNG CẤP CHỈ CODE */}
-          <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-indigo-600 via-blue-500 to-indigo-600 text-white shadow-md space-y-2.5 border border-indigo-500/40">
+          <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-indigo-600 via-blue-600 to-indigo-600 text-white shadow-md space-y-2.5 border border-indigo-500/40">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Shield className="w-5 h-5 text-emerald-400" />
@@ -279,7 +279,7 @@ export const GithubSyncModal: React.FC<GithubSyncModalProps> = ({
                   BẢO TOÀN DỮ LIỆU TUYỆT ĐỐI KHI NÂNG CẤP PHẦN MỀM
                 </span>
               </div>
-              <span className="text-[10px] bg-emerald-500/20 text-emerald-300 px-2.5 py-0.5 rounded-full border border-emerald-500/40 font-bold uppercase tracking-wider">
+              <span className="text-[12px] bg-emerald-500/20 text-emerald-300 px-2.5 py-0.5 rounded-full border border-emerald-500/40 font-bold uppercase tracking-wider">
                 Zero Data Loss
               </span>
             </div>
@@ -311,7 +311,7 @@ export const GithubSyncModal: React.FC<GithubSyncModalProps> = ({
             <button
               onClick={handlePullNow}
               disabled={actionLoading !== null}
-              className="py-3 px-4 rounded-2xl bg-emerald-600 hover:bg-emerald-700 active:scale-98 text-white font-black text-xs uppercase flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer disabled:opacity-50"
+              className="py-3 px-4 rounded-2xl bg-emerald-700 hover:bg-emerald-800 active:scale-98 text-white font-black text-xs uppercase flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer disabled:opacity-50"
             >
               <DownloadCloud className={`w-4 h-4 ${actionLoading === 'pull' ? 'animate-spin' : ''}`} />
               <span>{actionLoading === 'pull' ? 'Đang kéo...' : 'KÉO DỮ LIỆU TỪ GITHUB'}</span>
@@ -333,7 +333,7 @@ export const GithubSyncModal: React.FC<GithubSyncModalProps> = ({
               <span className="text-xs font-black uppercase text-slate-800 flex items-center gap-2">
                 <Globe className="w-4 h-4 text-indigo-600" /> Cấu hình kết nối kho GitHub từ xa
               </span>
-              <span className="text-[11px] text-slate-500 font-medium">Tự động đẩy sau mỗi thay đổi</span>
+              <span className="text-[12px] text-slate-500 font-medium">Tự động đẩy sau mỗi thay đổi</span>
             </div>
 
             <div>
@@ -347,7 +347,7 @@ export const GithubSyncModal: React.FC<GithubSyncModalProps> = ({
                 onChange={(e) => setRepoUrl(e.target.value)}
                 className="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-xs font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
-              <span className="text-[11px] text-slate-500 mt-1 block">
+              <span className="text-[12px] text-slate-500 mt-1 block">
                 Ví dụ: <code className="bg-slate-200 px-1 py-0.5 rounded font-mono">https://github.com/thanhliemcntt/lop-hoc-hanh-phuc.git</code>
               </span>
             </div>
@@ -365,7 +365,7 @@ export const GithubSyncModal: React.FC<GithubSyncModalProps> = ({
                   onChange={(e) => setToken(e.target.value)}
                   className="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-xs font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 />
-                <span className="text-[11px] text-slate-500 mt-1 block">
+                <span className="text-[12px] text-slate-500 mt-1 block">
                   Token cần quyền <strong className="text-indigo-700">repo</strong> để tự động đẩy commit lên GitHub.
                 </span>
               </div>

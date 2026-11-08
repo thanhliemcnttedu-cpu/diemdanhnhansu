@@ -231,7 +231,7 @@ export const HeadTiltGamePlayView: React.FC<HeadTiltGamePlayViewProps> = ({
           <div className="relative w-full max-w-xl bg-slate-100/90 backdrop-blur-xl border border-indigo-500/30 rounded-3xl p-6 md:p-8 shadow-2xl text-center flex flex-col items-center">
             
             {/* Header Icon */}
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-amber-600 to-rose-500 flex items-center justify-center text-white mb-3 shadow-lg shadow-amber-500/20">
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-amber-700 to-rose-600 flex items-center justify-center text-white mb-3 shadow-lg shadow-amber-500/20">
               <Smile className="w-9 h-9" />
             </div>
 
@@ -271,7 +271,7 @@ export const HeadTiltGamePlayView: React.FC<HeadTiltGamePlayViewProps> = ({
             {/* Guide List matching exactly Page 12 */}
             <div className="w-full text-left space-y-3.5 mb-6 text-xs md:text-sm">
               <div className="flex items-start gap-3 bg-slate-200/40 p-3.5 rounded-2xl border border-slate-200">
-                <div className="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-600 flex items-center justify-center font-black shrink-0 mt-0.5">
+                <div className="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-700 flex items-center justify-center font-black shrink-0 mt-0.5">
                   ✓
                 </div>
                 <div>
@@ -283,7 +283,7 @@ export const HeadTiltGamePlayView: React.FC<HeadTiltGamePlayViewProps> = ({
               </div>
 
               <div className="flex items-start gap-3 bg-slate-200/40 p-3.5 rounded-2xl border border-slate-200">
-                <div className="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-600 flex items-center justify-center font-black shrink-0 mt-0.5">
+                <div className="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-700 flex items-center justify-center font-black shrink-0 mt-0.5">
                   ✓
                 </div>
                 <div>
@@ -295,7 +295,7 @@ export const HeadTiltGamePlayView: React.FC<HeadTiltGamePlayViewProps> = ({
               </div>
 
               <div className="flex items-start gap-3 bg-slate-200/40 p-3.5 rounded-2xl border border-slate-200">
-                <div className="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-600 flex items-center justify-center font-black shrink-0 mt-0.5">
+                <div className="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-700 flex items-center justify-center font-black shrink-0 mt-0.5">
                   ✓
                 </div>
                 <div>
@@ -357,7 +357,7 @@ export const HeadTiltGamePlayView: React.FC<HeadTiltGamePlayViewProps> = ({
               <div className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-black text-xs md:text-sm tracking-wide shadow-md shadow-indigo-600/20">
                 Câu {currentIndex + 1}/{questions.length}
               </div>
-              <div className="hidden sm:flex items-center gap-1 text-xs font-bold text-amber-600">
+              <div className="hidden sm:flex items-center gap-1 text-xs font-bold text-amber-700">
                 <span>👈👉</span>
                 <span>Bấm hoặc nghiêng đầu để chọn</span>
               </div>
@@ -388,7 +388,7 @@ export const HeadTiltGamePlayView: React.FC<HeadTiltGamePlayViewProps> = ({
 
               {/* Real-time score tags */}
               <div className="flex items-center gap-1.5 text-xs font-black">
-                <span className="px-2 py-1 rounded-lg bg-emerald-500/20 text-emerald-600 border border-emerald-500/30">
+                <span className="px-2 py-1 rounded-lg bg-emerald-500/20 text-emerald-700 border border-emerald-500/30">
                   ✓ {correctCount}
                 </span>
                 <span className="px-2 py-1 rounded-lg bg-rose-500/20 text-rose-600 border border-rose-500/30">
@@ -569,18 +569,18 @@ export const HeadTiltGamePlayView: React.FC<HeadTiltGamePlayViewProps> = ({
                   {!isCameraActive && (
                     <div className="absolute inset-0 bg-slate-100 flex flex-col items-center justify-center p-3 text-center pointer-events-auto">
                       <Camera className="w-8 h-8 text-slate-500 mb-1" />
-                      <span className="text-[10px] font-bold text-slate-600 leading-tight">
+                      <span className="text-[12px] font-bold text-slate-600 leading-tight">
                         {cameraError ? cameraError : 'Camera chưa bật'}
                       </span>
                       <button
                         type="button"
                         onClick={() => startCamera()}
-                        className="mt-2 px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-[11px] font-black shadow-md cursor-pointer transition-all active:scale-95 flex items-center gap-1"
+                        className="mt-2 px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-[12px] font-black shadow-md cursor-pointer transition-all active:scale-95 flex items-center gap-1"
                       >
                         <RefreshCw className="w-3 h-3 animate-spin" />
                         Bật Camera ngay
                       </button>
-                      <span className="text-[9px] text-amber-600 mt-1.5">
+                      <span className="text-[12px] text-amber-700 mt-1.5">
                         (Hoặc bấm vào đáp án để chọn)
                       </span>
                     </div>
@@ -591,8 +591,8 @@ export const HeadTiltGamePlayView: React.FC<HeadTiltGamePlayViewProps> = ({
                     <div 
                       className={`absolute inset-0 flex items-center justify-center animate-in zoom-in-75 ${
                         isCurrentCorrect 
-                           ? 'bg-emerald-600/90 text-white' 
-                          : 'bg-rose-500/90 text-white'
+                           ? 'bg-emerald-700/90 text-white' 
+                          : 'bg-rose-600/90 text-white'
                       }`}
                     >
                       {isCurrentCorrect ? (
@@ -607,14 +607,14 @@ export const HeadTiltGamePlayView: React.FC<HeadTiltGamePlayViewProps> = ({
 
               {/* Tilt degree & Hold progress ring */}
               {!isConfirmed && isCameraActive && (
-                <div className="mt-2.5 px-3.5 py-1 rounded-full bg-white/90 border border-slate-200 backdrop-blur-md text-[11px] font-black tracking-wider flex items-center gap-1.5 text-slate-800 shadow-lg pointer-events-auto">
-                  <span className="text-[9px] px-1.5 py-0.5 rounded bg-indigo-500/30 text-indigo-600 font-mono">
+                <div className="mt-2.5 px-3.5 py-1 rounded-full bg-white/90 border border-slate-200 backdrop-blur-md text-[12px] font-black tracking-wider flex items-center gap-1.5 text-slate-800 shadow-lg pointer-events-auto">
+                  <span className="text-[12px] px-1.5 py-0.5 rounded bg-indigo-500/30 text-indigo-600 font-mono">
                     {engineType === 'mediapipe' ? 'AI MediaPipe' : 'AI Native CV'}
                   </span>
                   {tiltDirection === 'left' ? (
-                    <span className="text-cyan-600">👈 Nghiêng trái: {Math.abs(tiltAngle)}° (Giữ: {holdProgress}%)</span>
+                    <span className="text-cyan-700">👈 Nghiêng trái: {Math.abs(tiltAngle)}° (Giữ: {holdProgress}%)</span>
                   ) : tiltDirection === 'right' ? (
-                    <span className="text-amber-600">👉 Nghiêng phải: {Math.abs(tiltAngle)}° (Giữ: {holdProgress}%)</span>
+                    <span className="text-amber-700">👉 Nghiêng phải: {Math.abs(tiltAngle)}° (Giữ: {holdProgress}%)</span>
                   ) : (
                     <span className="text-slate-600">👀 Giữ thẳng đầu ({tiltAngle}°) để sẵn sàng</span>
                   )}
@@ -641,7 +641,7 @@ export const HeadTiltGamePlayView: React.FC<HeadTiltGamePlayViewProps> = ({
                 <button
                   type="button"
                   onClick={() => triggerManualTilt('left')}
-                  className="px-3 py-1 bg-sky-500/30 hover:bg-sky-500/50 border border-sky-400/50 text-sky-600 rounded-xl text-xs font-bold transition-all flex items-center gap-1 cursor-pointer"
+                  className="px-3 py-1 bg-sky-500/30 hover:bg-sky-500/50 border border-sky-400/50 text-sky-700 rounded-xl text-xs font-bold transition-all flex items-center gap-1 cursor-pointer"
                 >
                   👈 Nghiêng Trái (A)
                 </button>
@@ -655,7 +655,7 @@ export const HeadTiltGamePlayView: React.FC<HeadTiltGamePlayViewProps> = ({
               </div>
             )}
 
-            <div className="text-[11px] text-slate-500 font-medium hidden sm:block">
+            <div className="text-[12px] text-slate-500 font-medium hidden sm:block">
               💡 Nghiêng đầu giữ 1s • Hoặc bấm phím mũi tên ⬅️ ➡️
             </div>
           </div>

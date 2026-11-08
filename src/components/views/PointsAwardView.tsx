@@ -131,14 +131,14 @@ export const PointsAwardView: React.FC = () => {
               TÍCH ĐIỂM THI ĐUA & THƯỞNG / TRỪ XU
             </h2>
           </div>
-          <p className="text-[11px] text-slate-500 mt-0.5 uppercase">
+          <p className="text-[12px] text-slate-500 mt-0.5 uppercase">
             GHI NHẬN NỖ LỰC HỌC SINH NGAY TRONG TIẾT DẠY · PHÂN TÁCH THEO MÔN HỌC VÀ LƯU LỊCH SỬ MINH BẠCH
           </p>
         </div>
 
         {/* Selected count and Quick Trigger */}
         <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
-          <div className="text-[11px] font-black px-2.5 py-1.5 rounded-xl bg-slate-100 text-slate-700 uppercase shrink-0">
+          <div className="text-[12px] font-black px-2.5 py-1.5 rounded-xl bg-slate-100 text-slate-700 uppercase shrink-0">
             ĐÃ CHỌN: <strong className="text-blue-600 font-mono text-xs">{selectedStudentIds.length}</strong> HỌC SINH
           </div>
 
@@ -146,7 +146,7 @@ export const PointsAwardView: React.FC = () => {
             <button
               onClick={handleExecuteAward}
               disabled={selectedStudentIds.length === 0 || !canEvaluateEmulation}
-              className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-black text-white bg-emerald-600 hover:bg-emerald-700 disabled:opacity-40 disabled:cursor-not-allowed rounded-xl shadow-xs transition-all hover-zoom-btn uppercase"
+              className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-black text-white bg-emerald-700 hover:bg-emerald-800 disabled:opacity-40 disabled:cursor-not-allowed rounded-xl shadow-xs transition-all hover-zoom-btn uppercase"
               title={!canEvaluateEmulation ? 'Chỉ GVCN mới có quyền đánh giá điểm thi đua' : undefined}
             >
               <PlusCircle className="w-3.5 h-3.5" />
@@ -223,13 +223,13 @@ export const PointsAwardView: React.FC = () => {
                   </div>
 
                   <div className="min-w-0 flex-1">
-                    <div className="text-[10px] font-mono text-slate-500 font-bold">
+                    <div className="text-[12px] font-mono text-slate-500 font-bold">
                       STT {student.stt}
                     </div>
                     <div className="text-xs font-semibold text-slate-800 truncate" title={student.name}>
                       {student.name}
                     </div>
-                    <div className="text-[10px] font-mono font-bold text-amber-700">
+                    <div className="text-[12px] font-mono font-bold text-amber-700">
                       {student.points} xu
                     </div>
                   </div>
@@ -263,7 +263,7 @@ export const PointsAwardView: React.FC = () => {
                 {canConfigureCoinSubjects && (
                   <button
                     onClick={() => setIsAddingSubject(!isAddingSubject)}
-                    className="text-[11px] text-blue-600 hover:text-blue-700 font-medium"
+                    className="text-[12px] text-blue-600 hover:text-blue-700 font-medium"
                   >
                     + Thêm môn học
                   </button>
@@ -373,7 +373,7 @@ export const PointsAwardView: React.FC = () => {
                       }`}
                     >
                       <span className="truncate pr-2">{crit.title}</span>
-                      <span className={`shrink-0 font-mono font-bold px-1.5 py-0.5 rounded text-[11px] ${
+                      <span className={`shrink-0 font-mono font-bold px-1.5 py-0.5 rounded text-[12px] ${
                         isPositive ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'
                       }`}>
                         {crit.points > 0 ? `+${crit.points}` : crit.points} xu
@@ -416,7 +416,7 @@ export const PointsAwardView: React.FC = () => {
                 <Clock className="w-3.5 h-3.5 text-slate-400" />
                 <span>Lịch sử cộng/trừ xu gần đây</span>
               </div>
-              <span className="text-[11px] text-slate-400">{recentTransactions.length} mục</span>
+              <span className="text-[12px] text-slate-400">{recentTransactions.length} mục</span>
             </div>
 
             {recentTransactions.length === 0 ? (
@@ -434,13 +434,13 @@ export const PointsAwardView: React.FC = () => {
                       <div className="font-semibold text-slate-800 truncate">
                         {tx.studentName}
                       </div>
-                      <div className="text-[11px] text-slate-500 truncate">
+                      <div className="text-[12px] text-slate-500 truncate">
                         {tx.reason} {tx.subjectName ? `· ${tx.subjectName}` : ''}
                       </div>
                     </div>
 
                     <div className={`font-mono font-bold text-xs shrink-0 ${
-                      tx.amount > 0 ? 'text-emerald-600' : 'text-rose-600'
+                      tx.amount > 0 ? 'text-emerald-700' : 'text-rose-600'
                     }`}>
                       {tx.amount > 0 ? `+${tx.amount}` : tx.amount} xu
                     </div>

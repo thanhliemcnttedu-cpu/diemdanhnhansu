@@ -3,9 +3,13 @@
 @theme {
   --font-sans: 'Be Vietnam Pro', sans-serif;
   --font-display: 'Be Vietnam Pro', sans-serif;
+  /* 🔎 Cỡ chữ tối thiểu dễ đọc (máy chiếu, giáo viên lớn tuổi): kể cả khi màn hình thấp tự thu nhỏ cỡ chữ gốc,
+     chữ "xs" không dưới 12px và "sm" không dưới 14px */
+  --text-xs: max(12px, 0.75rem);
+  --text-sm: max(14px, 0.875rem);
   /* ⚡ Nhẹ máy: làm mờ kính (backdrop-blur) nhẹ hơn mặc định → cuộn trang mượt hơn */
   /* 🔎 Chữ xám phụ (text-slate-400 / gray-400) đậm hơn để đọc rõ trên nền trắng (tương phản ≥ 4:1) */
-  --color-slate-400: #66768c;
+  --color-slate-400: #5f6e83;
   --color-gray-400: #6b7280;
   /* Nhấp nháy nhẹ: chữ không bao giờ mờ quá 85% → luôn đọc được */
   --animate-pulse: soft-pulse 2s ease-in-out infinite;
@@ -36,27 +40,24 @@
     color-scheme: light; /* luôn giao diện sáng, kể cả khi Windows bật chế độ tối */
   }
 
-  /* ✨ Nút lệnh toàn hệ thống: nổi mượt khi rê chuột, biểu tượng & chữ phóng nhẹ như kính lúp */
+  /* Nút thường (phụ): rê chuột chỉ đổi màu nền/chữ theo lớp của nút, bấm thì lún nhẹ.
+     Hiệu ứng nổi + đèn LED + phóng chữ chỉ dành cho NÚT CHÍNH (.btn-3d màu đặc) – xem bên dưới. */
   button {
-    transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.2s ease, filter 0.2s ease,
+    transition: transform 0.15s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.2s ease,
       background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
   }
-  button > svg,
-  button > span {
-    transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
-  }
-  button:not(:disabled):not(.no-hover-fx):hover {
-    transform: translateY(-1.5px);
-    filter: brightness(1.04) saturate(1.06);
-  }
-  button:not(:disabled):not(.no-hover-fx):hover > svg {
-    transform: scale(1.16);
-  }
-  button:not(:disabled):not(.no-hover-fx):hover > span {
-    transform: scale(1.05);
-  }
   button:not(:disabled):not(.no-hover-fx):active {
-    transform: translateY(0) scale(0.97);
+    transform: scale(0.97);
+  }
+
+  /* Vòng sáng khi dùng bàn phím (Tab) – đồng bộ màu thương hiệu */
+  :focus-visible {
+    outline: 2px solid #2563eb;
+    outline-offset: 2px;
+  }
+  ::selection {
+    background: #bfdbfe;
+    color: #0f172a;
   }
 
   button, input, select, textarea, optgroup {
@@ -82,11 +83,6 @@
   }
 }
 
-/* 💡 Viền sáng LED cho nút màu (chữ trắng trên nền màu) khi rê chuột */
-button[class*="bg-"][class*="text-white"]:not(:disabled):not(.no-hover-fx):hover {
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45), 0 0 0 2px rgba(255, 255, 255, 0.7),
-    0 0 16px 2px rgba(56, 189, 248, 0.45), 0 10px 22px -8px rgba(37, 99, 235, 0.55);
-}
 
 @media (prefers-reduced-motion: reduce) {
   *, ::before, ::after {
@@ -173,7 +169,7 @@ button[class*="bg-"][class*="text-white"]:not(:disabled):not(.no-hover-fx):hover
 .btn-3d-blue {
   --btn-3d-glow: rgba(59,130,246,.6);
   --btn-3d-edge: #1e40af;
-  background: linear-gradient(180deg, #3b82f6 0%, #2563eb 55%, #1d4ed8 100%);
+  background: linear-gradient(180deg, #2563eb 0%, #1d4ed8 60%, #1e40af 100%);
   color: #ffffff;
   text-shadow: 0 1px 2px rgba(15, 23, 42, 0.35);
 }
@@ -181,7 +177,7 @@ button[class*="bg-"][class*="text-white"]:not(:disabled):not(.no-hover-fx):hover
 .btn-3d-cyan {
   --btn-3d-glow: rgba(6,182,212,.6);
   --btn-3d-edge: #164e63;
-  background: linear-gradient(180deg, #0891b2 0%, #0e7490 60%, #155e75 100%);
+  background: linear-gradient(180deg, #0e7490 0%, #155e75 100%);
   color: #ffffff;
   text-shadow: 0 1px 2px rgba(15, 23, 42, 0.35);
 }
@@ -189,7 +185,7 @@ button[class*="bg-"][class*="text-white"]:not(:disabled):not(.no-hover-fx):hover
 .btn-3d-sky {
   --btn-3d-glow: rgba(56,189,248,.65);
   --btn-3d-edge: #075985;
-  background: linear-gradient(180deg, #0284c7 0%, #0369a1 60%, #075985 100%);
+  background: linear-gradient(180deg, #0369a1 0%, #075985 100%);
   color: #ffffff;
   text-shadow: 0 1px 2px rgba(15, 23, 42, 0.35);
 }
@@ -197,7 +193,7 @@ button[class*="bg-"][class*="text-white"]:not(:disabled):not(.no-hover-fx):hover
 .btn-3d-emerald {
   --btn-3d-glow: rgba(16,185,129,.6);
   --btn-3d-edge: #064e3b;
-  background: linear-gradient(180deg, #059669 0%, #047857 60%, #065f46 100%);
+  background: linear-gradient(180deg, #047857 0%, #065f46 100%);
   color: #ffffff;
   text-shadow: 0 1px 2px rgba(15, 23, 42, 0.35);
 }
@@ -214,7 +210,7 @@ button[class*="bg-"][class*="text-white"]:not(:disabled):not(.no-hover-fx):hover
 .btn-3d-indigo {
   --btn-3d-glow: rgba(99,102,241,.6);
   --btn-3d-edge: #3730a3;
-  background: linear-gradient(180deg, #6366f1 0%, #4f46e5 55%, #4338ca 100%);
+  background: linear-gradient(180deg, #4f46e5 0%, #4338ca 60%, #3730a3 100%);
   color: #ffffff;
   text-shadow: 0 1px 2px rgba(15, 23, 42, 0.35);
 }
@@ -222,7 +218,7 @@ button[class*="bg-"][class*="text-white"]:not(:disabled):not(.no-hover-fx):hover
 .btn-3d-rose {
   --btn-3d-glow: rgba(244,63,94,.6);
   --btn-3d-edge: #be123c;
-  background: linear-gradient(180deg, #f43f5e 0%, #e11d48 55%, #be123c 100%);
+  background: linear-gradient(180deg, #e11d48 0%, #be123c 100%);
   color: #ffffff;
   text-shadow: 0 1px 2px rgba(15, 23, 42, 0.35);
 }
@@ -309,7 +305,7 @@ button[class*="bg-"][class*="text-white"]:not(:disabled):not(.no-hover-fx):hover
   transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.28s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease;
 }
 .hover-zoom-card:hover {
-  transform: translateY(-5px) scale(1.025);
+  transform: translateY(-2px);
   box-shadow: 0 20px 35px -10px rgba(99, 102, 241, 0.2), 0 8px 16px -4px rgba(15, 23, 42, 0.06);
   border-color: rgba(99, 102, 241, 0.5);
   z-index: 10;
@@ -320,12 +316,12 @@ button[class*="bg-"][class*="text-white"]:not(:disabled):not(.no-hover-fx):hover
   cursor: pointer;
 }
 .hover-zoom-btn:hover {
-  transform: translateY(-2.5px) scale(1.055);
+  transform: translateY(-1px);
   box-shadow: 0 10px 24px -4px rgba(37, 99, 235, 0.38);
   filter: brightness(1.03);
 }
 .hover-zoom-btn:active {
-  transform: translateY(0) scale(0.97);
+  transform: scale(0.97);
 }
 
 .hover-zoom-desk {
@@ -350,7 +346,7 @@ button[class*="bg-"][class*="text-white"]:not(:disabled):not(.no-hover-fx):hover
   cursor: pointer;
 }
 .hover-zoom-interactive:hover {
-  transform: translateY(-3px) scale(1.035);
+  transform: translateY(-2px);
   box-shadow: 0 12px 25px -5px rgba(15, 23, 42, 0.12);
 }
 
@@ -358,7 +354,7 @@ button[class*="bg-"][class*="text-white"]:not(:disabled):not(.no-hover-fx):hover
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .hover-zoom-glow:hover {
-  transform: translateY(-3px) scale(1.04);
+  transform: translateY(-2px);
   box-shadow: 0 0 25px rgba(59, 130, 246, 0.45);
 }
 
@@ -528,3 +524,16 @@ img {
   padding-bottom: max(0.5rem, env(safe-area-inset-bottom, 0.5rem));
 }
 
+/* ========================================================================= */
+/* 🎯 MỘT ĐIỂM NHẤN: nút 3D sáng (.btn-3d-light) là nút phụ → không nổi, không phát sáng, không phóng chữ */
+/* ========================================================================= */
+.btn-3d.btn-3d-light:hover,
+.btn-3d.btn-3d-sm.btn-3d-light:hover {
+  transform: none;
+  filter: none;
+  box-shadow: inset 0 1px 0 #ffffff, 0 2.5px 0 0 #93c5fd, 0 3px 6px -1px rgba(37, 99, 235, 0.16);
+}
+.btn-3d.btn-3d-light:hover > span,
+.btn-3d.btn-3d-light:hover > svg {
+  transform: none;
+}
