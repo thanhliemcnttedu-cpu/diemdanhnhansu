@@ -2297,6 +2297,14 @@ export const ClassroomProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     // Quản trị nhà trường & BGH được phép nhập lớp từ Excel (không chặn)
     if (!newClassesList || newClassesList.length === 0) return;
 
+    // 🛡️ Kiểm tra CDKEY Bản Quyền (Trial: tối đa 01 lớp học)
+    const bulkClassLimit = licenseService.checkClassLimit(classes.length, newClassesList.length);
+    if (!bulkClassLimit.allowed) {
+      alert(bulkClassLimit.message);
+      setIsCdKeyModalOpen(true);
+      return;
+    }
+
     if (isDemo && (classes.length + newClassesList.length) > 1) {
       alert('Tài khoản trải nghiệm (DEMO) chỉ được tạo tối đa 01 lớp học. Vui lòng liên hệ Quản trị viên để nâng cấp!');
       setIsRegistrationModalOpen(true);
@@ -3045,6 +3053,15 @@ export const ClassroomProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const bulkAddStudents = (items: Array<{ name: string; gender: 'Nam' | 'Nữ'; birthDate?: string; group?: string; role?: string; roles?: string[] }>) => {
     if (!checkBghPermission()) return;
     const currentList = students.filter(s => s.classId === activeClassId);
+
+    // 🛡️ Kiểm tra CDKEY Bản Quyền (Trial: tối đa 10 học sinh/lớp) — áp dụng cả khi nhập từ Excel
+    const bulkLimit = licenseService.checkStudentLimit(currentList.length, items.length);
+    if (!bulkLimit.allowed) {
+      alert(bulkLimit.message);
+      setIsCdKeyModalOpen(true);
+      if (bulkLimit.remaining <= 0) return;
+      items = items.slice(0, bulkLimit.remaining);
+    }
 
     if (isDemo) {
       if (currentList.length >= 10) {
@@ -4006,14 +4023,16 @@ export const ClassroomProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   };
 
   const initSubjectClasses = (items: InitSubjectClassItem[], replaceExisting: boolean = false) => {
-    if (isDemo) {
+    // 🛡️ Bản dùng thử (chưa nhập CDKEY) hoặc tài khoản DEMO: tối đa 01 lớp, 10 học sinh/lớp
+    const trialMode = isDemo || !licenseService.isActivated();
+    if (trialMode) {
       if (classes.length >= 1 && !replaceExisting) {
-        alert('Tài khoản trải nghiệm (DEMO) chỉ được tạo tối đa 01 lớp học. Vui lòng liên hệ Quản trị viên để nâng cấp!');
-        setIsRegistrationModalOpen(true);
+        alert('Bản dùng thử (chưa nhập CDKEY) chỉ được tạo tối đa 01 lớp học. Vui lòng nhập CDKEY bản quyền để quản lý nhiều lớp.');
+        setIsCdKeyModalOpen(true);
         return;
       }
       if (items.length > 1) {
-        alert('Tài khoản trải nghiệm (DEMO) chỉ được tạo tối đa 01 lớp học. Hệ thống sẽ khởi tạo 01 lớp đầu tiên với tối đa 10 học sinh.');
+        alert('Bản dùng thử (chưa nhập CDKEY) chỉ được tạo tối đa 01 lớp học. Phần mềm sẽ khởi tạo 01 lớp đầu tiên với tối đa 10 học sinh.');
         items = items.slice(0, 1);
       }
     }
@@ -4054,7 +4073,7 @@ export const ClassroomProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
       // Generate students
       let studentCount = Math.max(1, Math.min(item.studentCount || 32, 60));
-      if (isDemo && studentCount > 10) {
+      if (trialMode && studentCount > 10) {
         studentCount = 10;
       }
       // Remove any existing students of this class

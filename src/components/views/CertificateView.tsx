@@ -61,19 +61,19 @@ export interface CertificateElement {
 
 // Fallback certificate templates strictly in /certificates/
 const DEFAULT_CERTIFICATE_TEMPLATES: CertificateTemplate[] = [
-  { id: 'cert-1.png', name: 'Mẫu Khen Thưởng 1', url: '/certificates/1.png', filename: '1.png' },
-  { id: 'cert-2.png', name: 'Mẫu Khen Thưởng 2', url: '/certificates/2.png', filename: '2.png' },
-  { id: 'cert-3.png', name: 'Mẫu Khen Thưởng 3', url: '/certificates/3.png', filename: '3.png' },
-  { id: 'cert-4.png', name: 'Mẫu Khen Thưởng 4', url: '/certificates/4.png', filename: '4.png' },
-  { id: 'cert-5.png', name: 'Mẫu Khen Thưởng 5', url: '/certificates/5.png', filename: '5.png' },
-  { id: 'cert-7.png', name: 'Mẫu Khen Thưởng 7', url: '/certificates/7.png', filename: '7.png' },
-  { id: 'cert-8.png', name: 'Mẫu Khen Thưởng 8', url: '/certificates/8.png', filename: '8.png' },
-  { id: 'cert-9.png', name: 'Mẫu Khen Thưởng 9', url: '/certificates/9.png', filename: '9.png' },
-  { id: 'cert-10.png', name: 'Mẫu Khen Thưởng 10', url: '/certificates/10.png', filename: '10.png' },
-  { id: 'cert-11.png', name: 'Mẫu Khen Thưởng 11', url: '/certificates/11.png', filename: '11.png' },
-  { id: 'cert-12.png', name: 'Mẫu Khen Thưởng 12', url: '/certificates/12.png', filename: '12.png' },
-  { id: 'cert-13.png', name: 'Mẫu Khen Thưởng 13', url: '/certificates/13.png', filename: '13.png' },
-  { id: 'cert-14.png', name: 'Mẫu Khen Thưởng 14', url: '/certificates/14.png', filename: '14.png' },
+  { id: 'cert-1.jpg', name: 'Mẫu Khen Thưởng 1', url: '/certificates/1.jpg', filename: '1.jpg' },
+  { id: 'cert-2.jpg', name: 'Mẫu Khen Thưởng 2', url: '/certificates/2.jpg', filename: '2.jpg' },
+  { id: 'cert-3.jpg', name: 'Mẫu Khen Thưởng 3', url: '/certificates/3.jpg', filename: '3.jpg' },
+  { id: 'cert-4.jpg', name: 'Mẫu Khen Thưởng 4', url: '/certificates/4.jpg', filename: '4.jpg' },
+  { id: 'cert-5.jpg', name: 'Mẫu Khen Thưởng 5', url: '/certificates/5.jpg', filename: '5.jpg' },
+  { id: 'cert-7.jpg', name: 'Mẫu Khen Thưởng 7', url: '/certificates/7.jpg', filename: '7.jpg' },
+  { id: 'cert-8.jpg', name: 'Mẫu Khen Thưởng 8', url: '/certificates/8.jpg', filename: '8.jpg' },
+  { id: 'cert-9.jpg', name: 'Mẫu Khen Thưởng 9', url: '/certificates/9.jpg', filename: '9.jpg' },
+  { id: 'cert-10.jpg', name: 'Mẫu Khen Thưởng 10', url: '/certificates/10.jpg', filename: '10.jpg' },
+  { id: 'cert-11.jpg', name: 'Mẫu Khen Thưởng 11', url: '/certificates/11.jpg', filename: '11.jpg' },
+  { id: 'cert-12.jpg', name: 'Mẫu Khen Thưởng 12', url: '/certificates/12.jpg', filename: '12.jpg' },
+  { id: 'cert-13.jpg', name: 'Mẫu Khen Thưởng 13', url: '/certificates/13.jpg', filename: '13.jpg' },
+  { id: 'cert-14.jpg', name: 'Mẫu Khen Thưởng 14', url: '/certificates/14.jpg', filename: '14.jpg' },
 ];
 
 // Helper to format friendly template display names from filenames

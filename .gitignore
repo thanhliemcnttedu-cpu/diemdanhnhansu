@@ -30,6 +30,8 @@ data/database_local_supabase_sim/sim_config.json
 /server.js
 dist-server/
 release/
+release-lite/
+desktop-lite/app/
 
 # Local AI tooling state
 .claude-flow/

@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { playFanfareSound } from '../../utils/audio';
-import { licenseService, OFFICIAL_CDKEY, LicenseDetails } from '../../services/licenseService';
+import { licenseService, MASKED_CDKEY, LicenseDetails } from '../../services/licenseService';
 import { APP_AUTHOR_INFO } from '../../data/initialData';
 import { useClassroom } from '../../context/ClassroomContext';
 
@@ -27,7 +27,7 @@ export const CDKeyModal: React.FC<CDKeyModalProps> = ({ isOpen, onClose }) => {
     const unsub = licenseService.subscribe((details) => {
       setLicenseState(details);
       if (details.isActivated) {
-        setCdkeyInput(details.key || OFFICIAL_CDKEY);
+        setCdkeyInput(MASKED_CDKEY);
       }
     });
     return () => unsub();
@@ -38,7 +38,7 @@ export const CDKeyModal: React.FC<CDKeyModalProps> = ({ isOpen, onClose }) => {
       const current = licenseService.getDetails();
       setLicenseState(current);
       if (current.isActivated) {
-        setCdkeyInput(current.key || OFFICIAL_CDKEY);
+        setCdkeyInput(MASKED_CDKEY);
       } else {
         setCdkeyInput('');
       }
@@ -216,7 +216,7 @@ export const CDKeyModal: React.FC<CDKeyModalProps> = ({ isOpen, onClose }) => {
             >
               <KeyRound className="w-4 h-4" />
               <span>
-                {licenseState.isActivated && cdkeyInput.trim().toUpperCase() === OFFICIAL_CDKEY
+                {licenseState.isActivated && cdkeyInput === MASKED_CDKEY
                   ? 'BẢN QUYỀN ĐANG KÍCH HOẠT CHÍNH THỨC'
                   : cdkeyInput.trim()
                   ? 'MỞ KHÓA BẢN QUYỀN CHÍNH THỨC'

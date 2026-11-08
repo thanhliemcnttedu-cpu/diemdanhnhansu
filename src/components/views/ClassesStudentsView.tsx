@@ -176,7 +176,8 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
     isAdmin, allTeachers, allUsers, currentUser, syncDatabaseNow,
     schoolBranches, saveSchoolBranches, reloadSchoolBranches,
     canEvaluateEmulation, canEditStudentAvatar, canResetOrAssignCoins, canCreateClassInfographic, canConfigureCoinSubjects, isSchoolAdminOrBgh,
-    canAssignClassOfficer, canEditClassAvatar, canEditClassSlogan, canEditParentCommittee, isRestrictedAdminOrBgh
+    canAssignClassOfficer, canEditClassAvatar, canEditClassSlogan, canEditParentCommittee, isRestrictedAdminOrBgh,
+    isCdKeyActivated, setIsCdKeyModalOpen
   } = useClassroom();
 
   const [activeTabMode, setActiveTabMode] = useState<'classes' | 'students'>(mode);
@@ -218,10 +219,11 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
   const [classSortBy, setClassSortBy] = useState<'grade' | 'branch' | 'campus' | 'name'>('grade');
   const [classSortOrder, setClassSortOrder] = useState<'asc' | 'desc'>('asc');
 
-  // Demo school retired: no demo class/student limits.
-  const isDemoAccount = false;
+  // 🛡️ Bản dùng thử (chưa nhập CDKEY): tối đa 01 lớp, 10 học sinh/lớp
+  const isDemoAccount = !isCdKeyActivated;
   const isClassLimitReached = isDemoAccount && classes.length >= 1;
   const isStudentLimitReached = isDemoAccount && currentClassStudents.length >= 10;
+  const showTrialLimit = (msg: string) => { alert(msg); setIsCdKeyModalOpen(true); };
 
   // 🌟 Danh sách trường học hệ thống phục vụ lọc cho Super Admin
   const availableSchools = React.useMemo(() => {
@@ -826,7 +828,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
   const handleCreateClass = (e: React.FormEvent) => {
     e.preventDefault();
     if (isClassLimitReached) {
-      alert('Tài khoản trải nghiệm (DEMO) chỉ được tạo tối đa 01 lớp học. Vui lòng liên hệ Quản trị viên để nâng cấp!');
+      showTrialLimit('Bản dùng thử (chưa nhập CDKEY) chỉ được tạo tối đa 01 lớp học. Vui lòng nhập CDKEY bản quyền để quản lý nhiều lớp.');
       return;
     }
     if (!newClassName.trim()) return;
@@ -1035,7 +1037,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
   const handleConfirmBulkAddClasses = () => {
     if (excelParsedClasses.length === 0) return;
     if (isDemoAccount && (classes.length + excelParsedClasses.length) > 1) {
-      alert('Tài khoản trải nghiệm (DEMO) chỉ được tạo tối đa 01 lớp học. Vui lòng liên hệ Quản trị viên để nâng cấp!');
+      showTrialLimit('Bản dùng thử (chưa nhập CDKEY) chỉ được tạo tối đa 01 lớp học. Vui lòng nhập CDKEY bản quyền để quản lý nhiều lớp.');
       return;
     }
 
@@ -1337,7 +1339,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
   // 4. EXCEL UPLOAD
   const handleExcelUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (isStudentLimitReached) {
-      alert('Tài khoản trải nghiệm (DEMO) chỉ được thêm tối đa 10 học sinh mỗi lớp. Vui lòng liên hệ Quản trị viên để nâng cấp!');
+      showTrialLimit('Bản dùng thử (chưa nhập CDKEY) chỉ được tối đa 10 học sinh mỗi lớp. Vui lòng nhập CDKEY bản quyền để mở khóa sĩ số không giới hạn.');
       e.target.value = '';
       return;
     }
@@ -1411,14 +1413,14 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
       let finalStudents = [...excelParsedStudents];
       if (isDemoAccount) {
         if (currentClassStudents.length >= 10) {
-          alert('Tài khoản trải nghiệm (DEMO) chỉ được thêm tối đa 10 học sinh mỗi lớp. Vui lòng liên hệ Quản trị viên để nâng cấp!');
+          showTrialLimit('Bản dùng thử (chưa nhập CDKEY) chỉ được tối đa 10 học sinh mỗi lớp. Vui lòng nhập CDKEY bản quyền để mở khóa sĩ số không giới hạn.');
           setIsExcelPreviewOpen(false);
           setExcelParsedStudents([]);
           return;
         }
         const allowedToAdd = 10 - currentClassStudents.length;
         if (finalStudents.length > allowedToAdd) {
-          alert(`Tài khoản trải nghiệm (DEMO) chỉ được thêm tối đa 10 học sinh mỗi lớp. Vui lòng liên hệ Quản trị viên để nâng cấp! Hệ thống chỉ thêm ${allowedToAdd} học sinh đầu tiên để trải nghiệm.`);
+          showTrialLimit(`Bản dùng thử (chưa nhập CDKEY) chỉ được tối đa 10 học sinh mỗi lớp. Phần mềm chỉ thêm ${allowedToAdd} học sinh đầu danh sách. Nhập CDKEY bản quyền để mở khóa sĩ số không giới hạn.`);
           finalStudents = finalStudents.slice(0, allowedToAdd);
         }
       }
@@ -1433,7 +1435,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
   const handleSingleAdd = (e: React.FormEvent) => {
     e.preventDefault();
     if (isStudentLimitReached) {
-      alert('Tài khoản trải nghiệm (DEMO) chỉ được thêm tối đa 10 học sinh mỗi lớp. Vui lòng liên hệ Quản trị viên để nâng cấp!');
+      showTrialLimit('Bản dùng thử (chưa nhập CDKEY) chỉ được tối đa 10 học sinh mỗi lớp. Vui lòng nhập CDKEY bản quyền để mở khóa sĩ số không giới hạn.');
       return;
     }
     if (!singleName.trim()) return;
@@ -2497,7 +2499,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                   disabled={isClassLimitReached}
                   onClick={() => {
                     if (isClassLimitReached) {
-                      alert('Tài khoản trải nghiệm (DEMO) chỉ được tạo tối đa 01 lớp học. Vui lòng liên hệ Quản trị viên để nâng cấp!');
+                      showTrialLimit('Bản dùng thử (chưa nhập CDKEY) chỉ được tạo tối đa 01 lớp học. Vui lòng nhập CDKEY bản quyền để quản lý nhiều lớp.');
                       return;
                     }
                     setIsInitSubjectClassesModalOpen(true);
@@ -2507,7 +2509,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                       ? 'bg-slate-300 text-slate-500 cursor-not-allowed opacity-60 shadow-none'
                       : 'bg-gradient-to-r from-emerald-700 via-teal-700 to-cyan-700 hover:from-emerald-800 hover:to-cyan-800 text-white hover-zoom-btn shadow-md shadow-emerald-600/25'
                   }`}
-                  title={isClassLimitReached ? 'Tài khoản trải nghiệm (DEMO) chỉ được tạo tối đa 01 lớp học. Vui lòng liên hệ Quản trị viên để nâng cấp!' : 'Khởi tạo nhanh danh sách các lớp dạy bộ môn, điền thông tin lớp và số lượng học sinh'}
+                  title={isClassLimitReached ? 'Bản dùng thử (chưa nhập CDKEY) chỉ được tạo tối đa 01 lớp học. Vui lòng nhập CDKEY bản quyền để quản lý nhiều lớp.' : 'Khởi tạo nhanh danh sách các lớp dạy bộ môn, điền thông tin lớp và số lượng học sinh'}
                 >
                   <Sparkles className={`w-4 h-4 ${isClassLimitReached ? 'text-slate-400' : 'text-amber-300 animate-pulse'}`} />
                   <span>KHỞI TẠO LỚP DẠY BỘ MÔN</span>
@@ -2564,7 +2566,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                 disabled={isClassLimitReached}
                 onClick={() => {
                   if (isClassLimitReached) {
-                    alert('Tài khoản trải nghiệm (DEMO) chỉ được tạo tối đa 01 lớp học. Vui lòng liên hệ Quản trị viên để nâng cấp!');
+                    showTrialLimit('Bản dùng thử (chưa nhập CDKEY) chỉ được tạo tối đa 01 lớp học. Vui lòng nhập CDKEY bản quyền để quản lý nhiều lớp.');
                     return;
                   }
                   importClassesFileInputRef.current?.click();
@@ -2574,7 +2576,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                     ? 'bg-slate-200 text-slate-400 border-slate-300 cursor-not-allowed opacity-60 shadow-none'
                     : 'btn-3d-cyan'
                 } gap-1.5`}
-                title={isClassLimitReached ? 'Tài khoản trải nghiệm (DEMO) chỉ được tạo tối đa 01 lớp học. Vui lòng liên hệ Quản trị viên để nâng cấp!' : 'Tải lên file Excel để tạo hàng loạt lớp học'}
+                title={isClassLimitReached ? 'Bản dùng thử (chưa nhập CDKEY) chỉ được tạo tối đa 01 lớp học. Vui lòng nhập CDKEY bản quyền để quản lý nhiều lớp.' : 'Tải lên file Excel để tạo hàng loạt lớp học'}
               >
                 <Upload className="w-3.5 h-3.5" />
                 <span>NHẬP LỚP TỪ EXCEL</span>
@@ -2585,7 +2587,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                 disabled={isClassLimitReached}
                 onClick={() => {
                   if (isClassLimitReached) {
-                    alert('Tài khoản trải nghiệm (DEMO) chỉ được tạo tối đa 01 lớp học. Vui lòng liên hệ Quản trị viên để nâng cấp!');
+                    showTrialLimit('Bản dùng thử (chưa nhập CDKEY) chỉ được tạo tối đa 01 lớp học. Vui lòng nhập CDKEY bản quyền để quản lý nhiều lớp.');
                     return;
                   }
                   setIsCreateClassOpen(true);
@@ -2595,7 +2597,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                     ? 'bg-slate-300 text-slate-500 cursor-not-allowed opacity-60 shadow-none'
                     : 'btn-3d-blue'
                 } gap-1.5`}
-                title={isClassLimitReached ? 'Tài khoản trải nghiệm (DEMO) chỉ được tạo tối đa 01 lớp học. Vui lòng liên hệ Quản trị viên để nâng cấp!' : 'Thêm lớp học mới'}
+                title={isClassLimitReached ? 'Bản dùng thử (chưa nhập CDKEY) chỉ được tạo tối đa 01 lớp học. Vui lòng nhập CDKEY bản quyền để quản lý nhiều lớp.' : 'Thêm lớp học mới'}
               >
                 <Plus className="w-3.5 h-3.5" />
                 <span>THÊM LỚP HỌC MỚI</span>
@@ -2769,7 +2771,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                   disabled={isClassLimitReached}
                   onClick={() => {
                     if (isClassLimitReached) {
-                      alert('Tài khoản trải nghiệm (DEMO) chỉ được tạo tối đa 01 lớp học. Vui lòng liên hệ Quản trị viên để nâng cấp!');
+                      showTrialLimit('Bản dùng thử (chưa nhập CDKEY) chỉ được tạo tối đa 01 lớp học. Vui lòng nhập CDKEY bản quyền để quản lý nhiều lớp.');
                       return;
                     }
                     importClassesFileInputRef.current?.click();
@@ -2779,7 +2781,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                       ? 'bg-slate-300 text-slate-500 cursor-not-allowed opacity-60 shadow-none'
                       : 'bg-emerald-700 hover:bg-emerald-800 text-white shadow-xs hover-zoom-btn'
                   }`}
-                  title={isClassLimitReached ? 'Tài khoản trải nghiệm (DEMO) chỉ được tạo tối đa 01 lớp học. Vui lòng liên hệ Quản trị viên để nâng cấp!' : 'Tải lên file Excel để tạo hàng loạt lớp học'}
+                  title={isClassLimitReached ? 'Bản dùng thử (chưa nhập CDKEY) chỉ được tạo tối đa 01 lớp học. Vui lòng nhập CDKEY bản quyền để quản lý nhiều lớp.' : 'Tải lên file Excel để tạo hàng loạt lớp học'}
                 >
                   <Upload className="w-3.5 h-3.5" />
                   <span>NHẬP TỪ EXCEL</span>
@@ -2788,7 +2790,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                   disabled={isClassLimitReached}
                   onClick={() => {
                     if (isClassLimitReached) {
-                      alert('Tài khoản trải nghiệm (DEMO) chỉ được tạo tối đa 01 lớp học. Vui lòng liên hệ Quản trị viên để nâng cấp!');
+                      showTrialLimit('Bản dùng thử (chưa nhập CDKEY) chỉ được tạo tối đa 01 lớp học. Vui lòng nhập CDKEY bản quyền để quản lý nhiều lớp.');
                       return;
                     }
                     setIsCreateClassOpen(true);
@@ -2798,7 +2800,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                       ? 'bg-slate-300 text-slate-500 cursor-not-allowed opacity-60 shadow-none'
                       : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-xs hover-zoom-btn'
                   }`}
-                  title={isClassLimitReached ? 'Tài khoản trải nghiệm (DEMO) chỉ được tạo tối đa 01 lớp học. Vui lòng liên hệ Quản trị viên để nâng cấp!' : 'Tạo lớp học mới'}
+                  title={isClassLimitReached ? 'Bản dùng thử (chưa nhập CDKEY) chỉ được tạo tối đa 01 lớp học. Vui lòng nhập CDKEY bản quyền để quản lý nhiều lớp.' : 'Tạo lớp học mới'}
                 >
                   <Plus className="w-3.5 h-3.5" />
                   <span>TẠO LỚP HỌC MỚI</span>
@@ -3195,7 +3197,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                   disabled={isStudentLimitReached}
                   onClick={() => {
                     if (isStudentLimitReached) {
-                      alert('Tài khoản trải nghiệm (DEMO) chỉ được thêm tối đa 10 học sinh mỗi lớp. Vui lòng liên hệ Quản trị viên để nâng cấp!');
+                      showTrialLimit('Bản dùng thử (chưa nhập CDKEY) chỉ được tối đa 10 học sinh mỗi lớp. Vui lòng nhập CDKEY bản quyền để mở khóa sĩ số không giới hạn.');
                       return;
                     }
                     setIsSingleAddOpen(true);
@@ -3206,7 +3208,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                       ? 'bg-slate-300 text-slate-500 cursor-not-allowed opacity-60 shadow-none'
                       : 'btn-3d-blue'
                   } gap-1 shrink-0`}
-                  title={isStudentLimitReached ? 'Tài khoản trải nghiệm (DEMO) chỉ được thêm tối đa 10 học sinh mỗi lớp. Vui lòng liên hệ Quản trị viên để nâng cấp!' : 'Thêm học sinh mới'}
+                  title={isStudentLimitReached ? 'Bản dùng thử (chưa nhập CDKEY) chỉ được tối đa 10 học sinh mỗi lớp. Vui lòng nhập CDKEY bản quyền để mở khóa sĩ số không giới hạn.' : 'Thêm học sinh mới'}
                 >
                   <Plus className="w-3.5 h-3.5" />
                   <span>THÊM HỌC SINH</span>
@@ -3224,7 +3226,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                   disabled={isStudentLimitReached}
                   onClick={() => {
                     if (isStudentLimitReached) {
-                      alert('Tài khoản trải nghiệm (DEMO) chỉ được thêm tối đa 10 học sinh mỗi lớp. Vui lòng liên hệ Quản trị viên để nâng cấp!');
+                      showTrialLimit('Bản dùng thử (chưa nhập CDKEY) chỉ được tối đa 10 học sinh mỗi lớp. Vui lòng nhập CDKEY bản quyền để mở khóa sĩ số không giới hạn.');
                       return;
                     }
                     excelFileInputRef.current?.click();
@@ -3234,7 +3236,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                       ? 'bg-slate-200 text-slate-400 border-slate-300 cursor-not-allowed opacity-60 shadow-none'
                       : 'btn-3d-light'
                   } gap-1 shrink-0`}
-                  title={isStudentLimitReached ? 'Tài khoản trải nghiệm (DEMO) chỉ được thêm tối đa 10 học sinh mỗi lớp. Vui lòng liên hệ Quản trị viên để nâng cấp!' : 'Nhập danh sách học sinh từ file Excel'}
+                  title={isStudentLimitReached ? 'Bản dùng thử (chưa nhập CDKEY) chỉ được tối đa 10 học sinh mỗi lớp. Vui lòng nhập CDKEY bản quyền để mở khóa sĩ số không giới hạn.' : 'Nhập danh sách học sinh từ file Excel'}
                 >
                   <Upload className={`w-3.5 h-3.5 ${isStudentLimitReached ? 'text-slate-400' : 'text-blue-600'}`} />
                   <span>NHẬP EXCEL</span>
@@ -3472,7 +3474,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                   disabled={isStudentLimitReached}
                   onClick={() => {
                     if (isStudentLimitReached) {
-                      alert('Tài khoản trải nghiệm (DEMO) chỉ được thêm tối đa 10 học sinh mỗi lớp. Vui lòng liên hệ Quản trị viên để nâng cấp!');
+                      showTrialLimit('Bản dùng thử (chưa nhập CDKEY) chỉ được tối đa 10 học sinh mỗi lớp. Vui lòng nhập CDKEY bản quyền để mở khóa sĩ số không giới hạn.');
                       return;
                     }
                     setIsSingleAddOpen(true);
@@ -3482,7 +3484,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                       ? 'bg-slate-300 text-slate-500 cursor-not-allowed opacity-60'
                       : 'bg-indigo-600 text-white hover-zoom-btn'
                   }`}
-                  title={isStudentLimitReached ? 'Tài khoản trải nghiệm (DEMO) chỉ được thêm tối đa 10 học sinh mỗi lớp. Vui lòng liên hệ Quản trị viên để nâng cấp!' : 'Thêm thủ công'}
+                  title={isStudentLimitReached ? 'Bản dùng thử (chưa nhập CDKEY) chỉ được tối đa 10 học sinh mỗi lớp. Vui lòng nhập CDKEY bản quyền để mở khóa sĩ số không giới hạn.' : 'Thêm thủ công'}
                 >
                   THÊM THỦ CÔNG
                 </button>

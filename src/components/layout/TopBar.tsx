@@ -373,7 +373,7 @@ export const TopBar: React.FC<TopBarProps> = ({
           <button
             onClick={() => setIsCdKeyModalOpen(true)}
             className={`${chipBase} ${isCdKeyActivated ? 'bg-emerald-50 text-emerald-800 border-emerald-200 hover:bg-emerald-100' : 'bg-amber-100 text-amber-900 border-amber-300 hover:bg-amber-200'}`}
-            title="Kích hoạt mã CDKEY bản quyền phần mềm (LOP-HOC-HANH-PHUC)"
+            title="Kích hoạt mã CDKEY bản quyền phần mềm"
           >
             <KeyRound className="w-4 h-4" />
             <span className="hidden xl:inline">{isCdKeyActivated ? 'Bản quyền PRO' : 'Kích hoạt CDKEY'}</span>

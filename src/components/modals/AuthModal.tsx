@@ -391,7 +391,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   ? 'bg-emerald-700 hover:bg-emerald-800 text-white'
                   : 'bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950'
               }`}
-              title="Kích hoạt CDKEY (LOP-HOC-HANH-PHUC)"
+              title="Kích hoạt CDKEY bản quyền"
             >
               <KeyRound className="w-3.5 h-3.5" />
               <span>{isCdKeyActivated ? 'BẢN QUYỀN VĨNH VIỄN' : 'KÍCH HOẠT CDKEY'}</span>

@@ -237,7 +237,7 @@ function ClassroomApp() {
         onClose={() => setIsGoogleDriveModalOpen(false)}
       />
 
-      {/* Bản Quyền CDKEY Modal (Mã thống nhất: LOP-HOC-HANH-PHUC) */}
+      {/* Bản Quyền CDKEY Modal */}
       <CDKeyModal
         isOpen={isCdKeyModalOpen}
         onClose={() => setIsCdKeyModalOpen(false)}

@@ -1,0 +1,41 @@
+{
+  "$schema": "https://raw.githubusercontent.com/electron-userland/electron-builder/master/packages/app-builder-lib/scheme.json",
+  "appId": "com.lhhp.lophochanhphuc.desktop",
+  "productName": "LopHocHanhPhuc",
+  "copyright": "Copyright © 2026 Nguyễn Thanh Liêm - Lớp Học Hạnh Phúc",
+  "directories": {
+    "app": "desktop-lite/app",
+    "output": "release-lite",
+    "buildResources": "desktop-lite/build"
+  },
+  "files": ["**/*", "!node_modules{,/**/*}"],
+  "afterPack": "desktop-lite/afterPack.cjs",
+  "asar": true,
+  "compression": "maximum",
+  "electronLanguages": ["vi", "en-US"],
+  "electronDist": "node_modules/electron/dist",
+  "npmRebuild": false,
+  "nodeGypRebuild": false,
+  "includePdb": false,
+  "win": {
+    "target": [{ "target": "nsis", "arch": ["x64"] }],
+    "icon": "desktop-lite/app/icon.ico",
+    "artifactName": "LopHocHanhPhuc_Setup_${version}.exe",
+    "signAndEditExecutable": true
+  },
+  "nsis": {
+    "oneClick": false,
+    "perMachine": false,
+    "allowToChangeInstallationDirectory": true,
+    "createDesktopShortcut": "always",
+    "createStartMenuShortcut": true,
+    "shortcutName": "Lớp Học Hạnh Phúc",
+    "installerIcon": "desktop-lite/app/icon.ico",
+    "uninstallerIcon": "desktop-lite/app/icon.ico",
+    "uninstallDisplayName": "Lớp Học Hạnh Phúc",
+    "runAfterFinish": true,
+    "deleteAppDataOnUninstall": false,
+    "differentialPackage": false,
+    "warningsAsErrors": false
+  }
+}
