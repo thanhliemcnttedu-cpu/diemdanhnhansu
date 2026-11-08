@@ -5,6 +5,7 @@ import {
   GoogleDriveConfig 
 } from '../types/driveSync';
 import { dataAdapter } from './dataAdapter';
+import { getAppliedAdminEdits, mergeAppliedAdminEdits } from './adminEditsStore';
 import { getRoleScopedDataFileName } from './dataStorageService';
 import appsScriptSource from '../../scripts/google_apps_script.js?raw';
 
@@ -407,6 +408,10 @@ export const googleDriveService = {
       const standardJson = dataAdapter.toStandardClassroomJson(userData, currentUser, effectiveTargetClassId);
       if (standardJson.metadata) {
         standardJson.metadata.teacherRole = userData.teacherRole === 'subject' || currentUser.role === 'subject' ? 'subject' : 'homeroom';
+        // Dấu "đã nhận điều chỉnh của Quản trị" (xem adminEditsService)
+        if (currentUser.role === 'homeroom') {
+          (standardJson.metadata as any).appliedAdminEdits = getAppliedAdminEdits(currentUser.username);
+        }
       }
 
       // Lưu 1 bản rolling daily backup cục bộ
@@ -567,7 +572,7 @@ export const googleDriveService = {
     localData: UserClassroomData,
     targetFileName?: string,
     currentUser?: UserAccount | null
-  ): Promise<{ success: boolean; mergedData?: UserClassroomData; message: string }> {
+  ): Promise<{ success: boolean; mergedData?: UserClassroomData; message: string; raw?: any }> {
     const config = this.getConfig();
     const scriptUrl = this.normalizeScriptUrl(config.scriptUrl);
     const folderId = config.folderId?.trim();
@@ -632,6 +637,12 @@ export const googleDriveService = {
           }
         } catch (_) {}
 
+        // GVCN đăng nhập máy mới: khôi phục dấu "đã nhận điều chỉnh của Quản trị" từ tệp lớp
+        const appliedFromFile = (standardJson as any)?.metadata?.appliedAdminEdits;
+        if (appliedFromFile && currentUser?.role === 'homeroom' && fileToFetch === this.getFileNameForUser(currentUser, (standardJson as any)?.classInfo?.name)) {
+          mergeAppliedAdminEdits(currentUser.username, appliedFromFile);
+        }
+
         // Áp dụng Non-Destructive Smart Merge
         const mergedData = dataAdapter.smartMergeClassroomData(localData, standardJson);
         const nowStr = new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
@@ -641,6 +652,7 @@ export const googleDriveService = {
         return {
           success: true,
           mergedData,
+          raw: standardJson,
           message: `Tải và hợp nhất dữ liệu từ Google Drive thành công (${fileToFetch})!`
         };
       } else {
@@ -732,6 +744,7 @@ export const googleDriveService = {
     attendanceRecords: DailyAttendance[];
     boardingRecords: DailyBoardingMeal[];
     message: string;
+    appliedByClass?: Record<string, Record<string, number>>;
   }> {
     const config = this.getConfig();
     const scriptUrl = this.normalizeScriptUrl(config.scriptUrl);
@@ -783,7 +796,8 @@ export const googleDriveService = {
       let pulledCount = 0;
 
       // Tải song song (tối đa 5 tệp cùng lúc) để toàn trường vài chục lớp vẫn nhanh
-      const pulled: Array<{ success: boolean; mergedData?: UserClassroomData }> = new Array(gvcnFiles.length);
+      const pulled: Array<{ success: boolean; mergedData?: UserClassroomData; raw?: any }> = new Array(gvcnFiles.length);
+      const appliedByClass: Record<string, Record<string, number>> = {};
       let cursor = 0;
       const worker = async () => {
         while (cursor < gvcnFiles.length) {
@@ -802,6 +816,11 @@ export const googleDriveService = {
           if (pullRes && pullRes.success && pullRes.mergedData) {
             pulledCount++;
             const md = pullRes.mergedData;
+            const appliedMarks = pullRes.raw?.metadata?.appliedAdminEdits;
+            if (appliedMarks && typeof appliedMarks === 'object') {
+              const ids = new Set<string>([pullRes.raw?.classInfo?.id, ...(md.classes || []).map((c: any) => c?.id)].filter(Boolean));
+              ids.forEach(cid => { appliedByClass[cid] = appliedMarks; });
+            }
             (md.classes || []).forEach(c => { if (c && c.id) classesMap.set(c.id, c); });
             (md.students || []).forEach(s => { if (s && s.id) studentsMap.set(s.id, s); });
             (md.attendanceRecords || []).forEach(a => {
@@ -829,6 +848,7 @@ export const googleDriveService = {
         students: Array.from(studentsMap.values()),
         attendanceRecords: Array.from(attMap.values()),
         boardingRecords: Array.from(boardingMap.values()),
+        appliedByClass,
         message: `Đã kéo thành công dữ liệu từ ${pulledCount} lớp học trên Google Drive!`
       };
     } catch (err: any) {

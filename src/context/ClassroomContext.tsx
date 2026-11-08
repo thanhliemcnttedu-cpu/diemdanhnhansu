@@ -33,6 +33,8 @@ import {
 } from '../services/aiHierarchySynthesizer';
 import { googleDriveService, LOCAL_DRIVE_CONFIG_KEY } from '../services/googleDriveService';
 import { schoolDriveDbService } from '../services/schoolDriveDbService';
+import { adminEditsService } from '../services/adminEditsService';
+import { getAppliedAdminEdits, mergeAppliedAdminEdits } from '../services/adminEditsStore';
 import { dataStorageService } from '../services/dataStorageService';
 import { licenseService } from '../services/licenseService';
 
@@ -193,6 +195,9 @@ interface ClassroomContextType {
   isSchoolAdminOrBgh: boolean;
   canEvaluateEmulation: boolean;
   canEditStudentAvatar: boolean;
+  canManageStudents?: boolean;
+  canEditClassCore?: boolean;
+  canDeleteClasses?: boolean;
   canAssignClassOfficer: boolean;
   canEditClassAvatar: boolean;
   canEditClassSlogan: boolean;
@@ -288,7 +293,12 @@ export const ClassroomProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   // - Cấu hình Slogan / Khẩu hiệu lớp học (Hiển thị trên Infographic)
   // - Cấu hình Ban Đại Diện Cha Mẹ Học Sinh
   const isSchoolAdminOrBgh = !isSuperAdmin && Boolean(isSchoolAdmin || isBgh);
-  const isRestrictedAdminOrBghUser = isRestrictedAdminOrBgh(currentUser);
+  // adminquantri (Quản trị tối cao) có TOÀN QUYỀN: không bị giới hạn như Quản trị nhà trường / BGH
+  const isRestrictedAdminOrBghUser = !isSuperAdmin && isRestrictedAdminOrBgh(currentUser);
+  // Quản trị nhà trường & BGH: chỉ được thêm/nhập lớp, khai báo phân hiệu – điểm trường và gán phân hiệu cho lớp
+  const canManageStudents = !isSchoolAdminOrBgh;
+  const canEditClassCore = !isSchoolAdminOrBgh;
+  const canDeleteClasses = !isSchoolAdminOrBgh;
   const canEvaluateEmulation = !isSchoolAdminOrBgh;
   const canEditStudentAvatar = !isRestrictedAdminOrBghUser;
   const canAssignClassOfficer = !isRestrictedAdminOrBghUser;
@@ -1722,6 +1732,46 @@ export const ClassroomProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     schoolBranches, currentUser?.username
   ]);
 
+  // ✏️ GVCN (bản web Drive): nhận điều chỉnh của Quản trị cho lớp mình (tệp dieuchinh_quantri.json), mỗi 60 giây.
+  // Áp vào lớp → tự lưu như bình thường → tệp lớp mang dấu "đã nhận" để màn tổng hợp không áp lại.
+  useEffect(() => {
+    if (!currentUser || currentUser.role !== 'homeroom') return;
+    if (!googleDriveService.getConfig().scriptUrl) return;
+    let cancelled = false;
+    const run = async () => {
+      if (cancelled || !isRemoteDataLoadedRef.current) return;
+      try {
+        const entries = await adminEditsService.fetchEntries(0);
+        if (cancelled || Object.keys(entries).length === 0) return;
+        const curClasses = classesRef.current.length > 0 ? classesRef.current : classes;
+        const curStudents = studentsRef.current.length > 0 ? studentsRef.current : students;
+        const homeroomIds = curClasses
+          .filter(c => c && c.teacherRole !== 'subject' && !c.id.startsWith('class-sub-'))
+          .map(c => c.id);
+        const applied = getAppliedAdminEdits(currentUser.username);
+        const res = adminEditsService.applyForTeacher(entries, curClasses, curStudents, applied, homeroomIds);
+        if (Object.keys(res.newlyApplied).length > 0) mergeAppliedAdminEdits(currentUser.username, res.newlyApplied);
+        if (res.changed) {
+          isApplyingRemoteUpdateRef.current = false;
+          remoteUpdateLockUntilRef.current = 0;
+          classesRef.current = res.classes;
+          studentsRef.current = res.students;
+          setClasses(res.classes);
+          setStudents(res.students);
+        }
+      } catch (err) {
+        console.warn('Nhận điều chỉnh của Quản trị lỗi:', err);
+      }
+    };
+    const first = setTimeout(run, 4000);
+    const timer = setInterval(run, 60000);
+    return () => {
+      cancelled = true;
+      clearTimeout(first);
+      clearInterval(timer);
+    };
+  }, [currentUser?.username, currentUser?.role]);
+
   // User Auth Actions
   const loginUser = async (
     username: string, 
@@ -2133,7 +2183,7 @@ export const ClassroomProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const checkBghPermission = () => {
     if (isSuperAdmin) return true; // Supreme Privileges: Toàn quyền can thiệp CSDL
     if (isSchoolAdminOrBgh) {
-      setPermissionAlert("Bạn đang ở chế độ xem thông tin giám sát. Để tôn trọng quyền tự chủ của Giáo viên chủ nhiệm, thao tác này chỉ do GVCN thực hiện.");
+      setPermissionAlert("Quản trị nhà trường và Ban Giám Hiệu chỉ được thêm/nhập lớp học, khai báo phân hiệu – điểm trường và gán phân hiệu cho lớp. Thông tin học sinh, điểm danh và điểm thi đua do Giáo viên chủ nhiệm (hoặc Quản trị tối cao) thực hiện.");
       return false;
     }
     return true;
@@ -2226,7 +2276,7 @@ export const ClassroomProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   // 🌟 TẠO LỚP HỌC HÀNG LOẠT (BULK ADD CLASSES TỪ EXCEL / DANH SÁCH MẪU)
   const bulkAddClasses = async (newClassesList: Array<Omit<Classroom, 'id'>>) => {
-    if (!checkBghPermission()) return;
+    // Quản trị nhà trường & BGH được phép nhập lớp từ Excel (không chặn)
     if (!newClassesList || newClassesList.length === 0) return;
 
     if (isDemo && (classes.length + newClassesList.length) > 1) {
@@ -2306,6 +2356,13 @@ export const ClassroomProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     // 🛡️ NẾU LÀ TÀI KHOẢN QUẢN TRỊ NHÀ TRƯỜNG, BAN GIÁM HIỆU HOẶC ADMINQUANTRI:
     // Tuyệt đối không cho phép thay đổi: avatar lớp, slogan, ban đại diện cha mẹ học sinh (bảo toàn dữ liệu của GVCN)
     let cleanUpdated = { ...updated };
+    if (isSchoolAdminOrBgh && existing) {
+      // Chỉ cho phép gán phân hiệu / điểm trường; giữ nguyên mọi thông tin khác của lớp
+      const allowed: Partial<Classroom> = {};
+      if ('branch' in updated) allowed.branch = updated.branch;
+      if ('campus' in updated) allowed.campus = updated.campus;
+      cleanUpdated = allowed;
+    }
     if (isRestrictedAdminOrBghUser && existing) {
       if (updated.avatar !== undefined || updated.originalAvatar !== undefined || updated.avatarScale !== undefined || updated.avatarPosition !== undefined) {
         cleanUpdated.avatar = existing.avatar;
@@ -2561,7 +2618,11 @@ export const ClassroomProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   };
 
   const bulkUpdateClasses = (ids: string[], updates: Partial<Classroom>) => {
-    if (!checkBghPermission()) return;
+    if (isSchoolAdminOrBgh) {
+      const keys = Object.keys(updates || {});
+      const onlyBranch = keys.length > 0 && keys.every(k => k === 'branch' || k === 'campus');
+      if (!onlyBranch && !checkBghPermission()) return;
+    }
     if (!ids || ids.length === 0) return;
     const targetSet = new Set(ids);
     const next = classes.map(c => targetSet.has(c.id) ? { ...c, ...updates } : c);
@@ -2690,6 +2751,10 @@ export const ClassroomProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   };
 
   const updateStudent = (id: string, data: Partial<Student>) => {
+    if (isSchoolAdminOrBgh) {
+      setPermissionAlert("Quản trị nhà trường và Ban Giám Hiệu không có quyền thay đổi thông tin, ảnh đại diện, chức vụ hay điểm thi đua của học sinh. Việc này do Giáo viên chủ nhiệm (hoặc Quản trị tối cao) thực hiện.");
+      return;
+    }
     if (isRestrictedAdminOrBghUser && (data.avatar !== undefined || data.originalAvatar !== undefined || data.avatarScale !== undefined || data.avatarPosition !== undefined)) {
       setPermissionAlert("Để tôn trọng quyền tự chủ của Giáo viên chủ nhiệm, Quản trị nhà trường, Ban Giám Hiệu và Admin Quản trị không có quyền thay đổi ảnh đại diện của học sinh.");
       return;
@@ -4484,6 +4549,9 @@ export const ClassroomProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       isSchoolAdminOrBgh,
       canEvaluateEmulation,
       canEditStudentAvatar,
+      canManageStudents,
+      canEditClassCore,
+      canDeleteClasses,
       canAssignClassOfficer,
       canEditClassAvatar,
       canEditClassSlogan,

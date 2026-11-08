@@ -5,6 +5,7 @@ import { ACCOUNT_IDENTITY_MAP, getOfficialDisplayName } from '../utils/accountId
 import { dataStorageService } from './dataStorageService';
 import { googleDriveService } from './googleDriveService';
 import { schoolDriveDbService } from './schoolDriveDbService';
+import { adminEditsService } from './adminEditsService';
 import { DEFAULT_SUBJECT_TEACHER_CONFIG } from '../data/initialData';
 
 export function getApiBaseUrl(): string {
@@ -259,6 +260,7 @@ type DriveClassFilesData = {
   students: Student[];
   attendanceRecords: DailyAttendance[];
   boardingRecords: DailyBoardingMeal[];
+  appliedByClass?: Record<string, Record<string, number>>;
 };
 const DRIVE_CLASS_FILES_TTL_MS = 60000;
 let driveClassFilesCache: { key: string; at: number; data: DriveClassFilesData } | null = null;
@@ -280,7 +282,8 @@ async function loadDriveClassFilesCached(currentUser: UserAccount): Promise<Driv
         classes: res.classes,
         students: res.students,
         attendanceRecords: res.attendanceRecords,
-        boardingRecords: res.boardingRecords
+        boardingRecords: res.boardingRecords,
+        appliedByClass: res.appliedByClass || {}
       };
       driveClassFilesCache = { key, at: Date.now(), data };
       return data;
@@ -2270,6 +2273,51 @@ export const databaseService = {
         mergeDaily(drive.attendanceRecords, allAttendanceMap);
         mergeDaily(drive.boardingRecords, allBoardingMap);
       }
+
+      // ✏️ Áp điều chỉnh của Quản trị (tệp dieuchinh_quantri.json) chưa được GVCN nhận vào lớp
+      const edits = await adminEditsService.fetchEntries();
+      const editList = Object.values(edits).filter(Boolean).sort((a, b) => a.at - b.at);
+      if (editList.length > 0) {
+        const appliedByClass: Record<string, Record<string, number>> = {};
+        for (const [cid, applied] of Object.entries(drive?.appliedByClass || {})) {
+          appliedByClass[cid] = applied;
+          const alias = classAliasMap.get(cid);
+          if (alias) appliedByClass[alias] = applied;
+        }
+        const resolveClassId = (cid?: string, cname?: string) => {
+          if (!cid) return cid;
+          const aliased = classAliasMap.get(cid) || cid;
+          if (allClassesMap.has(aliased)) return aliased;
+          const byName = cname ? canonicalToIdMap.get(getCanonicalKey(cname)) : undefined;
+          return byName || aliased;
+        };
+        for (const e of editList) {
+          if (adminEditsService.isConsumed(e, appliedByClass)) continue;
+          if (e.kind === 'class') {
+            const target = resolveClassId(e.id, e.className || e.data?.name) || e.id;
+            if (e.deleted) {
+              allClassesMap.delete(target);
+              for (const [sid, st] of allStudentsMap) if (st.classId === target) allStudentsMap.delete(sid);
+            } else {
+              const existing = allClassesMap.get(target);
+              if (!existing && !e.data?.name) continue;
+              allClassesMap.set(target, { ...(existing || {}), ...(e.data || {}), id: target } as Classroom);
+              const cKey = getCanonicalKey((e.data?.name || existing?.name || '') as string);
+              if (cKey && !canonicalToIdMap.has(cKey)) canonicalToIdMap.set(cKey, target);
+            }
+          } else {
+            if (e.deleted) {
+              allStudentsMap.delete(e.id);
+              continue;
+            }
+            const existingS = allStudentsMap.get(e.id);
+            if (!existingS && !e.data?.name) continue;
+            const merged = { ...(existingS || {}), ...(e.data || {}), id: e.id } as Student;
+            merged.classId = resolveClassId(merged.classId, e.className) || merged.classId;
+            allStudentsMap.set(e.id, merged);
+          }
+        }
+      }
     } catch (driveErr) {
       console.warn('Drive class files merge error:', driveErr);
     }
@@ -2282,6 +2330,7 @@ export const databaseService = {
     );
 
     const finalClasses = Array.from(allClassesMap.values());
+    try { adminEditsService.setKnownSnapshot(finalClasses, validStudents); } catch (_) {}
 
     return {
       classes: finalClasses,
@@ -2454,6 +2503,8 @@ export const databaseService = {
   },
 
   async updateAdminClass(classData: any, targetUsername?: string, isDelete = false): Promise<boolean> {
+    // ☁️ Bản web (Drive): ghi điều chỉnh của Quản trị/BGH vào tệp dieuchinh_quantri.json
+    try { adminEditsService.record('class', classData, isDelete); } catch (_) {}
     const username = (targetUsername || classData?.teacherUsername || '').trim().toLowerCase();
     const nowTs = Date.now();
     let isSuccess = false;
@@ -2688,6 +2739,8 @@ export const databaseService = {
   },
 
   async updateAdminStudent(studentData: any, targetUsername?: string, isDelete = false, schoolName?: string): Promise<boolean> {
+    // ☁️ Bản web (Drive): ghi điều chỉnh của Quản trị tối cao vào tệp dieuchinh_quantri.json
+    try { adminEditsService.record('student', studentData, isDelete); } catch (_) {}
     const username = (targetUsername || '').trim().toLowerCase();
     const nowTs = Date.now();
     let isSuccess = false;

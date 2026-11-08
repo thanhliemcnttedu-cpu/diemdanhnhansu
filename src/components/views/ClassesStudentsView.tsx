@@ -1080,8 +1080,9 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
     });
 
     // Yêu cầu 2: Thông tin giáo viên và ban phụ huynh thông nhau 2 chiều giữa Cài đặt và Quản lý lớp học
-    // Cập nhật ngược lại vào hồ sơ giáo viên và thông tin tài khoản nếu là GVCN hoặc đang thao tác lớp chủ nhiệm
-    if (teacherRole === 'homeroom' || !isAdmin || editingClass.id === activeClassId) {
+    // Cập nhật ngược lại vào hồ sơ giáo viên – CHỈ với tài khoản giáo viên. Quản trị / BGH sửa lớp của GVCN
+    // không được lấy tên GVCN làm tên hồ sơ của chính mình.
+    if (!isAdmin) {
       updateTeacherProfile({
         name: trimmedTeacherName,
         academicYear: trimmedAcademicYear
@@ -2515,6 +2516,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
 
               {classes.length > 0 && (
                 <button
+                  {...(isSchoolAdminOrBgh ? { style: { display: 'none' } } : {})}
                   type="button"
                   onClick={() => setIsDeleteAllClassesOpen(true)}
                   className="btn-3d btn-3d-sm btn-3d-rose gap-1.5"
@@ -2636,6 +2638,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
               {selectedClassIds.length > 0 ? (
                 <div className="flex flex-wrap items-center gap-2">
                   <button
+                    {...(isSchoolAdminOrBgh ? { style: { display: 'none' } } : {})}
                     type="button"
                     onClick={() => {
                       setBulkEditGrade('keep');
@@ -2653,6 +2656,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                   </button>
 
                   <button
+                    {...(isSchoolAdminOrBgh ? { style: { display: 'none' } } : {})}
                     type="button"
                     onClick={() => setIsBulkClassDeleteOpen(true)}
                     className="px-4 py-2.5 bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-700 hover:to-red-700 text-white rounded-2xl font-black text-xs md:text-sm flex items-center gap-2 transition-all hover-zoom-btn shadow-md shadow-rose-600/25 uppercase"
@@ -2973,6 +2977,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                         </button>
 
                         <button
+                          {...(isSchoolAdminOrBgh ? { style: { display: 'none' } } : {})}
                           onClick={() => setDeleteConfirmClass(cls)}
                           className={`p-1.5 rounded-lg transition-colors hover-zoom-btn border ${
                             isSuperAdmin
@@ -3186,6 +3191,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
               {/* CỤM 1: THÊM & DỮ LIỆU EXCEL (Tông Xanh Dương 3D Công Nghệ) */}
               <div className="flex flex-wrap items-center gap-1 sm:gap-1.5 p-1 bg-sky-50/80 rounded-xl border border-sky-200/70 shadow-2xs">
                 <button
+                  {...(isSchoolAdminOrBgh ? { style: { display: 'none' } } : {})}
                   disabled={isStudentLimitReached}
                   onClick={() => {
                     if (isStudentLimitReached) {
@@ -3214,6 +3220,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                   onChange={handleExcelUpload}
                 />
                 <button
+                  {...(isSchoolAdminOrBgh ? { style: { display: 'none' } } : {})}
                   disabled={isStudentLimitReached}
                   onClick={() => {
                     if (isStudentLimitReached) {
@@ -3333,6 +3340,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
 
                 {currentClassStudents.length > 0 && (
                   <button
+                    {...(isSchoolAdminOrBgh ? { style: { display: 'none' } } : {})}
                     onClick={() => {
                       if (selectedStudentIds.length > 0) {
                         setIsBulkDeleteConfirmOpen(true);
@@ -3425,6 +3433,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                 )}
 
                 <button
+                  {...(isSchoolAdminOrBgh ? { style: { display: 'none' } } : {})}
                   onClick={() => setIsBulkDeleteConfirmOpen(true)}
                   className="px-3.5 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-black flex items-center gap-1.5 shadow-md shadow-rose-600/25 transition-all hover-zoom-btn uppercase"
                   title="Xóa các học sinh đã chọn"
@@ -3748,6 +3757,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
 
                       <div className="flex items-center gap-1 sm:gap-1.5">
                         <button
+                          {...(isSchoolAdminOrBgh ? { style: { display: 'none' } } : {})}
                           onClick={() => {
                             setEditingStudent(student);
                             setEditingRoles(getStudentRolesList(student));
@@ -3764,6 +3774,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                         </button>
 
                         <button
+                          {...(isSchoolAdminOrBgh ? { style: { display: 'none' } } : {})}
                           onClick={() => {
                             const canEditOrDeleteStudent = isSuperAdmin || ((student as any).teacher_id === currentUser?.id) || ((student as any).teacherUsername === currentUser?.username) || (!isAdmin && !isSuperAdmin); // GVCN luôn sửa được data trong context của mình
                             if (!canEditOrDeleteStudent) {
@@ -5213,6 +5224,11 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
             </div>
 
             <form onSubmit={handleSaveEditClass} className="space-y-3.5">
+              {isSchoolAdminOrBgh && (
+                <div className="px-3 py-2 rounded-xl bg-amber-50 border border-amber-300 text-[11px] font-semibold text-amber-900">
+                  🔒 Ban Giám Hiệu / Quản trị nhà trường chỉ gán <strong>phân hiệu – điểm trường</strong> cho lớp. Tên lớp, khối, năm học, giáo viên do Quản trị tối cao hoặc Giáo viên chủ nhiệm điều chỉnh.
+                </div>
+              )}
               {/* Bố cục 2 cột ngang thông minh (lg:grid-cols-12) */}
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-5 items-start">
                 
@@ -5307,6 +5323,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                       <label className="block text-[11px] font-bold text-slate-700 mb-1">Tên lớp *</label>
                       <input
                         type="text"
+                        disabled={isSchoolAdminOrBgh}
                         value={editingClass.name}
                         onChange={(e) => setEditingClass({ ...editingClass, name: e.target.value })}
                         className="w-full px-2.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold focus:ring-2 focus:ring-indigo-500"
@@ -5317,6 +5334,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                     <div>
                       <label className="block text-[11px] font-bold text-slate-700 mb-1">Khối lớp</label>
                       <select
+                        disabled={isSchoolAdminOrBgh}
                         value={editingClass.grade}
                         onChange={(e) => setEditingClass({ ...editingClass, grade: e.target.value })}
                         className="w-full px-2 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold"
@@ -5330,6 +5348,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                       <label className="block text-[11px] font-bold text-slate-700 mb-1">Năm học</label>
                       <input
                         type="text"
+                        disabled={isSchoolAdminOrBgh}
                         value={editingClass.academicYear || ''}
                         onChange={(e) => setEditingClass({ ...editingClass, academicYear: e.target.value })}
                         placeholder="2026–2027"
@@ -5461,6 +5480,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                     </div>
                     <input
                       type="text"
+                      disabled={isSchoolAdminOrBgh}
                       value={editingClass.teacherName || ''}
                       onChange={(e) => setEditingClass({ ...editingClass, teacherName: e.target.value })}
                       placeholder="Ví dụ: Thầy/Cô Nguyễn Văn A"
