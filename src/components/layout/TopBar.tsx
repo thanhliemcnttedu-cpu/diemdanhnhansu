@@ -4,9 +4,11 @@ import {
   Maximize2, Minimize2, 
   Sparkles, Award, ShieldAlert,
   ChevronDown, School, ShieldCheck, Database, LogIn, LogOut, Users,
-  Menu, Monitor, Cloud, HardDrive, KeyRound, MoreHorizontal
+  Menu, Monitor, Cloud, HardDrive, KeyRound, MoreHorizontal, RefreshCw
 } from 'lucide-react';
 import { googleDriveService } from '../../services/googleDriveService';
+import { invalidateDriveClassFilesCache, FORCE_DATA_REFRESH_EVENT } from '../../services/databaseService';
+import { adminEditsService } from '../../services/adminEditsService';
 import { playNoiseAlertSound } from '../../utils/audio';
 import { NavigationMenuId } from './Sidebar';
 import { getOfficialDisplayName, getOfficialRoleTitle } from '../../utils/accountIdentity';
@@ -164,6 +166,27 @@ export const TopBar: React.FC<TopBarProps> = ({
     isBgh
   );
   const isManagementAdmin = isSuperAdmin || isSchoolAdminAccount;
+
+  // 🔄 Quản trị tối cao / Quản trị nhà trường / BGH: cập nhật ngay dữ liệu mới nhất của mọi GVCN
+  const [isRefreshingAll, setIsRefreshingAll] = useState(false);
+  const [lastRefreshAllAt, setLastRefreshAllAt] = useState<string>('');
+  const handleRefreshAllData = async () => {
+    if (isRefreshingAll) return;
+    setIsRefreshingAll(true);
+    try {
+      invalidateDriveClassFilesCache();   // đọc lại tệp lớp gvcn_*.json trên Drive
+      adminEditsService.invalidateCache(); // đọc lại điều chỉnh của Quản trị
+      await syncDatabaseNow();             // tổng hợp lại lớp, học sinh, điểm danh, bán trú
+      window.dispatchEvent(new Event(FORCE_DATA_REFRESH_EVENT)); // bảng thống kê tải lại
+      const now = new Date();
+      setLastRefreshAllAt(`${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`);
+    } catch (err) {
+      console.warn('Cập nhật dữ liệu lỗi:', err);
+      alert('Chưa cập nhật được dữ liệu. Vui lòng kiểm tra kết nối Internet / Google Drive rồi thử lại.');
+    } finally {
+      setIsRefreshingAll(false);
+    }
+  };
 
   // Đảm bảo không áp dụng CSS zoom gây lỗi khoảng trắng
   useEffect(() => {
@@ -386,6 +409,22 @@ export const TopBar: React.FC<TopBarProps> = ({
             <span className="hidden 2xl:inline">Trợ lý AI</span>
           </button>
         </div>
+
+        {/* 🔄 Cập nhật dữ liệu mới nhất của tất cả giáo viên (Quản trị tối cao / Quản trị trường / BGH) */}
+        {isManagementAdmin && (
+          <button
+            onClick={handleRefreshAllData}
+            disabled={isRefreshingAll}
+            className={`${chipBase} bg-emerald-600 text-white border-emerald-600 hover:bg-emerald-700 disabled:opacity-80 disabled:cursor-wait`}
+            title={`Cập nhật ngay dữ liệu mới nhất từ tất cả tài khoản giáo viên (lớp, học sinh, điểm danh, bán trú)${lastRefreshAllAt ? ` • Lần cuối: ${lastRefreshAllAt}` : ''}`}
+            aria-label="Cập nhật dữ liệu mới nhất từ tất cả giáo viên"
+          >
+            <RefreshCw className={`w-4 h-4 ${isRefreshingAll ? 'animate-spin' : ''}`} />
+            <span className="hidden md:inline">
+              {isRefreshingAll ? 'Đang cập nhật…' : (lastRefreshAllAt ? `Đã cập nhật ${lastRefreshAllAt}` : 'Cập nhật dữ liệu')}
+            </span>
+          </button>
+        )}
 
         {isBgh && (
           <span

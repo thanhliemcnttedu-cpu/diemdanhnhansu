@@ -126,6 +126,11 @@ export const adminEditsService = {
     return Boolean(driveTarget()) && isManagementUser(sessionUser());
   },
 
+  /** Bỏ bộ nhớ đệm để lần đọc sau lấy điều chỉnh mới nhất trên Drive. */
+  invalidateCache() {
+    cache = null;
+  },
+
   /** Ảnh chụp dữ liệu mà màn tổng hợp đang hiển thị (để tính phần thay đổi). */
   setKnownSnapshot(classes: Classroom[], students: Student[]) {
     known.class = new Map(classes.map(c => [c.id, c]));

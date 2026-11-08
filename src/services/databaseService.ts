@@ -302,6 +302,9 @@ export function invalidateDriveClassFilesCache() {
   driveClassFilesCache = null;
 }
 
+/** Sự kiện toàn app: Quản trị/BGH bấm "Cập nhật dữ liệu" → các bảng thống kê tải lại ngay. */
+export const FORCE_DATA_REFRESH_EVENT = 'lhhp:force-data-refresh';
+
 export const databaseService = {
   // Authentication
   async login(

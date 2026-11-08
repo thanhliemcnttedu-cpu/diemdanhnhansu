@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Cloud, RefreshCw, CheckSquare, Utensils, AlertCircle, CheckCircle2, Clock } from 'lucide-react';
 import { useClassroom } from '../../../context/ClassroomContext';
-import { databaseService } from '../../../services/databaseService';
+import { databaseService, FORCE_DATA_REFRESH_EVENT } from '../../../services/databaseService';
 import {
   googleDriveService,
   toLocalDateKey,
@@ -147,10 +147,14 @@ export const DriveAttendanceStatsPanel: React.FC = () => {
         });
       } catch (_) {}
     }
+    // Quản trị/BGH bấm "Cập nhật dữ liệu" ở thanh trên cùng → tải lại ngay
+    const onForceRefresh = () => load();
+    window.addEventListener(FORCE_DATA_REFRESH_EVENT, onForceRefresh);
     return () => {
       clearInterval(timer);
       if (pending) clearTimeout(pending);
       if (unsubscribe) unsubscribe();
+      window.removeEventListener(FORCE_DATA_REFRESH_EVENT, onForceRefresh);
     };
   }, [load, currentUser?.username]);
 
