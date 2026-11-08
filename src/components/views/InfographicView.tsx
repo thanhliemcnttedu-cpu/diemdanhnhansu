@@ -83,7 +83,7 @@ export const InfographicView: React.FC = () => {
     students, currentClassStudents, teacherProfile,
     seatingColumns, deskCountsPerColumn, deskNumberingOrder, seatingAssignments, teacherDeskPos, doorPos,
     timetable, timetableConfig,
-    canCreateClassInfographic
+    canCreateClassInfographic, updateClass
   } = useClassroom();
 
   // Selected class for Infographic
@@ -133,7 +133,10 @@ export const InfographicView: React.FC = () => {
   // Custom edited editable texts
   const [customSlogan, setCustomSlogan] = useState<string>(targetClass?.slogan || 'Lớp học hạnh phúc • Chăm ngoan, sáng tạo, tự tin tỏa sáng');
   const [customTeacherName, setCustomTeacherName] = useState<string>(targetClass?.teacherName || teacherProfile.name);
-  const [customTeacherPhone, setCustomTeacherPhone] = useState<string>(teacherProfile.phone || '');
+  const [customTeacherPhone, setCustomTeacherPhone] = useState<string>(() => {
+    try { return localStorage.getItem(`lhhp_infographic_teacher_phone_${activeClassId || ''}`) || teacherProfile.phone || ''; } catch (_) { return teacherProfile.phone || ''; }
+  });
+  const [isClassInfoModalOpen, setIsClassInfoModalOpen] = useState(false);
 
   // Parent committee state (editable)
   const [parentCommittee, setParentCommittee] = useState({
@@ -1430,10 +1433,12 @@ export const InfographicView: React.FC = () => {
                       <div className="text-[11px] text-indigo-700 font-bold">
                         {teacherProfile.role || 'Giáo viên phụ trách lớp'}
                       </div>
-                      <div className="text-[11px] text-slate-500 flex items-center gap-1 mt-0.5">
-                        <Phone className="w-3 h-3 text-slate-400" />
-                        <span>{customTeacherPhone}</span>
-                      </div>
+                      {customTeacherPhone && (
+                        <div className="text-[11px] text-slate-600 flex items-center gap-1 mt-0.5">
+                          <Phone className="w-3 h-3 text-slate-500" />
+                          <span>{customTeacherPhone}</span>
+                        </div>
+                      )}
                     </>
                   )}
                 </div>
@@ -1448,7 +1453,7 @@ export const InfographicView: React.FC = () => {
                   <span>Ban Đại Diện Cha Mẹ Học Sinh Lớp</span>
                 </div>
                 <span className="text-[10px] text-rose-600 font-bold bg-white px-2 py-0.5 rounded-full border border-rose-200">
-                  4 Thành viên
+                  {[parentCommittee.head, parentCommittee.deputy, parentCommittee.member1, parentCommittee.member2].filter(m => m.name).length || 4} Thành viên
                 </span>
               </div>
 
@@ -1464,9 +1469,11 @@ export const InfographicView: React.FC = () => {
                       className="font-bold text-xs w-full border border-rose-200 rounded px-1"
                     />
                   ) : (
-                    <div className="font-bold text-slate-900 truncate">{parentCommittee.head.name}</div>
+                    parentCommittee.head.name
+                      ? <div className="font-bold text-slate-900 truncate">{parentCommittee.head.name}</div>
+                      : <div className="mt-2 border-b border-dotted border-slate-400 h-3" aria-label="Chỗ ghi tên" />
                   )}
-                  <div className="text-slate-500 font-mono text-[10px]">{parentCommittee.head.phone}</div>
+                  {parentCommittee.head.phone && <div className="text-slate-600 font-mono text-[10px]">☎ {parentCommittee.head.phone}</div>}
                 </div>
 
                 {/* Phó ban */}
@@ -1480,9 +1487,11 @@ export const InfographicView: React.FC = () => {
                       className="font-bold text-xs w-full border border-rose-200 rounded px-1"
                     />
                   ) : (
-                    <div className="font-bold text-slate-900 truncate">{parentCommittee.deputy.name}</div>
+                    parentCommittee.deputy.name
+                      ? <div className="font-bold text-slate-900 truncate">{parentCommittee.deputy.name}</div>
+                      : <div className="mt-2 border-b border-dotted border-slate-400 h-3" aria-label="Chỗ ghi tên" />
                   )}
-                  <div className="text-slate-500 font-mono text-[10px]">{parentCommittee.deputy.phone}</div>
+                  {parentCommittee.deputy.phone && <div className="text-slate-600 font-mono text-[10px]">☎ {parentCommittee.deputy.phone}</div>}
                 </div>
 
                 {/* Ủy viên 1 */}
@@ -1496,9 +1505,11 @@ export const InfographicView: React.FC = () => {
                       className="font-bold text-xs w-full border border-rose-200 rounded px-1"
                     />
                   ) : (
-                    <div className="font-bold text-slate-900 truncate">{parentCommittee.member1.name}</div>
+                    parentCommittee.member1.name
+                      ? <div className="font-bold text-slate-900 truncate">{parentCommittee.member1.name}</div>
+                      : <div className="mt-2 border-b border-dotted border-slate-400 h-3" aria-label="Chỗ ghi tên" />
                   )}
-                  <div className="text-slate-500 font-mono text-[10px]">{parentCommittee.member1.phone}</div>
+                  {parentCommittee.member1.phone && <div className="text-slate-600 font-mono text-[10px]">☎ {parentCommittee.member1.phone}</div>}
                 </div>
 
                 {/* Ủy viên 2 */}
@@ -1512,9 +1523,11 @@ export const InfographicView: React.FC = () => {
                       className="font-bold text-xs w-full border border-rose-200 rounded px-1"
                     />
                   ) : (
-                    <div className="font-bold text-slate-900 truncate">{parentCommittee.member2.name}</div>
+                    parentCommittee.member2.name
+                      ? <div className="font-bold text-slate-900 truncate">{parentCommittee.member2.name}</div>
+                      : <div className="mt-2 border-b border-dotted border-slate-400 h-3" aria-label="Chỗ ghi tên" />
                   )}
-                  <div className="text-slate-500 font-mono text-[10px]">{parentCommittee.member2.phone}</div>
+                  {parentCommittee.member2.phone && <div className="text-slate-600 font-mono text-[10px]">☎ {parentCommittee.member2.phone}</div>}
                 </div>
               </div>
             </div>
@@ -1525,8 +1538,16 @@ export const InfographicView: React.FC = () => {
         return renderSeatingChartComponent();
 
       case 'timetable': {
-        const periodTimesMorning = ['07:45 - 08:25', '08:30 - 09:10', '09:35 - 10:15', '10:20 - 11:00', '11:05 - 11:45'];
-        const periodTimesAfternoon = ['14:00 - 14:40', '14:45 - 15:25', '15:40 - 16:20', '16:25 - 17:00'];
+        // Số tiết & khung giờ lấy đúng theo cài đặt ở mục Thời khóa biểu (nếu có)
+        let savedTkb: any = null;
+        try { savedTkb = JSON.parse(localStorage.getItem(`lop_hoc_tkb_settings_${targetClass?.id}`) || 'null'); } catch (_) { savedTkb = null; }
+        const morningCount = Math.max(1, Math.min(6, timetableConfig?.morningPeriods || 5));
+        const afternoonCount = Math.max(0, Math.min(5, timetableConfig?.afternoonPeriods ?? 4));
+        const periodTimesMorning: string[] = Array.isArray(savedTkb?.morningTimes) && savedTkb.morningTimes.length ? savedTkb.morningTimes : ['07:45 - 08:25', '08:30 - 09:10', '09:35 - 10:15', '10:20 - 11:00', '11:05 - 11:45', ''];
+        const periodTimesAfternoon: string[] = Array.isArray(savedTkb?.afternoonTimes) && savedTkb.afternoonTimes.length ? savedTkb.afternoonTimes : ['14:00 - 14:40', '14:45 - 15:25', '15:40 - 16:20', '16:25 - 17:00', ''];
+        const morningList = Array.from({ length: morningCount }, (_, i) => i + 1);
+        const afternoonList = Array.from({ length: afternoonCount }, (_, i) => i + 1);
+        const hasAnySubject = timetable.some(t => (!t.classId || t.classId === targetClass?.id) && t.subject && t.subject !== '—');
 
         const getSubjectBadge = (subject: string | undefined) => {
           if (!subject || subject === '—') return <span className="text-slate-500 font-normal">—</span>;
@@ -1563,6 +1584,12 @@ export const InfographicView: React.FC = () => {
               </div>
             </div>
 
+            {!hasAnySubject ? (
+              <div className="rounded-xl border-2 border-dashed border-blue-200 bg-blue-50/50 px-4 py-6 text-center space-y-1">
+                <p className="text-sm font-black text-blue-900">Lớp chưa nhập thời khóa biểu</p>
+                <p className="text-xs text-slate-600">Vào mục <strong>Thời khóa biểu</strong> để chọn môn cho từng tiết (hoặc bấm “Nạp mẫu chuẩn Bộ GD”), Infographic sẽ tự cập nhật.</p>
+              </div>
+            ) : (
             <div className="overflow-x-auto rounded-xl border border-slate-200">
               <table className="w-full text-[10px] text-center border-collapse">
                 <thead>
@@ -1578,10 +1605,10 @@ export const InfographicView: React.FC = () => {
                 </thead>
                 <tbody>
                   {/* Sáng: 5 Tiết */}
-                  {[1, 2, 3, 4, 5].map((period, idx) => (
+                  {morningList.map((period, idx) => (
                     <tr key={`m-${period}`} className="border-b border-slate-100">
                       {idx === 0 && (
-                        <td rowSpan={5} className={`py-1 px-1 font-black ${ttClasses.morningHeader} border-r border-slate-200`}>
+                        <td rowSpan={morningCount} className={`py-1 px-1 font-black ${ttClasses.morningHeader} border-r border-slate-200`}>
                           SÁNG
                         </td>
                       )}
@@ -1606,10 +1633,10 @@ export const InfographicView: React.FC = () => {
                   ))}
 
                   {/* Chiều: 4 Tiết */}
-                  {[1, 2, 3, 4].map((period, idx) => (
+                  {afternoonList.map((period, idx) => (
                     <tr key={`a-${period}`} className="border-b border-slate-100">
                       {idx === 0 && (
-                        <td rowSpan={4} className={`py-1 px-1 font-black ${ttClasses.afternoonHeader} border-r border-slate-200`}>
+                        <td rowSpan={afternoonCount} className={`py-1 px-1 font-black ${ttClasses.afternoonHeader} border-r border-slate-200`}>
                           CHIỀU
                         </td>
                       )}
@@ -1635,6 +1662,7 @@ export const InfographicView: React.FC = () => {
                 </tbody>
               </table>
             </div>
+            )}
 
             {/* Dòng thời gian nề nếp sinh hoạt */}
             <div className="pt-1.5 border-t border-slate-100 flex flex-wrap items-center justify-between text-[9px] sm:text-[10px] text-slate-500 font-medium px-1">
@@ -2129,6 +2157,111 @@ export const InfographicView: React.FC = () => {
           </button>
         </div>
       </div>
+
+      {/* ✅ KIỂM TRA DỮ LIỆU: infographic tự lấy từ dữ liệu lớp – chỉ ra phần còn thiếu để bản in không bị trống */}
+      {canCreateClassInfographic && (() => {
+        const withPhoto = classStudents.filter(st => st.avatar && !/placeholder/i.test(st.avatar)).length;
+        const ttCount = timetable.filter(t => (!t.classId || t.classId === targetClass?.id) && t.subject && t.subject !== '—').length;
+        const seatCount = Object.values(seatingAssignments || {}).filter(id => classStudents.some(st => st.id === id)).length;
+        const parentsCount = [parentCommittee.head, parentCommittee.deputy, parentCommittee.member1, parentCommittee.member2].filter(m => (m.name || '').trim()).length;
+        const items: Array<{ ok: boolean; label: string; detail: string; action?: { label: string; onClick: () => void } }> = [
+          { ok: classStudents.length > 0, label: 'Học sinh', detail: `${classStudents.length} em • ${withPhoto} em có ảnh` },
+          { ok: ttCount > 0, label: 'Thời khóa biểu', detail: ttCount > 0 ? `${ttCount} tiết đã nhập` : 'Chưa nhập – vào mục Thời khóa biểu' },
+          { ok: seatCount > 0, label: 'Sơ đồ chỗ ngồi', detail: seatCount > 0 ? `${seatCount}/${classStudents.length} em đã xếp chỗ` : 'Chưa xếp – vào mục Sơ đồ lớp' },
+          { ok: parentsCount > 0, label: 'Ban phụ huynh', detail: `${parentsCount}/4 thành viên`, action: { label: parentsCount > 0 ? 'Sửa' : 'Nhập ngay', onClick: () => setIsClassInfoModalOpen(true) } },
+          { ok: Boolean(customTeacherPhone), label: 'SĐT GVCN', detail: customTeacherPhone || 'Chưa có', action: { label: customTeacherPhone ? 'Sửa' : 'Nhập ngay', onClick: () => setIsClassInfoModalOpen(true) } },
+        ];
+        const missing = items.filter(i => !i.ok).length;
+        return (
+          <div className="bg-white p-3 rounded-2xl border border-slate-200 shadow-2xs space-y-2">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="text-xs font-black uppercase tracking-wide text-slate-800">
+                Dữ liệu tự động cho Infographic {missing === 0
+                  ? <span className="ml-1 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200">Đầy đủ</span>
+                  : <span className="ml-1 px-2 py-0.5 rounded-full bg-amber-50 text-amber-900 border border-amber-200">Còn thiếu {missing} mục</span>}
+              </div>
+              <button type="button" onClick={() => setIsClassInfoModalOpen(true)} className="text-xs font-bold text-indigo-700 hover:underline">
+                Sửa thông tin lớp (GVCN, Ban phụ huynh)
+              </button>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
+              {items.map(it => (
+                <div key={it.label} className={`rounded-xl border px-2.5 py-2 ${it.ok ? 'border-emerald-200 bg-emerald-50/60' : 'border-amber-300 bg-amber-50/70'}`}>
+                  <div className="flex items-center gap-1.5 text-xs font-black text-slate-900">
+                    <span className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] text-white ${it.ok ? 'bg-emerald-700' : 'bg-amber-700'}`}>{it.ok ? '✓' : '!'}</span>
+                    {it.label}
+                  </div>
+                  <div className="text-xs text-slate-700 mt-0.5 truncate" title={it.detail}>{it.detail}</div>
+                  {it.action && (
+                    <button type="button" onClick={it.action.onClick} className="mt-1 text-xs font-black text-indigo-700 hover:underline">{it.action.label}</button>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      })()}
+
+      {isClassInfoModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-sky-900/20 backdrop-blur-xs p-4" role="dialog" aria-modal="true" aria-label="Thông tin lớp cho Infographic" onClick={() => setIsClassInfoModalOpen(false)}>
+          <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-xl max-h-[92vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            <div className="px-5 py-3.5 bg-gradient-to-r from-indigo-700 to-violet-700 text-white flex items-center justify-between sticky top-0">
+              <h3 className="text-sm font-black uppercase">Thông tin lớp {targetClass?.name}</h3>
+              <button type="button" onClick={() => setIsClassInfoModalOpen(false)} className="w-8 h-8 rounded-xl bg-white/20 hover:bg-white/30 flex items-center justify-center" aria-label="Đóng">✕</button>
+            </div>
+            <div className="p-5 space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <label className="space-y-1">
+                  <span className="text-xs font-black text-slate-700 uppercase">Họ tên GVCN</span>
+                  <input value={customTeacherName} onChange={(e) => setCustomTeacherName(e.target.value)} className="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm" />
+                </label>
+                <label className="space-y-1">
+                  <span className="text-xs font-black text-slate-700 uppercase">Số điện thoại GVCN</span>
+                  <input value={customTeacherPhone} onChange={(e) => setCustomTeacherPhone(e.target.value)} inputMode="tel" placeholder="Để trống nếu không muốn in" className="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm" />
+                </label>
+              </div>
+              <label className="space-y-1 block">
+                <span className="text-xs font-black text-slate-700 uppercase">Khẩu hiệu lớp</span>
+                <input value={customSlogan} onChange={(e) => setCustomSlogan(e.target.value)} className="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm" />
+              </label>
+              <div className="space-y-2">
+                <div className="text-xs font-black text-rose-800 uppercase">Ban đại diện cha mẹ học sinh</div>
+                {([
+                  ['head', 'Trưởng ban'], ['deputy', 'Phó ban'], ['member1', 'Ủy viên 1'], ['member2', 'Ủy viên 2'],
+                ] as const).map(([key, label]) => (
+                  <div key={key} className="grid grid-cols-[90px_1fr_140px] gap-2 items-center">
+                    <span className="text-xs font-bold text-slate-700">{label}</span>
+                    <input value={parentCommittee[key].name} placeholder="Họ tên phụ huynh"
+                      onChange={(e) => setParentCommittee(prev => ({ ...prev, [key]: { ...prev[key], name: e.target.value } }))}
+                      className="px-3 py-2 rounded-xl border border-slate-300 text-sm" />
+                    <input value={parentCommittee[key].phone} placeholder="SĐT" inputMode="tel"
+                      onChange={(e) => setParentCommittee(prev => ({ ...prev, [key]: { ...prev[key], phone: e.target.value } }))}
+                      className="px-3 py-2 rounded-xl border border-slate-300 text-sm" />
+                  </div>
+                ))}
+                <p className="text-xs text-slate-600">Ô để trống sẽ in thành dòng chấm để ghi tay.</p>
+              </div>
+              <div className="flex gap-2 pt-1">
+                <button type="button" onClick={() => setIsClassInfoModalOpen(false)} className="flex-1 py-3 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-black uppercase">Đóng</button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (targetClass) {
+                      updateClass(targetClass.id, { parentCommittee, slogan: customSlogan, teacherName: customTeacherName });
+                      try { localStorage.setItem(`lhhp_infographic_teacher_phone_${targetClass.id}`, customTeacherPhone); } catch (_) { /* ignore */ }
+                    }
+                    setIsClassInfoModalOpen(false);
+                    confetti({ particleCount: 30, spread: 50 });
+                  }}
+                  className="flex-[2] py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black uppercase"
+                >
+                  Lưu vào hồ sơ lớp
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Quick Layout Quick-Bar (Orientation & Page Count Quick Switch) */}
       <div className="bg-white/85 backdrop-blur-xs p-3 rounded-2xl border border-slate-200 flex flex-wrap items-center justify-between gap-3 shadow-2xs">

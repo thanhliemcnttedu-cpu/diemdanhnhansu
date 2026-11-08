@@ -238,7 +238,10 @@ export async function exportMultipleElementsToPdf(
       const dataUrl = await toPng(el, {
         quality: 0.98,
         pixelRatio: 2,
-        backgroundColor: '#ffffff'
+        backgroundColor: '#ffffff',
+        // Bản in: bỏ khung bo góc/bóng đổ của trang xem trước và các nút chỉnh sửa
+        style: { boxShadow: 'none', borderRadius: '0', border: 'none' },
+        filter: (node) => !(node instanceof HTMLElement && (node.classList.contains('no-print') || node.classList.contains('no-pdf')))
       });
 
       const img = new Image();

@@ -22,6 +22,7 @@ import {
 import { exportElementToPdf, downloadPrintableHtml } from '../../utils/printHelper';
 import { playDeductSound } from '../../utils/audio';
 import { SubjectTeacherTimetableView } from './schedule/SubjectTeacherTimetableView';
+import { ModernTimetable, MODERN_TIMETABLE_THEMES, type ModernTimetableTheme } from './schedule/ModernTimetableTemplates';
 
 export const DAYS_OF_WEEK = [
   { day: 2, label: 'Thứ Hai', short: 'T2', badgeColor: 'bg-sky-500 text-white', pastelBg: 'bg-sky-50 border-sky-200 text-sky-900', icon: '☀️' },
@@ -42,7 +43,8 @@ export type TimetableTemplateId =
   | 'minimalist_a4'    // 7. Tối Giản Thanh Lịch In A4
   | 'cosmic_galaxy'    // 8. Vũ Trụ & Phi Hành Gia (Mẫu Mới 1)
   | 'jungle_safari'    // 9. Rừng Xanh & Muông Thú Safari (Mẫu Mới 2)
-  | 'pastel_castle';   // 10. Lâu Đài Cổ Tích Pastel Kẹo Ngọt (Mẫu Mới 3)
+  | 'pastel_castle'    // 10. Lâu Đài Cổ Tích Pastel Kẹo Ngọt (Mẫu Mới 3)
+  | ModernTimetableTheme; // 11–15. Bộ mẫu hiện đại (ModernTimetableTemplates.tsx)
 
 interface TemplateMeta {
   id: TimetableTemplateId;
@@ -53,7 +55,17 @@ interface TemplateMeta {
   tagColor: string;
 }
 
+const MODERN_TAG_COLORS: Record<ModernTimetableTheme, string> = {
+  subject_color: 'from-blue-600 via-violet-600 to-pink-600',
+  luxe_navy: 'from-slate-800 to-amber-600',
+  pastel_soft: 'from-rose-400 to-violet-400',
+  minimal_mono: 'from-slate-700 to-slate-500',
+  day_cards: 'from-sky-600 to-emerald-600',
+};
+const isModernTheme = (id: string): id is ModernTimetableTheme => MODERN_TIMETABLE_THEMES.some(t => t.id === id);
+
 const TEMPLATES: TemplateMeta[] = [
+  ...MODERN_TIMETABLE_THEMES.map(t => ({ ...t, tagColor: MODERN_TAG_COLORS[t.id] })),
   {
     id: 'pedagogical',
     name: 'Chuẩn Sư Phạm',
@@ -649,7 +661,7 @@ export const ScheduleLinksView: React.FC<ScheduleLinksViewProps> = ({ defaultTab
               <div className="flex items-center gap-2">
                 <Sparkles className="w-4 h-4 text-amber-500" />
                 <h3 className="text-xs font-black text-indigo-950 uppercase tracking-wider">
-                  CHỌN MẪU TRÌNH BÀY THỜI KHÓA BIỂU (7 MẪU NGHỆ THUẬT THEO ẢNH):
+                  CHỌN MẪU TRÌNH BÀY THỜI KHÓA BIỂU ({TEMPLATES.length} MẪU):
                 </h3>
               </div>
               <span className="text-[12px] font-bold text-indigo-600">
@@ -794,6 +806,20 @@ export const ScheduleLinksView: React.FC<ScheduleLinksViewProps> = ({ defaultTab
           {/* ===================================================================== */}
           <div id="printable-timetable" ref={timetableContainerRef} className="bg-white rounded-3xl border border-slate-200 shadow-md overflow-hidden p-4 sm:p-6 space-y-6">
             
+            {/* BỘ MẪU HIỆN ĐẠI (11–15) */}
+            {isModernTheme(selectedTemplate) && (
+              <ModernTimetable
+                theme={selectedTemplate}
+                settings={{ ...displaySettings, className: selectedClass?.name || displaySettings.className }}
+                days={daysToShow}
+                morningPeriods={timetableConfig.morningPeriods}
+                afternoonPeriods={timetableConfig.afternoonPeriods}
+                getSubject={(day, session, period) => timetable.find(t => (t.classId ? t.classId === selectedClassId : true) && t.day === day && t.session === session && t.period === period)?.subject || ''}
+                getMeta={(sub) => getSubjectMeta(sub)}
+                onSlotClick={handleOpenSlotPicker}
+              />
+            )}
+
             {/* ------------------------------------------------------------- */}
             {/* TEMPLATE 1: TIÊU CHUẨN SƯ PHẠM HIỆN ĐẠI                       */}
             {/* ------------------------------------------------------------- */}

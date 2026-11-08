@@ -8,11 +8,16 @@ import {
   Sliders, Info, MousePointer, ShieldCheck,
   PenTool, Upload, FileSignature, X
 } from 'lucide-react';
-import { toPng } from 'html-to-image';
+import { toPng, toJpeg } from 'html-to-image';
 import confetti from 'canvas-confetti';
 import { useClassroom } from '../../context/ClassroomContext';
 import { APP_AUTHOR_INFO } from '../../data/initialData';
 import { removeWhiteBackground } from '../../utils/imageProcessor';
+import {
+  analyzeTemplate, buildCertificateLayout, ensureCertificateFonts, fitElementsToContent, preferredComposition,
+  CERT_TYPOGRAPHY, type TemplateAnalysis, type CertComposition, type CertContent,
+} from '../../utils/certificateLayout';
+import { renderCertificateCanvas } from '../../utils/certificateRenderer';
 
 // Canvas Native Resolution 1920 x 1080 Full HD
 const CANVAS_WIDTH = 1920;
@@ -50,6 +55,8 @@ export interface CertificateElement {
   borderColor?: string;
   border?: string;
   boxShadow?: string;
+  maxFontSize?: number;
+  textShadow?: string;
 }
 
 // Fallback certificate templates strictly in /certificates/
@@ -221,6 +228,8 @@ export const CertificateView: React.FC = () => {
   // Canvas Scaling State (Live Preview responsive scaling)
   const previewContainerRef = useRef<HTMLDivElement>(null);
   const [previewScale, setPreviewScale] = useState(0.5);
+  const canvasWidthRef = useRef(CANVAS_WIDTH);
+  const [scaleTick, setScaleTick] = useState(0);
 
   // Draggable Elements Canvas State
   const [elements, setElements] = useState<CertificateElement[]>([]);
@@ -478,7 +487,7 @@ export const CertificateView: React.FC = () => {
       if (previewContainerRef.current) {
         const containerW = previewContainerRef.current.clientWidth - 48;
         const containerH = previewContainerRef.current.clientHeight - 80;
-        const scaleX = containerW / CANVAS_WIDTH;
+        const scaleX = containerW / canvasWidthRef.current;
         const scaleY = containerH / CANVAS_HEIGHT;
         const calculatedScale = Math.min(scaleX, scaleY);
         setPreviewScale(Math.max(0.18, Math.min(calculatedScale, 0.95)));
@@ -488,7 +497,7 @@ export const CertificateView: React.FC = () => {
     updateScale();
     window.addEventListener('resize', updateScale);
     return () => window.removeEventListener('resize', updateScale);
-  }, []);
+  }, [scaleTick]);
 
   // Auto-select eligible students when class changes
   useEffect(() => {
@@ -537,678 +546,104 @@ export const CertificateView: React.FC = () => {
   }, [issueDate]);
 
   // =========================================================================
-  // SMART RANDOMIZED AUTO-LAYOUT (ART DIRECTOR QUALITY 1920x1080)
-  // Generates 1 of 3 distinct layout variations with randomized aesthetic fonts and colors:
-  // - Layout 1 (Cổ điển): Avatar lớn ở giữa trên cùng, chữ căn giữa toàn bộ.
-  // - Layout 2 (Hiện đại): Avatar lớn lệch trái, toàn bộ text căn lề trái nằm ở nửa bên phải.
-  // - Layout 3 (Sáng tạo): Avatar lớn góc phải, Tên học sinh khổng lồ và nội dung bên trái.
+  // 🎨 BỐ CỤC TỰ ĐỘNG THEO ẢNH NỀN (src/utils/certificateLayout.ts)
+  // - Đọc ảnh nền: vùng trống, khung viền, huy chương, nhân vật, màu chủ đạo.
+  // - Khung thư khen giữ đúng tỉ lệ ảnh nền (không kéo méo), cao 1080px.
+  // - 3 bố cục: Căn giữa / Ảnh bên trái / Ảnh bên phải + 4 bộ phông nghệ thuật.
   // =========================================================================
-  // =========================================================================
-  // SMART RANDOMIZED AUTO-LAYOUT V2 (ART DIRECTOR QUALITY 1920x1080)
-  // Generates 1 of 3 distinct layout variations with randomized aesthetic fonts and colors:
-  // - White space breathing room on Y-axis (No overlaps, generous vertical spacing)
-  // - whiteSpace: 'nowrap' on ALL text elements (Guaranteed zero unexpected line-breaks)
-  // - Paired harmonic palettes: Title color paired with Student Name & Accents
-  // - Curated typography hierarchy: Serif/Playfair for Title, Cursive/Script for Student Name, Sans for body
-  // =========================================================================
+  const [templateAnalysis, setTemplateAnalysis] = useState<TemplateAnalysis | null>(null);
+  const [typoIndex, setTypoIndex] = useState(0);
+  const canvasW = templateAnalysis?.canvasW || CANVAS_WIDTH;
+  const [signatureAspect, setSignatureAspect] = useState(0.45);
+  const [logoAspect, setLogoAspect] = useState(1);
+
+  useEffect(() => {
+    canvasWidthRef.current = canvasW;
+    setScaleTick(t => t + 1);
+  }, [canvasW]);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const [analysis] = await Promise.all([analyzeTemplate(activeTemplate.url), ensureCertificateFonts()]);
+      if (!cancelled) setTemplateAnalysis(analysis);
+    })();
+    return () => { cancelled = true; };
+  }, [activeTemplate.url]);
+
+  useEffect(() => {
+    const measure = (src: string | null, set: (v: number) => void, fallback: number) => {
+      if (!src) return;
+      const img = new Image();
+      img.onload = () => set(img.naturalWidth ? img.naturalHeight / img.naturalWidth : fallback);
+      img.src = src;
+    };
+    measure(teacherSignatureImage, setSignatureAspect, 0.45);
+    measure(schoolLogoImage, setLogoAspect, 1);
+  }, [teacherSignatureImage, schoolLogoImage]);
+
+  const VARIANT_TO_COMPOSITION: Record<1 | 2 | 3, CertComposition> = { 1: 'center', 2: 'left', 3: 'right' };
+  const COMPOSITION_TO_VARIANT: Record<CertComposition, 1 | 2 | 3> = { center: 1, left: 2, right: 3 };
+
+  const classLabel = activeClass?.name ? `Lớp ${activeClass.name}` : 'Lớp';
+
+  /** Nội dung thay đổi theo từng học sinh (dùng khi đổi học sinh xem trước & xuất hàng loạt) */
+  const contentMapFor = useCallback((student: any): Record<string, string> => ({
+    student_name: student?.name || 'Nguyễn Văn An',
+    student_avatar: student?.originalAvatar || student?.avatar || '',
+    student_class: `Học sinh ${classLabel}`,
+    reason_body: `“${reason}”`,
+    school_header: schoolName.toUpperCase(),
+    title_sub: certificateTitle,
+    date_text: formattedDate,
+    teacher_signature: teacherName,
+  }), [classLabel, reason, schoolName, certificateTitle, formattedDate, teacherName]);
+
   const generateRandomizedLayout = useCallback((
     student = previewStudent,
-    forceVariant?: 1 | 2 | 3
+    forceVariant?: 1 | 2 | 3,
+    typo: number = typoIndex,
   ): { layout: CertificateElement[]; variant: 1 | 2 | 3 } => {
-    const studentName = student?.name || 'Nguyễn Văn An';
-    const studentAvatar = student?.originalAvatar || student?.avatar || '';
-    const className = activeClass?.name ? `Lớp ${activeClass.name}` : 'Lớp 4A1';
+    const analysis = templateAnalysis;
+    if (!analysis) return { layout: elements, variant: currentLayoutVariant };
+    const variant = forceVariant || COMPOSITION_TO_VARIANT[preferredComposition(analysis)];
+    const content: CertContent = {
+      schoolName,
+      title: 'Thư khen',
+      subtitle: certificateTitle,
+      lead: 'Trân trọng khen ngợi em',
+      studentName: student?.name || 'Nguyễn Văn An',
+      avatar: student?.originalAvatar || student?.avatar || '',
+      className: `Học sinh ${classLabel}`,
+      reason: `“${reason}”`,
+      date: formattedDate,
+      teacherTitle: 'Giáo viên chủ nhiệm',
+      teacherName,
+      signature: teacherSignatureImage && autoInsertSignature ? teacherSignatureImage : null,
+      signatureAspect,
+      logo: schoolLogoImage,
+      logoAspect,
+    };
+    const layout = buildCertificateLayout(analysis, content, VARIANT_TO_COMPOSITION[variant], CERT_TYPOGRAPHY[typo % CERT_TYPOGRAPHY.length]);
+    return { layout: layout as CertificateElement[], variant };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [templateAnalysis, previewStudent, typoIndex, schoolName, certificateTitle, classLabel, reason, formattedDate, teacherName, teacherSignatureImage, autoInsertSignature, signatureAspect, schoolLogoImage, logoAspect]);
 
-    // Pick random variant 1, 2, or 3
-    const variant: 1 | 2 | 3 = forceVariant || (Math.floor(Math.random() * 3) + 1 as 1 | 2 | 3);
-
-    // Pick random curated script font for student name
-    const scriptFonts = [
-      '"Dancing Script", cursive',
-      '"Great Vibes", cursive',
-      '"Pattaya", cursive',
-      '"Charm", cursive',
-      '"Pacifico", cursive'
-    ];
-    const randomScriptFont = scriptFonts[Math.floor(Math.random() * scriptFonts.length)];
-
-    // Pick paired artistic harmonic palette
-    const palette = ARTISTIC_PALETTES[Math.floor(Math.random() * ARTISTIC_PALETTES.length)];
-
-    let elementsResult: CertificateElement[] = [];
-
-    if (variant === 1) {
-      // -------------------------------------------------------------
-      // LAYOUT 1: CỔ ĐIỂN ĐỐI XỨNG (CENTERPIECE HERO AVATAR 460px - WHITE SPACE CHUẨN MỰC)
-      // Y: 75 -> Tên trường (Tracking rộng)
-      // Y: 130 -> Tiêu đề THƯ KHEN (Playfair Display, Size 98)
-      // Y: 235 -> Tiêu đề phụ (Tuần/Tháng)
-      // Y: 285 -> Trung tâm Avatar 460x460 (Đáy Y: 745)
-      // Y: 765 -> Lời dẫn "Trân trọng khen ngợi em:" (Lora italic)
-      // Y: 810 -> Tên học sinh KHỔNG LỒ 145px (Cursive nghệ thuật, không rớt dòng)
-      // Y: 955 -> Lớp học
-      // Y: 995 -> Lý do khen thưởng
-      // Chân trang: Y: 990 (Ngày tháng) & Y: 960-1000 (Giáo viên chủ nhiệm)
-      // -------------------------------------------------------------
-      const avatarSize = 460;
-      const avatarX = Math.round((CANVAS_WIDTH - avatarSize) / 2); // 730
-
-      elementsResult = [
-        {
-          id: 'school_header',
-          type: 'text',
-          content: schoolName.toUpperCase(),
-          x: 260,
-          y: 75,
-          width: 1400,
-          fontSize: 30,
-          fontFamily: '"Montserrat", sans-serif',
-          color: '#334155',
-          fontWeight: 800,
-          textAlign: 'center',
-          letterSpacing: '0.22em',
-          textTransform: 'uppercase',
-          whiteSpace: 'nowrap',
-        },
-        {
-          id: 'title_master',
-          type: 'text',
-          content: 'THƯ KHEN',
-          x: 360,
-          y: 130,
-          width: 1200,
-          fontSize: 98,
-          fontFamily: '"Playfair Display", serif',
-          color: palette.titleColor,
-          fontWeight: 900,
-          textAlign: 'center',
-          letterSpacing: '0.16em',
-          textTransform: 'uppercase',
-          whiteSpace: 'nowrap',
-        },
-        {
-          id: 'title_sub',
-          type: 'text',
-          content: certificateTitle,
-          x: 360,
-          y: 235,
-          width: 1200,
-          fontSize: 28,
-          fontFamily: '"Plus Jakarta Sans", sans-serif',
-          color: palette.subColor,
-          fontWeight: 800,
-          textAlign: 'center',
-          letterSpacing: '0.12em',
-          textTransform: 'uppercase',
-          whiteSpace: 'nowrap',
-        },
-        // HERO AVATAR 460x460 WITH LUXURY BORDER & PAIRED GLOW
-        {
-          id: 'student_avatar',
-          type: 'image',
-          content: studentAvatar,
-          x: avatarX,
-          y: 285,
-          width: avatarSize,
-          height: avatarSize,
-          isCircleImage: true,
-          borderWidth: 10,
-          borderColor: '#ffffff',
-          boxShadow: `0 25px 50px -12px rgba(0, 0, 0, 0.45), 0 0 0 5px ${palette.accentBorder}`,
-        },
-        {
-          id: 'lead_text',
-          type: 'text',
-          content: 'Trân trọng khen ngợi em:',
-          x: 460,
-          y: 765,
-          width: 1000,
-          fontSize: 34,
-          fontFamily: '"Lora", serif',
-          fontStyle: 'italic',
-          color: palette.leadColor,
-          fontWeight: 600,
-          textAlign: 'center',
-          letterSpacing: '0.04em',
-          whiteSpace: 'nowrap',
-        },
-        // GIANT ARTISTIC STUDENT NAME (145px - Cursived & Non-breaking)
-        {
-          id: 'student_name',
-          type: 'text',
-          content: studentName,
-          x: 160,
-          y: 810,
-          width: 1600,
-          fontSize: 145,
-          fontFamily: randomScriptFont,
-          color: palette.nameColor,
-          fontWeight: 700,
-          letterSpacing: '0.02em',
-          textAlign: 'center',
-          whiteSpace: 'nowrap',
-        },
-        {
-          id: 'student_class',
-          type: 'text',
-          content: `Học sinh ${className}`,
-          x: 660,
-          y: 955,
-          width: 600,
-          fontSize: 26,
-          fontFamily: '"Montserrat", sans-serif',
-          color: '#0f172a',
-          fontWeight: 800,
-          letterSpacing: '0.1em',
-          textAlign: 'center',
-          textTransform: 'uppercase',
-          whiteSpace: 'nowrap',
-        },
-        {
-          id: 'reason_body',
-          type: 'text',
-          content: `“${reason}”`,
-          x: 260,
-          y: 995,
-          width: 1400,
-          fontSize: 32,
-          fontFamily: '"Be Vietnam Pro", sans-serif',
-          fontStyle: 'italic',
-          color: '#1e293b',
-          fontWeight: 500,
-          textAlign: 'center',
-          lineHeight: 1.4,
-          letterSpacing: '0.02em',
-          whiteSpace: 'nowrap',
-        },
-        {
-          id: 'date_text',
-          type: 'text',
-          content: formattedDate,
-          x: 120,
-          y: 990,
-          width: 480,
-          fontSize: 24,
-          fontFamily: '"Be Vietnam Pro", sans-serif',
-          color: '#475569',
-          fontWeight: 600,
-          textAlign: 'center',
-          letterSpacing: '0.02em',
-          whiteSpace: 'nowrap',
-        },
-        {
-          id: 'teacher_title',
-          type: 'text',
-          content: 'GIÁO VIÊN CHỦ NHIỆM',
-          x: 1340,
-          y: 960,
-          width: 480,
-          fontSize: 25,
-          fontFamily: '"Montserrat", sans-serif',
-          color: '#334155',
-          fontWeight: 800,
-          textAlign: 'center',
-          letterSpacing: '0.09em',
-          whiteSpace: 'nowrap',
-        },
-        {
-          id: 'teacher_signature',
-          type: 'text',
-          content: teacherName,
-          x: 1340,
-          y: 1000,
-          width: 480,
-          fontSize: 50,
-          fontFamily: '"Dancing Script", cursive',
-          color: palette.nameColor,
-          fontWeight: 700,
-          textAlign: 'center',
-          letterSpacing: '0.03em',
-          whiteSpace: 'nowrap',
-        },
-      ];
-
-      // Tự động chèn chữ ký điện tử đã tách nền nếu bật
-      if (teacherSignatureImage && autoInsertSignature) {
-        elementsResult.push({
-          id: 'signature',
-          type: 'image',
-          content: teacherSignatureImage,
-          x: 1340,
-          y: 915,
-          width: 260,
-          height: 120,
-          isCircleImage: false,
-          borderWidth: 0,
-          boxShadow: 'none',
-        });
-      }
-    } else if (variant === 2) {
-      // -------------------------------------------------------------
-      // LAYOUT 2: HIỆN ĐẠI (SPLIT: HERO AVATAR LỆCH TRÁI 480px, TEXT STACK PHẢI)
-      // -------------------------------------------------------------
-      const avatarSize = 480;
-
-      elementsResult = [
-        {
-          id: 'school_header',
-          type: 'text',
-          content: schoolName.toUpperCase(),
-          x: 150,
-          y: 75,
-          width: 1640,
-          fontSize: 30,
-          fontFamily: '"Montserrat", sans-serif',
-          color: '#334155',
-          fontWeight: 800,
-          textAlign: 'left',
-          letterSpacing: '0.2em',
-          textTransform: 'uppercase',
-          whiteSpace: 'nowrap',
-        },
-        // HERO AVATAR ON LEFT
-        {
-          id: 'student_avatar',
-          type: 'image',
-          content: studentAvatar,
-          x: 160,
-          y: 200,
-          width: avatarSize,
-          height: avatarSize,
-          isCircleImage: true,
-          borderWidth: 12,
-          borderColor: '#ffffff',
-          boxShadow: `0 25px 60px -15px rgba(0, 0, 0, 0.5), 0 0 0 5px ${palette.accentBorder}`,
-        },
-        // TEXT STACK ON RIGHT (X: 740, ALIGNED LEFT)
-        {
-          id: 'title_master',
-          type: 'text',
-          content: 'THƯ KHEN',
-          x: 740,
-          y: 160,
-          width: 1060,
-          fontSize: 98,
-          fontFamily: '"Playfair Display", serif',
-          color: palette.titleColor,
-          fontWeight: 900,
-          textAlign: 'left',
-          letterSpacing: '0.15em',
-          textTransform: 'uppercase',
-          whiteSpace: 'nowrap',
-        },
-        {
-          id: 'title_sub',
-          type: 'text',
-          content: certificateTitle,
-          x: 740,
-          y: 265,
-          width: 1060,
-          fontSize: 30,
-          fontFamily: '"Plus Jakarta Sans", sans-serif',
-          color: palette.subColor,
-          fontWeight: 800,
-          textAlign: 'left',
-          letterSpacing: '0.1em',
-          textTransform: 'uppercase',
-          whiteSpace: 'nowrap',
-        },
-        {
-          id: 'lead_text',
-          type: 'text',
-          content: 'Trân trọng khen ngợi em:',
-          x: 740,
-          y: 335,
-          width: 1060,
-          fontSize: 32,
-          fontFamily: '"Lora", serif',
-          fontStyle: 'italic',
-          color: palette.leadColor,
-          fontWeight: 600,
-          textAlign: 'left',
-          letterSpacing: '0.04em',
-          whiteSpace: 'nowrap',
-        },
-        // GIANT ARTISTIC STUDENT NAME
-        {
-          id: 'student_name',
-          type: 'text',
-          content: studentName,
-          x: 740,
-          y: 385,
-          width: 1100,
-          fontSize: 145,
-          fontFamily: randomScriptFont,
-          color: palette.nameColor,
-          fontWeight: 700,
-          letterSpacing: '0.02em',
-          textAlign: 'left',
-          whiteSpace: 'nowrap',
-        },
-        {
-          id: 'student_class',
-          type: 'text',
-          content: `Học sinh ${className}`,
-          x: 740,
-          y: 535,
-          width: 1060,
-          fontSize: 28,
-          fontFamily: '"Montserrat", sans-serif',
-          color: '#0f172a',
-          fontWeight: 800,
-          letterSpacing: '0.08em',
-          textAlign: 'left',
-          textTransform: 'uppercase',
-          whiteSpace: 'nowrap',
-        },
-        {
-          id: 'reason_body',
-          type: 'text',
-          content: `“${reason}”`,
-          x: 740,
-          y: 590,
-          width: 1060,
-          fontSize: 34,
-          fontFamily: '"Be Vietnam Pro", sans-serif',
-          fontStyle: 'italic',
-          color: '#1e293b',
-          fontWeight: 500,
-          textAlign: 'left',
-          lineHeight: 1.4,
-          letterSpacing: '0.02em',
-          whiteSpace: 'nowrap',
-        },
-        // BOTTOM FOOTER
-        {
-          id: 'date_text',
-          type: 'text',
-          content: formattedDate,
-          x: 160,
-          y: 760,
-          width: 480,
-          fontSize: 24,
-          fontFamily: '"Be Vietnam Pro", sans-serif',
-          color: '#475569',
-          fontWeight: 600,
-          textAlign: 'center',
-          letterSpacing: '0.02em',
-          whiteSpace: 'nowrap',
-        },
-        {
-          id: 'teacher_title',
-          type: 'text',
-          content: 'GIÁO VIÊN CHỦ NHIỆM',
-          x: 1300,
-          y: 770,
-          width: 480,
-          fontSize: 25,
-          fontFamily: '"Montserrat", sans-serif',
-          color: '#334155',
-          fontWeight: 800,
-          textAlign: 'center',
-          letterSpacing: '0.08em',
-          whiteSpace: 'nowrap',
-        },
-        {
-          id: 'teacher_signature',
-          type: 'text',
-          content: teacherName,
-          x: 1300,
-          y: 815,
-          width: 480,
-          fontSize: 50,
-          fontFamily: '"Dancing Script", cursive',
-          color: palette.nameColor,
-          fontWeight: 700,
-          textAlign: 'center',
-          letterSpacing: '0.03em',
-          whiteSpace: 'nowrap',
-        },
-      ];
-
-      // Tự động chèn chữ ký điện tử đã tách nền nếu bật
-      if (teacherSignatureImage && autoInsertSignature) {
-        elementsResult.push({
-          id: 'signature',
-          type: 'image',
-          content: teacherSignatureImage,
-          x: 1300,
-          y: 730,
-          width: 260,
-          height: 120,
-          isCircleImage: false,
-          borderWidth: 0,
-          boxShadow: 'none',
-        });
-      }
-    } else {
-      // -------------------------------------------------------------
-      // LAYOUT 3: SÁNG TẠO (HERO AVATAR BÊN PHẢI 480px, TYPOGRAPHY BÊN TRÁI)
-      // -------------------------------------------------------------
-      const avatarSize = 480;
-
-      elementsResult = [
-        {
-          id: 'school_header',
-          type: 'text',
-          content: schoolName.toUpperCase(),
-          x: 160,
-          y: 75,
-          width: 1600,
-          fontSize: 30,
-          fontFamily: '"Montserrat", sans-serif',
-          color: '#334155',
-          fontWeight: 800,
-          textAlign: 'left',
-          letterSpacing: '0.2em',
-          textTransform: 'uppercase',
-          whiteSpace: 'nowrap',
-        },
-        // TEXT STACK ON LEFT (X: 160)
-        {
-          id: 'title_master',
-          type: 'text',
-          content: 'THƯ KHEN',
-          x: 160,
-          y: 160,
-          width: 1040,
-          fontSize: 98,
-          fontFamily: '"Playfair Display", serif',
-          color: palette.titleColor,
-          fontWeight: 900,
-          textAlign: 'left',
-          letterSpacing: '0.15em',
-          textTransform: 'uppercase',
-          whiteSpace: 'nowrap',
-        },
-        {
-          id: 'title_sub',
-          type: 'text',
-          content: certificateTitle,
-          x: 160,
-          y: 265,
-          width: 1040,
-          fontSize: 30,
-          fontFamily: '"Plus Jakarta Sans", sans-serif',
-          color: palette.subColor,
-          fontWeight: 800,
-          textAlign: 'left',
-          letterSpacing: '0.1em',
-          textTransform: 'uppercase',
-          whiteSpace: 'nowrap',
-        },
-        // HERO AVATAR ON RIGHT (X: 1260)
-        {
-          id: 'student_avatar',
-          type: 'image',
-          content: studentAvatar,
-          x: 1260,
-          y: 200,
-          width: avatarSize,
-          height: avatarSize,
-          isCircleImage: true,
-          borderWidth: 12,
-          borderColor: '#ffffff',
-          boxShadow: `0 25px 60px -15px rgba(0, 0, 0, 0.5), 0 0 0 5px ${palette.accentBorder}`,
-        },
-        {
-          id: 'lead_text',
-          type: 'text',
-          content: 'Trân trọng khen ngợi em:',
-          x: 160,
-          y: 335,
-          width: 1040,
-          fontSize: 32,
-          fontFamily: '"Lora", serif',
-          fontStyle: 'italic',
-          color: palette.leadColor,
-          fontWeight: 600,
-          textAlign: 'left',
-          letterSpacing: '0.04em',
-          whiteSpace: 'nowrap',
-        },
-        // GIANT ARTISTIC STUDENT NAME
-        {
-          id: 'student_name',
-          type: 'text',
-          content: studentName,
-          x: 160,
-          y: 385,
-          width: 1080,
-          fontSize: 145,
-          fontFamily: randomScriptFont,
-          color: palette.nameColor,
-          fontWeight: 700,
-          letterSpacing: '0.02em',
-          textAlign: 'left',
-          whiteSpace: 'nowrap',
-        },
-        {
-          id: 'student_class',
-          type: 'text',
-          content: `Học sinh ${className}`,
-          x: 160,
-          y: 535,
-          width: 1040,
-          fontSize: 28,
-          fontFamily: '"Montserrat", sans-serif',
-          color: '#0f172a',
-          fontWeight: 800,
-          letterSpacing: '0.08em',
-          textAlign: 'left',
-          textTransform: 'uppercase',
-          whiteSpace: 'nowrap',
-        },
-        {
-          id: 'reason_body',
-          type: 'text',
-          content: `“${reason}”`,
-          x: 160,
-          y: 590,
-          width: 1040,
-          fontSize: 34,
-          fontFamily: '"Be Vietnam Pro", sans-serif',
-          fontStyle: 'italic',
-          color: '#1e293b',
-          fontWeight: 500,
-          textAlign: 'left',
-          lineHeight: 1.4,
-          letterSpacing: '0.02em',
-          whiteSpace: 'nowrap',
-        },
-        // BOTTOM FOOTER
-        {
-          id: 'date_text',
-          type: 'text',
-          content: formattedDate,
-          x: 160,
-          y: 760,
-          width: 480,
-          fontSize: 24,
-          fontFamily: '"Be Vietnam Pro", sans-serif',
-          color: '#475569',
-          fontWeight: 600,
-          textAlign: 'left',
-          letterSpacing: '0.02em',
-          whiteSpace: 'nowrap',
-        },
-        {
-          id: 'teacher_title',
-          type: 'text',
-          content: 'GIÁO VIÊN CHỦ NHIỆM',
-          x: 1260,
-          y: 770,
-          width: 480,
-          fontSize: 25,
-          fontFamily: '"Montserrat", sans-serif',
-          color: '#334155',
-          fontWeight: 800,
-          textAlign: 'center',
-          letterSpacing: '0.08em',
-          whiteSpace: 'nowrap',
-        },
-        {
-          id: 'teacher_signature',
-          type: 'text',
-          content: teacherName,
-          x: 1260,
-          y: 815,
-          width: 480,
-          fontSize: 50,
-          fontFamily: '"Dancing Script", cursive',
-          color: palette.nameColor,
-          fontWeight: 700,
-          textAlign: 'center',
-          letterSpacing: '0.03em',
-          whiteSpace: 'nowrap',
-        },
-      ];
-
-      // Tự động chèn chữ ký điện tử đã tách nền nếu bật
-      if (teacherSignatureImage && autoInsertSignature) {
-        elementsResult.push({
-          id: 'signature',
-          type: 'image',
-          content: teacherSignatureImage,
-          x: 1260,
-          y: 730,
-          width: 260,
-          height: 120,
-          isCircleImage: false,
-          borderWidth: 0,
-          boxShadow: 'none',
-        });
-      }
-    }
-
-    return { layout: elementsResult, variant };
-  }, [previewStudent, schoolName, certificateTitle, activeClass, reason, formattedDate, teacherName, teacherSignatureImage, autoInsertSignature]);
-
-  // Initial layout initialization on mount
+  // Dựng lại bố cục khi đổi ảnh nền (phân tích xong). Đổi học sinh / sửa nội dung KHÔNG làm mất vị trí đã chỉnh.
+  const generateRef = useRef(generateRandomizedLayout);
+  generateRef.current = generateRandomizedLayout;
   useEffect(() => {
-    const { layout, variant } = generateRandomizedLayout(previewStudent, 1);
+    if (!templateAnalysis) return;
+    const { layout, variant } = generateRef.current();
     setElements(layout);
     setCurrentLayoutVariant(variant);
-  }, [generateRandomizedLayout]);
+    setActiveElementId(null);
+  }, [templateAnalysis]);
 
-  // Update dynamic content in elements while preserving user-adjusted coordinates
+  // Update dynamic content in elements while preserving user-adjusted coordinates (chữ dài tự thu nhỏ)
   const updateStudentInElements = useCallback((student: any, existingElements: CertificateElement[]): CertificateElement[] => {
-    const studentName = student?.name || 'Nguyễn Văn An';
-    const studentAvatar = student?.originalAvatar || student?.avatar || '';
-    const className = activeClass?.name ? `Lớp ${activeClass.name}` : 'Lớp 4A1';
-
-    return existingElements.map(el => {
-      if (el.id === 'student_name') return { ...el, content: studentName };
-      if (el.id === 'student_avatar') return { ...el, content: studentAvatar };
-      if (el.id === 'student_class') return { ...el, content: `Học sinh ${className}` };
-      if (el.id === 'reason_body') return { ...el, content: `“${reason}”` };
-      if (el.id === 'school_header') return { ...el, content: schoolName.toUpperCase() };
-      if (el.id === 'title_sub') return { ...el, content: certificateTitle };
-      if (el.id === 'date_text') return { ...el, content: formattedDate };
-      if (el.id === 'teacher_signature') return { ...el, content: teacherName };
-      return el;
-    });
-  }, [activeClass, reason, schoolName, certificateTitle, formattedDate, teacherName]);
+    return fitElementsToContent(existingElements, contentMapFor(student));
+  }, [contentMapFor]);
 
   // Keep elements content in sync when form fields change
   useEffect(() => {
@@ -1216,14 +651,16 @@ export const CertificateView: React.FC = () => {
   }, [previewStudent, updateStudentInElements]);
 
   // ==========================================
-  // ACTION BUTTON 1: TẠO THƯ KHEN (Randomizes Layout 1, 2 or 3)
+  // NÚT "TẠO THƯ KHEN": đổi sang bố cục + bộ phông khác, vẫn tự né hoạ tiết của ảnh nền
   // ==========================================
   const handleAutoLayout = () => {
-    let nextVariant: 1 | 2 | 3 = (Math.floor(Math.random() * 3) + 1) as 1 | 2 | 3;
-    if (nextVariant === currentLayoutVariant) {
-      nextVariant = (currentLayoutVariant % 3 + 1) as 1 | 2 | 3;
-    }
-    const { layout, variant } = generateRandomizedLayout(previewStudent, nextVariant);
+    const variants: Array<1 | 2 | 3> = [1, 2, 3];
+    const choices = variants.filter(v => v !== currentLayoutVariant);
+    const nextVariant = choices[Math.floor(Math.random() * choices.length)];
+    let nextTypo = Math.floor(Math.random() * CERT_TYPOGRAPHY.length);
+    if (nextTypo === typoIndex) nextTypo = (nextTypo + 1) % CERT_TYPOGRAPHY.length;
+    setTypoIndex(nextTypo);
+    const { layout, variant } = generateRandomizedLayout(previewStudent, nextVariant, nextTypo);
     setElements(layout);
     setCurrentLayoutVariant(variant);
     setActiveElementId(null);
@@ -1231,16 +668,20 @@ export const CertificateView: React.FC = () => {
   };
 
   // ==========================================
-  // ACTION BUTTON 2: TẠO LẠI (Clears & Resets with random variations)
+  // NÚT "TẠO LẠI": về bố cục đề xuất cho ảnh nền này
   // ==========================================
   const handleResetLayout = () => {
-    setElements([]); // Clear
-    setTimeout(() => {
-      const { layout, variant } = generateRandomizedLayout(previewStudent);
-      setElements(layout);
-      setCurrentLayoutVariant(variant);
-      setActiveElementId(null);
-    }, 20);
+    const { layout, variant } = generateRandomizedLayout(previewStudent);
+    setElements(layout);
+    setCurrentLayoutVariant(variant);
+    setActiveElementId(null);
+  };
+
+  const applyVariant = (v: 1 | 2 | 3, typo: number = typoIndex) => {
+    const { layout, variant } = generateRandomizedLayout(previewStudent, v, typo);
+    setElements(layout);
+    setCurrentLayoutVariant(variant);
+    setActiveElementId(null);
   };
 
   // ==========================================
@@ -1294,6 +735,44 @@ export const CertificateView: React.FC = () => {
   // Fixes corner shrink bug using html-to-image override options:
   // canvasWidth: 1920, canvasHeight: 1080, style: { transform: 'scale(1)', transformOrigin: 'top left' }
   // =========================================================================
+  /**
+   * Tạo ảnh thư khen: vẽ trực tiếp lên canvas (giữ đúng phông nghệ thuật, nhanh);
+   * nếu không được (ví dụ ảnh học sinh từ nguồn chặn CORS) thì chụp bản xem trước như cách cũ.
+   */
+  const renderCertificateImage = async (els: CertificateElement[], type: 'png' | 'jpeg', initial: string): Promise<string> => {
+    try {
+      const cv = await renderCertificateCanvas(els, activeTemplate.url, canvasW, CANVAS_HEIGHT, initial);
+      return type === 'png' ? cv.toDataURL('image/png') : cv.toDataURL('image/jpeg', 0.95);
+    } catch (err) {
+      console.warn('Vẽ canvas thất bại, chụp bản xem trước:', err);
+      const node = certificatePrintRef.current;
+      if (!node) throw err;
+      await waitForImages(node);
+      const opts = {
+        quality: type === 'png' ? 1 : 0.95,
+        pixelRatio: 1,
+        canvasWidth: canvasW,
+        canvasHeight: CANVAS_HEIGHT,
+        backgroundColor: '#ffffff',
+        style: { transform: 'scale(1)', transformOrigin: 'top left' },
+        cacheBust: true,
+      };
+      return type === 'png' ? toPng(node, opts) : toJpeg(node, opts);
+    }
+  };
+
+  const waitForImages = async (node: HTMLElement) => {
+    const imgs = Array.from(node.querySelectorAll('img'));
+    await Promise.all(imgs.map(img => (img.complete && img.naturalWidth > 0)
+      ? Promise.resolve()
+      : new Promise<void>(resolve => {
+        const done = () => resolve();
+        img.addEventListener('load', done, { once: true });
+        img.addEventListener('error', done, { once: true });
+        setTimeout(done, 4000);
+      })));
+  };
+
   const handleDownloadSingle = async () => {
     if (!certificatePrintRef.current) return;
     setIsExporting(true);
@@ -1305,21 +784,11 @@ export const CertificateView: React.FC = () => {
       setActiveElementId(null);
       await waitForNextFrame(180);
 
-      const dataUrl = await toPng(certificatePrintRef.current, {
-        quality: 1,
-        pixelRatio: 1,
-        canvasWidth: CANVAS_WIDTH,
-        canvasHeight: CANVAS_HEIGHT,
-        style: {
-          transform: 'scale(1)',
-          transformOrigin: 'top left',
-        },
-        cacheBust: true,
-      });
+      const dataUrl = await renderCertificateImage(elements, 'png', previewStudent?.name?.charAt(0) || 'A');
 
       const studentNameClean = previewStudent?.name || 'HocSinh';
       const link = document.createElement('a');
-      link.download = `ThuKhen_${studentNameClean.replace(/\s+/g, '_')}_1920x1080.png`;
+      link.download = `ThuKhen_${studentNameClean.replace(/\s+/g, '_')}.png`;
       link.href = dataUrl;
       link.click();
 
@@ -1335,104 +804,79 @@ export const CertificateView: React.FC = () => {
   };
 
   // =========================================================================
-  // 2. MASTER TEMPLATE BULK EXPORT (CONSISTENT BATCH RENDERING)
-  // Tuyệt đối không sinh lại layout ngẫu nhiên trong vòng lặp.
-  // Sử dụng Deep Copy của elements hiện tại làm Master Template bất biến,
-  // chỉ hoán đổi nội dung (Name, Avatar, Reason, Class) của từng học sinh,
-  // bảo toàn 100% tọa độ, font chữ, màu sắc, chữ ký mà giáo viên đã căn chỉnh.
+  // 2. XUẤT HÀNG LOẠT: cùng một mẫu, cùng vị trí – chỉ thay ảnh, tên (tự co chữ nếu tên dài)
+  //    Kết quả gói gọn trong 1 tệp: ZIP (ảnh JPG) hoặc PDF (mỗi trang một thư khen, để in).
   // =========================================================================
-  const handleExportBatch = async () => {
-    if (!certificatePrintRef.current || selectedStudents.length === 0) return;
+  const [showBatchDialog, setShowBatchDialog] = useState(false);
+  const [batchScope, setBatchScope] = useState<'selected' | 'all'>('selected');
+  const [batchFormat, setBatchFormat] = useState<'zip' | 'pdf'>('zip');
 
+  const handleExportBatch = () => {
+    setBatchScope(selectedStudents.length > 0 && selectedStudents.length < currentClassStudents.length ? 'selected' : 'all');
+    setShowBatchDialog(true);
+  };
+
+  const runBatchExport = async () => {
+    const node = certificatePrintRef.current;
+    const ids = batchScope === 'all'
+      ? currentClassStudents.map(s => s.id)
+      : currentClassStudents.filter(s => selectedStudents.includes(s.id)).map(s => s.id);
+    if (!node || ids.length === 0) return;
+    setShowBatchDialog(false);
+
+    const wasEditMode = isEditMode;
     setIsExporting(true);
     setExportProgress(0);
     setActiveElementId(null);
-    setIsEditMode(false); // Khóa chế độ chỉnh sửa để ngăn click/drag làm lệch tọa độ
+    setIsEditMode(false);
 
-    // BƯỚC 1: Lấy mảng elements hiện tại làm Master Template (Deep Copy bất biến)
+    // Mẫu gốc bất biến (vị trí, phông, màu do thầy cô đã căn chỉnh)
     const masterTemplate: CertificateElement[] = JSON.parse(JSON.stringify(elements));
-    const initialPreviewStudentId = previewStudentId;
-    const totalCount = selectedStudents.length;
-
+    const lopName = activeClass?.name || 'Lop';
     try {
-      let exportedCount = 0;
+      const zip = batchFormat === 'zip' ? new (await import('jszip')).default() : null;
+      const pdf = batchFormat === 'pdf'
+        ? new (await import('jspdf')).jsPDF({ orientation: 'landscape', unit: 'px', format: [canvasW, CANVAS_HEIGHT], compress: true })
+        : null;
 
-      // BƯỚC 2: Bắt đầu vòng lặp qua danh sách học sinh được chọn
-      for (let i = 0; i < totalCount; i++) {
-        const studentId = selectedStudents[i];
-        const student = currentClassStudents.find(s => s.id === studentId);
-        const studentNameClean = student?.name || `Học sinh ${i + 1}`;
-        const studentAvatar = student?.originalAvatar || student?.avatar || '';
-        const className = activeClass?.name ? `Lớp ${activeClass.name}` : 'Lớp 4A1';
-
-        setExportMessage(`Đang xuất thư khen (${i + 1}/${totalCount}): ${studentNameClean}`);
-        setPreviewStudentId(studentId);
-
-        // BƯỚC 3 (Cloning & Mapping): Biến đổi content từ masterTemplate
-        const currentStudentElements: CertificateElement[] = masterTemplate.map(el => {
-          // Tên học sinh: Giữ nguyên x, y, font, color, letterSpacing... CHỈ đổi content
-          if (el.id === 'student_name' || el.id === 'studentName') {
-            return { ...el, content: studentNameClean };
-          }
-          // Avatar học sinh: Giữ nguyên x, y, size, border, shadow... CHỈ đổi content
-          if (el.id === 'student_avatar' || el.id === 'avatar') {
-            return { ...el, content: studentAvatar };
-          }
-          // Lý do khen thưởng: CHỈ đổi content
-          if (el.id === 'reason_body' || el.id === 'reason') {
-            return { ...el, content: `“${reason}”` };
-          }
-          // Lớp học sinh: Cập nhật tên lớp hiện tại
-          if (el.id === 'student_class' || el.id === 'studentClass') {
-            return { ...el, content: `Học sinh ${className}` };
-          }
-          // Các element khác (Tiêu đề, Chữ ký, Ngày tháng, Lời dẫn, Tên trường, GVCN...) Giữ nguyên 100%
-          return { ...el };
-        });
-
-        // BƯỚC 4: setElements(currentStudentElements) để Canvas cập nhật
-        setElements(currentStudentElements);
-
-        // BƯỚC 5: Chờ DOM render & nạp ảnh hoàn tất bức thư khen mới (600ms theo đúng đặc tả)
-        await new Promise(r => setTimeout(r, 600));
-
-        // BƯỚC 6: Chụp ảnh bằng html-to-image (1920x1080 Full HD) và tải xuống
-        if (certificatePrintRef.current) {
-          const dataUrl = await toPng(certificatePrintRef.current, {
-            quality: 1,
-            pixelRatio: 1,
-            canvasWidth: CANVAS_WIDTH,
-            canvasHeight: CANVAS_HEIGHT,
-            style: {
-              transform: 'scale(1)',
-              transformOrigin: 'top left',
-            },
-            cacheBust: true,
-          });
-
-          const link = document.createElement('a');
-          const safeName = studentNameClean.replace(/\s+/g, '_');
-          link.download = `ThuKhen_${safeName}_${activeClass?.name || 'Lop'}.png`;
-          link.href = dataUrl;
-          link.click();
+      for (let i = 0; i < ids.length; i++) {
+        const student = currentClassStudents.find(s => s.id === ids[i]);
+        const studentName = student?.name || `Hoc sinh ${i + 1}`;
+        setExportMessage(`Đang tạo thư khen (${i + 1}/${ids.length}): ${studentName}`);
+        const studentEls = fitElementsToContent(masterTemplate, contentMapFor(student));
+        setElements(studentEls);
+        await waitForNextFrame(30);
+        const dataUrl = await Promise.race([
+          renderCertificateImage(studentEls, 'jpeg', studentName.charAt(0) || 'A'),
+          new Promise<string>((_, reject) => setTimeout(() => reject(new Error('Quá thời gian tạo ảnh')), 60000)),
+        ]);
+        const fileName = `${String(i + 1).padStart(2, '0')}_ThuKhen_${studentName.replace(/\s+/g, '_')}.jpg`;
+        if (zip) zip.file(fileName, dataUrl.split(',')[1], { base64: true });
+        if (pdf) {
+          if (i > 0) pdf.addPage([canvasW, CANVAS_HEIGHT], 'landscape');
+          pdf.addImage(dataUrl, 'JPEG', 0, 0, canvasW, CANVAS_HEIGHT);
         }
-
-        exportedCount++;
-        setExportProgress(Math.round((exportedCount / totalCount) * 100));
-        await new Promise(resolve => setTimeout(resolve, 150));
+        setExportProgress(Math.round(((i + 1) / ids.length) * 100));
       }
 
-      setExportMessage('Hoàn tất xuất tất cả thư khen!');
+      setExportMessage('Đang đóng gói tệp…');
+      const baseName = `ThuKhen_Lop${lopName}_${ids.length}HS`;
+      if (zip) {
+        const blob = await zip.generateAsync({ type: 'blob' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `${baseName}.zip`;
+        link.click();
+        setTimeout(() => URL.revokeObjectURL(link.href), 5000);
+      }
+      if (pdf) pdf.save(`${baseName}.pdf`);
       confetti({ particleCount: 150, spread: 85, origin: { y: 0.6 } });
     } catch (error) {
       console.error('Lỗi khi xuất thư khen hàng loạt:', error);
-      alert('Có lỗi xảy ra trong quá trình xuất thư khen hàng loạt.');
+      alert('Có lỗi xảy ra trong quá trình xuất thư khen hàng loạt. Vui lòng thử lại.');
     } finally {
-      // BƯỚC 7: Restore lại layout Master Template ban đầu và học sinh preview để giao diện không bị kẹt
-      setElements(masterTemplate);
-      if (initialPreviewStudentId) {
-        setPreviewStudentId(initialPreviewStudentId);
-      }
+      setElements(fitElementsToContent(masterTemplate, contentMapFor(previewStudent)));
+      setIsEditMode(wasEditMode);
       setIsExporting(false);
       setExportProgress(0);
       setExportMessage('');
@@ -1444,7 +888,9 @@ export const CertificateView: React.FC = () => {
     if (!activeElementId) return;
     setElements(prev => prev.map(el => {
       if (el.id === activeElementId) {
-        return { ...el, ...updates };
+        const next = { ...el, ...updates };
+        if (updates.fontSize) next.maxFontSize = updates.fontSize;
+        return next;
       }
       return el;
     }));
@@ -1510,14 +956,14 @@ export const CertificateView: React.FC = () => {
           <div>
             <div className="flex items-center gap-2">
               <h1 className="text-base font-black text-slate-800 tracking-tight uppercase">
-                TRÌNH THIẾT KẾ THƯ KHEN PRO • 1920 × 1080
+                TRÌNH THIẾT KẾ THƯ KHEN PRO • {canvasW} × 1080
               </h1>
               <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-purple-100 text-purple-700 uppercase tracking-wider">
-                LAYOUT {currentLayoutVariant === 1 ? 'CỔ ĐIỂN' : currentLayoutVariant === 2 ? 'HIỆN ĐẠI' : 'SÁNG TẠO'}
+                {currentLayoutVariant === 1 ? 'CĂN GIỮA' : currentLayoutVariant === 2 ? 'ẢNH BÊN TRÁI' : 'ẢNH BÊN PHẢI'} • {CERT_TYPOGRAPHY[typoIndex].label.toUpperCase()}
               </span>
             </div>
             <p className="text-xs text-slate-500 font-medium">
-              Bảng công cụ cố định • Focus Ring trực quan • Click & Drag độc lập • Xuất chuẩn 1920x1080 không lệch góc
+              Tự bố trí theo ảnh nền (né khung viền, huy chương, hoạ tiết) • Kéo thả chỉnh tay • Xuất hàng loạt ZIP/PDF
             </p>
           </div>
         </div>
@@ -1563,7 +1009,7 @@ export const CertificateView: React.FC = () => {
             onClick={handleAutoLayout}
             disabled={isExporting}
             className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-black text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 shadow-2xs transition-all hover-zoom-btn disabled:opacity-50 disabled:pointer-events-none uppercase"
-            title="Ngẫu nhiên đổi 1 trong 3 layout mỹ thuật (Cổ điển, Hiện đại, Sáng tạo)"
+            title="Phần mềm đọc ảnh nền rồi tự bố trí lại: đổi bố cục (căn giữa / ảnh trái / ảnh phải) và bộ phông chữ"
           >
             <Shuffle className="w-4 h-4 text-indigo-600" />
             <span>TẠO THƯ KHEN</span>
@@ -1575,7 +1021,7 @@ export const CertificateView: React.FC = () => {
             onClick={handleResetLayout}
             disabled={isExporting}
             className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 border border-slate-200 transition-all hover-zoom-btn disabled:opacity-50 disabled:pointer-events-none uppercase"
-            title="Khôi phục vị trí mặc định ban đầu"
+            title="Về bố cục đề xuất cho ảnh nền đang chọn"
           >
             <RotateCcw className="w-3.5 h-3.5" />
             <span>TẠO LẠI</span>
@@ -1597,9 +1043,9 @@ export const CertificateView: React.FC = () => {
           <button
             type="button"
             onClick={handleExportBatch}
-            disabled={isExporting || selectedStudents.length === 0}
+            disabled={isExporting || currentClassStudents.length === 0}
             className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black text-white bg-gradient-to-r from-emerald-600 via-teal-600 to-green-600 hover:from-emerald-700 hover:to-green-700 shadow-md shadow-emerald-600/20 transition-all hover-zoom-btn disabled:opacity-50 disabled:cursor-not-allowed uppercase"
-            title="Xuất ảnh cho toàn bộ học sinh được chọn, giữ nguyên vị trí đã chỉnh sửa"
+            title="Tạo thư khen cho nhiều em hoặc cả lớp: cùng mẫu, cùng vị trí, gói trong 1 tệp ZIP hoặc PDF"
           >
             {isExporting ? (
               <>
@@ -1609,7 +1055,7 @@ export const CertificateView: React.FC = () => {
             ) : (
               <>
                 <Download className="w-4 h-4" />
-                <span>TẢI HÀNG LOẠT ({selectedStudents.length})</span>
+                <span>TẢI HÀNG LOẠT</span>
               </>
             )}
           </button>
@@ -1729,26 +1175,21 @@ export const CertificateView: React.FC = () => {
               </div>
 
               {/* Layout Switcher helper */}
-              <div className="p-3.5 rounded-2xl bg-gradient-to-br from-indigo-50 to-blue-50 border border-indigo-200/80 text-[11px] text-slate-600 space-y-2">
-                <strong className="text-indigo-950 font-black block uppercase text-[10px] tracking-wider">
-                  🎨 Chọn nhanh 3 Bố Cục Nghệ Thuật:
+              <div className="p-3.5 rounded-2xl bg-gradient-to-br from-indigo-50 to-blue-50 border border-indigo-200/80 text-xs text-slate-700 space-y-2.5">
+                <strong className="text-indigo-950 font-black block uppercase text-xs tracking-wide">
+                  🎨 Bố cục (tự né hoạ tiết ảnh nền)
                 </strong>
                 <div className="grid grid-cols-3 gap-1.5">
                   {[
-                    { id: 1, label: 'Cổ điển' },
-                    { id: 2, label: 'Hiện đại' },
-                    { id: 3, label: 'Sáng tạo' },
+                    { id: 1, label: 'Căn giữa' },
+                    { id: 2, label: 'Ảnh trái' },
+                    { id: 3, label: 'Ảnh phải' },
                   ].map(b => (
                     <button
                       key={b.id}
                       type="button"
-                      onClick={() => {
-                        const { layout, variant } = generateRandomizedLayout(previewStudent, b.id as 1 | 2 | 3);
-                        setElements(layout);
-                        setCurrentLayoutVariant(variant);
-                        setActiveElementId(null);
-                      }}
-                      className={`py-1.5 px-1 rounded-xl text-[10px] font-black border transition-all ${
+                      onClick={() => applyVariant(b.id as 1 | 2 | 3)}
+                      className={`py-1.5 px-1 rounded-xl text-xs font-black border transition-all ${
                         currentLayoutVariant === b.id
                           ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs'
                           : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100'
@@ -1758,6 +1199,29 @@ export const CertificateView: React.FC = () => {
                     </button>
                   ))}
                 </div>
+                <strong className="text-indigo-950 font-black block uppercase text-xs tracking-wide pt-1">
+                  ✒️ Bộ phông chữ
+                </strong>
+                <div className="grid grid-cols-2 gap-1.5">
+                  {CERT_TYPOGRAPHY.map((t, idx) => (
+                    <button
+                      key={t.id}
+                      type="button"
+                      onClick={() => { setTypoIndex(idx); applyVariant(currentLayoutVariant, idx); }}
+                      className={`py-1.5 px-2 rounded-xl border transition-all text-left ${
+                        typoIndex === idx
+                          ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs'
+                          : 'bg-white text-slate-800 border-slate-200 hover:bg-slate-100'
+                      }`}
+                    >
+                      <span className="block text-xs font-black">{t.label}</span>
+                      <span className="block text-base leading-tight truncate" style={{ fontFamily: t.name.family }}>Nguyễn An</span>
+                    </button>
+                  ))}
+                </div>
+                <p className="text-xs text-slate-600 leading-snug">
+                  Màu chữ được lấy từ chính ảnh nền và tự chỉnh đủ đậm để dễ đọc. Kéo thả để chỉnh tay; bấm “Tạo lại” để về bố cục đề xuất.
+                </p>
               </div>
             </div>
           )}
@@ -2556,7 +2020,7 @@ export const CertificateView: React.FC = () => {
             <div
               className="relative shadow-2xl rounded-2xl overflow-hidden ring-4 ring-slate-200 shrink-0"
               style={{
-                width: `${CANVAS_WIDTH * previewScale}px`,
+                width: `${canvasW * previewScale}px`,
                 height: `${CANVAS_HEIGHT * previewScale}px`,
               }}
             >
@@ -2565,7 +2029,7 @@ export const CertificateView: React.FC = () => {
                 id="certificate-print-node-1920"
                 className="select-none overflow-hidden relative bg-white"
                 style={{
-                  width: `${CANVAS_WIDTH}px`,
+                  width: `${canvasW}px`,
                   height: `${CANVAS_HEIGHT}px`,
                   transform: `scale(${previewScale})`,
                   transformOrigin: 'top left',
@@ -2611,7 +2075,8 @@ export const CertificateView: React.FC = () => {
                           letterSpacing: el.letterSpacing || 'normal',
                           lineHeight: el.lineHeight || 1.3,
                           textTransform: el.textTransform || 'none',
-                          whiteSpace: 'nowrap',
+                          whiteSpace: (el.whiteSpace as any) || 'nowrap',
+                          textShadow: el.textShadow,
                           zIndex: isActive ? 40 : 20,
                           padding: '6px 10px',
                         }}
@@ -2688,6 +2153,95 @@ export const CertificateView: React.FC = () => {
 
               </div>
             </div>
+
+            {/* HỘP THOẠI XUẤT HÀNG LOẠT */}
+            {showBatchDialog && (
+              <div
+                className="fixed inset-0 z-[60] flex items-center justify-center bg-sky-900/20 backdrop-blur-xs p-4"
+                role="dialog"
+                aria-modal="true"
+                aria-label="Tạo thư khen hàng loạt"
+                onClick={(e) => { e.stopPropagation(); setShowBatchDialog(false); }}
+              >
+                <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-lg overflow-hidden" onClick={(e) => e.stopPropagation()}>
+                  <div className="px-5 py-3.5 bg-gradient-to-r from-emerald-700 to-teal-700 text-white flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Users className="w-5 h-5" />
+                      <h3 className="text-sm font-black uppercase tracking-tight">Tạo thư khen hàng loạt</h3>
+                    </div>
+                    <button type="button" onClick={() => setShowBatchDialog(false)} className="w-8 h-8 rounded-xl bg-white/20 hover:bg-white/30 flex items-center justify-center" aria-label="Đóng">
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                  <div className="p-5 space-y-4">
+                    <p className="text-sm text-slate-700">
+                      Mọi thư khen dùng <strong>cùng mẫu nền, cùng vị trí ảnh và chữ, cùng nội dung khen</strong> như bản đang thiết kế; chỉ thay ảnh và tên từng em (tên dài tự thu nhỏ cho vừa).
+                    </p>
+
+                    <div className="space-y-2">
+                      <div className="text-xs font-black uppercase tracking-wide text-slate-700">Khen cho</div>
+                      <div className="grid grid-cols-2 gap-2">
+                        {([
+                          { id: 'selected', label: 'Các em đã chọn', count: selectedStudents.length },
+                          { id: 'all', label: `Cả lớp ${activeClass?.name || ''}`, count: currentClassStudents.length },
+                        ] as const).map(opt => (
+                          <button
+                            key={opt.id}
+                            type="button"
+                            disabled={opt.count === 0}
+                            onClick={() => setBatchScope(opt.id)}
+                            className={`p-3 rounded-2xl border-2 text-left transition-colors disabled:opacity-50 ${batchScope === opt.id ? 'border-emerald-600 bg-emerald-50' : 'border-slate-200 hover:bg-slate-50'}`}
+                          >
+                            <span className="block text-sm font-black text-slate-900">{opt.label}</span>
+                            <span className="block text-xs font-bold text-slate-600">{opt.count} học sinh</span>
+                          </button>
+                        ))}
+                      </div>
+                      {batchScope === 'selected' && (
+                        <button type="button" onClick={() => { setShowBatchDialog(false); setIsSidebarSection('students'); }} className="text-xs font-bold text-indigo-700 hover:underline">
+                          Chọn lại danh sách học sinh ở thẻ “Học sinh” →
+                        </button>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <div className="text-xs font-black uppercase tracking-wide text-slate-700">Định dạng tệp</div>
+                      <div className="grid grid-cols-2 gap-2">
+                        {([
+                          { id: 'zip', label: 'Tệp ZIP ảnh', desc: 'Mỗi em 1 ảnh JPG, gửi Zalo/in lẻ' },
+                          { id: 'pdf', label: 'Tệp PDF để in', desc: 'Mỗi trang 1 thư khen, in cả loạt' },
+                        ] as const).map(opt => (
+                          <button
+                            key={opt.id}
+                            type="button"
+                            onClick={() => setBatchFormat(opt.id)}
+                            className={`p-3 rounded-2xl border-2 text-left transition-colors ${batchFormat === opt.id ? 'border-emerald-600 bg-emerald-50' : 'border-slate-200 hover:bg-slate-50'}`}
+                          >
+                            <span className="block text-sm font-black text-slate-900">{opt.label}</span>
+                            <span className="block text-xs font-medium text-slate-600">{opt.desc}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="flex gap-2 pt-1">
+                      <button type="button" onClick={() => setShowBatchDialog(false)} className="flex-1 py-3 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-black uppercase">
+                        Để sau
+                      </button>
+                      <button
+                        type="button"
+                        onClick={runBatchExport}
+                        disabled={(batchScope === 'all' ? currentClassStudents.length : selectedStudents.length) === 0}
+                        className="flex-[2] py-3 rounded-2xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-black uppercase flex items-center justify-center gap-2 disabled:opacity-50"
+                      >
+                        <Download className="w-4 h-4" />
+                        <span>Tạo {batchScope === 'all' ? currentClassStudents.length : selectedStudents.length} thư khen</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Bottom Export Overlay Progress (Visible during batch export) */}
             {isExporting && (
