@@ -751,14 +751,28 @@ export const googleDriveService = {
 
     try {
       let filesList: Array<{ id: string; name: string }> = [];
+      let listOk = false;
 
       try {
         const directRes = await fetch(`${scriptUrl}${scriptUrl.includes('?') ? '&' : '?'}action=listClassFiles&folderId=${encodeURIComponent(folderId)}`);
         const listData = await directRes.json();
         if (listData && Array.isArray(listData.files)) {
           filesList = listData.files;
+          listOk = true;
         }
       } catch (_) {}
+
+      if (!listOk) {
+        return {
+          success: false,
+          pulledCount: 0,
+          classes: [],
+          students: [],
+          attendanceRecords: [],
+          boardingRecords: [],
+          message: 'Không đọc được danh sách tệp lớp trên Google Drive.'
+        };
+      }
 
       const gvcnFiles = filesList.filter(f => f.name.toLowerCase().startsWith('gvcn_') && f.name.toLowerCase().endsWith('.json'));
 
@@ -768,10 +782,24 @@ export const googleDriveService = {
       const boardingMap = new Map<string, DailyBoardingMeal>();
       let pulledCount = 0;
 
-      for (const gf of gvcnFiles) {
+      // Tải song song (tối đa 5 tệp cùng lúc) để toàn trường vài chục lớp vẫn nhanh
+      const pulled: Array<{ success: boolean; mergedData?: UserClassroomData }> = new Array(gvcnFiles.length);
+      let cursor = 0;
+      const worker = async () => {
+        while (cursor < gvcnFiles.length) {
+          const idx = cursor++;
+          try {
+            pulled[idx] = await this.pullClassData({ classes: [], students: [] } as any, gvcnFiles[idx].name, currentUser);
+          } catch (_) {
+            pulled[idx] = { success: false };
+          }
+        }
+      };
+      await Promise.all(Array.from({ length: Math.min(5, gvcnFiles.length) }, worker));
+
+      for (const pullRes of pulled) {
         try {
-          const pullRes = await this.pullClassData({ classes: [], students: [] } as any, gf.name, currentUser);
-          if (pullRes.success && pullRes.mergedData) {
+          if (pullRes && pullRes.success && pullRes.mergedData) {
             pulledCount++;
             const md = pullRes.mergedData;
             (md.classes || []).forEach(c => { if (c && c.id) classesMap.set(c.id, c); });

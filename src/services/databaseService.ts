@@ -253,6 +253,52 @@ export const FALLBACK_USERS: UserAccount[] = [
 
 export const FALLBACK_SCHOOLS: SchoolEntity[] = [];
 
+// ☁️ Bộ nhớ đệm tệp lớp GVCN đọc từ Drive cho Quản trị/BGH (app làm mới ~12s/lần → chỉ gọi Drive tối đa 1 lần/60s)
+type DriveClassFilesData = {
+  classes: Classroom[];
+  students: Student[];
+  attendanceRecords: DailyAttendance[];
+  boardingRecords: DailyBoardingMeal[];
+};
+const DRIVE_CLASS_FILES_TTL_MS = 60000;
+let driveClassFilesCache: { key: string; at: number; data: DriveClassFilesData } | null = null;
+let driveClassFilesInflight: { key: string; promise: Promise<DriveClassFilesData | null> } | null = null;
+
+async function loadDriveClassFilesCached(currentUser: UserAccount): Promise<DriveClassFilesData | null> {
+  const cfg = googleDriveService.getConfig();
+  if (!cfg.scriptUrl) return null;
+  const key = `${cfg.scriptUrl}|${cfg.folderId || ''}`;
+  if (driveClassFilesCache && driveClassFilesCache.key === key && Date.now() - driveClassFilesCache.at < DRIVE_CLASS_FILES_TTL_MS) {
+    return driveClassFilesCache.data;
+  }
+  if (driveClassFilesInflight && driveClassFilesInflight.key === key) return driveClassFilesInflight.promise;
+  const promise = (async () => {
+    try {
+      const res = await googleDriveService.pullAllClassFilesFromDrive(currentUser);
+      if (!res.success) return driveClassFilesCache?.key === key ? driveClassFilesCache.data : null;
+      const data: DriveClassFilesData = {
+        classes: res.classes,
+        students: res.students,
+        attendanceRecords: res.attendanceRecords,
+        boardingRecords: res.boardingRecords
+      };
+      driveClassFilesCache = { key, at: Date.now(), data };
+      return data;
+    } catch (_) {
+      return driveClassFilesCache?.key === key ? driveClassFilesCache.data : null;
+    } finally {
+      driveClassFilesInflight = null;
+    }
+  })();
+  driveClassFilesInflight = { key, promise };
+  return promise;
+}
+
+/** Bỏ bộ nhớ đệm để lần tổng hợp sau đọc lại Drive ngay (ví dụ khi bấm "Làm mới"). */
+export function invalidateDriveClassFilesCache() {
+  driveClassFilesCache = null;
+}
+
 export const databaseService = {
   // Authentication
   async login(
@@ -1850,7 +1896,8 @@ export const databaseService = {
     };
 
     // Nếu hiện tại chưa có giáo viên chủ nhiệm nào (CSDL trắng vừa dọn dẹp xong), hoàn tất ngay lập tức trong 0ms
-    if (scopedTeachers.length === 0 && schoolAdmins.length === 0) {
+    // (trừ khi đã kết nối Drive dùng chung: tệp lớp trên Drive vẫn là nguồn dữ liệu hợp lệ)
+    if (scopedTeachers.length === 0 && schoolAdmins.length === 0 && !googleDriveService.getConfig().scriptUrl) {
       return {
         classes: [],
         students: [],
@@ -2182,8 +2229,53 @@ export const databaseService = {
       }
     } catch (_) {}
 
+    // ☁️ NGUỒN GOOGLE DRIVE (bản web Vercel không có máy chủ/Supabase): đọc tệp lớp gvcn_*.json của
+    // các GVCN trong thư mục dùng chung để Quản trị & BGH thấy đủ lớp, học sinh, điểm danh, bán trú.
+    try {
+      const drive = await loadDriveClassFilesCached(currentUser);
+      if (drive) {
+        for (const c of drive.classes) {
+          if (!c || !c.id) continue;
+          if (c.teacherRole === 'subject' || c.id.startsWith('class-sub-')) continue;
+          const cKey = getCanonicalKey(c.name);
+          const targetId = classAliasMap.get(c.id) || (cKey ? canonicalToIdMap.get(cKey) : null) || c.id;
+          if (targetId !== c.id) classAliasMap.set(c.id, targetId);
+          const existing = allClassesMap.get(targetId);
+          allClassesMap.set(targetId, {
+            ...(existing || {}),
+            ...c,
+            id: targetId,
+            branch: c.branch || existing?.branch || null,
+            campus: c.campus || existing?.campus || null,
+            schoolName: c.schoolName || existing?.schoolName || currentUser.schoolName || 'TRƯỜNG HỌC',
+            teacherRole: 'homeroom'
+          } as Classroom);
+          if (cKey && !canonicalToIdMap.has(cKey)) canonicalToIdMap.set(cKey, targetId);
+        }
+        for (const s of drive.students) {
+          if (!s || !s.id || !s.classId || s.classId.startsWith('class-sub-')) continue;
+          const mappedClassId = classAliasMap.get(s.classId) || s.classId;
+          const existingS = allStudentsMap.get(s.id);
+          allStudentsMap.set(s.id, { ...(existingS || {}), ...s, classId: mappedClassId, points: Math.max(s.points || 0, existingS?.points || 0) });
+        }
+        const mergeDaily = <T extends { date: string; classId: string; records?: any }>(list: T[], map: Map<string, T>) => {
+          for (const r of list) {
+            if (!r || !r.date || !r.classId) continue;
+            const mappedClassId = classAliasMap.get(r.classId) || r.classId;
+            const key = `${r.date}_${mappedClassId}`;
+            const ex = map.get(key);
+            map.set(key, { ...(ex || {}), ...r, classId: mappedClassId, records: { ...((ex as any)?.records || {}), ...(r.records || {}) } } as T);
+          }
+        };
+        mergeDaily(drive.attendanceRecords, allAttendanceMap);
+        mergeDaily(drive.boardingRecords, allBoardingMap);
+      }
+    } catch (driveErr) {
+      console.warn('Drive class files merge error:', driveErr);
+    }
+
     const validClassIds = new Set(allClassesMap.keys());
-    let validStudents = Array.from(allStudentsMap.values()).filter(s => 
+    let validStudents = Array.from(allStudentsMap.values()).filter(s =>
       Boolean(s.classId && validClassIds.has(s.classId)) &&
       s.classId !== 'class-1791592764810' &&
       !s.classId.startsWith('class-sub-')

@@ -106,3 +106,20 @@
 - **Fix Applied**: Script V3 một nguồn duy nhất (app import `?raw`), tệp báo cáo gọn `bc_gvcn_*.json`, action `aggregateRange`; vòng 5 giây chỉ đẩy lại khi lần trước lỗi; cấu hình Drive dùng chung qua `/api/drive/shared-config` + biến `VITE_DRIVE_*`; `toLocalDateKey`; thống nhất late = có mặt.
 - **Prevention**: Không duy trì 2 bản mã Apps Script; mọi ngày báo cáo dùng giờ địa phương; không đẩy định kỳ vô điều kiện.
 - **Status**: Fixed (chưa kiểm thử trên Apps Script thật — đã kiểm bằng Drive giả lập)
+
+---
+
+## [2026-11-08 14:30] - Bản web (Vercel): Quản trị & BGH thấy 0 lớp, 0 học sinh dù GVCN đã nhập lớp
+
+- **Type**: Integration
+- **Severity**: High
+- **File**: `src/services/databaseService.ts:getExecutiveScopedData`, `src/services/googleDriveService.ts:pullAllClassFilesFromDrive`
+- **Agent**: Claude Code
+- **Root Cause**: Dữ liệu lớp/học sinh của Quản trị/BGH được gom từ máy chủ Express (`/api/executive/scoped-data`), Supabase (`user_classroom_data`) hoặc localStorage của chính máy đó. Bản Vercel không có Express, trường không dùng Supabase, BGH ở máy khác → cả 3 nguồn rỗng. Riêng thống kê chuyên cần/bán trú vẫn đúng vì đọc thẳng báo cáo `bc_gvcn_*` trên Drive (`aggregateRange`).
+- **Error Message**:
+  ```
+  (không có lỗi) Lớp học: "0 lớp • 0 học sinh"; Thống kê: "Đã báo cáo hôm nay: 1/1 lớp"
+  ```
+- **Fix Applied**: `getExecutiveScopedData` gộp thêm nguồn Google Drive: đọc mọi tệp `gvcn_*.json` trong thư mục dùng chung (`listClassFiles` + `getLatest`, tải song song 5 tệp), gộp lớp theo id/tên lớp chuẩn hóa, học sinh, điểm danh, bán trú. Có bộ nhớ đệm 60 giây + chống gọi trùng (app làm mới ~12 giây/lần). Không ghi ngược: Quản trị/BGH chỉ ghi tệp riêng (`adminquantri.json`, `bgh.json`), không đụng tệp `gvcn_*`.
+- **Prevention**: Mọi tính năng tổng hợp cho Quản trị/BGH phải có nguồn chạy được trên bản tĩnh (Drive) — thử bằng Apps Script giả lập với BGH ở "máy khác" (xóa `lop_hoc_user_db_<gvcn>` khỏi localStorage trước khi đăng nhập BGH).
+- **Status**: Fixed
