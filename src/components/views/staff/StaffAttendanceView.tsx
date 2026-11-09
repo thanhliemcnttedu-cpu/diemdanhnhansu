@@ -401,7 +401,8 @@ export const StaffAttendanceView: React.FC = () => {
 const TodayDetail: React.FC<{ staff: StaffMember[]; records: Record<string, StaffRecord> }> = ({ staff, records }) => {
   const [filter, setFilter] = useState<StaffStatus | 'missing' | 'all'>('all');
   const [q, setQ] = useState('');
-  const [showCccd, setShowCccd] = useState(false);
+  // Mặc định hiện đầy đủ số CCCD (bấm con mắt ở đầu cột để che khi cần)
+  const [showCccd, setShowCccd] = useState(true);
   const [revealed, setRevealed] = useState<string[]>([]);
   const hasFullCccd = staff.some(s => s.currentCccd);
   const norm = (t: string) => t.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/gi, 'd').toLowerCase();
@@ -504,7 +505,7 @@ const RosterPanel: React.FC<{ canManage: boolean; auth: { username: string; pass
   // Chọn nhiều nhân sự (theo mã GV) để xóa / đổi mật khẩu hàng loạt
   const [selected, setSelected] = useState<string[]>([]);
   // Hiện số CCCD đầy đủ (chỉ Quản trị; Apps Script 4.3 trở lên)
-  const [showAllCccd, setShowAllCccd] = useState(false);
+  const [showAllCccd, setShowAllCccd] = useState(true);
   const [revealedCccd, setRevealedCccd] = useState<string[]>([]);
   const [bulkPinOpen, setBulkPinOpen] = useState(false);
   const [bulkPinMode, setBulkPinMode] = useState<'random' | 'common'>('random');

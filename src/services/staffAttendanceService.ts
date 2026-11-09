@@ -233,14 +233,47 @@ export const staffAttendanceService = {
   },
   clearViewerAuth() { try { sessionStorage.removeItem(VIEWER_KEY); } catch (_) { /* ignore */ } },
 
-  getRoster(auth?: { username: string; password: string } | null) {
-    return this.call({ action: 'getStaffRoster', auth: auth ?? staffAttendanceService.getViewerAuth() });
+  // ---------------- số CCCD đầy đủ nhớ trên máy Quản trị (khi nhập Excel / sửa) — dùng khi Apps Script chưa trả `currentCccd`
+  cccdCacheKey() {
+    const c = this.resolveConnection();
+    return `lhhp_staff_cccd_cache:${c?.folderId || 'default'}`;
   },
-  saveRoster(staff: StaffUpsert[], deletedCodes: string[] = [], auth?: { username: string; password: string } | null) {
-    return this.call({ action: 'saveStaffRoster', auth: auth ?? staffAttendanceService.getViewerAuth(), staff, deletedCodes }, null, 60000);
+  readCccdCache(): Record<string, string> {
+    try { return JSON.parse(localStorage.getItem(this.cccdCacheKey()) || '{}') || {}; } catch (_) { return {}; }
   },
-  range(from: string, to: string, auth?: { username: string; password: string } | null) {
-    return this.call({ action: 'staffAttendanceRange', auth: auth ?? staffAttendanceService.getViewerAuth(), from, to }, null, 45000);
+  rememberCccds(items: Array<{ code: string; cccd?: string }>, deletedCodes: string[] = []) {
+    try {
+      const cache = this.readCccdCache();
+      items.forEach(it => {
+        const d = String(it.cccd || '').replace(/\D/g, '');
+        if (it.code && (d.length === 12 || d.length === 9)) cache[String(it.code).trim().toUpperCase()] = d;
+      });
+      deletedCodes.forEach(c => { delete cache[String(c).trim().toUpperCase()]; });
+      localStorage.setItem(this.cccdCacheKey(), JSON.stringify(cache));
+    } catch (_) { /* ignore */ }
+  },
+  /** Bổ sung số CCCD đầy đủ từ bộ nhớ máy (chỉ khi 4 số cuối khớp, tránh hiện số cũ) */
+  withFullCccd<T extends { staff?: StaffMember[] }>(res: T): T {
+    if (!res || !Array.isArray(res.staff)) return res;
+    const cache = this.readCccdCache();
+    res.staff = res.staff.map(s => {
+      if (s.currentCccd) return s;
+      const d = cache[String(s.code).toUpperCase()];
+      return d && (!s.cccdLast4 || d.endsWith(s.cccdLast4)) ? { ...s, currentCccd: d } : s;
+    });
+    return res;
+  },
+
+  async getRoster(auth?: { username: string; password: string } | null) {
+    return this.withFullCccd(await this.call({ action: 'getStaffRoster', auth: auth ?? staffAttendanceService.getViewerAuth() }));
+  },
+  async saveRoster(staff: StaffUpsert[], deletedCodes: string[] = [], auth?: { username: string; password: string } | null) {
+    const res = await this.call({ action: 'saveStaffRoster', auth: auth ?? staffAttendanceService.getViewerAuth(), staff, deletedCodes }, null, 60000);
+    if (res?.success) this.rememberCccds(staff.map(s => ({ code: s.code, cccd: s.cccd })), deletedCodes);
+    return this.withFullCccd(res);
+  },
+  async range(from: string, to: string, auth?: { username: string; password: string } | null) {
+    return this.withFullCccd(await this.call({ action: 'staffAttendanceRange', auth: auth ?? staffAttendanceService.getViewerAuth(), from, to }, null, 45000));
   },
 };
 
