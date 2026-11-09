@@ -43,13 +43,25 @@ export interface StaffMember {
 export interface StaffDayLock { all?: boolean; codes?: Record<string, boolean>; at?: string; by?: string }
 export const isLockedFor = (L: StaffDayLock | null | undefined, code: string) => Boolean(L && (L.all || L.codes?.[code]));
 
-export interface StaffAttempt { status: StaffStatus; note?: string; at: string }
-export interface StaffRecord { status: StaffStatus; note?: string; at: string; firstAt?: string; edits?: number; attempt?: number; history?: StaffAttempt[] }
+export interface StaffAttempt { status: StaffStatus; note?: string; at: string; by?: string }
+/** `by` + `proxy`: BGH / Quản trị điểm danh hộ (Apps Script 4.7) */
+export interface StaffRecord { status: StaffStatus; note?: string; at: string; firstAt?: string; edits?: number; attempt?: number; history?: StaffAttempt[]; by?: string; proxy?: boolean }
 
 /** Lần điểm danh hiện tại trong ngày (1 = lần đầu) */
 export const attemptOf = (r?: StaffRecord | null) => (r ? r.attempt || (r.history?.length) || (r.edits || 0) + 1 : 0);
 /** Ghi chú hệ thống khi điểm danh lại: "Thực hiện điểm danh lại lần 2" */
-export const systemNoteOf = (r?: StaffRecord | null) => (attemptOf(r) > 1 ? `Thực hiện điểm danh lại lần ${attemptOf(r)}` : '');
+export const systemNoteOf = (r?: StaffRecord | null) => [
+  attemptOf(r) > 1 ? `Thực hiện điểm danh lại lần ${attemptOf(r)}` : '',
+  r?.proxy && r.by ? `Điểm danh hộ bởi ${r.by}` : '',
+].filter(Boolean).join(' • ');
+
+/** Ghi chú đi công tác: "Nơi công tác: … • Nội dung: … • ghi chú thêm" (ghép / tách để sửa lại) */
+export const composeTripNote = (place: string, content: string, extra: string) =>
+  [`Nơi công tác: ${place.trim()}`, content.trim() ? `Nội dung: ${content.trim()}` : '', extra.trim()].filter(Boolean).join(' • ').slice(0, 300);
+export const parseTripNote = (note: string) => {
+  const m = /^Nơi công tác: (.*?)(?: • Nội dung: (.*?))?(?: • (.*))?$/.exec(note || '');
+  return m ? { place: m[1] || '', content: m[2] || '', extra: m[3] || '' } : { place: '', content: '', extra: note || '' };
+};
 /** Ghép ghi chú của người điểm danh + ghi chú hệ thống */
 export const fullNoteOf = (r?: StaffRecord | null) => [r?.note || '', systemNoteOf(r)].filter(Boolean).join(' • ');
 const two = (n: number) => String(n).padStart(2, '0');
@@ -337,6 +349,11 @@ export const staffAttendanceService = {
     return this.withFullCccd(res);
   },
   /** BGH / Quản trị: khóa hoặc mở khóa điểm danh (codes = danh sách mã; all = toàn bộ) */
+  /** BGH / Quản trị điểm danh hộ 1 / nhiều nhân sự (Apps Script 4.7) */
+  proxyCheckIn(opts: { codes: string[]; status: StaffStatus; note?: string; date?: string }, auth?: { username: string; password: string } | null) {
+    return this.call({ action: 'staffProxyCheckIn', auth: auth ?? staffAttendanceService.getViewerAuth(), codes: opts.codes, status: opts.status, note: opts.note || '', date: opts.date });
+  },
+
   lockStaff(opts: { date?: string; lock: boolean; all?: boolean; codes?: string[] }, auth?: { username: string; password: string } | null) {
     return this.call({ action: 'staffLock', auth: auth ?? staffAttendanceService.getViewerAuth(), date: opts.date, lock: opts.lock, all: Boolean(opts.all), codes: opts.codes || [] });
   },

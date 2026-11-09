@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { CheckCircle2, Eye, EyeOff, LogOut, ShieldCheck, Stethoscope, Briefcase, CalendarDays, Loader2, AlertTriangle, PencilLine, Lock, Plane } from 'lucide-react';
-import { staffAttendanceService, STAFF_STATUS_META, longDateLabel, StaffStatus, StaffMember, StaffRecord, attemptOf, attemptsOf, timeSpoken, timeHMS } from '../../../services/staffAttendanceService';
+import { staffAttendanceService, composeTripNote, parseTripNote, STAFF_STATUS_META, longDateLabel, StaffStatus, StaffMember, StaffRecord, attemptOf, attemptsOf, timeSpoken, timeHMS } from '../../../services/staffAttendanceService';
 
 /**
  * 📲 TRANG ĐIỂM DANH GIÁO VIÊN – NHÂN VIÊN (/diemdanh)
@@ -10,13 +10,6 @@ import { staffAttendanceService, STAFF_STATUS_META, longDateLabel, StaffStatus, 
  * mọi lần đều được máy chủ ghi giờ (nhà trường / kế toán thấy "Thực hiện điểm danh lại lần N").
  */
 const REMEMBER_KEY = 'lhhp_staff_checkin_remember_cccd';
-/** Ghi chú đi công tác: "Nơi công tác: … • Nội dung: … • ghi chú thêm" (ghép / tách để sửa lại) */
-const composeTripNote = (place: string, content: string, extra: string) =>
-  [`Nơi công tác: ${place.trim()}`, content.trim() ? `Nội dung: ${content.trim()}` : '', extra.trim()].filter(Boolean).join(' • ').slice(0, 300);
-const parseTripNote = (note: string) => {
-  const m = /^Nơi công tác: (.*?)(?: • Nội dung: (.*?))?(?: • (.*))?$/.exec(note || '');
-  return m ? { place: m[1] || '', content: m[2] || '', extra: m[3] || '' } : { place: '', content: '', extra: note || '' };
-};
 const LOCK_MESSAGE = 'Hiện tại chức năng điểm danh trong ngày đã được quản trị nhà trường khóa chốt số liệu.';
 
 const OPTIONS: Array<{ id: StaffStatus; icon: React.ReactNode; hint: string }> = [

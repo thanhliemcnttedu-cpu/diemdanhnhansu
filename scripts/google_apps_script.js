@@ -13,6 +13,8 @@
  * - CHỈ tổng hợp tệp của GVCN (gvcn_*.json, teacherRole = homeroom). Tệp GV bộ môn (gvbm_*.json),
  *   BGH, Quản trị không được tính để không dôi số lớp / số học sinh.
  *
+ * - V4.7: BGH / Quản trị ĐIỂM DANH HỘ nhân sự (action=staffProxyCheckIn; 1 / nhiều người; hôm nay hoặc ngày đã qua;
+ *   bỏ qua khóa chốt; bản ghi có "by" = người điểm danh hộ).
  * - V4.6: Thêm trạng thái điểm danh "Đi công tác" (business_trip) – ghi chú ghi nơi / nội dung công tác.
  * - V4.5: BGH / Quản trị KHÓA hoặc MỞ KHÓA điểm danh trong ngày (1 người, nhiều người hoặc tất cả):
  *   action=staffLock; khi bị khóa, nhân sự điểm danh sẽ nhận thông báo "đã khóa chốt số liệu".
@@ -42,7 +44,7 @@
 var FOLDER_ID = "__FOLDER_ID__";
 var TARGET_FILENAME = "du_lieu_lop_hoc_hanh_phuc.json";
 var REPORT_PREFIX = "bc_";
-var SCRIPT_VERSION = "4.6";
+var SCRIPT_VERSION = "4.7";
 
 // ---------------------------------------------------------------------------------------
 // HTTP POST: lưu dữ liệu lớp
@@ -56,7 +58,7 @@ function doPost(e) {
     var folderId = payload.folderId || "";
     var action = payload.action || "saveClassData";
 
-    if (action === "staffAuth" || action === "staffCheckIn" || action === "getStaffRoster" || action === "saveStaffRoster" || action === "staffAttendanceRange" || action === "staffLock") {
+    if (action === "staffAuth" || action === "staffCheckIn" || action === "getStaffRoster" || action === "saveStaffRoster" || action === "staffAttendanceRange" || action === "staffLock" || action === "staffProxyCheckIn") {
       var staffFolder = resolveFolder(folderId);
       if (!staffFolder) return createJsonResponse({ success: false, message: "Không tìm thấy thư mục Google Drive: " + folderId });
       if (action === "staffAuth") return createJsonResponse(handleStaffAuth(staffFolder, payload));
@@ -64,6 +66,7 @@ function doPost(e) {
       if (action === "getStaffRoster") return createJsonResponse(handleGetStaffRoster(staffFolder, payload));
       if (action === "saveStaffRoster") return createJsonResponse(handleSaveStaffRoster(staffFolder, payload));
       if (action === "staffLock") return createJsonResponse(handleStaffLock(staffFolder, payload));
+      if (action === "staffProxyCheckIn") return createJsonResponse(handleStaffProxyCheckIn(staffFolder, payload));
       return createJsonResponse(handleStaffAttendanceRange(staffFolder, payload));
     }
 
@@ -909,6 +912,53 @@ function isStaffLocked(month, dateStr, code) {
   var L = month && month.locks && month.locks[dateStr];
   if (!L) return false;
   return L.all === true || !!(L.codes && L.codes[code]);
+}
+
+// --- V4.7: BGH / Quản trị điểm danh HỘ (nhân sự báo qua điện thoại…): 1 / nhiều người, hôm nay hoặc ngày đã qua
+function handleStaffProxyCheckIn(folder, payload) {
+  var actor = staffActor(folder, payload.auth, false);
+  if (!actor) return { success: false, code: "UNAUTHORIZED", message: "Chỉ BGH / Quản trị được điểm danh hộ." };
+  var status = String(payload.status || "");
+  if (!STAFF_STATUSES[status]) return { success: false, message: "Trạng thái điểm danh không hợp lệ." };
+  var today = staffToday();
+  var date = String(payload.date || today).slice(0, 10);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || date > today) return { success: false, message: "Chỉ điểm danh hộ được cho hôm nay hoặc ngày đã qua." };
+  var codes = (payload.codes || []).map(normalizeStaffCode).filter(function (c) { return !!c; });
+  if (!codes.length) return { success: false, message: "Chưa chọn nhân sự." };
+  var note = String(payload.note || "").slice(0, 300);
+  var lock = LockService.getScriptLock();
+  try { lock.waitLock(20000); } catch (_) {}
+  try {
+    var db = readStaffDb(folder);
+    var byCode = {};
+    for (var i = 0; i < db.staff.length; i++) byCode[db.staff[i].code] = db.staff[i];
+    var month = readMonth(folder, date);
+    if (!month.days[date]) month.days[date] = {};
+    var nowIso = new Date().toISOString();
+    var done = [], errors = [], records = {};
+    for (var j = 0; j < codes.length; j++) {
+      var code = codes[j];
+      if (!byCode[code]) { errors.push(code + ": không có trong danh sách nhân sự."); continue; }
+      var prev = month.days[date][code];
+      var history = (prev && prev.history) ? prev.history.slice(0, 19)
+        : (prev ? [{ status: prev.status, note: prev.note || "", at: prev.at }] : []);
+      history.push({ status: status, note: note, at: nowIso, by: actor.username });
+      month.days[date][code] = {
+        status: status, note: note, at: nowIso,
+        firstAt: prev && prev.firstAt ? prev.firstAt : nowIso,
+        attempt: history.length, edits: history.length - 1, history: history,
+        by: actor.username, proxy: true
+      };
+      records[code] = month.days[date][code];
+      done.push(code);
+    }
+    month.updatedAt = nowIso;
+    if (done.length) writeFileOverwrite(folder, monthFileName(date), JSON.stringify(month));
+    return { success: done.length > 0, date: date, count: done.length, errors: errors, records: records,
+      message: done.length ? ("Đã điểm danh hộ " + done.length + " người.") : (errors[0] || "Không điểm danh hộ được.") };
+  } finally {
+    try { lock.releaseLock(); } catch (_) {}
+  }
 }
 
 // --- BGH / Quản trị: khóa hoặc mở khóa điểm danh (1 người / nhiều người / tất cả)

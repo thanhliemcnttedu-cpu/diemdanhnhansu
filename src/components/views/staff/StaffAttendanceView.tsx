@@ -6,7 +6,7 @@ import {
 import { useClassroom } from '../../../context/ClassroomContext';
 import {
   staffAttendanceService, STAFF_STATUS_META, aggregate, toDateKey, addDays, fromDateKey, shortDateLabel, longDateLabel, weekdayLabel, dateRangeKeys,
-  parseStaffSheet, STAFF_TEMPLATE_HEADERS, isLockedFor, StaffDayLock, randomPin, weekdayShort, attemptOf, attemptsOf, systemNoteOf, timeHMS, StaffMember, StaffRecord, StaffStatus, StaffUpsert, ParsedStaffRow,
+  parseStaffSheet, STAFF_TEMPLATE_HEADERS, isLockedFor, StaffDayLock, composeTripNote, randomPin, weekdayShort, attemptOf, attemptsOf, systemNoteOf, timeHMS, StaffMember, StaffRecord, StaffStatus, StaffUpsert, ParsedStaffRow,
 } from '../../../services/staffAttendanceService';
 import { StaffCheckInQrCard } from './StaffCheckInQr';
 import { appsScriptSetupService } from '../../../services/appsScriptSetupService';
@@ -423,6 +423,7 @@ export const StaffAttendanceView: React.FC = () => {
 
               {/* Hôm nay: chi tiết từng người */}
               <TodayDetail staff={staff} records={days[today] || {}} today={today} dayLock={locks[today] || null} auth={auth}
+                onRecordsChanged={(date, recs) => setDays(prev => ({ ...prev, [date]: { ...(prev[date] || {}), ...recs } }))}
                 onLockChanged={(L) => setLocks(prev => { const next = { ...prev }; if (L) next[today] = L; else delete next[today]; return next; })} />
             </>
           )}
@@ -439,7 +440,34 @@ export const StaffAttendanceView: React.FC = () => {
 const TodayDetail: React.FC<{
   staff: StaffMember[]; records: Record<string, StaffRecord>; today: string; dayLock: StaffDayLock | null;
   auth: { username: string; password: string } | null; onLockChanged: (L: StaffDayLock | null) => void;
-}> = ({ staff, records, today, dayLock, auth, onLockChanged }) => {
+  onRecordsChanged: (date: string, recs: Record<string, StaffRecord>) => void;
+}> = ({ staff, records, today, dayLock, auth, onLockChanged, onRecordsChanged }) => {
+  // 📞 Điểm danh hộ (nhân sự báo qua điện thoại…) — BGH, Quản trị nhà trường, Quản trị tối cao (Apps Script 4.7)
+  const [proxyCodes, setProxyCodes] = useState<string[] | null>(null);
+  const [pStatus, setPStatus] = useState<StaffStatus>('present');
+  const [pPlace, setPPlace] = useState('');
+  const [pContent, setPContent] = useState('');
+  const [pNote, setPNote] = useState('');
+  const [pBusy, setPBusy] = useState(false);
+  const [pErr, setPErr] = useState('');
+  const openProxy = (codes: string[]) => { setProxyCodes(codes); setPStatus('present'); setPPlace(''); setPContent(''); setPNote(''); setPErr(''); };
+  const submitProxy = async () => {
+    if (!proxyCodes?.length) return;
+    if (pStatus === 'business_trip' && !pPlace.trim()) { setPErr('Đi công tác: hãy ghi rõ nơi công tác.'); return; }
+    const note = pStatus === 'business_trip' ? composeTripNote(pPlace, pContent, pNote) : pNote.trim();
+    setPBusy(true); setPErr('');
+    try {
+      const r = await staffAttendanceService.proxyCheckIn({ codes: proxyCodes, status: pStatus, note, date: today }, auth);
+      if (!r?.success) { setPErr(r?.message || 'Chưa điểm danh hộ được.'); return; }
+      onRecordsChanged(r.date || today, r.records || {});
+      setLockMsg({ type: 'ok', text: `${r.message || 'Đã điểm danh hộ.'}${r.errors?.length ? ` (${r.errors.length} lỗi: ${r.errors.slice(0, 3).join('; ')})` : ''}` });
+      setProxyCodes(null); setPicked([]);
+    } catch (e: any) {
+      setPErr(/Hành động không hợp lệ|phiên bản 4\.2/.test(String(e?.message || ''))
+        ? 'Apps Script của trường chưa có chức năng điểm danh hộ: cần cập nhật lên V4.7 (Hệ thống → Cài đặt Apps Script → Cập nhật bản mới).'
+        : (e?.message || 'Lỗi kết nối.'));
+    } finally { setPBusy(false); }
+  };
   // Khóa chốt số liệu: chọn 1 / nhiều / tất cả rồi Khóa hoặc Mở khóa (BGH, Quản trị nhà trường, Quản trị tối cao)
   const [picked, setPicked] = useState<string[]>([]);
   const [lockBusy, setLockBusy] = useState(false);
@@ -499,6 +527,7 @@ Người bị khóa sẽ không điểm danh / sửa điểm danh được và n
         </span>
         {picked.length > 0 && <>
           <span className="text-sm font-bold text-slate-700">Đã chọn {picked.length}:</span>
+          <button type="button" onClick={() => openProxy(picked)} className="no-hover-fx h-8 px-3 rounded-lg text-sm font-bold bg-indigo-600 hover:bg-indigo-700 text-white inline-flex items-center gap-1.5 whitespace-nowrap"><UserCheck className="w-4 h-4" /> Điểm danh hộ ({picked.length})</button>
           <button type="button" disabled={lockBusy} onClick={() => applyLock(true, false, picked)} className="no-hover-fx h-8 px-3 rounded-lg text-sm font-bold bg-rose-600 hover:bg-rose-700 text-white inline-flex items-center gap-1.5 whitespace-nowrap disabled:opacity-50"><Lock className="w-4 h-4" /> Khóa ({picked.length})</button>
           <button type="button" disabled={lockBusy} onClick={() => applyLock(false, false, picked)} className="no-hover-fx h-8 px-3 rounded-lg text-sm font-bold bg-emerald-700 hover:bg-emerald-800 text-white inline-flex items-center gap-1.5 whitespace-nowrap disabled:opacity-50"><Unlock className="w-4 h-4" /> Mở khóa ({picked.length})</button>
           <button type="button" onClick={() => setPicked([])} className="no-hover-fx h-8 px-2.5 rounded-lg text-sm font-bold text-slate-700 hover:bg-white whitespace-nowrap">Bỏ chọn</button>
@@ -516,7 +545,7 @@ Người bị khóa sẽ không điểm danh / sửa điểm danh được và n
       <div className="overflow-x-auto p-4">
         <table className="w-full text-sm table-fixed min-w-[700px]">
           <colgroup>
-            <col className="w-8" /><col className="w-[28%]" /><col className="w-[140px]" /><col className="w-[170px]" /><col className="w-[100px]" /><col />
+            <col className="w-8" /><col className="w-[28%]" /><col className="w-[140px]" /><col className="w-[170px]" /><col className="w-[100px]" /><col /><col className="w-[44px]" />
           </colgroup>
           <thead><tr className="text-left text-xs uppercase text-slate-600 border-b border-slate-200 whitespace-nowrap">
             <th className="py-2 pr-2">
@@ -539,14 +568,14 @@ Người bị khóa sẽ không điểm danh / sửa điểm danh được và n
                 )}
               </span>
             </th>
-            <th className="py-2 pr-2">Trạng thái</th><th className="py-2 pr-2">Giờ / lần</th><th className="py-2">Ghi chú</th>
+            <th className="py-2 pr-2">Trạng thái</th><th className="py-2 pr-2">Giờ / lần</th><th className="py-2 pr-2">Ghi chú</th><th className="py-2 text-center" aria-label="Thao tác"></th>
           </tr></thead>
           <tbody>
             {rows.map(({ s, r }) => {
               const meta = STAFF_STATUS_META[r ? r.status : 'missing'];
               const n = attemptOf(r);
               const locked = isLockedFor(dayLock, s.code);
-              const sub = [s.code, s.position, s.dept].filter(Boolean).join(' • ');
+              const sub = [s.position, s.dept].filter(Boolean).join(' • ');
               const noteText = [r?.note || '', systemNoteOf(r)].filter(Boolean).join(' • ');
               return (
                 <tr key={s.code} className={`border-b border-slate-100 align-top ${picked.includes(s.code) ? 'bg-amber-50' : ''}`}>
@@ -589,20 +618,71 @@ Người bị khóa sẽ không điểm danh / sửa điểm danh được và n
                       {n > 1 && <span className="ml-1 px-1.5 py-0.5 rounded-full text-xs font-black bg-amber-50 text-amber-900 border border-amber-200">L{n}</span>}
                     </> : <span className="text-slate-400">—</span>}
                   </td>
-                  <td className="py-2 text-slate-700 min-w-0" title={noteText}>
+                  <td className="py-2 pr-2 text-slate-700 min-w-0" title={noteText}>
                     <p className="truncate">
                       {r?.note || ''}
                       {r?.note && systemNoteOf(r) ? <span className="text-slate-400"> • </span> : null}
                       {systemNoteOf(r) && <span className="text-xs font-bold text-amber-800">{systemNoteOf(r)}</span>}
                     </p>
                   </td>
+                  <td className="py-1.5 text-center">
+                    <button type="button" onClick={() => openProxy([s.code])} title={`Điểm danh hộ ${s.name}`} aria-label={`Điểm danh hộ ${s.name}`}
+                      className="no-hover-fx w-8 h-8 inline-flex items-center justify-center rounded-lg text-indigo-700 hover:bg-indigo-50"><UserCheck className="w-4 h-4" /></button>
+                  </td>
                 </tr>
               );
             })}
-            {rows.length === 0 && <tr><td colSpan={6} className="py-6 text-center text-slate-600">Không có nhân sự phù hợp.</td></tr>}
+            {rows.length === 0 && <tr><td colSpan={7} className="py-6 text-center text-slate-600">Không có nhân sự phù hợp.</td></tr>}
           </tbody>
         </table>
       </div>
+
+      {proxyCodes && (
+        <div className="fixed inset-0 z-50 flex items-start sm:items-center justify-center bg-sky-900/20 backdrop-blur-xs p-2 sm:p-4 overflow-y-auto" role="dialog" aria-modal="true" aria-label="Điểm danh hộ">
+          <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-lg my-auto">
+            <div className="px-5 py-3.5 border-b border-slate-200 flex items-center justify-between gap-3">
+              <div className="min-w-0">
+                <p className="text-base font-black text-slate-900 inline-flex items-center gap-2"><UserCheck className="w-5 h-5 text-indigo-600" /> Điểm danh hộ — {longDateLabel(today)}</p>
+                <p className="text-sm text-slate-600 truncate" title={proxyCodes.map(c => staff.find(s => s.code === c)?.name || c).join(', ')}>
+                  {proxyCodes.length === 1 ? (staff.find(s => s.code === proxyCodes[0])?.name || proxyCodes[0]) : `${proxyCodes.length} nhân sự: ${proxyCodes.slice(0, 4).map(c => staff.find(s => s.code === c)?.name || c).join(', ')}${proxyCodes.length > 4 ? '…' : ''}`}
+                </p>
+              </div>
+              <button type="button" onClick={() => setProxyCodes(null)} className="text-sm font-bold text-slate-600 shrink-0">Đóng</button>
+            </div>
+            <div className="p-5 space-y-3">
+              <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="Trạng thái điểm danh">
+                {(['present', 'business_trip', 'sick_leave', 'personal_unpaid'] as StaffStatus[]).map(k => {
+                  const m = STAFF_STATUS_META[k];
+                  const on = pStatus === k;
+                  return (
+                    <button key={k} type="button" role="radio" aria-checked={on} onClick={() => setPStatus(k)}
+                      className="no-hover-fx px-3 py-2.5 rounded-xl border-2 text-sm font-black text-left"
+                      style={{ borderColor: on ? m.color : '#e2e8f0', background: on ? m.soft : '#fff', color: m.text }}>{m.label}</button>
+                  );
+                })}
+              </div>
+              {pStatus === 'business_trip' && (
+                <div className="grid grid-cols-1 gap-2">
+                  <input value={pPlace} onChange={(e) => setPPlace(e.target.value.slice(0, 120))} placeholder="Nơi công tác *" aria-label="Nơi công tác"
+                    className="w-full h-10 px-3 rounded-xl border border-blue-300 text-sm" />
+                  <input value={pContent} onChange={(e) => setPContent(e.target.value.slice(0, 150))} placeholder="Nội dung công tác" aria-label="Nội dung công tác"
+                    className="w-full h-10 px-3 rounded-xl border border-blue-300 text-sm" />
+                </div>
+              )}
+              <textarea value={pNote} onChange={(e) => setPNote(e.target.value.slice(0, 300))} rows={2} aria-label="Ghi chú"
+                placeholder="Ghi chú (ví dụ: báo qua điện thoại lúc 7h15)" className="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm" />
+              <p className="text-xs text-slate-600">Bản ghi được đánh dấu "Điểm danh hộ bởi {auth?.username}". Điểm danh hộ vẫn thực hiện được khi điểm danh hôm nay đã khóa.</p>
+              {pErr && <p className="text-sm font-bold text-rose-700">{pErr}</p>}
+              <div className="flex gap-2">
+                <button type="button" onClick={() => setProxyCodes(null)} className="no-hover-fx flex-1 h-11 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-sm font-black">Hủy</button>
+                <button type="button" onClick={submitProxy} disabled={pBusy} className="no-hover-fx flex-[2] h-11 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-black inline-flex items-center justify-center gap-2 disabled:opacity-50">
+                  {pBusy ? <Loader2 className="w-4 h-4 animate-spin" /> : <UserCheck className="w-4 h-4" />} {pBusy ? 'Đang lưu…' : `Điểm danh hộ${proxyCodes.length > 1 ? ` ${proxyCodes.length} người` : ''}`}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
