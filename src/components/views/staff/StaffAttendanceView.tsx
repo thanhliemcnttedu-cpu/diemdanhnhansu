@@ -6,7 +6,7 @@ import {
 import { useClassroom } from '../../../context/ClassroomContext';
 import {
   staffAttendanceService, STAFF_STATUS_META, aggregate, toDateKey, addDays, fromDateKey, shortDateLabel, longDateLabel, weekdayLabel, dateRangeKeys,
-  parseStaffSheet, STAFF_TEMPLATE_HEADERS, randomPin, weekdayShort, attemptOf, attemptsOf, systemNoteOf, timeHMS, StaffMember, StaffRecord, StaffStatus, StaffUpsert, ParsedStaffRow,
+  parseStaffSheet, STAFF_TEMPLATE_HEADERS, isLockedFor, StaffDayLock, randomPin, weekdayShort, attemptOf, attemptsOf, systemNoteOf, timeHMS, StaffMember, StaffRecord, StaffStatus, StaffUpsert, ParsedStaffRow,
 } from '../../../services/staffAttendanceService';
 import { StaffCheckInQrCard } from './StaffCheckInQr';
 
@@ -98,6 +98,7 @@ export const StaffAttendanceView: React.FC = () => {
   const [customTo, setCustomTo] = useState(() => toDateKey(new Date()));
   const [staff, setStaff] = useState<StaffMember[]>([]);
   const [days, setDays] = useState<DaysMap>({});
+  const [locks, setLocks] = useState<Record<string, StaffDayLock>>({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [lastLoaded, setLastLoaded] = useState<Date | null>(null);
@@ -130,6 +131,7 @@ export const StaffAttendanceView: React.FC = () => {
       }
       setStaff(r.staff || []);
       setDays(r.days || {});
+      setLocks(r.locks || {});
       if (r.today) setToday(r.today);
       setLoadedRange({ from: fetchFrom, to: fetchTo });
       setLastLoaded(new Date());
@@ -385,7 +387,8 @@ export const StaffAttendanceView: React.FC = () => {
               </div>
 
               {/* Hôm nay: chi tiết từng người */}
-              <TodayDetail staff={staff} records={days[today] || {}} />
+              <TodayDetail staff={staff} records={days[today] || {}} today={today} dayLock={locks[today] || null} auth={auth}
+                onLockChanged={(L) => setLocks(prev => { const next = { ...prev }; if (L) next[today] = L; else delete next[today]; return next; })} />
             </>
           )}
         </>
@@ -398,7 +401,35 @@ export const StaffAttendanceView: React.FC = () => {
 };
 
 // ---------------------------------------------------------------- hôm nay: ai đã / chưa điểm danh
-const TodayDetail: React.FC<{ staff: StaffMember[]; records: Record<string, StaffRecord> }> = ({ staff, records }) => {
+const TodayDetail: React.FC<{
+  staff: StaffMember[]; records: Record<string, StaffRecord>; today: string; dayLock: StaffDayLock | null;
+  auth: { username: string; password: string } | null; onLockChanged: (L: StaffDayLock | null) => void;
+}> = ({ staff, records, today, dayLock, auth, onLockChanged }) => {
+  // Khóa chốt số liệu: chọn 1 / nhiều / tất cả rồi Khóa hoặc Mở khóa (BGH, Quản trị nhà trường, Quản trị tối cao)
+  const [picked, setPicked] = useState<string[]>([]);
+  const [lockBusy, setLockBusy] = useState(false);
+  const [lockMsg, setLockMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null);
+  const applyLock = async (lock: boolean, all: boolean, codes: string[] = []) => {
+    const who = all ? 'TẤT CẢ nhân sự' : `${codes.length} nhân sự đã chọn`;
+    if (!confirm(lock
+      ? `Khóa điểm danh hôm nay của ${who}?
+Người bị khóa sẽ không điểm danh / sửa điểm danh được và nhận thông báo đã khóa chốt số liệu.`
+      : `Mở lại điểm danh hôm nay cho ${who}?`)) return;
+    setLockBusy(true); setLockMsg(null);
+    try {
+      const r = await staffAttendanceService.lockStaff({ date: today, lock, all, codes }, auth);
+      if (!r?.success) {
+        setLockMsg({ type: 'err', text: /Hành động không hợp lệ|4\.2/.test(String(r?.message || '')) ? 'Apps Script chưa có chức năng khóa điểm danh: cần cập nhật lên V4.5 (dán mã mới → Triển khai → Phiên bản mới).' : (r?.message || 'Chưa khóa được.') });
+        return;
+      }
+      onLockChanged(r.lock || null);
+      setPicked([]);
+      setLockMsg({ type: 'ok', text: lock ? `Đã khóa điểm danh hôm nay của ${who}.` : `Đã mở lại điểm danh hôm nay cho ${who}.` });
+    } catch (e: any) {
+      setLockMsg({ type: 'err', text: /Hành động không hợp lệ|4\.2/.test(String(e?.message || '')) ? 'Apps Script chưa có chức năng khóa điểm danh: cần cập nhật lên V4.5 (dán mã mới → Triển khai → Phiên bản mới).' : (e?.message || 'Lỗi kết nối.') });
+    } finally { setLockBusy(false); }
+  };
+  const lockedCount = staff.filter(s => !s.disabled && isLockedFor(dayLock, s.code)).length;
   const [filter, setFilter] = useState<StaffStatus | 'missing' | 'all'>('all');
   const [q, setQ] = useState('');
   // Mặc định hiện đầy đủ số CCCD (bấm con mắt ở đầu cột để che khi cần)
@@ -424,9 +455,39 @@ const TodayDetail: React.FC<{ staff: StaffMember[]; records: Record<string, Staf
           </button>
         ))}
       </div>
+      {/* 🔒 Khóa chốt số liệu điểm danh hôm nay */}
+      <div className={`mx-4 mt-3 rounded-2xl border px-3 py-2.5 flex flex-wrap items-center gap-2 ${dayLock?.all ? 'bg-rose-50 border-rose-200' : lockedCount ? 'bg-amber-50 border-amber-200' : 'bg-slate-50 border-slate-200'}`}>
+        <Lock className={`w-4 h-4 shrink-0 ${dayLock?.all ? 'text-rose-700' : lockedCount ? 'text-amber-700' : 'text-slate-500'}`} />
+        <span className="text-sm font-bold text-slate-800 mr-auto">
+          {dayLock?.all ? 'Đã khóa điểm danh hôm nay của tất cả nhân sự' : lockedCount ? `Đã khóa điểm danh hôm nay của ${lockedCount} người` : 'Điểm danh hôm nay đang mở'}
+          {dayLock?.at && (dayLock.all || lockedCount) ? <span className="font-normal text-slate-600"> • lúc {timeHMS(dayLock.at)}{dayLock.by ? ` bởi ${dayLock.by}` : ''}</span> : null}
+        </span>
+        {picked.length > 0 && <>
+          <span className="text-sm font-bold text-slate-700">Đã chọn {picked.length}:</span>
+          <button type="button" disabled={lockBusy} onClick={() => applyLock(true, false, picked)} className="no-hover-fx h-8 px-3 rounded-lg text-sm font-bold bg-rose-600 hover:bg-rose-700 text-white inline-flex items-center gap-1.5 whitespace-nowrap disabled:opacity-50"><Lock className="w-4 h-4" /> Khóa ({picked.length})</button>
+          <button type="button" disabled={lockBusy} onClick={() => applyLock(false, false, picked)} className="no-hover-fx h-8 px-3 rounded-lg text-sm font-bold bg-emerald-700 hover:bg-emerald-800 text-white inline-flex items-center gap-1.5 whitespace-nowrap disabled:opacity-50"><Unlock className="w-4 h-4" /> Mở khóa ({picked.length})</button>
+          <button type="button" onClick={() => setPicked([])} className="no-hover-fx h-8 px-2.5 rounded-lg text-sm font-bold text-slate-700 hover:bg-white whitespace-nowrap">Bỏ chọn</button>
+          <span className="w-px h-6 bg-slate-300 mx-0.5" aria-hidden="true" />
+        </>}
+        <button type="button" disabled={lockBusy || Boolean(dayLock?.all)} onClick={() => applyLock(true, true)} className="no-hover-fx h-8 px-3 rounded-lg text-sm font-bold border border-rose-300 bg-white hover:bg-rose-50 text-rose-800 inline-flex items-center gap-1.5 whitespace-nowrap disabled:opacity-50">
+          {lockBusy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Lock className="w-4 h-4" />} Khóa tất cả
+        </button>
+        <button type="button" disabled={lockBusy || (!dayLock?.all && !lockedCount)} onClick={() => applyLock(false, true)} className="no-hover-fx h-8 px-3 rounded-lg text-sm font-bold border border-emerald-300 bg-white hover:bg-emerald-50 text-emerald-800 inline-flex items-center gap-1.5 whitespace-nowrap disabled:opacity-50">
+          <Unlock className="w-4 h-4" /> Mở khóa tất cả
+        </button>
+      </div>
+      {lockMsg && <p className={`mx-4 mt-2 text-sm font-bold ${lockMsg.type === 'ok' ? 'text-emerald-800' : 'text-rose-700'}`}>{lockMsg.text}</p>}
+
       <div className="overflow-x-auto p-4">
-        <table className="w-full text-sm min-w-[980px]">
+        <table className="w-full text-sm min-w-[1060px]">
           <thead><tr className="text-left text-xs uppercase text-slate-600 border-b border-slate-200 whitespace-nowrap">
+            <th className="py-2 pr-2 w-8">
+              <input type="checkbox" className="w-4 h-4 rounded border-slate-300 cursor-pointer align-middle"
+                checked={rows.length > 0 && rows.every(x => picked.includes(x.s.code))}
+                ref={el => { if (el) el.indeterminate = rows.some(x => picked.includes(x.s.code)) && !rows.every(x => picked.includes(x.s.code)); }}
+                onChange={() => setPicked(prev => rows.every(x => prev.includes(x.s.code)) ? prev.filter(c => !rows.some(x => x.s.code === c)) : Array.from(new Set([...prev, ...rows.map(x => x.s.code)])))}
+                aria-label="Chọn tất cả nhân sự đang hiển thị" title="Chọn tất cả (theo bộ lọc đang hiển thị)" />
+            </th>
             <th className="py-2 pr-2">Mã GV</th><th className="py-2 pr-2">Họ và tên</th>
             <th className="py-2 pr-2">
               <span className="inline-flex items-center gap-1">
@@ -440,14 +501,18 @@ const TodayDetail: React.FC<{ staff: StaffMember[]; records: Record<string, Staf
                 )}
               </span>
             </th>
-            <th className="py-2 pr-2">Chức vụ / Tổ</th><th className="py-2 pr-2">Trạng thái</th><th className="py-2 pr-2">Giờ điểm danh</th><th className="py-2 pr-2">Lần</th><th className="py-2">Ghi chú</th>
+            <th className="py-2 pr-2">Chức vụ / Tổ</th><th className="py-2 pr-2">Trạng thái</th><th className="py-2 pr-2">Khóa</th><th className="py-2 pr-2">Giờ điểm danh</th><th className="py-2 pr-2">Lần</th><th className="py-2">Ghi chú</th>
           </tr></thead>
           <tbody>
             {rows.map(({ s, r }) => {
               const meta = STAFF_STATUS_META[r ? r.status : 'missing'];
               const n = attemptOf(r);
               return (
-                <tr key={s.code} className="border-b border-slate-100">
+                <tr key={s.code} className={`border-b border-slate-100 ${picked.includes(s.code) ? 'bg-amber-50' : ''}`}>
+                  <td className="py-2 pr-2">
+                    <input type="checkbox" className="w-4 h-4 rounded border-slate-300 cursor-pointer align-middle" checked={picked.includes(s.code)}
+                      onChange={() => setPicked(prev => prev.includes(s.code) ? prev.filter(c => c !== s.code) : [...prev, s.code])} aria-label={`Chọn ${s.name}`} />
+                  </td>
                   <td className="py-2 pr-2 font-mono text-xs text-slate-700 whitespace-nowrap">{s.code}</td>
                   <td className="py-2 pr-2 font-bold text-slate-900 whitespace-nowrap">{s.name}</td>
                   <td className="py-2 pr-2 font-mono text-slate-700 whitespace-nowrap">
@@ -469,6 +534,9 @@ const TodayDetail: React.FC<{ staff: StaffMember[]; records: Record<string, Staf
                   </td>
                   <td className="py-2 pr-2 text-slate-700 whitespace-nowrap max-w-[240px] truncate" title={[s.position, s.dept].filter(Boolean).join(' • ')}>{[s.position, s.dept].filter(Boolean).join(' • ')}</td>
                   <td className="py-2 pr-2 whitespace-nowrap"><span className="px-2 py-0.5 rounded-full text-xs font-black whitespace-nowrap" style={{ background: meta.soft, color: meta.text }}>{meta.label}</span></td>
+                  <td className="py-2 pr-2 whitespace-nowrap">{isLockedFor(dayLock, s.code)
+                    ? <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-black bg-rose-50 text-rose-800"><Lock className="w-3 h-3" /> Đã khóa</span>
+                    : <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-800"><Unlock className="w-3 h-3" /> Mở</span>}</td>
                   <td className="py-2 pr-2 text-slate-700 font-mono text-xs whitespace-nowrap" title={r ? attemptsOf(r).map((a, i) => `Lần ${i + 1}: ${timeHMS(a.at)} – ${STAFF_STATUS_META[a.status]?.short}`).join('\n') : ''}>{r ? timeHMS(r.at) : ''}</td>
                   <td className="py-2 pr-2 whitespace-nowrap">{n > 1 ? <span className="px-2 py-0.5 rounded-full text-xs font-black bg-amber-50 text-amber-900 border border-amber-200 whitespace-nowrap">Lần {n}</span> : n === 1 ? <span className="text-xs text-slate-600">1</span> : ''}</td>
                   <td className="py-2 text-slate-700 max-w-[300px]" title={[r?.note || '', systemNoteOf(r)].filter(Boolean).join(' • ')}>
@@ -481,7 +549,7 @@ const TodayDetail: React.FC<{ staff: StaffMember[]; records: Record<string, Staf
                 </tr>
               );
             })}
-            {rows.length === 0 && <tr><td colSpan={8} className="py-6 text-center text-slate-600">Không có nhân sự phù hợp.</td></tr>}
+            {rows.length === 0 && <tr><td colSpan={10} className="py-6 text-center text-slate-600">Không có nhân sự phù hợp.</td></tr>}
           </tbody>
         </table>
       </div>

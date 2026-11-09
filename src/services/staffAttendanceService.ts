@@ -35,6 +35,10 @@ export interface StaffMember {
   updatedAt?: string;
 }
 
+/** Khóa chốt số liệu điểm danh của 1 ngày (Apps Script 4.5): khóa tất cả hoặc từng mã GV */
+export interface StaffDayLock { all?: boolean; codes?: Record<string, boolean>; at?: string; by?: string }
+export const isLockedFor = (L: StaffDayLock | null | undefined, code: string) => Boolean(L && (L.all || L.codes?.[code]));
+
 export interface StaffAttempt { status: StaffStatus; note?: string; at: string }
 export interface StaffRecord { status: StaffStatus; note?: string; at: string; firstAt?: string; edits?: number; attempt?: number; history?: StaffAttempt[] }
 
@@ -285,6 +289,11 @@ export const staffAttendanceService = {
     if (res?.success) this.rememberCccds(staff.map(s => ({ code: s.code, cccd: s.cccd })), deletedCodes);
     return this.withFullCccd(res);
   },
+  /** BGH / Quản trị: khóa hoặc mở khóa điểm danh (codes = danh sách mã; all = toàn bộ) */
+  lockStaff(opts: { date?: string; lock: boolean; all?: boolean; codes?: string[] }, auth?: { username: string; password: string } | null) {
+    return this.call({ action: 'staffLock', auth: auth ?? staffAttendanceService.getViewerAuth(), date: opts.date, lock: opts.lock, all: Boolean(opts.all), codes: opts.codes || [] });
+  },
+
   async range(from: string, to: string, auth?: { username: string; password: string } | null) {
     return this.withFullCccd(await this.call({ action: 'staffAttendanceRange', auth: auth ?? staffAttendanceService.getViewerAuth(), from, to }, null, 45000));
   },

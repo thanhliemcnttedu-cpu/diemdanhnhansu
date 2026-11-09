@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { CheckCircle2, Eye, EyeOff, LogOut, ShieldCheck, Stethoscope, Briefcase, CalendarDays, Loader2, AlertTriangle, PencilLine } from 'lucide-react';
+import { CheckCircle2, Eye, EyeOff, LogOut, ShieldCheck, Stethoscope, Briefcase, CalendarDays, Loader2, AlertTriangle, PencilLine, Lock } from 'lucide-react';
 import { staffAttendanceService, STAFF_STATUS_META, longDateLabel, StaffStatus, StaffMember, StaffRecord, attemptOf, attemptsOf, timeSpoken, timeHMS } from '../../../services/staffAttendanceService';
 
 /**
@@ -10,6 +10,7 @@ import { staffAttendanceService, STAFF_STATUS_META, longDateLabel, StaffStatus, 
  * mọi lần đều được máy chủ ghi giờ (nhà trường / kế toán thấy "Thực hiện điểm danh lại lần N").
  */
 const REMEMBER_KEY = 'lhhp_staff_checkin_remember_cccd';
+const LOCK_MESSAGE = 'Hiện tại chức năng điểm danh trong ngày đã được quản trị nhà trường khóa chốt số liệu.';
 
 const OPTIONS: Array<{ id: StaffStatus; icon: React.ReactNode; hint: string }> = [
   { id: 'present', icon: <Briefcase className="w-6 h-6" />, hint: 'Đi làm bình thường' },
@@ -34,6 +35,8 @@ export const StaffCheckInPage: React.FC = () => {
   const [done, setDone] = useState<StaffRecord | null>(null);
   // Đã điểm danh hôm nay → phải bấm "Sửa điểm danh" mới mở lại phiếu
   const [editing, setEditing] = useState(false);
+  // BGH / Quản trị đã khóa chốt số liệu điểm danh hôm nay (Apps Script 4.5)
+  const [lockedMsg, setLockedMsg] = useState('');
 
   const [schoolName, setSchoolName] = useState(conn?.schoolName || '');
   useEffect(() => { document.title = 'Điểm danh giáo viên – nhân viên'; }, []);
@@ -46,7 +49,7 @@ export const StaffCheckInPage: React.FC = () => {
   }, [conn]);
 
   const reset = () => {
-    setStaff(null); setPin(''); setStatus(''); setNote(''); setExisting(null); setDone(null); setError(''); setEditing(false);
+    setStaff(null); setPin(''); setStatus(''); setNote(''); setExisting(null); setDone(null); setError(''); setEditing(false); setLockedMsg('');
     if (!remember) setCccd('');
   };
 
@@ -63,7 +66,8 @@ export const StaffCheckInPage: React.FC = () => {
       try { if (remember) localStorage.setItem(REMEMBER_KEY, digits); else localStorage.removeItem(REMEMBER_KEY); } catch (_) { /* ignore */ }
       setStaff(r.staff); setToday(r.today); setExisting(r.record || null);
       setStatus(r.record?.status || ''); setNote(r.record?.note || '');
-      setEditing(!r.record);
+      setLockedMsg(r.locked ? (r.lockMessage || LOCK_MESSAGE) : '');
+      setEditing(!r.record && !r.locked);
     } catch (err: any) {
       setError(err?.message || 'Không kết nối được máy chủ.');
     } finally {
@@ -79,6 +83,7 @@ export const StaffCheckInPage: React.FC = () => {
       const r = await staffAttendanceService.checkIn(cccd.replace(/\D/g, ''), pin, status, note.trim(), today);
       if (!r?.success) {
         if (r?.code === 'NOT_TODAY' && r.today) setToday(r.today);
+        if (r?.code === 'LOCKED') { setLockedMsg(r.message || LOCK_MESSAGE); setEditing(false); setDone(null); return; }
         setError(r?.message || 'Chưa ghi nhận được điểm danh.');
         return;
       }
@@ -166,7 +171,22 @@ export const StaffCheckInPage: React.FC = () => {
                 </button>
               </div>
 
-              {existing && !editing && (
+              {lockedMsg && (
+                <div className="rounded-2xl border-2 border-rose-300 bg-rose-50 p-4 space-y-3" role="alert">
+                  <div className="flex items-start gap-2.5">
+                    <Lock className="w-6 h-6 text-rose-700 shrink-0 mt-0.5" />
+                    <div className="text-sm text-rose-950 space-y-1">
+                      <p className="font-black text-base">{lockedMsg}</p>
+                      {existing
+                        ? <p>Bạn đã điểm danh lần {attemptOf(existing)} lúc {timeSpoken(existing.at)}: <strong>{STAFF_STATUS_META[existing.status].label}</strong>{existing.note ? <> — {existing.note}</> : null}.</p>
+                        : <p>Bạn <strong>chưa điểm danh</strong> hôm nay. Vui lòng liên hệ Ban giám hiệu / Quản trị nhà trường nếu cần điều chỉnh.</p>}
+                    </div>
+                  </div>
+                  <button type="button" onClick={reset} className="w-full py-3 rounded-2xl bg-white border border-rose-300 hover:bg-rose-100 text-rose-950 font-black text-sm">Đã hiểu, thoát</button>
+                </div>
+              )}
+
+              {!lockedMsg && existing && !editing && (
                 <div className="rounded-2xl border-2 border-amber-300 bg-amber-50 p-4 space-y-3" role="alert">
                   <div className="flex items-start gap-2.5">
                     <AlertTriangle className="w-6 h-6 text-amber-700 shrink-0 mt-0.5" />
@@ -195,7 +215,7 @@ export const StaffCheckInPage: React.FC = () => {
                 </div>
               )}
 
-              {(!existing || editing) && (<>
+              {!lockedMsg && (!existing || editing) && (<>
               <div className="space-y-2" role="radiogroup" aria-label="Trạng thái điểm danh">
                 {OPTIONS.map(o => {
                   const meta = STAFF_STATUS_META[o.id];

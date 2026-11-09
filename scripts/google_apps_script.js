@@ -13,6 +13,8 @@
  * - CHỈ tổng hợp tệp của GVCN (gvcn_*.json, teacherRole = homeroom). Tệp GV bộ môn (gvbm_*.json),
  *   BGH, Quản trị không được tính để không dôi số lớp / số học sinh.
  *
+ * - V4.5: BGH / Quản trị KHÓA hoặc MỞ KHÓA điểm danh trong ngày (1 người, nhiều người hoặc tất cả):
+ *   action=staffLock; khi bị khóa, nhân sự điểm danh sẽ nhận thông báo "đã khóa chốt số liệu".
  * - V4.4: Lưu số CCCD đầy đủ ngay trong hồ sơ nhân sự (nhansu_truong.json, tệp được khóa, không tải trực tiếp được)
  *   và hiển thị đầy đủ cho Quản trị / BGH trong danh sách + tổng hợp. Nhập lại Excel 1 lần để có số đầy đủ.
  * - V4.3: Quản trị xem được ĐẦY ĐỦ số CCCD của nhân sự (bản xem lưu ở Script Properties "scccd:<mã>",
@@ -39,7 +41,7 @@
 var FOLDER_ID = "__FOLDER_ID__";
 var TARGET_FILENAME = "du_lieu_lop_hoc_hanh_phuc.json";
 var REPORT_PREFIX = "bc_";
-var SCRIPT_VERSION = "4.4";
+var SCRIPT_VERSION = "4.5";
 
 // ---------------------------------------------------------------------------------------
 // HTTP POST: lưu dữ liệu lớp
@@ -53,13 +55,14 @@ function doPost(e) {
     var folderId = payload.folderId || "";
     var action = payload.action || "saveClassData";
 
-    if (action === "staffAuth" || action === "staffCheckIn" || action === "getStaffRoster" || action === "saveStaffRoster" || action === "staffAttendanceRange") {
+    if (action === "staffAuth" || action === "staffCheckIn" || action === "getStaffRoster" || action === "saveStaffRoster" || action === "staffAttendanceRange" || action === "staffLock") {
       var staffFolder = resolveFolder(folderId);
       if (!staffFolder) return createJsonResponse({ success: false, message: "Không tìm thấy thư mục Google Drive: " + folderId });
       if (action === "staffAuth") return createJsonResponse(handleStaffAuth(staffFolder, payload));
       if (action === "staffCheckIn") return createJsonResponse(handleStaffCheckIn(staffFolder, payload));
       if (action === "getStaffRoster") return createJsonResponse(handleGetStaffRoster(staffFolder, payload));
       if (action === "saveStaffRoster") return createJsonResponse(handleSaveStaffRoster(staffFolder, payload));
+      if (action === "staffLock") return createJsonResponse(handleStaffLock(staffFolder, payload));
       return createJsonResponse(handleStaffAttendanceRange(staffFolder, payload));
     }
 
@@ -893,7 +896,64 @@ function handleStaffAuth(folder, payload) {
   var today = staffToday();
   var month = readMonth(folder, today);
   var rec = (month.days[today] || {})[v.staff.code] || null;
-  return { success: true, staff: publicStaff(v.staff), today: today, record: rec, serverTime: new Date().toISOString() };
+  var locked = isStaffLocked(month, today, v.staff.code);
+  return { success: true, staff: publicStaff(v.staff), today: today, record: rec, locked: locked, lockMessage: locked ? STAFF_LOCK_MESSAGE : "", serverTime: new Date().toISOString() };
+}
+
+// ---------------------------------------------------------------- V4.5: khóa chốt số liệu điểm danh theo ngày
+var STAFF_LOCK_MESSAGE = "Hiện tại chức năng điểm danh trong ngày đã được quản trị nhà trường khóa chốt số liệu.";
+
+// month.locks[ngày] = { all: true|false, codes: { MÃ: true }, at, by }
+function isStaffLocked(month, dateStr, code) {
+  var L = month && month.locks && month.locks[dateStr];
+  if (!L) return false;
+  return L.all === true || !!(L.codes && L.codes[code]);
+}
+
+// --- BGH / Quản trị: khóa hoặc mở khóa điểm danh (1 người / nhiều người / tất cả)
+function handleStaffLock(folder, payload) {
+  var actor = staffActor(folder, payload.auth, false);
+  if (!actor) return { success: false, code: "UNAUTHORIZED", message: "Chỉ BGH / Quản trị được khóa điểm danh." };
+  var today = staffToday();
+  var date = String(payload.date || today).slice(0, 10);
+  if (date > today) return { success: false, message: "Không khóa được ngày chưa tới." };
+  var doLock = payload.lock !== false;
+  var lock = LockService.getScriptLock();
+  try { lock.waitLock(20000); } catch (_) {}
+  try {
+    var month = readMonth(folder, date);
+    if (!month.locks) month.locks = {};
+    var L = month.locks[date] || { all: false, codes: {} };
+    if (!L.codes) L.codes = {};
+    var codes = (payload.codes || []).map(normalizeStaffCode).filter(function (c) { return !!c; });
+    if (payload.all) {
+      L.all = doLock;
+      L.codes = {};
+    } else if (doLock) {
+      for (var i = 0; i < codes.length; i++) L.codes[codes[i]] = true;
+    } else {
+      if (L.all) {
+        // Đang khóa toàn bộ, mở cho một số người -> chuyển sang khóa từng người (trừ những người được mở)
+        var keep = {};
+        var db = readStaffDb(folder);
+        for (var j = 0; j < db.staff.length; j++) keep[db.staff[j].code] = true;
+        for (var k = 0; k < codes.length; k++) delete keep[codes[k]];
+        L.all = false;
+        L.codes = keep;
+      } else {
+        for (var m = 0; m < codes.length; m++) delete L.codes[codes[m]];
+      }
+    }
+    L.at = new Date().toISOString();
+    L.by = actor.username;
+    if (!L.all && Object.keys(L.codes).length === 0) delete month.locks[date];
+    else month.locks[date] = L;
+    month.updatedAt = L.at;
+    writeFileOverwrite(folder, monthFileName(date), JSON.stringify(month));
+    return { success: true, date: date, lock: month.locks[date] || null };
+  } finally {
+    try { lock.releaseLock(); } catch (_) {}
+  }
 }
 
 // --- Giáo viên/nhân viên: điểm danh CHO HÔM NAY (ngày do máy chủ xác định)
@@ -910,6 +970,9 @@ function handleStaffCheckIn(folder, payload) {
     var v = verifyStaff(folder, payload.cccd, payload.pin);
     if (!v.ok) return { success: false, code: v.code, message: v.message };
     var month = readMonth(folder, today);
+    if (isStaffLocked(month, today, v.staff.code)) {
+      return { success: false, code: "LOCKED", locked: true, message: STAFF_LOCK_MESSAGE };
+    }
     if (!month.days[today]) month.days[today] = {};
     var prev = month.days[today][v.staff.code];
     var nowIso = new Date().toISOString();
@@ -1039,12 +1102,16 @@ function handleStaffAttendanceRange(folder, payload) {
   var to = String(payload.to || today).slice(0, 10);
   if (from > to) { var t = from; from = to; to = t; }
   var days = {};
+  var locks = {};
   var month = from.slice(0, 7);
   var guard = 0;
   while (month <= to.slice(0, 7) && guard++ < 14) {
     var m = readJsonFile(folder, STAFF_ATT_PREFIX + month + ".json", null);
     if (m && m.days) {
       for (var dk in m.days) if (dk >= from && dk <= to) days[dk] = m.days[dk];
+    }
+    if (m && m.locks) {
+      for (var lk in m.locks) if (lk >= from && lk <= to) locks[lk] = m.locks[lk];
     }
     var y = Number(month.slice(0, 4)), mo = Number(month.slice(5, 7)) + 1;
     if (mo > 12) { mo = 1; y++; }
@@ -1058,7 +1125,7 @@ function handleStaffAttendanceRange(folder, payload) {
     if (showCccd) p.currentCccd = props.getProperty("scccd:" + s.code) || "";
     return p;
   });
-  return { success: true, today: today, from: from, to: to, staff: staff, days: days };
+  return { success: true, today: today, from: from, to: to, staff: staff, days: days, locks: locks };
 }
 
 function createJsonResponse(obj) {
