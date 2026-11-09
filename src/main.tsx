@@ -4,6 +4,7 @@ import App from './App.tsx';
 import './index.css';
 import { schoolDriveDbService } from './services/schoolDriveDbService';
 import { installGlobalAvatarFallback } from './utils/avatarConfig';
+import { installAutoFitText } from './utils/autoFitText';
 
 // 🌐 Bản web tĩnh (Vercel): không có máy chủ Express (/api/*). Dò 1 lần khi khởi động; nếu không có,
 // trả 404 ngay tại trình duyệt cho các lần gọi /api sau đó (cùng kiểu phản hồi như máy chủ tĩnh,
@@ -36,6 +37,8 @@ import { installGlobalAvatarFallback } from './utils/avatarConfig';
 schoolDriveDbService.ensureCacheOwnership();
 // 🛡️ Ảnh avatar học sinh lỗi ở bất kỳ màn hình nào → tự sửa / dùng ảnh dự phòng
 installGlobalAvatarFallback();
+// Nhãn ngắn bị xuống dòng / bị cắt → tự co chữ (≥ 12px) cho vừa 1 dòng
+installAutoFitText();
 
 // 📲 Trang điểm danh giáo viên – nhân viên (/diemdanh): giao diện riêng, nhẹ, không cần đăng nhập phần mềm
 const isStaffCheckInRoute = typeof window !== 'undefined'

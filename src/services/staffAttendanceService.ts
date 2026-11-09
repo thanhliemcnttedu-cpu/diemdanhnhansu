@@ -111,7 +111,10 @@ const readSavedConn = (): Conn | null => {
 };
 
 export const staffAttendanceService = {
-  /** Kết nối dùng cho trang điểm danh: ưu tiên link (#mã.mã hoặc #c=...), rồi kết nối đã nhớ, rồi kết nối của phần mềm */
+  /**
+   * Kết nối Apps Script cho chấm công. Thứ tự: link đang mở (#mã.mã hoặc #c=...) → cấu hình Drive của máy (Quản trị vừa cài / cập nhật)
+   * → kết nối đã nhớ từ link trước. Cấu hình của máy PHẢI đứng trước kết nối đã nhớ, nếu không màn quản lý sẽ gọi nhầm link cũ đã chết.
+   */
   resolveConnection(): Conn | null {
     if (typeof window !== 'undefined') {
       const short = decodeShortConn(window.location.hash);
@@ -129,12 +132,12 @@ export const staffAttendanceService = {
           return c;
         }
       }
-      const saved = readSavedConn();
-      if (saved) return saved;
     }
     const cfg = googleDriveService.getConfig();
     const scriptUrl = googleDriveService.normalizeScriptUrl(cfg.scriptUrl);
-    if (!scriptUrl || !cfg.folderId) return null;
+    if (!scriptUrl || !cfg.folderId) {
+      return typeof window !== 'undefined' ? readSavedConn() : null;
+    }
     let schoolName = '';
     try {
       const cache = JSON.parse(localStorage.getItem('lhhp_drive_schools_cache') || 'null');

@@ -1076,8 +1076,8 @@ export const AdminRealtimeDashboardView: React.FC = () => {
               <Calendar className="w-4 h-4" />
             </div>
             <div>
-              <div className="flex items-center gap-2">
-                <h3 className="text-xs sm:text-sm font-black text-indigo-950 uppercase tracking-tight">
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                <h3 className="text-xs sm:text-sm font-black text-indigo-950 uppercase tracking-tight whitespace-nowrap">
                   KHUNG THỜI GIAN BÁO CÁO TỔNG HỢP
                 </h3>
                 <span className="px-2 py-0.5 rounded-full text-[12px] font-black bg-indigo-50 text-indigo-700 border border-indigo-200">
@@ -1276,7 +1276,7 @@ export const AdminRealtimeDashboardView: React.FC = () => {
           <div className="space-y-1">
             <label className="text-[12px] font-black text-slate-700 flex items-center gap-1.5">
               <Building2 className="w-3.5 h-3.5 text-indigo-600" />
-              <span>CẤP 1: CHỌN PHÂN HIỆU</span>
+              <span className="whitespace-nowrap">CẤP 1: PHÂN HIỆU</span>
             </label>
             <select
               value={selectedBranch}
@@ -1299,7 +1299,7 @@ export const AdminRealtimeDashboardView: React.FC = () => {
           <div className="space-y-1">
             <label className="text-[12px] font-black text-slate-700 flex items-center gap-1.5">
               <MapPin className="w-3.5 h-3.5 text-rose-600" />
-              <span>CẤP 2: CHỌN ĐIỂM TRƯỜNG</span>
+              <span className="whitespace-nowrap">CẤP 2: ĐIỂM TRƯỜNG</span>
             </label>
             <select
               value={selectedCampus}
@@ -1322,7 +1322,7 @@ export const AdminRealtimeDashboardView: React.FC = () => {
           <div className="space-y-1">
             <label className="text-[12px] font-black text-slate-700 flex items-center gap-1.5">
               <GraduationCap className="w-3.5 h-3.5 text-amber-600" />
-              <span>CẤP 3: CHỌN KHỐI HỌC</span>
+              <span className="whitespace-nowrap">CẤP 3: KHỐI HỌC</span>
             </label>
             <select
               value={selectedGrade}

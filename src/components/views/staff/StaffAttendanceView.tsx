@@ -10,6 +10,7 @@ import {
 } from '../../../services/staffAttendanceService';
 import { StaffCheckInQrCard } from './StaffCheckInQr';
 import { appsScriptSetupService } from '../../../services/appsScriptSetupService';
+import { openReinitSchoolDb } from '../../modals/ReinitSchoolDbModal';
 
 type Tab = 'summary' | 'roster' | 'link';
 type Period = 'today' | 'yesterday' | 'week' | 'month' | 'custom';
@@ -326,6 +327,9 @@ export const StaffAttendanceView: React.FC = () => {
               <p className="font-bold flex items-start gap-2"><ShieldAlert className="w-4 h-4 mt-0.5 shrink-0" />{error}</p>
               {(errorKind === 'dead' || errorKind === 'no_db') && (
                 <div className="flex flex-wrap gap-2 pl-6">
+                  {errorKind === 'no_db' && canManage && (
+                    <button type="button" onClick={openReinitSchoolDb} className="no-hover-fx h-9 px-3.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold whitespace-nowrap">Khởi tạo lại CSDL trường</button>
+                  )}
                   {errorKind === 'dead' && canManage && (
                     <button type="button" onClick={() => appsScriptSetupService.open('install')} className="no-hover-fx h-9 px-3.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold whitespace-nowrap">Mở Cài đặt Apps Script</button>
                   )}

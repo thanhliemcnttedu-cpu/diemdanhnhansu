@@ -158,3 +158,20 @@
 - **Prevention**: Không dùng `id` làm khóa cho tài khoản đến từ Drive; khóa chuẩn là `username` (viết thường). Mọi hàm tìm theo khóa phải từ chối khóa rỗng.
 - **Status**: Fixed
 
+---
+
+## [2026-11-10 00:30] - Chấm công báo "Failed to fetch / link không trả lời" dù Apps Script mới đã chạy (chip xanh V4.5)
+
+- **Type**: Logic
+- **Severity**: High
+- **File**: `src/services/staffAttendanceService.ts` (`resolveConnection`)
+- **Agent**: Claude
+- **Root Cause**: Thứ tự chọn kết nối là link đang mở → **kết nối đã nhớ** (`lhhp_staff_checkin_conn`, ghi khi mở trang /diemdanh bằng link cũ) → cấu hình Drive của máy. Sau khi Quản trị cài lại Apps Script (link mới), màn quản lý chấm công vẫn gọi link cũ đã chết; chip trên thanh trên lại dùng cấu hình máy nên báo xanh → hai nơi mâu thuẫn. Kèm theo: người dùng xóa sạch thư mục Drive làm mất `csdl_truong.json` (Apps Script trả UNAUTHORIZED).
+- **Error Message**:
+  ```
+  Failed to fetch  →  "Không kết nối được Apps Script của nhà trường: link /exec không trả lời…"
+  ```
+- **Fix Applied**: Cấu hình Drive của máy đứng trước kết nối đã nhớ; kết nối đã nhớ chỉ dùng khi máy chưa cấu hình (điện thoại nhân sự). Thêm `diagnoseFailure` (dead / no_db) và nút "Khởi tạo lại CSDL trường".
+- **Prevention**: Mọi màn quản lý phải dùng cùng một nguồn kết nối với phần kiểm tra phiên bản. Hướng dẫn trường: không đặt dự án Apps Script trong thư mục dữ liệu, không xóa `csdl_truong.json`.
+- **Status**: Fixed
+

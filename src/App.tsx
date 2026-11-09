@@ -19,6 +19,7 @@ import { DesktopRoleSetupModal } from './components/modals/DesktopRoleSetupModal
 import { ChangePasswordModal } from './components/modals/ChangePasswordModal';
 import { ZaloQrModal } from './components/modals/ZaloQrModal';
 import { AppsScriptSetupWizard } from './components/modals/AppsScriptSetupWizard';
+import { ReinitSchoolDbModal } from './components/modals/ReinitSchoolDbModal';
 import { schoolDriveDbService } from './services/schoolDriveDbService';
 import { CommandPalette } from './components/layout/CommandPalette';
 import { OPEN_CHANGE_PASSWORD_EVENT } from './components/modals/ChangePasswordModal';
@@ -337,6 +338,7 @@ function ClassroomApp() {
       {/* Mã QR Zalo liên hệ tác giả (tự mở khi bấm mọi liên kết Zalo của tác giả) */}
       <ZaloQrModal />
       <AppsScriptSetupWizard />
+      <ReinitSchoolDbModal />
 
       {/* Cấu Hình & Lựa Chọn Vai Trò Cài Đặt Desktop (CSDL_LHHP.exe) */}
       <DesktopRoleSetupModal

@@ -416,5 +416,49 @@ export const schoolDriveDbService = {
     } catch (err: any) {
       return { success: false, message: err?.message || 'Không kết nối được Google Drive.' };
     }
+  },
+
+  /** Danh sách trường + tài khoản đang lưu trên máy này (dùng để khởi tạo lại CSDL trên Drive) */
+  localSnapshot(): { schools: any[]; users: any[] } {
+    const users = readJson<any[]>(local, USERS_KEY, [])
+      .filter(u => u?.username && u.tenantType !== 'guest' && u.role !== 'guest_admin');
+    const schools = readJson<any[]>(local, SCHOOLS_KEY, []).filter(sc => sc?.name);
+    return { schools, users };
+  },
+
+  /**
+   * 🔁 KHỞI TẠO LẠI csdl_truong.json trên Drive (khi tệp bị xóa) từ dữ liệu trường + tài khoản trên máy Quản trị.
+   * - Tài khoản đang thao tác dùng `adminPassword`; MỌI tài khoản khác dùng `commonPassword` (dễ thông báo, không nhầm).
+   * - Apps Script ở chế độ khởi tạo (chưa có CSDL) chấp nhận ngay; nếu CSDL đã có thì phải đúng mật khẩu Quản trị (gộp, không xóa ai).
+   */
+  async reinitializeSchoolDb(adminUsername: string, adminPassword: string, commonPassword: string, adminFullName?: string): Promise<{ success: boolean; message: string; count?: number }> {
+    if (!this.isConfigured()) return { success: false, message: 'Máy này chưa kết nối thư mục Google Drive của nhà trường.' };
+    const adminKey = String(adminUsername || '').trim().toLowerCase();
+    if (!adminKey || !adminPassword) return { success: false, message: 'Thiếu tài khoản / mật khẩu Quản trị.' };
+    const { schools, users } = this.localSnapshot();
+    const payloadUsers = users.map(u => {
+      const key = String(u.username).trim().toLowerCase();
+      const { password: _omit, currentPassword: _cp, ...safe } = u;
+      const pw = key === adminKey ? adminPassword : commonPassword;
+      return { ...safe, username: key, password: pw };
+    }).filter(u => u.password);
+    if (!payloadUsers.some(u => u.username === adminKey)) {
+      payloadUsers.unshift({ id: `user-${adminKey}`, username: adminKey, fullName: adminFullName || 'Quản trị hệ thống', role: 'admin', tenantType: 'school', status: 'active', password: adminPassword });
+    }
+    try {
+      const data = await this.callScript({
+        action: 'saveSchoolDb',
+        auth: { username: adminKey, password: adminPassword, fullName: adminFullName },
+        db: { mode: 'merge', schools, users: payloadUsers, deletedUsernames: [], deletedSchoolIds: [] }
+      }, 60000);
+      if (!data?.success) return { success: false, message: data?.message || 'Không khởi tạo được cơ sở dữ liệu nhà trường.' };
+      this.rememberAdminAuth(adminKey, adminPassword);
+      try { sessionStorage.setItem('lhhp_staff_viewer_auth', JSON.stringify({ username: adminKey, password: adminPassword })); } catch (_) { /* ignore */ }
+      payloadUsers.forEach(u => { if (u.username !== adminKey) this.setIssuedPassword(u.username, u.password); });
+      this.applyAuthoritative(data.users, data.schools);
+      return { success: true, count: payloadUsers.length, message: `Đã khởi tạo lại cơ sở dữ liệu nhà trường trên Google Drive: ${schools.length} trường, ${payloadUsers.length} tài khoản.` };
+    } catch (err: any) {
+      return { success: false, message: err?.message || 'Không kết nối được Google Drive.' };
+    }
   }
 };

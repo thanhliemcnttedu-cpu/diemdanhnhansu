@@ -670,14 +670,14 @@ export const ScheduleLinksView: React.FC<ScheduleLinksViewProps> = ({ defaultTab
             </div>
 
             {/* Template Buttons Carousel / Grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2.5">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-7 gap-2.5">
               {TEMPLATES.map((tmpl) => {
                 const isSelected = selectedTemplate === tmpl.id;
                 return (
                   <button
                     key={tmpl.id}
                     onClick={() => handleSelectTemplate(tmpl.id)}
-                    className={`p-3 rounded-2xl border text-left transition-all relative flex flex-col justify-between hover-zoom-btn ${
+                    className={`p-2 sm:p-3 rounded-2xl border text-left transition-all relative flex flex-col justify-between hover-zoom-btn ${
                       isSelected
                         ? 'border-indigo-600 bg-gradient-to-b from-indigo-50 to-violet-50/50 shadow-md ring-2 ring-indigo-500/20'
                         : 'border-slate-200/90 hover:border-indigo-300 bg-slate-50/40 hover:bg-white'
@@ -2255,7 +2255,7 @@ export const ScheduleLinksView: React.FC<ScheduleLinksViewProps> = ({ defaultTab
             </div>
           )}
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
             {quickLinks.map((link, index) => (
               <div key={link.id} className="bg-white rounded-3xl border border-indigo-100 p-5 shadow-2xs hover:border-indigo-300 hover:shadow-md transition-all flex flex-col justify-between hover-zoom-card">
                 <div>

@@ -348,11 +348,11 @@ export const TopBar: React.FC<TopBarProps> = ({
             <span className="hidden sm:inline">{viewInfo.title}</span>
             {currentView !== 'dashboard' && currentView !== 'classes' && (
               isManagementAdmin ? (
-                <span className="text-indigo-600 font-extrabold ml-1.5 hidden md:inline-block uppercase">
+                <span className="text-indigo-600 font-extrabold ml-1.5 hidden 2xl:inline-block uppercase">
                   {isSuperAdmin && currentView === 'data' ? 'HỆ THỐNG & NHÀ TRƯỜNG' : 'TOÀN TRƯỜNG'}
                 </span>
               ) : activeClass ? (
-                <span className="text-indigo-600 font-extrabold ml-1.5 hidden md:inline-block">
+                <span className="text-indigo-600 font-extrabold ml-1.5 hidden 2xl:inline-block">
                   {activeClass.name.trim().toLowerCase().startsWith('lớp') ? activeClass.name.trim() : `Lớp ${activeClass.name.trim()}`}
                 </span>
               ) : null
@@ -374,11 +374,12 @@ export const TopBar: React.FC<TopBarProps> = ({
         <button
           type="button"
           onClick={() => window.dispatchEvent(new Event('lhhp:open-command-palette'))}
-          className={`${chipBase} max-lg:hidden bg-slate-50 text-slate-600 border-slate-200 hover:bg-white hover:text-slate-900 min-w-[170px] justify-between`}
+          className={`${chipBase} max-lg:hidden bg-slate-50 text-slate-600 border-slate-200 hover:bg-white hover:text-slate-900 xl:min-w-[170px] justify-between`}
+          aria-label="Tìm nhanh chức năng (Ctrl + K)"
           title="Tìm nhanh chức năng (Ctrl + K)"
         >
-          <span className="inline-flex items-center gap-1.5"><Search className="w-3.5 h-3.5" />Tìm nhanh…</span>
-          <kbd className="text-[12px] font-bold text-slate-500 border border-slate-200 rounded px-1">Ctrl K</kbd>
+          <span className="inline-flex items-center gap-1.5"><Search className="w-3.5 h-3.5" /><span className="max-xl:hidden">Tìm nhanh…</span></span>
+          <kbd className="max-xl:hidden text-[12px] font-bold text-slate-500 border border-slate-200 rounded px-1">Ctrl K</kbd>
         </button>
         {!isManagerUser && (
           <button
@@ -438,7 +439,7 @@ export const TopBar: React.FC<TopBarProps> = ({
             aria-label="Cập nhật dữ liệu mới nhất từ tất cả giáo viên"
           >
             <RefreshCw className={`w-4 h-4 ${isRefreshingAll ? 'animate-spin' : ''}`} />
-            <span className="hidden md:inline">
+            <span className="hidden xl:inline">
               {isRefreshingAll ? 'Đang cập nhật…' : (lastRefreshAllAt ? `Đã cập nhật ${lastRefreshAllAt}` : 'Cập nhật dữ liệu')}
             </span>
           </button>
@@ -514,7 +515,7 @@ export const TopBar: React.FC<TopBarProps> = ({
 
         {/* Năm học */}
         {(teacherProfile.academicYear || activeClass?.academicYear) && (
-          <span className={`${chipBase} max-md:hidden bg-white text-slate-700 border-slate-200 cursor-default`} title="Năm học">
+          <span className={`${chipBase} max-xl:hidden bg-white text-slate-700 border-slate-200 cursor-default`} title="Năm học">
             <CalendarDays className="w-4 h-4 text-slate-500" />
             {teacherProfile.academicYear || activeClass?.academicYear}
           </span>

@@ -5,6 +5,7 @@ import {
 import { googleDriveService } from '../../services/googleDriveService';
 import { appsScriptSetupService, OPEN_APPS_SCRIPT_WIZARD_EVENT, SetupCheck } from '../../services/appsScriptSetupService';
 import { useClassroom } from '../../context/ClassroomContext';
+import { openReinitSchoolDb } from './ReinitSchoolDbModal';
 
 /**
  * 🧭 TRÌNH CÀI ĐẶT APPS SCRIPT "1 TRANG"
@@ -193,6 +194,13 @@ export const AppsScriptSetupWizard: React.FC = () => {
                     {shareCopied ? <CheckCheck className="w-4 h-4" /> : <Copy className="w-4 h-4" />} {shareCopied ? 'Đã sao chép tin nhắn' : 'Sao chép tin nhắn kết nối gửi toàn trường'}
                   </button>
                 )}
+              </div>
+            )}
+            {result?.checks.some(c => c.key === 'folder' && c.state === 'ok' && /chưa có CSDL/.test(c.detail)) && (
+              <div className="rounded-xl bg-amber-50 border border-amber-200 px-3 py-2.5 text-sm text-amber-950 space-y-2">
+                <p>Thư mục chưa có cơ sở dữ liệu nhà trường (<code className="font-mono">csdl_truong.json</code>). Nếu tệp đã bị xóa, khởi tạo lại từ dữ liệu trên máy này (sau khi đã Lưu kết nối).</p>
+                <button type="button" onClick={() => { if (!saved && result?.allOk) saveConfig(); setOpen(false); openReinitSchoolDb(); }}
+                  className="no-hover-fx h-9 px-3.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold whitespace-nowrap">Khởi tạo lại CSDL trường</button>
               </div>
             )}
             {saved && isUpdate && <p className="text-sm font-bold text-emerald-800">Đã cập nhật xong. Link giữ nguyên nên giáo viên, nhân viên không phải làm gì thêm.</p>}

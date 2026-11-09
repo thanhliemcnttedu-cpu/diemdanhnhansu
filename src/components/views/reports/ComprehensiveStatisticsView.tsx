@@ -1272,7 +1272,7 @@ export const ComprehensiveStatisticsView: React.FC = () => {
             title={`Xuất bản PDF A4 Khổ Ngang chuẩn in ấn (${totalPrintPages} Trang, lề tối thiểu 0.25cm) chứa trọn vẹn biểu đồ, các lớp GVCN ngắt trang và tiến bộ học sinh`}
           >
             <Download className="w-3.5 h-3.5" />
-            <span>{isExportingPdf ? 'Đang tạo...' : `Xuất PDF A4 (${totalPrintPages} Trang)`}</span>
+            <span className="whitespace-nowrap">{isExportingPdf ? 'Đang tạo...' : `Xuất PDF A4 (${totalPrintPages} Trang)`}</span>
           </button>
 
           {/* Xuất Excel */}

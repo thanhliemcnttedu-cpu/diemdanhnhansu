@@ -1016,7 +1016,7 @@ export const SeatingChartView: React.FC = () => {
                                 ) : (
                                   <div className="py-2.5 text-center text-slate-400">
                                     <Users className="w-4 h-4 mx-auto mb-0.5 opacity-40" />
-                                    <span className="text-[12px] font-semibold">Ghế Trái</span>
+                                    <span className="text-[12px] font-semibold whitespace-nowrap" title="Ghế trái">Trái</span>
                                   </div>
                                 )}
                               </button>
@@ -1049,7 +1049,7 @@ export const SeatingChartView: React.FC = () => {
                                 ) : (
                                   <div className="py-2.5 text-center text-slate-400">
                                     <Users className="w-4 h-4 mx-auto mb-0.5 opacity-40" />
-                                    <span className="text-[12px] font-semibold">Ghế Phải</span>
+                                    <span className="text-[12px] font-semibold whitespace-nowrap" title="Ghế phải">Phải</span>
                                   </div>
                                 )}
                               </button>

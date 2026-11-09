@@ -1602,7 +1602,7 @@ export const ReportsDataView: React.FC<ReportsDataViewProps> = ({ defaultTab = '
             )}
 
             {/* 2. CỤM 3 THẺ CHỨC NĂNG HÀNH ĐỘNG THÍCH ỨNG (TẢI VỀ • NẠP VÀO • LÀM MỚI NĂM HỌC) */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 sm:gap-5">
               {/* Card 1: Backup Download (.JSON & .ZIP) theo phân cấp */}
               <div className="bg-white rounded-3xl border border-slate-200/90 p-4 sm:p-6 shadow-xs flex flex-col justify-between space-y-4 sm:space-y-5 hover-zoom-card">
                 <div className="space-y-2">
