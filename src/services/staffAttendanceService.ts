@@ -1,7 +1,7 @@
 /**
  * 👩‍🏫 CHẤM CÔNG (ĐIỂM DANH) GIÁO VIÊN – NHÂN VIÊN TOÀN TRƯỜNG
  *
- * - Dữ liệu nằm trong thư mục Drive dùng chung, do Apps Script V4.2 quản lý:
+ * - Dữ liệu nằm trong thư mục Drive dùng chung, do Apps Script V4.2+ quản lý (V4.3: Quản trị xem đủ số CCCD):
  *   nhansu_truong.json (CCCD + mật khẩu chỉ lưu dạng băm) và chamcong_nhansu_YYYY-MM.json.
  * - Nhân sự điểm danh tại trang /diemdanh bằng số CCCD + mật khẩu điểm danh; NGÀY do máy chủ quyết định.
  * - Quản trị (admin / school_admin) quản lý danh sách; BGH + Quản trị xem tổng hợp (cần mật khẩu phiên).
@@ -29,6 +29,8 @@ export interface StaffMember {
   disabled?: boolean;
   hasPin?: boolean;
   currentPin?: string;
+  /** Số CCCD đầy đủ – chỉ Quản trị nhận được (Apps Script 4.3+) */
+  currentCccd?: string;
   updatedAt?: string;
 }
 

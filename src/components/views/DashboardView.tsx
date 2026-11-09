@@ -220,7 +220,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         ];
 
         const shortcuts: Array<{ key: string; label: string; icon: React.ReactNode; onClick: () => void; tone: string }> = isManagementAccount ? [
-          { key: 'r', label: 'Báo cáo realtime', icon: <ShieldCheck className="w-5 h-5" />, onClick: () => onNavigate('reports'), tone: 'text-indigo-700 bg-indigo-50' },
+          { key: 'r', label: 'Báo cáo', icon: <ShieldCheck className="w-5 h-5" />, onClick: () => onNavigate('reports'), tone: 'text-indigo-700 bg-indigo-50' },
           { key: 's', label: 'Chấm công', icon: <CheckSquare className="w-5 h-5" />, onClick: () => onNavigate('staff_attendance'), tone: 'text-emerald-800 bg-emerald-50' },
           { key: 'c', label: 'Lớp học', icon: <School className="w-5 h-5" />, onClick: () => onNavigate('classes'), tone: 'text-sky-800 bg-sky-50' },
           { key: 'k', label: 'Tìm nhanh', icon: <TrendingUp className="w-5 h-5" />, onClick: () => window.dispatchEvent(new Event('lhhp:open-command-palette')), tone: 'text-slate-700 bg-slate-100' },
@@ -243,7 +243,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                   <img src={displayAvatar} alt={greetingUserName} className="w-14 h-14 rounded-2xl object-cover ring-4 ring-white shadow-sm bg-white shrink-0" />
                   <div className="min-w-0">
                     <p className="text-sm font-semibold text-indigo-800">{dateLine} • {roleText}</p>
-                    <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight leading-tight truncate">
+                    <h1 className="text-lg sm:text-2xl font-black text-slate-900 tracking-tight leading-tight truncate">
                       {(() => { const g = String(getGreeting()).toLocaleLowerCase('vi-VN'); return g.charAt(0).toLocaleUpperCase('vi-VN') + g.slice(1); })()}, {greetingUserName}!
                     </h1>
                     <p className="text-sm text-slate-700 truncate">

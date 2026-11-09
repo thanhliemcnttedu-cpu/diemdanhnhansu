@@ -13,6 +13,9 @@
  * - CHỈ tổng hợp tệp của GVCN (gvcn_*.json, teacherRole = homeroom). Tệp GV bộ môn (gvbm_*.json),
  *   BGH, Quản trị không được tính để không dôi số lớp / số học sinh.
  *
+ * - V4.3: Quản trị xem được ĐẦY ĐỦ số CCCD của nhân sự (bản xem lưu ở Script Properties "scccd:<mã>",
+ *   KHÔNG nằm trong thư mục Drive; chỉ trả về cho tài khoản Quản trị). Nhân sự nhập trước 4.3 cần nhập lại
+ *   tệp Excel (hoặc sửa CCCD) để lưu số đầy đủ. Cập nhật: dán lại mã -> Triển khai -> Phiên bản mới (giữ URL).
  * - V4.2: CHẤM CÔNG GIÁO VIÊN – NHÂN VIÊN (nhansu_truong.json + chamcong_nhansu_YYYY-MM.json):
  *   nhân sự điểm danh bằng số CCCD + mật khẩu điểm danh, chỉ cho NGÀY HÔM NAY theo giờ máy chủ.
  *   ⚠️ Cập nhật từ V4.1: dán lại toàn bộ mã này rồi Triển khai -> Quản lý triển khai -> sửa -> Phiên bản mới
@@ -34,7 +37,7 @@
 var FOLDER_ID = "__FOLDER_ID__";
 var TARGET_FILENAME = "du_lieu_lop_hoc_hanh_phuc.json";
 var REPORT_PREFIX = "bc_";
-var SCRIPT_VERSION = "4.2";
+var SCRIPT_VERSION = "4.3";
 
 // ---------------------------------------------------------------------------------------
 // HTTP POST: lưu dữ liệu lớp
@@ -939,7 +942,10 @@ function handleGetStaffRoster(folder, payload) {
   var props = PropertiesService.getScriptProperties();
   var list = db.staff.map(function (s) {
     var p = publicStaff(s);
-    if (withPins) p.currentPin = props.getProperty("spin:" + s.code) || "";
+    if (withPins) {
+      p.currentPin = props.getProperty("spin:" + s.code) || "";
+      p.currentCccd = props.getProperty("scccd:" + s.code) || "";
+    }
     return p;
   });
   return { success: true, staff: list, today: staffToday(), updatedAt: db.updatedAt || "" };
@@ -981,7 +987,7 @@ function handleSaveStaffRoster(folder, payload) {
           var dup = null;
           for (var k in byCode) if (byCode[k] !== s && byCode[k].cccdHash === h) dup = byCode[k];
           if (dup) { errors.push(code + ": số CCCD trùng với " + dup.code + "."); if (isNew) continue; }
-          else { s.cccdHash = h; s.cccdLast4 = digits.slice(-4); }
+          else { s.cccdHash = h; s.cccdLast4 = digits.slice(-4); props.setProperty("scccd:" + code, digits); }
         }
       }
       if (isNew && !s.cccdHash) { errors.push(code + ": thiếu số CCCD."); continue; }
@@ -1000,7 +1006,7 @@ function handleSaveStaffRoster(folder, payload) {
     var deleted = payload.deletedCodes || [];
     for (var d = 0; d < deleted.length; d++) {
       var dc = normalizeStaffCode(deleted[d]);
-      if (byCode[dc]) { delete byCode[dc]; try { props.deleteProperty("spin:" + dc); } catch (_) {} }
+      if (byCode[dc]) { delete byCode[dc]; try { props.deleteProperty("spin:" + dc); props.deleteProperty("scccd:" + dc); } catch (_) {} }
     }
     db.staff = Object.keys(byCode).map(function (c) { return byCode[c]; });
     db.updatedAt = new Date().toISOString();
@@ -1016,7 +1022,7 @@ function handleGetStaffRosterResult(db, props, errors) {
   return {
     success: true,
     errors: errors,
-    staff: db.staff.map(function (s) { var p = publicStaff(s); p.currentPin = props.getProperty("spin:" + s.code) || ""; return p; }),
+    staff: db.staff.map(function (s) { var p = publicStaff(s); p.currentPin = props.getProperty("spin:" + s.code) || ""; p.currentCccd = props.getProperty("scccd:" + s.code) || ""; return p; }),
     today: staffToday(),
     updatedAt: db.updatedAt
   };

@@ -333,7 +333,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 overflow-hidden login-tech-bg"
+      className="fixed inset-0 z-50 flex items-start md:items-center justify-center p-2 sm:p-4 overflow-y-auto md:overflow-hidden login-tech-bg"
     >
       {/* 🌐 Nền công nghệ tông sáng: vầng sáng (aurora) + lưới tọa độ + đường mạch */}
       <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
@@ -369,19 +369,21 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
       {/* Main container */}
       <div 
-        className="relative w-full max-w-6xl flex flex-col max-h-[97vh] animate-in fade-in zoom-in-95 duration-300"
+        className="relative w-full max-w-6xl flex flex-col md:max-h-[97vh] animate-in fade-in zoom-in-95 duration-300"
         onClick={(e) => e.stopPropagation()}
       >
         {/* ─────────── TOP HEADER BAR ─────────── */}
-        <div className="flex items-center justify-between px-3 sm:px-4 pb-2 shrink-0">
-          <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+        <div className="flex items-center justify-between gap-2 px-1 sm:px-4 pb-2 shrink-0">
+          <div className="flex items-center gap-2.5 sm:gap-4 min-w-0">
             {/* Logo */}
-            <img src="/logo.svg" alt="Logo Lớp Học Hạnh Phúc" className="w-12 h-12 sm:w-16 sm:h-16 shrink-0 rounded-[22%] shadow-lg shadow-indigo-500/30 ring-4 ring-white" />
+            <img src="/logo.svg" alt="Logo Lớp Học Hạnh Phúc" className="w-10 h-10 sm:w-16 sm:h-16 shrink-0 rounded-[22%] shadow-lg shadow-indigo-500/30 ring-2 sm:ring-4 ring-white" />
             {/* Title */}
             <div className="min-w-0">
-              <h1 className="text-base sm:text-lg md:text-xl lg:text-xl font-black text-slate-900 tracking-tight leading-tight whitespace-nowrap">
-                HỆ THỐNG QUẢN TRỊ CSDL LỚP HỌC HẠNH PHÚC
+              <h1 className="text-base sm:text-lg md:text-xl font-black text-slate-900 tracking-tight leading-tight whitespace-nowrap truncate">
+                <span className="sm:hidden">Lớp Học Hạnh Phúc</span>
+                <span className="hidden sm:inline">HỆ THỐNG QUẢN TRỊ CSDL LỚP HỌC HẠNH PHÚC</span>
               </h1>
+              <p className="text-xs text-indigo-700 font-semibold sm:hidden truncate">Đăng nhập hệ thống quản lý lớp học</p>
               <p className="text-xs text-indigo-700 font-semibold mt-0.5 hidden sm:block">
                 SCHOOL DATABASE MANAGEMENT SYSTEM • Phiên bản chuyên nghiệp
               </p>
@@ -389,30 +391,31 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           </div>
           
           {/* Nút Đăng ký & CDKEY (gọn trên cùng hàng tiêu đề để không phải cuộn) */}
-          <div className="flex flex-wrap items-center justify-end gap-2 shrink-0 ml-2">
+          <div className="flex items-center justify-end gap-1.5 sm:gap-2 shrink-0">
             <button
               type="button"
               onClick={() => setIsRegistrationModalOpen(true)}
-              className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-full font-black text-[12px] sm:text-[12px] uppercase tracking-wide shadow-lg transition-all hover:scale-[1.03] active:scale-[0.98] flex items-center gap-1.5 cursor-pointer"
+              aria-label="Đăng ký tài khoản mới"
+              className="w-9 h-9 sm:w-auto sm:h-auto justify-center sm:px-4 sm:py-2 rounded-full font-black text-[12px] uppercase tracking-wide shadow-lg transition-all hover:scale-[1.03] active:scale-[0.98] flex items-center gap-1.5 cursor-pointer whitespace-nowrap"
               style={{ background: 'linear-gradient(135deg, #dc2626 0%, #e11d48 50%, #b91c1c 100%)', color: 'white', boxShadow: '0 6px 20px rgba(220, 38, 38, 0.35)' }}
               title="Đăng ký mua tài khoản giáo viên mới"
             >
-              <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+              <Sparkles className="w-4 h-4 sm:w-3.5 sm:h-3.5 text-amber-300" />
               <span className="hidden sm:inline">ĐĂNG KÝ TÀI KHOẢN MỚI</span>
-              <span className="sm:hidden">ĐĂNG KÝ</span>
             </button>
             <button
               type="button"
               onClick={() => setIsCdKeyModalOpen(true)}
-              className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-full font-black text-[12px] sm:text-[12px] uppercase tracking-wide shadow-lg transition-all hover:scale-[1.03] active:scale-[0.98] flex items-center gap-1.5 cursor-pointer ${
+              aria-label="Kích hoạt CDKEY bản quyền"
+              className={`w-9 h-9 sm:w-auto sm:h-auto justify-center sm:px-4 sm:py-2 rounded-full font-black text-[12px] uppercase tracking-wide shadow-lg transition-all hover:scale-[1.03] active:scale-[0.98] flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
                 isCdKeyActivated
                   ? 'bg-emerald-700 hover:bg-emerald-800 text-white'
                   : 'bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950'
               }`}
               title="Kích hoạt CDKEY bản quyền"
             >
-              <KeyRound className="w-3.5 h-3.5" />
-              <span>{isCdKeyActivated ? 'BẢN QUYỀN VĨNH VIỄN' : 'KÍCH HOẠT CDKEY'}</span>
+              <KeyRound className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
+              <span className="hidden sm:inline">{isCdKeyActivated ? 'BẢN QUYỀN VĨNH VIỄN' : 'KÍCH HOẠT CDKEY'}</span>
             </button>
           </div>
 
@@ -429,14 +432,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         </div>
 
         {/* ─────────── MAIN SPLIT PANEL ─────────── */}
-        <div className="flex-1 flex flex-col md:flex-row gap-3 sm:gap-4 px-3 sm:px-4 pb-3 sm:pb-4 overflow-hidden min-h-0">
+        <div className="flex-1 flex flex-col md:flex-row gap-3 sm:gap-4 px-0 sm:px-4 pb-3 sm:pb-4 md:overflow-hidden min-h-0">
           
           {/* ═══════════ LEFT PANEL - LOGIN FORM & RESCUE ═══════════ */}
           <div className="md:w-[44%] shrink-0 flex flex-col rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl" style={{
             background: 'linear-gradient(160deg, #1d4ed8 0%, #2563eb 50%, #4338ca 100%)',
             boxShadow: '0 25px 50px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1)'
           }}>
-            <div className="flex-1 p-3 sm:p-4 flex flex-col overflow-y-auto">
+            <div className="flex-1 p-3.5 sm:p-4 flex flex-col md:overflow-y-auto">
               {/* Error & Success Alerts */}
               {errorMessage && (
                 <div className="mb-3 p-3 rounded-2xl bg-rose-600/35 border-2 border-rose-400 text-white text-xs sm:text-sm font-black flex items-start gap-2.5 backdrop-blur-md shadow-xl animate-in fade-in slide-in-from-top duration-200">
@@ -473,7 +476,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     <div className="flex items-center justify-between gap-2">
                       <div className="text-[12px] font-black text-white uppercase flex items-center gap-1.5">
                         <Cloud className="w-3.5 h-3.5" />
-                        <span>{driveConfigured ? 'Đổi thư mục dùng chung của nhà trường' : '1. Kết nối thư mục dùng chung của nhà trường'}</span>
+                        <span>{driveConfigured ? 'Đổi kết nối Drive của trường' : '1. Kết nối Drive của trường'}</span>
                       </div>
                       {driveConfigured && (
                         <button
@@ -489,7 +492,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                       Dán 2 đường link do Quản trị nhà trường cung cấp rồi bấm <b>Xác thực</b> (mỗi máy chỉ làm 1 lần).
                     </p>
                     <label className="block space-y-1">
-                      <span className="text-[12px] font-black text-white uppercase">Ô 1 · Link thư mục dùng chung (Google Drive)</span>
+                      <span className="text-[12px] font-black text-white uppercase">Ô 1 · Link thư mục Google Drive</span>
                       <input
                         type="text"
                         value={folderLinkInput}
@@ -499,7 +502,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                       />
                     </label>
                     <label className="block space-y-1">
-                      <span className="text-[12px] font-black text-white uppercase">Ô 2 · Link mã script của nhà trường (Apps Script)</span>
+                      <span className="text-[12px] font-black text-white uppercase">Ô 2 · Link Apps Script (/exec)</span>
                       <input
                         type="text"
                         value={scriptLinkInput}
@@ -544,6 +547,32 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     </button>
                   </div>
                 )}
+
+                {/* 📱 Điện thoại: chọn vai trò ngay trong form (khung vai trò bên phải chỉ hiện trên màn lớn) */}
+                <div className="md:hidden">
+                  <label htmlFor="login-role-mobile" className="block text-[12px] font-black text-white uppercase mb-1.5 tracking-wider">Vai trò đăng nhập</label>
+                  <select
+                    id="login-role-mobile"
+                    value={selectedRoleScope}
+                    onChange={(e) => {
+                      const id = e.target.value as LoginRoleScope;
+                      if (onlyAdminAllowed && id !== 'admin') {
+                        setErrorMessage(!driveConfigured
+                          ? '🔒 Cần kết nối Drive của trường trước khi chọn vai trò này.'
+                          : '🔒 Nhà trường chưa khởi tạo cơ sở dữ liệu. Chỉ Quản trị đăng nhập được.');
+                        return;
+                      }
+                      setSelectedRoleScope(id);
+                    }}
+                    className="w-full px-3 py-2.5 rounded-xl text-sm font-bold text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-amber-300"
+                  >
+                    {roleOptions.map(opt => (
+                      <option key={opt.id} value={opt.id} disabled={onlyAdminAllowed && opt.id !== 'admin'}>
+                        {opt.title.replace(/^Vai trò /i, '')}{onlyAdminAllowed && opt.id !== 'admin' ? ' (cần kết nối)' : ''}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
                 {/* Username Input */}
                 <div>
@@ -661,7 +690,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   }}
                 >
                   <ArrowRight className="w-5 h-5" />
-                  {loading ? 'Đang xử lý đăng nhập...' : 'ĐĂNG NHẬP VÀO HỆ THỐNG'}
+                  <span className="whitespace-nowrap">{loading ? 'Đang đăng nhập…' : 'ĐĂNG NHẬP VÀO HỆ THỐNG'}</span>
                 </button>
               </form>
 
@@ -670,7 +699,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 <div className="mt-2.5 flex gap-2">
                   <a
                     href="/diemdanh"
-                    className="flex-1 py-2.5 rounded-2xl bg-white/95 hover:bg-white text-emerald-900 font-black text-sm flex items-center justify-center gap-2 shadow-sm"
+                    className="flex-1 py-2.5 rounded-2xl bg-white/95 hover:bg-white text-emerald-900 font-black text-sm flex items-center justify-center gap-2 shadow-sm whitespace-nowrap"
                     title="Giáo viên, nhân viên điểm danh đi làm hôm nay bằng số CCCD + mật khẩu điểm danh"
                   >
                     <UserCheck className="w-4 h-4 text-emerald-700" />
@@ -679,7 +708,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   <button
                     type="button"
                     onClick={() => setIsCheckInQrOpen(true)}
-                    className="px-3.5 py-2.5 rounded-2xl bg-white/95 hover:bg-white text-emerald-900 font-black text-sm flex items-center justify-center gap-1.5 shadow-sm"
+                    className="px-3.5 py-2.5 rounded-2xl bg-white/95 hover:bg-white text-emerald-900 font-black text-sm flex items-center justify-center gap-1.5 shadow-sm whitespace-nowrap"
                     title="Hiện mã QR để giáo viên quét bằng Zalo / camera điện thoại và điểm danh"
                   >
                     <QrCode className="w-4 h-4 text-emerald-700" />
@@ -690,15 +719,15 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               <StaffCheckInQrModal open={isCheckInQrOpen} onClose={() => setIsCheckInQrOpen(false)} />
 
               {/* ─────────── CỨU HỘ & KHÔI PHỤC DỮ LIỆU (gọn 1 dòng) ─────────── */}
-              <div className="mt-3 pt-2.5 border-t border-white/10 flex items-center gap-2">
-                <span className="text-[12px] font-black uppercase tracking-wide text-amber-300 flex items-center gap-1 shrink-0">
+              <div className="mt-3 pt-2.5 border-t border-white/10 flex flex-wrap items-center gap-2">
+                <span className="w-full sm:w-auto text-[12px] font-black uppercase tracking-wide text-amber-300 flex items-center gap-1 shrink-0">
                   <RefreshCw className="w-3 h-3 text-amber-400" />
                   Cứu hộ dữ liệu:
                 </span>
                 <button
                   type="button"
                   onClick={() => setIsGoogleDriveModalOpen(true)}
-                  className="flex-1 px-2 py-1.5 rounded-lg border border-white/40 bg-white/15 hover:bg-white/25 text-white text-[12px] font-black flex items-center justify-center gap-1 cursor-pointer"
+                  className="flex-1 px-2 py-2 rounded-lg border border-white/40 bg-white/15 hover:bg-white/25 text-white text-[12px] font-black flex items-center justify-center gap-1 cursor-pointer whitespace-nowrap"
                   title="Kéo dữ liệu từ thư mục Google Drive dùng chung"
                 >
                   <Cloud className="w-3.5 h-3.5" /> Google Drive
@@ -706,10 +735,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 <button
                   type="button"
                   onClick={() => setIsDataStorageModalOpen(true)}
-                  className="flex-1 px-2 py-1.5 rounded-lg border border-emerald-300/60 bg-emerald-700/40 hover:bg-emerald-800/60 text-white text-[12px] font-black flex items-center justify-center gap-1 cursor-pointer"
+                  className="flex-1 px-2 py-2 rounded-lg border border-emerald-300/60 bg-emerald-700/40 hover:bg-emerald-800/60 text-white text-[12px] font-black flex items-center justify-center gap-1 cursor-pointer whitespace-nowrap"
                   title="Chọn tệp JSON an toàn trên ổ D / E hoặc USB"
                 >
-                  <HardDrive className="w-3.5 h-3.5" /> Ổ D / E & USB
+                  <HardDrive className="w-3.5 h-3.5" /> Ổ D/E, USB
                 </button>
               </div>
             </div>
@@ -731,7 +760,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           </div>
 
           {/* ═══════════ RIGHT PANEL - ROLE SELECTION & 5 PHÂN HỆ TINH HOA (ẢNH 9) ═══════════ */}
-          <div className="flex-1 flex flex-col rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl bg-white" style={{
+          <div className="hidden md:flex flex-1 flex-col rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl bg-white" style={{
             boxShadow: '0 25px 50px rgba(0,0,0,0.15)'
           }}>
             {/* Tab switch header */}

@@ -602,3 +602,8 @@ img {
 .app-glow-1 { width: 560px; height: 560px; left: 10%; top: -220px; background: rgba(125, 211, 252, 0.6); }
 .app-glow-2 { width: 620px; height: 620px; right: -200px; bottom: -240px; background: rgba(196, 181, 253, 0.6); }
 .app-glow-3 { width: 420px; height: 420px; right: 25%; top: 30%; background: rgba(165, 243, 252, 0.35); }
+
+/* Thẻ chuyển (tab) không xuống dòng: chữ trên một dòng, thanh thẻ cuộn ngang khi hẹp */
+[role="tablist"] > button, [role="tablist"] > a { white-space: nowrap; flex-shrink: 0; }
+.no-scrollbar { scrollbar-width: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }

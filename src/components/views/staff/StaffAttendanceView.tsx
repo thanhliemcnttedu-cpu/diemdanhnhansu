@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import * as XLSX from 'xlsx';
 import {
-  UserCheck, RefreshCw, Download, Upload, Users, Link2, Copy, Check, Plus, KeyRound, Lock, Unlock, Trash2, Search, Loader2, ShieldAlert, TrendingUp, TrendingDown, Minus, Pencil, MapPin, CheckCircle2, Info,
+  UserCheck, RefreshCw, Download, Upload, Users, Link2, Copy, Check, Plus, KeyRound, Lock, Unlock, Trash2, Search, Loader2, ShieldAlert, TrendingUp, TrendingDown, Minus, Pencil, MapPin, CheckCircle2, Info, Eye, EyeOff,
 } from 'lucide-react';
 import { useClassroom } from '../../../context/ClassroomContext';
 import {
@@ -259,19 +259,21 @@ export const StaffAttendanceView: React.FC = () => {
   return (
     <div className="p-4 sm:p-6 space-y-4 max-w-7xl mx-auto">
       {/* Header */}
-      <div className="bg-white rounded-3xl border border-slate-200 shadow-xs p-4 sm:p-5 flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+      <div className="bg-white rounded-3xl border border-slate-200 shadow-xs p-4 sm:p-5 flex flex-col xl:flex-row xl:items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <div className="w-11 h-11 rounded-2xl bg-emerald-700 text-white flex items-center justify-center"><UserCheck className="w-6 h-6" /></div>
-          <div>
-            <h1 className="text-xl font-black text-slate-900">Chấm công giáo viên – nhân viên</h1>
-            <p className="text-sm text-slate-600">{longDateLabel(today)}{schoolName ? ` • ${schoolName}` : ''}</p>
+          <div className="min-w-0">
+            <h1 className="text-lg sm:text-xl font-black text-slate-900 whitespace-nowrap truncate">
+              <span className="sm:hidden">Chấm công nhân sự</span><span className="hidden sm:inline">Chấm công giáo viên – nhân viên</span>
+            </h1>
+            <p className="text-sm text-slate-600 truncate" title={`${longDateLabel(today)}${schoolName ? ` • ${schoolName}` : ''}`}>{longDateLabel(today)}{schoolName ? ` • ${schoolName}` : ''}</p>
           </div>
         </div>
-        <div className="flex flex-wrap gap-1.5 bg-slate-100 p-1 rounded-2xl" role="tablist">
-          {([['summary', 'Tổng hợp', <TrendingUp key="i" className="w-4 h-4" />], ['roster', 'Danh sách nhân sự', <Users key="i" className="w-4 h-4" />], ['link', 'Link điểm danh', <Link2 key="i" className="w-4 h-4" />]] as const).map(([id, label, icon]) => (
+        <div className="flex gap-1 sm:gap-1.5 bg-slate-100 p-1 rounded-2xl overflow-x-auto no-scrollbar max-w-full self-stretch sm:self-start xl:self-auto" role="tablist">
+          {([['summary', 'Tổng hợp', 'Tổng hợp', <TrendingUp key="i" className="w-4 h-4" />], ['roster', 'Danh sách nhân sự', 'Nhân sự', <Users key="i" className="w-4 h-4" />], ['link', 'Link điểm danh', 'Link', <Link2 key="i" className="w-4 h-4" />]] as const).map(([id, label, shortLabel, icon]) => (
             <button key={id} type="button" role="tab" aria-selected={tab === id} onClick={() => setTab(id)}
-              className={`px-3.5 py-2 rounded-xl text-sm font-black inline-flex items-center gap-1.5 ${tab === id ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600 hover:text-slate-900'}`}>
-              {icon}{label}
+              className={`flex-1 sm:flex-none justify-center px-3 sm:px-3.5 py-2 rounded-xl text-sm font-black inline-flex items-center gap-1.5 whitespace-nowrap shrink-0 ${tab === id ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600 hover:text-slate-900'}`}>
+              {icon}<span className="sm:hidden">{shortLabel}</span><span className="hidden sm:inline">{label}</span>
             </button>
           ))}
         </div>
@@ -461,6 +463,9 @@ const RosterPanel: React.FC<{ canManage: boolean; auth: { username: string; pass
   const [posFilter, setPosFilter] = useState('');
   // Chọn nhiều nhân sự (theo mã GV) để xóa / đổi mật khẩu hàng loạt
   const [selected, setSelected] = useState<string[]>([]);
+  // Hiện số CCCD đầy đủ (chỉ Quản trị; Apps Script 4.3 trở lên)
+  const [showAllCccd, setShowAllCccd] = useState(false);
+  const [revealedCccd, setRevealedCccd] = useState<string[]>([]);
   const [bulkPinOpen, setBulkPinOpen] = useState(false);
   const [bulkPinMode, setBulkPinMode] = useState<'random' | 'common'>('random');
   const [bulkPin, setBulkPin] = useState('');
@@ -608,8 +613,8 @@ const RosterPanel: React.FC<{ canManage: boolean; auth: { username: string; pass
         <div className="px-4 py-3 flex flex-wrap items-center gap-3 border-b border-slate-100">
           <div className="flex items-center gap-2 min-w-0 mr-auto">
             <Users className="w-5 h-5 text-indigo-600 shrink-0" />
-            <p className="text-base font-black text-slate-900">Danh sách cán bộ, giáo viên, nhân viên</p>
-            <span className="px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-800 text-xs font-bold tabular-nums">{list.length} người</span>
+            <p className="text-base font-black text-slate-900 whitespace-nowrap truncate"><span className="sm:hidden">Danh sách nhân sự</span><span className="hidden sm:inline">Danh sách cán bộ, giáo viên, nhân viên</span></p>
+            <span className="px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-800 text-xs font-bold tabular-nums whitespace-nowrap shrink-0">{list.length} người</span>
           </div>
           <div className="flex flex-wrap items-center gap-2">
             {canManage && <>
@@ -641,11 +646,16 @@ const RosterPanel: React.FC<{ canManage: boolean; auth: { username: string; pass
             <option value="">Tất cả chức vụ</option>
             {positions.map(p => <option key={p} value={p}>{p}</option>)}
           </select>
-          <span className="ml-auto text-xs text-slate-600 inline-flex items-center gap-1"><Info className="w-3.5 h-3.5" />
+          <span className="ml-auto text-xs text-slate-600 items-center gap-1 hidden sm:inline-flex"><Info className="w-3.5 h-3.5" />
             {shown.length === list.length ? `${list.length} người` : `Hiển thị ${shown.length}/${list.length} người`}{canManage ? ' • Bấm biểu tượng bút để sửa' : ''}
           </span>
         </div>
 
+        {canManage && list.length > 0 && !list.some(s => s.currentCccd) && (
+          <p className="px-4 pt-3 text-sm text-slate-700 inline-flex items-start gap-1.5"><Info className="w-4 h-4 mt-0.5 text-sky-700 shrink-0" />
+            <span>Muốn xem đầy đủ số CCCD: cập nhật Apps Script lên <strong>4.3</strong> (dán mã mới → Triển khai → Phiên bản mới), rồi bấm <strong>Nhập Excel</strong> lại tệp danh sách. Mật khẩu đã cấp được giữ nguyên.</span>
+          </p>
+        )}
         {!canManage && <p className="px-4 pt-3 text-sm text-slate-600">Ban giám hiệu chỉ xem danh sách. Thêm, sửa, cấp mật khẩu do tài khoản Quản trị nhà trường thực hiện.</p>}
 
         {canManage && selectedPeople.length > 0 && (
@@ -664,9 +674,9 @@ const RosterPanel: React.FC<{ canManage: boolean; auth: { username: string; pass
         )}
 
         <div className="overflow-x-auto">
-          <table className="w-full text-sm min-w-[760px]">
+          <table className="w-full text-sm min-w-[860px]">
             <thead>
-              <tr className="text-left text-xs font-bold uppercase tracking-wide text-slate-600 bg-slate-50 border-b border-slate-200">
+              <tr className="text-left text-xs font-bold uppercase tracking-wide text-slate-600 bg-slate-50 border-b border-slate-200 whitespace-nowrap">
                 {canManage && (
                   <th className="py-3 pl-4 pr-1 w-10 text-center">
                     <input type="checkbox" className="w-4 h-4 rounded border-slate-300 cursor-pointer align-middle"
@@ -681,7 +691,18 @@ const RosterPanel: React.FC<{ canManage: boolean; auth: { username: string; pass
                 <th className={`py-3 ${canManage ? 'pl-1' : 'pl-4'} pr-2 w-12 text-center`}>STT</th>
                 <th className="py-3 pr-2">Họ và tên</th>
                 <th className="py-3 pr-2">Tổ / Môn dạy</th>
-                <th className="py-3 pr-2">CCCD</th>
+                <th className="py-3 pr-2 whitespace-nowrap">
+                  <span className="inline-flex items-center gap-1">
+                    CCCD
+                    {canManage && list.some(s => s.currentCccd) && (
+                      <button type="button" onClick={() => { setShowAllCccd(v => !v); setRevealedCccd([]); }}
+                        className="no-hover-fx w-7 h-7 inline-flex items-center justify-center rounded-md text-slate-600 hover:bg-slate-200 normal-case"
+                        title={showAllCccd ? 'Ẩn số CCCD' : 'Hiện đầy đủ số CCCD của tất cả'} aria-label={showAllCccd ? 'Ẩn số CCCD' : 'Hiện đầy đủ số CCCD của tất cả'}>
+                        {showAllCccd ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    )}
+                  </span>
+                </th>
                 {canManage && <th className="py-3 pr-2">Mật khẩu ĐD</th>}
                 <th className="py-3 pr-2 text-center">Trạng thái</th>
                 {canManage && <th className="py-3 pr-4 text-center">Thao tác</th>}
@@ -698,12 +719,34 @@ const RosterPanel: React.FC<{ canManage: boolean; auth: { username: string; pass
                   )}
                   <td className={`py-3 ${canManage ? 'pl-1' : 'pl-4'} pr-2 text-center text-slate-500 tabular-nums`}>{i + 1}</td>
                   <td className="py-3 pr-2">
-                    <p className={`font-bold ${s.disabled ? 'text-slate-500' : 'text-slate-900'}`}>{s.name}</p>
-                    <p className="text-xs text-slate-600 mt-0.5"><span className="font-mono">{s.code}</span>{s.position ? <> <span className="text-slate-400">|</span> {s.position}</> : null}</p>
-                    {schoolName && <p className="text-xs text-emerald-700 mt-0.5 inline-flex items-center gap-1"><MapPin className="w-3 h-3" />{schoolName}</p>}
+                    <p className={`font-bold whitespace-nowrap ${s.disabled ? 'text-slate-500' : 'text-slate-900'}`}>{s.name}</p>
+                    <p className="text-xs text-slate-600 mt-0.5 whitespace-nowrap"><span className="font-mono">{s.code}</span>{s.position ? <> <span className="text-slate-400">|</span> {s.position}</> : null}</p>
+                    {schoolName && <p className="text-xs text-emerald-700 mt-0.5 flex items-center gap-1 whitespace-nowrap max-w-[280px]" title={schoolName}><MapPin className="w-3 h-3 shrink-0" /><span className="truncate">{schoolName}</span></p>}
                   </td>
-                  <td className="py-3 pr-2 text-indigo-800">{s.dept ? s.dept.split(/[,;]\s*/).map((d, k) => <p key={k} className="leading-snug">{d}</p>) : <span className="text-slate-400">—</span>}</td>
-                  <td className="py-3 pr-2 font-mono text-slate-700">{s.cccdLast4 ? `••••••••${s.cccdLast4}` : '—'}</td>
+                  <td className="py-3 pr-2 text-indigo-800">{s.dept ? s.dept.split(/[,;]\s*/).map((d, k) => <p key={k} className="leading-snug whitespace-nowrap">{d}</p>) : <span className="text-slate-400">—</span>}</td>
+                  <td className="py-3 pr-2 font-mono text-slate-700 whitespace-nowrap">
+                    {(() => {
+                      const open = Boolean(s.currentCccd) && (showAllCccd || revealedCccd.includes(s.code));
+                      const text = open ? s.currentCccd : s.cccdLast4 ? `••••••••${s.cccdLast4}` : '—';
+                      return (
+                        <span className="inline-flex items-center gap-1">
+                          <span className={open ? 'text-slate-900 font-semibold tracking-wide' : ''}>{text}</span>
+                          {canManage && s.currentCccd && !showAllCccd && (
+                            <button type="button" onClick={() => setRevealedCccd(prev => prev.includes(s.code) ? prev.filter(c => c !== s.code) : [...prev, s.code])}
+                              className="no-hover-fx w-7 h-7 inline-flex items-center justify-center rounded-md text-slate-500 hover:text-slate-800 hover:bg-slate-100"
+                              title={open ? 'Ẩn số CCCD' : 'Xem đầy đủ số CCCD'} aria-label={`${open ? 'Ẩn' : 'Xem'} số CCCD của ${s.name}`}>
+                              {open ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                            </button>
+                          )}
+                          {canManage && !s.currentCccd && s.cccdLast4 && (
+                            <span className="text-slate-400 cursor-help" title="Chưa lưu số CCCD đầy đủ: cập nhật Apps Script 4.3 rồi nhập lại tệp Excel (hoặc sửa CCCD) để xem được đủ số.">
+                              <Info className="w-3.5 h-3.5" />
+                            </span>
+                          )}
+                        </span>
+                      );
+                    })()}
+                  </td>
                   {canManage && <td className="py-3 pr-2 font-mono text-slate-800">{s.currentPin || <span className="text-rose-700 font-sans font-bold">Chưa có</span>}</td>}
                   <td className="py-3 pr-2 text-center">
                     {s.disabled

@@ -337,13 +337,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <nav className="flex-1 overflow-y-auto px-2.5 py-2 scrollbar-thin" aria-label="Điều hướng chính">
           {(() => {
             const systemActions: Array<{ key: string; label: string; icon: React.ComponentType<{ className?: string }>; badge?: string; onClick: () => void }> = [
-              { key: 'accounts', label: canManageAccounts ? 'Tài khoản & CSDL trường' : 'Đăng nhập quản trị', icon: ShieldCheck, onClick: () => (canManageAccounts ? setIsAccountManagerOpen(true) : setIsAuthModalOpen(true)) },
+              { key: 'accounts', label: canManageAccounts ? 'Tài khoản & CSDL' : 'Đăng nhập quản trị', icon: ShieldCheck, onClick: () => (canManageAccounts ? setIsAccountManagerOpen(true) : setIsAuthModalOpen(true)) },
               { key: 'drive', label: 'Google Drive', icon: Cloud, onClick: () => setIsGoogleDriveModalOpen(true) },
               { key: 'storage', label: 'Nơi lưu dữ liệu', icon: HardDrive, onClick: () => setIsDataStorageModalOpen(true) },
               { key: 'password', label: 'Đổi mật khẩu', icon: Lock, onClick: () => window.dispatchEvent(new Event(OPEN_CHANGE_PASSWORD_EVENT)) },
               { key: 'cdkey', label: isCdKeyActivated ? 'Bản quyền PRO' : 'Kích hoạt CDKEY', icon: KeyRound, onClick: () => setIsCdKeyModalOpen(true) },
               { key: 'register', label: 'Đăng ký sử dụng', icon: Sparkles, onClick: () => setIsRegistrationModalOpen(true) },
-              { key: 'zalo', label: 'Liên hệ hỗ trợ (Zalo)', icon: MessageCircle, onClick: () => window.dispatchEvent(new Event(OPEN_ZALO_QR_EVENT)) },
+              { key: 'zalo', label: 'Hỗ trợ qua Zalo', icon: MessageCircle, onClick: () => window.dispatchEvent(new Event(OPEN_ZALO_QR_EVENT)) },
             ];
             type Row = { key: string; label: string; icon: React.ComponentType<{ className?: string }>; badge?: string; badgeType?: string; active: boolean; onClick: () => void };
             const groups: Array<{ key: string; label: string; icon: React.ComponentType<{ className?: string }>; tone: string; rows: Row[] }> = [
@@ -380,7 +380,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                       className="no-hover-fx w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-left normal-case text-slate-800 hover:bg-slate-100/80 transition-colors"
                     >
                       <GroupIcon className={`w-[18px] h-[18px] shrink-0 ${group.tone}`} />
-                      <span className="flex-1 text-sm font-bold leading-snug">{group.label}</span>
+                      <span className="flex-1 min-w-0 text-sm font-bold truncate whitespace-nowrap" title={group.label}>{group.label}</span>
                       <ChevronDown className={`w-4 h-4 text-slate-500 transition-transform duration-200 ${open ? 'rotate-180' : ''}`} aria-hidden="true" />
                     </button>
                   ) : gi > 0 && <div className="mx-2 my-2 border-t border-slate-200" aria-hidden="true" />}
@@ -409,13 +409,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
                             type="button"
                             onClick={row.onClick}
                             aria-current={row.active ? 'page' : undefined}
-                            className={`no-hover-fx relative w-full flex items-center gap-2.5 pl-8 pr-2.5 py-2 rounded-xl text-left normal-case transition-colors ${
+                            className={`no-hover-fx relative w-full flex items-center gap-2 pl-7 pr-2 py-2 rounded-xl text-left normal-case transition-colors ${
                               row.active ? 'bg-sky-50 text-sky-900 ring-1 ring-sky-100' : 'text-slate-700 hover:bg-slate-100/80 hover:text-slate-950'
                             }`}
                           >
                             {row.active && <span className="absolute left-0 top-1.5 bottom-1.5 w-[3px] rounded-r-full bg-sky-600" aria-hidden="true" />}
                             <Icon className={`w-4 h-4 shrink-0 ${row.active ? 'text-sky-700' : group.tone}`} />
-                            <span className={`flex-1 text-sm leading-snug ${row.active ? 'font-bold' : 'font-medium'}`}>{row.label}</span>
+                            <span className={`flex-1 min-w-0 text-sm truncate whitespace-nowrap ${row.active ? 'font-bold' : 'font-medium'}`} title={row.label}>{row.label}</span>
                             {row.badge && (
                               <span className={`px-1.5 py-0.5 rounded-md text-xs font-bold shrink-0 ${
                                 row.badgeType === 'count' ? 'bg-slate-100 text-slate-700'

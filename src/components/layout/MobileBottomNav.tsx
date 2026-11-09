@@ -65,7 +65,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
             }`}>
               <Icon className="w-5 h-5" />
             </div>
-            <span className="text-[12px] tracking-tight leading-none normal-case truncate max-w-[64px]">
+            <span className="text-[12px] tracking-tight leading-none normal-case whitespace-nowrap">
               {item.label}
             </span>
           </button>

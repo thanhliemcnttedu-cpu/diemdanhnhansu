@@ -357,7 +357,7 @@ export const TopBar: React.FC<TopBarProps> = ({
         <button
           type="button"
           onClick={() => window.dispatchEvent(new Event('lhhp:open-command-palette'))}
-          className={`${chipBase} hidden lg:inline-flex bg-slate-50 text-slate-600 border-slate-200 hover:bg-white hover:text-slate-900 min-w-[170px] justify-between`}
+          className={`${chipBase} max-lg:hidden bg-slate-50 text-slate-600 border-slate-200 hover:bg-white hover:text-slate-900 min-w-[170px] justify-between`}
           title="Tìm nhanh chức năng (Ctrl + K)"
         >
           <span className="inline-flex items-center gap-1.5"><Search className="w-3.5 h-3.5" />Tìm nhanh…</span>
@@ -376,7 +376,7 @@ export const TopBar: React.FC<TopBarProps> = ({
         {/* ☁️ Trạng thái Google Drive (các tiện ích khác nằm ở nhóm "Hệ thống" của thanh bên) */}
         <button
           onClick={() => setIsGoogleDriveModalOpen(true)}
-          className={`${chipBase} hidden lg:inline-flex ${driveChipClass}`}
+          className={`${chipBase} max-lg:hidden ${driveChipClass}`}
           title={`Google Drive: ${driveLabel}`}
           aria-label={`Google Drive: ${driveLabel}`}
         >
@@ -470,7 +470,7 @@ export const TopBar: React.FC<TopBarProps> = ({
 
         {/* Năm học */}
         {(teacherProfile.academicYear || activeClass?.academicYear) && (
-          <span className={`${chipBase} hidden md:inline-flex bg-white text-slate-700 border-slate-200 cursor-default`} title="Năm học">
+          <span className={`${chipBase} max-md:hidden bg-white text-slate-700 border-slate-200 cursor-default`} title="Năm học">
             <CalendarDays className="w-4 h-4 text-slate-500" />
             {teacherProfile.academicYear || activeClass?.academicYear}
           </span>

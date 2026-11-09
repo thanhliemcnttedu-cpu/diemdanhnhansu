@@ -2564,7 +2564,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
             <div className="flex-1 border border-slate-200 rounded-2xl overflow-hidden shadow-2xs bg-white">
               <div className="overflow-x-auto h-full">
                 <table className="w-full text-left border-collapse text-sm min-w-[900px]">
-                  <thead className="bg-slate-50 border-b border-slate-200 text-xs font-bold text-slate-600 uppercase tracking-wide sticky top-0 z-10">
+                  <thead className="bg-slate-50 border-b border-slate-200 text-xs font-bold text-slate-600 uppercase tracking-wide sticky top-0 z-10 whitespace-nowrap">
                     <tr>
                       <th className="py-3 px-3 text-center w-10">
                         <input
@@ -2658,16 +2658,16 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                                 className="w-9 h-9 rounded-full border border-slate-200 object-cover bg-slate-50 shrink-0 mt-0.5"
                               />
                               <div className="min-w-0">
-                                <p className="font-bold text-slate-900 flex items-center gap-1.5">
+                                <p className="font-bold text-slate-900 flex items-center gap-1.5 whitespace-nowrap">
                                   <span>{u.fullName}</span>
                                   {isSelf && <span className="text-xs font-bold text-indigo-700 bg-indigo-50 px-1.5 rounded border border-indigo-200">Bạn</span>}
                                   {u.isDemo && <span className="text-xs font-bold text-amber-900 bg-amber-100 px-1.5 rounded">Demo</span>}
                                 </p>
-                                <p className="text-xs text-slate-600 mt-0.5">
+                                <p className="text-xs text-slate-600 mt-0.5 whitespace-nowrap">
                                   <span className="font-mono">{u.username}</span> <span className="text-slate-400">|</span> <span className={`font-semibold ${roleInfo.cls}`}>{roleInfo.label}</span>
                                 </p>
-                                <p className={`text-xs mt-0.5 inline-flex items-center gap-1 ${u.tenantType === 'guest' ? 'text-fuchsia-700' : 'text-emerald-700'}`}>
-                                  <MapPin className="w-3 h-3 shrink-0" />{u.tenantType === 'guest' ? 'Giáo viên cá nhân (vãng lai)' : (u.schoolName || 'Nhà trường')}
+                                <p className={`text-xs mt-0.5 flex items-center gap-1 whitespace-nowrap max-w-[280px] ${u.tenantType === 'guest' ? 'text-fuchsia-700' : 'text-emerald-700'}`}>
+                                  <MapPin className="w-3 h-3 shrink-0" /><span className="truncate">{u.tenantType === 'guest' ? 'Giáo viên cá nhân (vãng lai)' : (u.schoolName || 'Nhà trường')}</span>
                                 </p>
                               </div>
                             </div>
@@ -2678,7 +2678,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                             </code>
                           </td>
                           <td className="py-3 px-2">
-                            <span className={`inline-flex items-center gap-1.5 font-semibold ${u.role === 'subject' ? 'text-emerald-800' : u.role === 'homeroom' ? 'text-indigo-800' : 'text-slate-700'}`}>
+                            <span className={`inline-flex items-center gap-1.5 font-semibold whitespace-nowrap ${u.role === 'subject' ? 'text-emerald-800' : u.role === 'homeroom' ? 'text-indigo-800' : 'text-slate-700'}`}>
                               {u.role === 'homeroom' ? <GraduationCap className="w-4 h-4 text-indigo-600" /> : u.role === 'subject' ? <Laptop className="w-4 h-4 text-emerald-700" /> : u.role === 'admin' ? <Crown className="w-4 h-4 text-rose-600" /> : <Building2 className="w-4 h-4 text-purple-600" />}
                               {scope}
                             </span>

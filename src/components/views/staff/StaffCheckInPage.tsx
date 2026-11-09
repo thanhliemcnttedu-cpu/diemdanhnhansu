@@ -95,7 +95,7 @@ export const StaffCheckInPage: React.FC = () => {
       <div className="w-full max-w-md space-y-4">
         <header className="text-center space-y-1">
           <img src="/logo.svg" alt="Lớp Học Hạnh Phúc" className="mx-auto w-16 h-16 rounded-[22%] shadow-md" />
-          <h1 className="text-2xl font-black text-slate-900">Điểm danh giáo viên – nhân viên</h1>
+          <h1 className="font-black text-slate-900 whitespace-nowrap text-[clamp(0.95rem,4.3vw,1.5rem)]">Điểm danh giáo viên – nhân viên</h1>
           {schoolName && <p className="text-sm font-bold text-emerald-800 uppercase">{schoolName}</p>}
         </header>
 
