@@ -548,3 +548,34 @@ img {
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.01em;
 }
+
+/* ========================================================================= */
+/* 🌐 NỀN ĐĂNG NHẬP CÔNG NGHỆ – TÔNG SÁNG (aurora + lưới tọa độ)             */
+/* ========================================================================= */
+.login-tech-bg {
+  background:
+    radial-gradient(1200px 600px at 50% -10%, #ffffff 0%, rgba(255, 255, 255, 0) 70%),
+    linear-gradient(160deg, #f4f8ff 0%, #eaf2ff 45%, #f1edff 100%);
+}
+.login-grid {
+  background-image:
+    linear-gradient(rgba(79, 70, 229, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(79, 70, 229, 0.08) 1px, transparent 1px);
+  background-size: 44px 44px;
+  -webkit-mask-image: radial-gradient(ellipse 75% 70% at 50% 45%, #000 35%, transparent 100%);
+  mask-image: radial-gradient(ellipse 75% 70% at 50% 45%, #000 35%, transparent 100%);
+}
+.login-aurora {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(70px);
+  opacity: 0.55;
+  will-change: transform;
+}
+.login-aurora-1 { width: 520px; height: 520px; left: -120px; top: -140px; background: #7dd3fc; animation: aurora-drift 18s ease-in-out infinite alternate; }
+.login-aurora-2 { width: 560px; height: 560px; right: -160px; bottom: -180px; background: #c4b5fd; animation: aurora-drift 22s ease-in-out infinite alternate-reverse; }
+.login-aurora-3 { width: 420px; height: 420px; right: 18%; top: -120px; background: #a5f3fc; opacity: 0.45; animation: aurora-drift 26s ease-in-out infinite alternate; }
+@keyframes aurora-drift {
+  0% { transform: translate3d(0, 0, 0) scale(1); }
+  100% { transform: translate3d(60px, 40px, 0) scale(1.12); }
+}

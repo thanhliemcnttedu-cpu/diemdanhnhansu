@@ -332,15 +332,40 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
 
   return (
-    <div 
-      className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4"
-      style={{ background: 'linear-gradient(135deg, #0284c7 0%, #2563eb 50%, #4f46e5 100%)' }}
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 overflow-hidden login-tech-bg"
     >
-      {/* Background pattern overlay */}
-      <div className="absolute inset-0 opacity-10" style={{
-        backgroundImage: `radial-gradient(circle at 25% 25%, rgba(255,255,255,0.15) 0%, transparent 50%),
-                          radial-gradient(circle at 75% 75%, rgba(255,255,255,0.1) 0%, transparent 50%)`,
-      }} />
+      {/* 🌐 Nền công nghệ tông sáng: vầng sáng (aurora) + lưới tọa độ + đường mạch */}
+      <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
+        <div className="login-aurora login-aurora-1" />
+        <div className="login-aurora login-aurora-2" />
+        <div className="login-aurora login-aurora-3" />
+        <div className="absolute inset-0 login-grid" />
+        <svg className="absolute -left-10 top-10 w-[520px] h-[520px] text-indigo-500/25" viewBox="0 0 520 520" fill="none">
+          <g stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+            <path d="M0 120 H140 L190 170 H330" />
+            <path d="M0 220 H90 L140 270 H260 L300 310" />
+            <path d="M60 360 H180 L230 410 H360" />
+            <path d="M200 40 V100 L240 140" />
+          </g>
+          <g fill="currentColor">
+            <circle cx="330" cy="170" r="6" /><circle cx="300" cy="310" r="6" /><circle cx="360" cy="410" r="6" /><circle cx="240" cy="140" r="5" />
+            <circle cx="140" cy="120" r="4" /><circle cx="90" cy="220" r="4" />
+          </g>
+        </svg>
+        <svg className="absolute -right-12 bottom-0 w-[560px] h-[460px] text-sky-500/25" viewBox="0 0 560 460" fill="none">
+          <g stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+            <path d="M560 90 H400 L350 140 H220" />
+            <path d="M560 200 H460 L410 250 H300 L260 290" />
+            <path d="M520 340 H380 L330 390 H190" />
+            <path d="M360 460 V400 L320 360" />
+          </g>
+          <g fill="currentColor">
+            <circle cx="220" cy="140" r="6" /><circle cx="260" cy="290" r="6" /><circle cx="190" cy="390" r="6" /><circle cx="320" cy="360" r="5" />
+            <circle cx="400" cy="90" r="4" /><circle cx="460" cy="200" r="4" />
+          </g>
+        </svg>
+      </div>
 
       {/* Main container */}
       <div 
@@ -351,15 +376,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         <div className="flex items-center justify-between px-3 sm:px-4 pb-2 shrink-0">
           <div className="flex items-center gap-3 sm:gap-4 min-w-0">
             {/* Logo */}
-            <img src="/logo.svg" alt="Logo Lớp Học Hạnh Phúc" className="w-12 h-12 sm:w-16 sm:h-16 shrink-0 rounded-[22%] shadow-2xl ring-2 ring-white/50" />
+            <img src="/logo.svg" alt="Logo Lớp Học Hạnh Phúc" className="w-12 h-12 sm:w-16 sm:h-16 shrink-0 rounded-[22%] shadow-lg shadow-indigo-500/30 ring-4 ring-white" />
             {/* Title */}
             <div className="min-w-0">
-              <h1 className="text-base sm:text-lg md:text-xl lg:text-xl font-black text-white tracking-tight drop-shadow-lg leading-tight whitespace-nowrap" style={{
-                textShadow: '0 2px 12px rgba(0,0,0,0.4), 0 0 40px rgba(255,255,255,0.1)'
-              }}>
+              <h1 className="text-base sm:text-lg md:text-xl lg:text-xl font-black text-slate-900 tracking-tight leading-tight whitespace-nowrap">
                 HỆ THỐNG QUẢN TRỊ CSDL LỚP HỌC HẠNH PHÚC
               </h1>
-              <p className="text-[12px] sm:text-xs text-white/95 font-semibold mt-0.5 drop-shadow hidden sm:block">
+              <p className="text-xs text-indigo-700 font-semibold mt-0.5 hidden sm:block">
                 SCHOOL DATABASE MANAGEMENT SYSTEM • Phiên bản chuyên nghiệp
               </p>
             </div>
@@ -397,7 +420,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           {currentUser && (
             <button
               onClick={onClose}
-              className="p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-all hover:scale-110"
+              className="p-2 rounded-full bg-white/80 hover:bg-white text-slate-700 border border-slate-200 transition-colors"
               title="Đóng cửa sổ"
             >
               <X className="w-5 h-5" />
