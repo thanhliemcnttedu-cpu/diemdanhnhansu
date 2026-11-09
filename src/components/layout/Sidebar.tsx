@@ -154,8 +154,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
       id: 'staff_attendance',
       label: 'Chấm công nhân sự',
       icon: UserCheck,
-      badge: 'NEW',
-      badgeType: 'new'
     },
     {
       id: 'data',

@@ -457,6 +457,11 @@ const RosterPanel: React.FC<{ canManage: boolean; auth: { username: string; pass
   const [editing, setEditing] = useState<(StaffUpsert & { isNew?: boolean }) | null>(null);
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'locked'>('all');
   const [posFilter, setPosFilter] = useState('');
+  // Chọn nhiều nhân sự (theo mã GV) để xóa / đổi mật khẩu hàng loạt
+  const [selected, setSelected] = useState<string[]>([]);
+  const [bulkPinOpen, setBulkPinOpen] = useState(false);
+  const [bulkPinMode, setBulkPinMode] = useState<'random' | 'common'>('random');
+  const [bulkPin, setBulkPin] = useState('');
   const fileRef = useRef<HTMLInputElement>(null);
 
   const load = useCallback(async () => {
@@ -558,6 +563,35 @@ const RosterPanel: React.FC<{ canManage: boolean; auth: { username: string; pass
     .filter(s => !posFilter || (s.position || '') === posFilter)
     .sort((a, b) => (a.order || 0) - (b.order || 0) || a.name.localeCompare(b.name, 'vi'));
   const iconBtn = 'no-hover-fx w-8 h-8 inline-flex items-center justify-center rounded-lg transition-colors';
+  const selectedSet = new Set(selected.filter(c => list.some(s => s.code === c)));
+  const selectedPeople = list.filter(s => selectedSet.has(s.code));
+  const allShownSelected = shown.length > 0 && shown.every(s => selectedSet.has(s.code));
+  const someShownSelected = shown.some(s => selectedSet.has(s.code));
+  const toggleOne = (code: string) => setSelected(prev => (prev.includes(code) ? prev.filter(c => c !== code) : [...prev, code]));
+  const toggleAllShown = () => setSelected(prev => (allShownSelected
+    ? prev.filter(c => !shown.some(s => s.code === c))
+    : Array.from(new Set([...prev, ...shown.map(s => s.code)]))));
+
+  const bulkDelete = async () => {
+    if (selectedPeople.length === 0) return;
+    const names = selectedPeople.slice(0, 5).map(s => s.name).join(', ') + (selectedPeople.length > 5 ? `… (+${selectedPeople.length - 5})` : '');
+    if (!confirm(`Xóa ${selectedPeople.length} nhân sự khỏi danh sách điểm danh?\n${names}\n\nDữ liệu điểm danh cũ vẫn giữ trên Drive.`)) return;
+    const ok = await save([], selectedPeople.map(s => s.code), `Đã xóa ${selectedPeople.length} nhân sự khỏi danh sách.`);
+    if (ok) setSelected([]);
+  };
+
+  const bulkPinProblem = bulkPinMode === 'common'
+    ? (!bulkPin ? 'Nhập mật khẩu chung.' : bulkPin.length < 4 ? 'Mật khẩu điểm danh cần ít nhất 4 ký tự.' : /\s/.test(bulkPin) ? 'Mật khẩu không được có khoảng trắng.' : '')
+    : '';
+  const bulkChangePin = async () => {
+    if (selectedPeople.length === 0 || bulkPinProblem) return;
+    if (!confirm(`Đổi mật khẩu điểm danh cho ${selectedPeople.length} nhân sự? Mật khẩu cũ sẽ không dùng được nữa.`)) return;
+    const items = selectedPeople.map(s => ({ code: s.code, pin: bulkPinMode === 'common' ? bulkPin : randomPin() }));
+    const ok = await save(items, [], bulkPinMode === 'common'
+      ? `Đã đặt mật khẩu chung "${bulkPin}" cho ${items.length} nhân sự. Bấm "Xuất mật khẩu" để in danh sách.`
+      : `Đã cấp mật khẩu ngẫu nhiên mới cho ${items.length} nhân sự. Bấm "Xuất mật khẩu" để in danh sách phát cho từng người.`);
+    if (ok) { setBulkPinOpen(false); setBulkPin(''); setSelected([]); }
+  };
 
   return (
     <div className="space-y-3">
@@ -608,11 +642,37 @@ const RosterPanel: React.FC<{ canManage: boolean; auth: { username: string; pass
 
         {!canManage && <p className="px-4 pt-3 text-sm text-slate-600">Ban giám hiệu chỉ xem danh sách. Thêm, sửa, cấp mật khẩu do tài khoản Quản trị nhà trường thực hiện.</p>}
 
+        {canManage && selectedPeople.length > 0 && (
+          <div className="px-4 py-2.5 flex flex-wrap items-center gap-2 bg-amber-50 border-b border-amber-200" role="region" aria-label="Thao tác với nhân sự đã chọn">
+            <span className="text-sm font-bold text-amber-950 mr-1">Đã chọn {selectedPeople.length} người</span>
+            <button type="button" onClick={() => { setBulkPinMode('random'); setBulkPin(''); setBulkPinOpen(true); }} disabled={loading}
+              className="no-hover-fx h-9 px-3.5 rounded-lg text-sm font-bold bg-amber-600 hover:bg-amber-700 text-white inline-flex items-center gap-1.5 disabled:opacity-50">
+              <KeyRound className="w-4 h-4" /> Đổi mật khẩu ({selectedPeople.length})
+            </button>
+            <button type="button" onClick={bulkDelete} disabled={loading}
+              className="no-hover-fx h-9 px-3.5 rounded-lg text-sm font-bold bg-rose-600 hover:bg-rose-700 text-white inline-flex items-center gap-1.5 disabled:opacity-50">
+              <Trash2 className="w-4 h-4" /> Xóa ({selectedPeople.length})
+            </button>
+            <button type="button" onClick={() => setSelected([])} className="no-hover-fx h-9 px-3 rounded-lg text-sm font-bold text-amber-950 hover:bg-amber-100">Bỏ chọn</button>
+          </div>
+        )}
+
         <div className="overflow-x-auto">
           <table className="w-full text-sm min-w-[760px]">
             <thead>
               <tr className="text-left text-xs font-bold uppercase tracking-wide text-slate-600 bg-slate-50 border-b border-slate-200">
-                <th className="py-3 pl-4 pr-2 w-12 text-center">STT</th>
+                {canManage && (
+                  <th className="py-3 pl-4 pr-1 w-10 text-center">
+                    <input type="checkbox" className="w-4 h-4 rounded border-slate-300 cursor-pointer align-middle"
+                      checked={allShownSelected}
+                      ref={el => { if (el) el.indeterminate = !allShownSelected && someShownSelected; }}
+                      onChange={toggleAllShown}
+                      disabled={shown.length === 0}
+                      title={allShownSelected ? 'Bỏ chọn tất cả' : 'Chọn tất cả (theo bộ lọc đang hiển thị)'}
+                      aria-label="Chọn tất cả nhân sự đang hiển thị" />
+                  </th>
+                )}
+                <th className={`py-3 ${canManage ? 'pl-1' : 'pl-4'} pr-2 w-12 text-center`}>STT</th>
                 <th className="py-3 pr-2">Họ và tên</th>
                 <th className="py-3 pr-2">Tổ / Môn dạy</th>
                 <th className="py-3 pr-2">CCCD</th>
@@ -623,8 +683,14 @@ const RosterPanel: React.FC<{ canManage: boolean; auth: { username: string; pass
             </thead>
             <tbody>
               {shown.map((s, i) => (
-                <tr key={s.code} className={`border-b border-slate-100 hover:bg-sky-50/50 transition-colors ${s.disabled ? 'bg-slate-50/70' : ''}`}>
-                  <td className="py-3 pl-4 pr-2 text-center text-slate-500 tabular-nums">{i + 1}</td>
+                <tr key={s.code} className={`border-b border-slate-100 transition-colors ${selectedSet.has(s.code) ? 'bg-amber-50' : s.disabled ? 'bg-slate-50/70 hover:bg-sky-50/50' : 'hover:bg-sky-50/50'}`}>
+                  {canManage && (
+                    <td className="py-3 pl-4 pr-1 text-center">
+                      <input type="checkbox" className="w-4 h-4 rounded border-slate-300 cursor-pointer align-middle"
+                        checked={selectedSet.has(s.code)} onChange={() => toggleOne(s.code)} aria-label={`Chọn ${s.name}`} />
+                    </td>
+                  )}
+                  <td className={`py-3 ${canManage ? 'pl-1' : 'pl-4'} pr-2 text-center text-slate-500 tabular-nums`}>{i + 1}</td>
                   <td className="py-3 pr-2">
                     <p className={`font-bold ${s.disabled ? 'text-slate-500' : 'text-slate-900'}`}>{s.name}</p>
                     <p className="text-xs text-slate-600 mt-0.5"><span className="font-mono">{s.code}</span>{s.position ? <> <span className="text-slate-400">|</span> {s.position}</> : null}</p>
@@ -635,8 +701,8 @@ const RosterPanel: React.FC<{ canManage: boolean; auth: { username: string; pass
                   {canManage && <td className="py-3 pr-2 font-mono text-slate-800">{s.currentPin || <span className="text-rose-700 font-sans font-bold">Chưa có</span>}</td>}
                   <td className="py-3 pr-2 text-center">
                     {s.disabled
-                      ? <span className="inline-flex items-center gap-1 text-xs font-bold text-slate-700 bg-slate-200/70 px-2.5 py-1 rounded-full"><Lock className="w-3 h-3" /> Đã khóa</span>
-                      : <span className="inline-flex items-center gap-1 text-xs font-bold text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded-full"><CheckCircle2 className="w-3 h-3" /> Hoạt động</span>}
+                      ? <span className="inline-flex items-center gap-1 text-xs font-bold text-slate-700 bg-slate-200/70 px-2.5 py-1 rounded-full whitespace-nowrap"><Lock className="w-3 h-3" /> Đã khóa</span>
+                      : <span className="inline-flex items-center gap-1 text-xs font-bold text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded-full whitespace-nowrap"><CheckCircle2 className="w-3 h-3" /> Hoạt động</span>}
                   </td>
                   {canManage && (
                     <td className="py-3 pr-4 text-center whitespace-nowrap">
@@ -648,11 +714,48 @@ const RosterPanel: React.FC<{ canManage: boolean; auth: { username: string; pass
                   )}
                 </tr>
               ))}
-              {shown.length === 0 && <tr><td colSpan={8} className="py-10 text-center text-slate-600">{loading ? 'Đang tải…' : list.length ? 'Không có người phù hợp bộ lọc.' : 'Chưa có nhân sự. Bấm "Tải mẫu" rồi "Nhập Excel" để thêm danh sách.'}</td></tr>}
+              {shown.length === 0 && <tr><td colSpan={9} className="py-10 text-center text-slate-600">{loading ? 'Đang tải…' : list.length ? 'Không có người phù hợp bộ lọc.' : 'Chưa có nhân sự. Bấm "Tải mẫu" rồi "Nhập Excel" để thêm danh sách.'}</td></tr>}
             </tbody>
           </table>
         </div>
       </section>
+
+      {/* Đổi mật khẩu điểm danh hàng loạt */}
+      {bulkPinOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-sky-900/20 backdrop-blur-xs p-4" role="dialog" aria-modal="true" aria-label="Đổi mật khẩu điểm danh hàng loạt">
+          <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-lg">
+            <div className="px-5 py-3.5 border-b border-slate-200 flex items-center justify-between">
+              <p className="text-base font-black text-slate-900 inline-flex items-center gap-2"><KeyRound className="w-5 h-5 text-amber-700" /> Đổi mật khẩu cho {selectedPeople.length} nhân sự</p>
+              <button type="button" onClick={() => setBulkPinOpen(false)} className="text-sm font-bold text-slate-600">Đóng</button>
+            </div>
+            <div className="p-5 space-y-3">
+              <label className={`flex items-start gap-2 rounded-2xl border p-3 text-sm cursor-pointer ${bulkPinMode === 'random' ? 'border-indigo-300 bg-indigo-50' : 'border-slate-200'}`}>
+                <input type="radio" name="bulk-pin-mode" className="mt-0.5" checked={bulkPinMode === 'random'} onChange={() => setBulkPinMode('random')} />
+                <span><strong>Mỗi người một mật khẩu ngẫu nhiên 6 số</strong> (an toàn). Sau khi đổi, bấm "Xuất mật khẩu" để in phát cho từng người.</span>
+              </label>
+              <label className={`flex items-start gap-2 rounded-2xl border p-3 text-sm cursor-pointer ${bulkPinMode === 'common' ? 'border-indigo-300 bg-indigo-50' : 'border-slate-200'}`}>
+                <input type="radio" name="bulk-pin-mode" className="mt-0.5" checked={bulkPinMode === 'common'} onChange={() => setBulkPinMode('common')} />
+                <span><strong>Một mật khẩu chung cho tất cả</strong> người đã chọn (dễ thông báo, nên nhắc mọi người dùng đúng số CCCD của mình).</span>
+              </label>
+              {bulkPinMode === 'common' && (
+                <div className="pl-6 space-y-1">
+                  <input value={bulkPin} onChange={(e) => setBulkPin(e.target.value)} placeholder="Mật khẩu chung (ít nhất 4 ký tự)" autoComplete="off"
+                    className="w-64 max-w-full h-9 px-3 rounded-lg border border-slate-300 text-sm font-mono" aria-label="Mật khẩu chung" />
+                  {bulkPin && bulkPinProblem && <p className="text-sm font-bold text-rose-700">{bulkPinProblem}</p>}
+                </div>
+              )}
+              <p className="text-xs text-slate-600">Áp dụng cho: {selectedPeople.slice(0, 6).map(s => s.name).join(', ')}{selectedPeople.length > 6 ? ` và ${selectedPeople.length - 6} người khác` : ''}.</p>
+              <div className="flex gap-2 pt-1">
+                <button type="button" onClick={() => setBulkPinOpen(false)} className="flex-1 py-2.5 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-sm font-black">Hủy</button>
+                <button type="button" onClick={bulkChangePin} disabled={loading || Boolean(bulkPinProblem) || selectedPeople.length === 0}
+                  className="flex-[2] py-2.5 rounded-2xl bg-amber-700 hover:bg-amber-800 text-white text-sm font-black disabled:opacity-50">
+                  {loading ? 'Đang lưu…' : `Đổi mật khẩu cho ${selectedPeople.length} người`}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Xem trước nhập Excel */}
       {preview && (
