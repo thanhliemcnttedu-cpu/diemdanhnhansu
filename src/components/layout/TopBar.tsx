@@ -5,7 +5,7 @@ import {
   Sparkles, Award, ShieldAlert,
   ChevronDown, School, ShieldCheck, Database, LogIn, LogOut, Users,
   Menu, Monitor, Cloud, HardDrive, KeyRound, MoreHorizontal, RefreshCw
-, Search, MonitorPlay, MapPin, CalendarDays, AlertTriangle
+, Search, MonitorPlay, MapPin, CalendarDays, AlertTriangle, CheckCircle2
 } from 'lucide-react';
 import { googleDriveService } from '../../services/googleDriveService';
 import { invalidateDriveClassFilesCache, FORCE_DATA_REFRESH_EVENT } from '../../services/databaseService';
@@ -178,17 +178,19 @@ export const TopBar: React.FC<TopBarProps> = ({
 
   // 🔄 Quản trị tối cao / Quản trị nhà trường / BGH: cập nhật ngay dữ liệu mới nhất của mọi GVCN
   // 🧭 Apps Script của trường cũ hơn mã trong phần mềm → nhắc cập nhật (chỉ tài khoản quản lý)
-  const [gasUpdate, setGasUpdate] = useState<{ current: string; latest: string } | null>(null);
+  const [gasUpdate, setGasUpdate] = useState<{ current: string; latest: string; outdated: boolean } | null>(null);
   useEffect(() => {
     if (!isManagerUser) { setGasUpdate(null); return; }
     let alive = true;
     const check = (force = false) => appsScriptSetupService.checkForUpdate(force)
-      .then(r => { if (alive) setGasUpdate(r && r.outdated ? { current: r.current, latest: r.latest } : null); })
+      .then(r => { if (alive) setGasUpdate(r && r.current ? { current: r.current, latest: r.latest, outdated: r.outdated } : null); })
       .catch(() => { /* ignore */ });
     check();
     const onUpdated = () => check(true);
+    const onChecked = () => check(false); // trình cài đặt vừa kiểm tra xong → đọc kết quả mới nhớ
     window.addEventListener('lhhp:apps-script-updated', onUpdated);
-    return () => { alive = false; window.removeEventListener('lhhp:apps-script-updated', onUpdated); };
+    window.addEventListener('lhhp:apps-script-checked', onChecked);
+    return () => { alive = false; window.removeEventListener('lhhp:apps-script-updated', onUpdated); window.removeEventListener('lhhp:apps-script-checked', onChecked); };
   }, [isManagerUser]);
 
   const [isRefreshingAll, setIsRefreshingAll] = useState(false);
@@ -400,7 +402,19 @@ export const TopBar: React.FC<TopBarProps> = ({
         </button>
 
         {/* 🧭 Nhắc cập nhật Apps Script */}
-        {gasUpdate && (
+        {gasUpdate && !gasUpdate.outdated && (
+          <button
+            type="button"
+            onClick={() => appsScriptSetupService.open('update')}
+            className={`${chipBase} max-md:hidden bg-emerald-50 text-emerald-800 border-emerald-200 hover:bg-emerald-100`}
+            title={`Apps Script của trường đang chạy V${gasUpdate.current} — đã là bản mới nhất. Bấm để mở trình cài đặt / kiểm tra.`}
+            aria-label={`Apps Script V${gasUpdate.current}, đã cập nhật mới nhất`}
+          >
+            <CheckCircle2 className="w-4 h-4 text-emerald-700" />
+            <span className="max-xl:hidden">Apps Script</span> V{gasUpdate.current}
+          </button>
+        )}
+        {gasUpdate && gasUpdate.outdated && (
           <button
             type="button"
             onClick={() => appsScriptSetupService.open('update')}

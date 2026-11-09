@@ -85,6 +85,8 @@ export const appsScriptSetupService = {
     checks.push({ key: 'access', label: 'Quyền truy cập "Bất kỳ ai"', state: 'ok', detail: 'Script trả lời bình thường, ai cũng gọi được.' });
 
     const version = String(ping.data.version || '');
+    // Ghi nhớ ngay để chip trên thanh trên đổi trạng thái (không phải chờ bấm Lưu / hết 30 phút)
+    this.rememberVersion(url, version);
     const cmp = compareVersions(version, latest);
     checks.push(cmp >= 0
       ? { key: 'version', label: 'Phiên bản mã', state: 'ok', detail: `Google đang chạy V${version} (mới nhất: V${latest}).` }
@@ -112,7 +114,7 @@ export const appsScriptSetupService = {
     const latest = this.getBundledVersion();
     try {
       const cached = JSON.parse(sessionStorage.getItem(UPDATE_CHECK_KEY) || 'null');
-      if (!force && cached && cached.url === url && Date.now() - cached.at < 30 * 60 * 1000) {
+      if (!force && cached && cached.url === url && Date.now() - cached.at < 10 * 60 * 1000) {
         return { current: cached.version, latest, outdated: Boolean(cached.version) && compareVersions(cached.version, latest) < 0 };
       }
     } catch (_) { /* ignore */ }
@@ -121,6 +123,16 @@ export const appsScriptSetupService = {
     const version = String(ping.data.version || '');
     try { sessionStorage.setItem(UPDATE_CHECK_KEY, JSON.stringify({ url, version, at: Date.now() })); } catch (_) { /* ignore */ }
     return { current: version, latest, outdated: Boolean(version) && compareVersions(version, latest) < 0 };
+  },
+
+  rememberVersion(url: string, version: string) {
+    try {
+      const cfgUrl = googleDriveService.normalizeScriptUrl(googleDriveService.getConfig().scriptUrl || '');
+      if (cfgUrl && cfgUrl === url) {
+        sessionStorage.setItem(UPDATE_CHECK_KEY, JSON.stringify({ url, version, at: Date.now() }));
+        window.dispatchEvent(new Event('lhhp:apps-script-checked'));
+      }
+    } catch (_) { /* ignore */ }
   },
 
   clearUpdateCache() {

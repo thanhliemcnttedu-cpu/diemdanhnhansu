@@ -9,6 +9,7 @@ import {
   parseStaffSheet, STAFF_TEMPLATE_HEADERS, isLockedFor, StaffDayLock, randomPin, weekdayShort, attemptOf, attemptsOf, systemNoteOf, timeHMS, StaffMember, StaffRecord, StaffStatus, StaffUpsert, ParsedStaffRow,
 } from '../../../services/staffAttendanceService';
 import { StaffCheckInQrCard } from './StaffCheckInQr';
+import { appsScriptSetupService } from '../../../services/appsScriptSetupService';
 
 type Tab = 'summary' | 'roster' | 'link';
 type Period = 'today' | 'yesterday' | 'week' | 'month' | 'custom';
@@ -101,6 +102,8 @@ export const StaffAttendanceView: React.FC = () => {
   const [locks, setLocks] = useState<Record<string, StaffDayLock>>({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  // Loại lỗi để hiện nút xử lý phù hợp: 'dead' (link Apps Script không trả lời) / 'no_db' (mất csdl_truong.json)
+  const [errorKind, setErrorKind] = useState<'dead' | 'no_db' | ''>('');
   const [lastLoaded, setLastLoaded] = useState<Date | null>(null);
   const [loadedRange, setLoadedRange] = useState<{ from: string; to: string } | null>(null);
 
@@ -121,11 +124,15 @@ export const StaffAttendanceView: React.FC = () => {
   const load = useCallback(async (silent = false) => {
     if (!auth) return;
     if (!silent) setLoading(true);
-    setError('');
+    setError(''); setErrorKind('');
     try {
       const r = await staffAttendanceService.range(fetchFrom, fetchTo, auth);
       if (!r?.success) {
-        if (r?.code === 'UNAUTHORIZED') { staffAttendanceService.clearViewerAuth(); setAuth(null); }
+        if (r?.code === 'UNAUTHORIZED') {
+          const d = await staffAttendanceService.diagnoseFailure();
+          if (d.kind === 'no_db' || d.kind === 'dead') { setError(d.message); setErrorKind(d.kind); return; }
+          staffAttendanceService.clearViewerAuth(); setAuth(null);
+        }
         setError(r?.message || 'Không tải được dữ liệu chấm công.');
         return;
       }
@@ -136,7 +143,9 @@ export const StaffAttendanceView: React.FC = () => {
       setLoadedRange({ from: fetchFrom, to: fetchTo });
       setLastLoaded(new Date());
     } catch (e: any) {
-      setError(e?.message || 'Không kết nối được Apps Script.');
+      const d = e?.code === 'NETWORK' ? await staffAttendanceService.diagnoseFailure() : null;
+      if (d && (d.kind === 'dead' || d.kind === 'no_db')) { setError(d.message); setErrorKind(d.kind); }
+      else setError(e?.message || 'Không kết nối được Apps Script.');
     } finally {
       if (!silent) setLoading(false);
     }
@@ -171,11 +180,16 @@ export const StaffAttendanceView: React.FC = () => {
     setAuthError('');
     try {
       const r = await staffAttendanceService.range(today, today, a);
-      if (!r?.success) { setAuthError(r?.message || 'Sai mật khẩu.'); return; }
+      if (!r?.success) {
+        const d = r?.code === 'UNAUTHORIZED' ? await staffAttendanceService.diagnoseFailure() : null;
+        setAuthError(d && d.kind !== 'ok' && d.kind !== 'unknown' ? d.message : (r?.message || 'Sai mật khẩu.'));
+        return;
+      }
       staffAttendanceService.rememberViewerAuth(a.username, a.password);
       setAuth(a); setAuthPassword('');
     } catch (err: any) {
-      setAuthError(err?.message || 'Không kết nối được Apps Script.');
+      const d = err?.code === 'NETWORK' ? await staffAttendanceService.diagnoseFailure() : null;
+      setAuthError(d && d.kind !== 'ok' && d.kind !== 'unknown' ? d.message : (err?.message || 'Không kết nối được Apps Script.'));
     }
   };
 
@@ -307,7 +321,20 @@ export const StaffAttendanceView: React.FC = () => {
             </div>
           </div>
 
-          {error && <div className="rounded-2xl border border-rose-200 bg-rose-50 text-rose-800 text-sm font-bold px-4 py-3 flex items-center gap-2"><ShieldAlert className="w-4 h-4" />{error}</div>}
+          {error && (
+            <div className="rounded-2xl border border-rose-200 bg-rose-50 text-rose-900 text-sm px-4 py-3 space-y-2" role="alert">
+              <p className="font-bold flex items-start gap-2"><ShieldAlert className="w-4 h-4 mt-0.5 shrink-0" />{error}</p>
+              {(errorKind === 'dead' || errorKind === 'no_db') && (
+                <div className="flex flex-wrap gap-2 pl-6">
+                  {errorKind === 'dead' && canManage && (
+                    <button type="button" onClick={() => appsScriptSetupService.open('install')} className="no-hover-fx h-9 px-3.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold whitespace-nowrap">Mở Cài đặt Apps Script</button>
+                  )}
+                  <a href="https://drive.google.com/drive/trash" target="_blank" rel="noreferrer" className="no-hover-fx h-9 px-3.5 rounded-lg border border-rose-300 bg-white hover:bg-rose-100 text-rose-900 text-sm font-bold inline-flex items-center whitespace-nowrap">Mở Thùng rác Google Drive</a>
+                  <button type="button" onClick={() => load()} className="no-hover-fx h-9 px-3.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-800 text-sm font-bold whitespace-nowrap">Thử lại</button>
+                </div>
+              )}
+            </div>
+          )}
           {!error && staff.length === 0 && !loading && (
             <div className="rounded-2xl border-2 border-dashed border-slate-300 bg-white p-6 text-center text-sm text-slate-700">
               Chưa có danh sách nhân sự. {canManage ? 'Vào thẻ "Danh sách nhân sự" để nhập từ Excel.' : 'Quản trị nhà trường cần nhập danh sách nhân sự trước.'}
@@ -558,6 +585,13 @@ Người bị khóa sẽ không điểm danh / sửa điểm danh được và n
 };
 
 // ---------------------------------------------------------------- danh sách nhân sự
+/** Lỗi quyền / mạng → chẩn đoán (link chết, mất CSDL trường) để báo cách xử lý cụ thể */
+const explainFailure = async (code: string | undefined, fallback: string) => {
+  if (code !== 'UNAUTHORIZED' && code !== 'NETWORK') return fallback;
+  const d = await staffAttendanceService.diagnoseFailure();
+  return d.kind === 'dead' || d.kind === 'no_db' ? d.message : fallback;
+};
+
 const RosterPanel: React.FC<{ canManage: boolean; auth: { username: string; password: string }; schoolName: string }> = ({ canManage, auth, schoolName }) => {
   const [list, setList] = useState<StaffMember[]>([]);
   const [loading, setLoading] = useState(false);
@@ -586,8 +620,8 @@ const RosterPanel: React.FC<{ canManage: boolean; auth: { username: string; pass
     setLoading(true);
     try {
       const r = await staffAttendanceService.getRoster(auth);
-      if (r?.success) setList(r.staff || []); else setMsg({ type: 'err', text: r?.message || 'Không tải được danh sách.' });
-    } catch (e: any) { setMsg({ type: 'err', text: e?.message || 'Lỗi kết nối.' }); }
+      if (r?.success) setList(r.staff || []); else setMsg({ type: 'err', text: await explainFailure(r?.code, r?.message || 'Không tải được danh sách.') });
+    } catch (e: any) { setMsg({ type: 'err', text: await explainFailure(e?.code, e?.message || 'Lỗi kết nối.') }); }
     finally { setLoading(false); }
   }, [auth]);
   useEffect(() => { load(); }, [load]);
@@ -596,11 +630,11 @@ const RosterPanel: React.FC<{ canManage: boolean; auth: { username: string; pass
     setLoading(true); setMsg(null);
     try {
       const r = await staffAttendanceService.saveRoster(items, deleted, auth);
-      if (!r?.success) { setMsg({ type: 'err', text: r?.message || 'Chưa lưu được.' }); return false; }
+      if (!r?.success) { setMsg({ type: 'err', text: await explainFailure(r?.code, r?.message || 'Chưa lưu được.') }); return false; }
       setList(r.staff || []);
       setMsg(r.errors?.length ? { type: 'err', text: `Đã lưu, nhưng có ${r.errors.length} dòng lỗi: ${r.errors.slice(0, 5).join('; ')}${r.errors.length > 5 ? '…' : ''}` } : { type: 'ok', text: okText });
       return true;
-    } catch (e: any) { setMsg({ type: 'err', text: e?.message || 'Lỗi kết nối.' }); return false; }
+    } catch (e: any) { setMsg({ type: 'err', text: await explainFailure(e?.code, e?.message || 'Lỗi kết nối.') }); return false; }
     finally { setLoading(false); }
   };
 

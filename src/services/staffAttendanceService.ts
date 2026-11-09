@@ -217,10 +217,40 @@ export const staffAttendanceService = {
       return data;
     } catch (e: any) {
       if (e?.name === 'AbortError') throw new Error('Mạng chậm, không kết nối được máy chủ. Vui lòng thử lại.');
+      // Trình duyệt không nhận được phản hồi hợp lệ (link /exec chết, dự án Apps Script bị xóa, chưa mở "Bất kỳ ai"…)
+      if (e instanceof TypeError || /Failed to fetch|NetworkError|Load failed/i.test(String(e?.message || ''))) {
+        const err: any = new Error('Không kết nối được Apps Script của nhà trường: link /exec không trả lời. Thường do dự án Apps Script đã bị xóa (ví dụ nằm trong thư mục vừa dọn), triển khai bị lưu trữ, hoặc chưa mở quyền "Bất kỳ ai".');
+        err.code = 'NETWORK';
+        throw err;
+      }
       throw e;
     } finally {
       clearTimeout(t);
     }
+  },
+
+  /**
+   * Chẩn đoán khi gọi thất bại: link chết? hay thư mục đã mất CSDL nhà trường (csdl_truong.json) nên không nhận ra tài khoản?
+   */
+  async diagnoseFailure(): Promise<{ kind: 'dead' | 'no_db' | 'ok' | 'unknown'; message: string }> {
+    const c = this.resolveConnection();
+    if (!c) return { kind: 'unknown', message: '' };
+    const get = async (q: string) => {
+      try {
+        const res = await fetch(`${c.scriptUrl}${c.scriptUrl.includes('?') ? '&' : '?'}${q}`);
+        return JSON.parse(await res.text());
+      } catch (_) { return null; }
+    };
+    const ping = await get('action=ping');
+    if (!ping?.success) {
+      return { kind: 'dead', message: 'Không kết nối được Apps Script của nhà trường: link /exec không trả lời. Thường do dự án Apps Script đã bị xóa (ví dụ nằm trong thư mục Drive vừa dọn — kiểm tra Thùng rác), triển khai bị lưu trữ, hoặc chưa mở quyền "Bất kỳ ai". Mở "Cài đặt Apps Script" để kiểm tra và cài lại.' };
+    }
+    const ls = await get(`action=listSchools&folderId=${encodeURIComponent(c.folderId)}`);
+    if (ls && ls.success && !ls.initialized) {
+      return { kind: 'no_db', message: 'Thư mục Drive chưa có cơ sở dữ liệu nhà trường (tệp csdl_truong.json đã bị xóa), nên Apps Script không nhận ra tài khoản. Cách làm: khôi phục csdl_truong.json từ Thùng rác Google Drive, HOẶC đăng xuất rồi đăng nhập vai trò Quản trị cao nhất (adminquantri) để khởi tạo lại trường và tài khoản; sau đó nhập lại danh sách nhân sự.' };
+    }
+    if (ls && !ls.success) return { kind: 'dead', message: `Apps Script không mở được thư mục Drive (${ls.message || 'không rõ lý do'}). Mở "Cài đặt Apps Script" để kiểm tra.` };
+    return { kind: 'ok', message: '' };
   },
 
   // ---------------- nhân sự tự điểm danh
