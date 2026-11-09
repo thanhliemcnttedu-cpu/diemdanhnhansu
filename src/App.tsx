@@ -235,7 +235,8 @@ function ClassroomApp() {
       />}
 
       {/* Main Container */}
-      <div className="relative z-10 flex-1 flex flex-col min-w-0 h-full overflow-hidden">
+      {/* Không đặt z-index ở đây: hộp thoại (fixed z-50) bên trong các màn phải nổi trên thanh bên (z-40) */}
+      <div className="relative flex-1 flex flex-col min-w-0 h-full overflow-hidden">
         {/* Top Header matching PDF with Mobile Hamburger Menu */}
         {!isPresenting && <TopBar
           currentView={currentView}

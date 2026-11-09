@@ -453,7 +453,9 @@ const RosterPanel: React.FC<{ canManage: boolean; auth: { username: string; pass
   const [msg, setMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null);
   const [q, setQ] = useState('');
   const [preview, setPreview] = useState<ParsedStaffRow[] | null>(null);
-  const [pinMode, setPinMode] = useState<'random' | 'birth'>('random');
+  const [pinMode, setPinMode] = useState<'random' | 'birth' | 'custom'>('random');
+  const [customPin, setCustomPin] = useState('');
+  const [resetExistingPins, setResetExistingPins] = useState(false);
   const [editing, setEditing] = useState<(StaffUpsert & { isNew?: boolean }) | null>(null);
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'locked'>('all');
   const [posFilter, setPosFilter] = useState('');
@@ -516,14 +518,18 @@ const RosterPanel: React.FC<{ canManage: boolean; auth: { username: string; pass
     return m ? `${m[1].padStart(2, '0')}${m[2].padStart(2, '0')}${m[3]}` : '';
   };
 
+  const customPinProblem = pinMode !== 'custom' ? ''
+    : !customPin ? 'Nhập mật khẩu muốn gán.' : customPin.length < 4 ? 'Mật khẩu điểm danh cần ít nhất 4 ký tự.' : /\s/.test(customPin) ? 'Mật khẩu không được có khoảng trắng.' : '';
   const confirmImport = async () => {
-    if (!preview) return;
+    if (!preview || customPinProblem) return;
+    if (resetExistingPins && list.length > 0 && !confirm('Đặt lại mật khẩu cho cả những người ĐÃ có mật khẩu trong danh sách? Mật khẩu cũ của họ sẽ không dùng được nữa.')) return;
     const existing = new Set(list.map(s => s.code));
     const ok = preview.filter(p => p.issues.length === 0);
     const items: StaffUpsert[] = ok.map(p => {
       const { issues, inactiveReason, birthDate, ...rest } = p;
-      const needPin = !existing.has(p.code) || !list.find(s => s.code === p.code)?.hasPin;
-      return { ...rest, pin: needPin ? (pinMode === 'birth' ? birthPin(birthDate) || randomPin() : randomPin()) : undefined };
+      const needPin = resetExistingPins || !existing.has(p.code) || !list.find(s => s.code === p.code)?.hasPin;
+      const pin = pinMode === 'custom' ? customPin : pinMode === 'birth' ? birthPin(birthDate) || randomPin() : randomPin();
+      return { ...rest, pin: needPin ? pin : undefined };
     });
     const done = await save(items, [], `Đã nhập ${items.length} nhân sự (bỏ qua ${preview.length - ok.length} dòng lỗi).`);
     if (done) setPreview(null);
@@ -787,14 +793,28 @@ const RosterPanel: React.FC<{ canManage: boolean; auth: { username: string; pass
             </div>
             <div className="px-5 py-4 border-t border-slate-200 space-y-3">
               <p className="text-xs text-slate-600">Chỉ đưa lên Drive: mã, họ tên, chức vụ, tổ/môn, giới tính, điện thoại; số CCCD được băm (chỉ giữ 4 số cuối để đối chiếu). Không đưa các thông tin cá nhân khác trong tệp.</p>
-              <div className="flex flex-wrap items-center gap-3 text-sm">
-                <span className="font-black text-slate-800">Mật khẩu điểm danh cho người mới:</span>
-                <label className="inline-flex items-center gap-1.5"><input type="radio" checked={pinMode === 'random'} onChange={() => setPinMode('random')} /> Ngẫu nhiên 6 số (an toàn)</label>
-                <label className="inline-flex items-center gap-1.5"><input type="radio" checked={pinMode === 'birth'} onChange={() => setPinMode('birth')} /> Theo ngày sinh (ddmmyyyy)</label>
-              </div>
+              <fieldset className="space-y-2 text-sm">
+                <legend className="font-black text-slate-800 mb-1">Mật khẩu điểm danh gán khi nhập:</legend>
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+                  <label className="inline-flex items-center gap-1.5 cursor-pointer"><input type="radio" name="import-pin-mode" checked={pinMode === 'random'} onChange={() => setPinMode('random')} /> Ngẫu nhiên 6 số (an toàn)</label>
+                  <label className="inline-flex items-center gap-1.5 cursor-pointer"><input type="radio" name="import-pin-mode" checked={pinMode === 'birth'} onChange={() => setPinMode('birth')} /> Theo ngày sinh (ddmmyyyy)</label>
+                  <label className="inline-flex items-center gap-1.5 cursor-pointer"><input type="radio" name="import-pin-mode" checked={pinMode === 'custom'} onChange={() => setPinMode('custom')} /> Tự nhập 1 mật khẩu chung</label>
+                </div>
+                {pinMode === 'custom' && (
+                  <div className="flex flex-wrap items-center gap-2 pl-6">
+                    <input value={customPin} onChange={(e) => setCustomPin(e.target.value)} placeholder="Mật khẩu chung (ít nhất 4 ký tự)" autoComplete="off" autoFocus
+                      aria-label="Mật khẩu chung gán cho nhân sự" className="w-64 max-w-full h-9 px-3 rounded-lg border border-slate-300 text-sm font-mono" />
+                    {customPin && customPinProblem && <span className="text-sm font-bold text-rose-700">{customPinProblem}</span>}
+                  </div>
+                )}
+                <label className="flex items-start gap-1.5 cursor-pointer text-slate-700">
+                  <input type="checkbox" className="mt-0.5" checked={resetExistingPins} onChange={(e) => setResetExistingPins(e.target.checked)} />
+                  <span>Áp dụng cả cho người <strong>đã có</strong> mật khẩu trong danh sách (mặc định chỉ gán cho người mới hoặc chưa có mật khẩu).</span>
+                </label>
+              </fieldset>
               <div className="flex gap-2">
                 <button type="button" onClick={() => setPreview(null)} className="flex-1 py-3 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-sm font-black">Hủy</button>
-                <button type="button" onClick={confirmImport} disabled={loading} className="flex-[2] py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-black disabled:opacity-50">
+                <button type="button" onClick={confirmImport} disabled={loading || Boolean(customPinProblem)} className="flex-[2] py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-black disabled:opacity-50">
                   {loading ? 'Đang lưu…' : `Lưu ${preview.filter(p => !p.issues.length).length} nhân sự lên Drive`}
                 </button>
               </div>
