@@ -4,8 +4,9 @@ import {
   Volume2, Timer, Link, BarChart3, Database, 
   Settings, Brain, ChevronLeft, ChevronRight, BookOpen,
   ShieldCheck, LogIn, UserCheck, X, Award,
-  HardDrive, Cloud, KeyRound, Lock
+  HardDrive, Cloud, KeyRound, Lock, ChevronDown, Settings2, MessageCircle
 } from 'lucide-react';
+import { useState } from 'react';
 import { useClassroom } from '../../context/ClassroomContext';
 import { OPEN_CHANGE_PASSWORD_EVENT } from '../modals/ChangePasswordModal';
 import { APP_AUTHOR_INFO } from '../../data/initialData';
@@ -208,12 +209,21 @@ export const Sidebar: React.FC<SidebarProps> = ({
     return true;
   });
 
-  // Nhóm menu: dễ tìm, gọn mắt
-  const NAV_GROUPS: Array<{ key: string; label: string; ids: NavigationMenuId[] }> = [
-    { key: 'class', label: 'Lớp học', ids: ['dashboard', 'classes', 'students', 'attendance', 'seating', 'schedule'] },
-    { key: 'activity', label: 'Hoạt động', ids: ['picker', 'rewards', 'certificate', 'infographic', 'noise', 'timer'] },
-    { key: 'manage', label: 'Quản lý & báo cáo', ids: ['reports', 'staff_attendance', 'data', 'links', 'ai'] },
+  // Nhóm menu: gập / mở được (giống cổng quản lý nhà trường), nhớ trạng thái trên máy
+  const NAV_GROUPS: Array<{ key: string; label: string; icon: React.ComponentType<{ className?: string }>; tone: string; ids: NavigationMenuId[] }> = [
+    { key: 'class', label: 'Lớp học', icon: School, tone: 'text-sky-600', ids: ['dashboard', 'classes', 'students', 'attendance', 'seating', 'schedule'] },
+    { key: 'activity', label: 'Hoạt động', icon: Sparkles, tone: 'text-violet-600', ids: ['picker', 'rewards', 'certificate', 'infographic', 'noise', 'timer'] },
+    { key: 'manage', label: 'Quản lý & báo cáo', icon: BarChart3, tone: 'text-emerald-700', ids: ['reports', 'staff_attendance', 'data', 'links', 'ai'] },
   ];
+  const [closedGroups, setClosedGroups] = useState<string[]>(() => {
+    try { return JSON.parse(localStorage.getItem('lhhp_nav_closed_groups') || '[]'); } catch (_) { return []; }
+  });
+  const toggleGroup = (key: string) => setClosedGroups(prev => {
+    const next = prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key];
+    try { localStorage.setItem('lhhp_nav_closed_groups', JSON.stringify(next)); } catch (_) { /* ignore */ }
+    return next;
+  });
+  const schoolLabel = currentUser?.schoolName || teacherProfile.schoolName || 'Hệ sinh thái lớp học thông minh';
 
   const renderSidebarContent = (isMobileDrawer = false) => {
     const isEffectivelyCollapsed = isMobileDrawer ? false : collapsed;
@@ -227,17 +237,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
     return (
       <div className="flex flex-col h-full overflow-hidden select-none">
         {/* Brand Header: LỚP HỌC HẠNH PHÚC (Yêu cầu 6) */}
-        <div className="h-13 border-b border-slate-200/80 flex items-center px-3 justify-between shrink-0">
+        <div className="h-14 border-b border-slate-200/80 flex items-center px-3 justify-between shrink-0">
           {!isEffectivelyCollapsed ? (
-            <div className="flex items-center gap-2 overflow-hidden">
+            <div className="flex items-center gap-2.5 overflow-hidden">
               <img src="/logo.svg" alt="Lớp Học Hạnh Phúc" className="w-9 h-9 rounded-[22%] shadow-sm shrink-0" />
-              <div className="truncate">
-                <h1 className="text-[12px] font-black text-indigo-900 tracking-tight leading-tight truncate flex items-center gap-1 uppercase">
-                  LỚP HỌC HẠNH PHÚC
-                </h1>
-                <p className="text-[12px] text-indigo-600 font-semibold leading-none mt-0.5">
-                  Hệ sinh thái thông minh
-                </p>
+              <div className="min-w-0">
+                <p className="text-base font-black text-slate-900 tracking-tight leading-tight truncate">Lớp Học Hạnh Phúc</p>
+                <p className="text-xs text-slate-500 font-semibold leading-tight truncate" title={schoolLabel}>{schoolLabel}</p>
               </div>
             </div>
           ) : (
@@ -329,215 +335,118 @@ export const Sidebar: React.FC<SidebarProps> = ({
           )
         )}
 
-        {/* Navigation Items — chia nhóm cho dễ tìm */}
+        {/* Điều hướng: nhóm gập/mở (biểu tượng + mũi tên), mục con thụt vào — gọn, dễ dò */}
         <nav className="flex-1 overflow-y-auto px-2.5 py-2 scrollbar-thin" aria-label="Điều hướng chính">
-          {NAV_GROUPS.map((group, gi) => {
-            const items = MENU_ITEMS.filter(it => group.ids.includes(it.id))
-              .sort((x, y) => group.ids.indexOf(x.id) - group.ids.indexOf(y.id));
-            if (items.length === 0) return null;
-            return (
-              <div key={group.key} className={gi > 0 ? 'mt-3' : ''}>
-                {!isEffectivelyCollapsed
-                  ? <p className="px-3 pb-1 text-xs font-bold uppercase tracking-wider text-slate-500">{group.label}</p>
-                  : gi > 0 && <div className="mx-2 mb-2 border-t border-slate-200" aria-hidden="true" />}
-                <div className="space-y-0.5">
-                  {items.map((item) => {
-                    const Icon = item.icon;
-                    const isActive = currentView === item.id;
-                    const showBadge = item.badge && item.badgeType !== 'hot';
-                    return (
-                      <button
-                        key={item.id}
-                        onClick={() => handleItemClick(item.id)}
-                        aria-current={isActive ? 'page' : undefined}
-                        className={`no-hover-fx relative w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl text-left normal-case group select-none transition-colors duration-150 ${
-                          isActive
-                            ? 'bg-indigo-50 text-indigo-900 ring-1 ring-indigo-200'
-                            : 'text-slate-700 hover:bg-white hover:text-slate-950'
-                        }`}
-                        title={isEffectivelyCollapsed ? item.label : undefined}
-                      >
-                        {isActive && <span className="absolute left-0 top-1.5 bottom-1.5 w-1 rounded-r-full bg-indigo-600" aria-hidden="true" />}
-                        <span className={`w-8 h-8 rounded-lg shrink-0 flex items-center justify-center transition-colors ${
-                          isActive
-                            ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-600/30'
-                            : item.badgeType === 'ai'
-                            ? 'bg-gradient-to-br from-indigo-600 to-violet-600 text-white'
-                            : 'bg-slate-100 text-slate-600 group-hover:bg-indigo-100 group-hover:text-indigo-700'
-                        }`}>
-                          <Icon className="w-4 h-4" />
-                        </span>
-                        {!isEffectivelyCollapsed && (
-                          <span className="truncate flex-1 flex items-center justify-between gap-1.5">
-                            <span className={`text-sm truncate leading-tight ${isActive ? 'font-bold' : 'font-semibold'}`}>{item.label}</span>
-                            {showBadge && (
+          {(() => {
+            const systemActions: Array<{ key: string; label: string; icon: React.ComponentType<{ className?: string }>; badge?: string; onClick: () => void }> = [
+              { key: 'accounts', label: canManageAccounts ? 'Tài khoản & CSDL trường' : 'Đăng nhập quản trị', icon: ShieldCheck, onClick: () => (canManageAccounts ? setIsAccountManagerOpen(true) : setIsAuthModalOpen(true)) },
+              { key: 'drive', label: 'Google Drive', icon: Cloud, onClick: () => setIsGoogleDriveModalOpen(true) },
+              { key: 'storage', label: 'Nơi lưu dữ liệu', icon: HardDrive, onClick: () => setIsDataStorageModalOpen(true) },
+              { key: 'password', label: 'Đổi mật khẩu', icon: Lock, onClick: () => window.dispatchEvent(new Event(OPEN_CHANGE_PASSWORD_EVENT)) },
+              { key: 'cdkey', label: isCdKeyActivated ? 'Bản quyền PRO' : 'Kích hoạt CDKEY', icon: KeyRound, onClick: () => setIsCdKeyModalOpen(true) },
+              { key: 'register', label: 'Đăng ký sử dụng', icon: Sparkles, onClick: () => setIsRegistrationModalOpen(true) },
+              { key: 'zalo', label: 'Liên hệ hỗ trợ (Zalo)', icon: MessageCircle, onClick: () => window.dispatchEvent(new Event(OPEN_ZALO_QR_EVENT)) },
+            ];
+            type Row = { key: string; label: string; icon: React.ComponentType<{ className?: string }>; badge?: string; badgeType?: string; active: boolean; onClick: () => void };
+            const groups: Array<{ key: string; label: string; icon: React.ComponentType<{ className?: string }>; tone: string; rows: Row[] }> = [
+              ...NAV_GROUPS.map(g => ({
+                key: g.key, label: g.label, icon: g.icon, tone: g.tone,
+                rows: MENU_ITEMS.filter(it => g.ids.includes(it.id))
+                  .sort((x, y) => g.ids.indexOf(x.id) - g.ids.indexOf(y.id))
+                  .map(it => ({
+                    key: it.id, label: it.label, icon: it.icon, active: currentView === it.id,
+                    badge: it.badge && it.badgeType !== 'hot' ? it.badge : undefined, badgeType: it.badgeType,
+                    onClick: () => handleItemClick(it.id),
+                  })),
+              })),
+              {
+                key: 'system', label: 'Hệ thống', icon: Settings2, tone: 'text-amber-700',
+                rows: systemActions.map(a => ({
+                  key: a.key, label: a.label, icon: a.icon, badge: a.badge, badgeType: a.badge ? 'trial' : undefined, active: false,
+                  onClick: () => { a.onClick(); if (isMobileDrawer && onCloseMobile) onCloseMobile(); },
+                })),
+              },
+            ];
+            return groups.map((group, gi) => {
+              if (group.rows.length === 0) return null;
+              const GroupIcon = group.icon;
+              const hasActive = group.rows.some(r => r.active);
+              const open = isEffectivelyCollapsed || hasActive || !closedGroups.includes(group.key);
+              return (
+                <div key={group.key} className={gi > 0 ? 'mt-1' : ''}>
+                  {!isEffectivelyCollapsed ? (
+                    <button
+                      type="button"
+                      onClick={() => toggleGroup(group.key)}
+                      aria-expanded={open}
+                      className="no-hover-fx w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-left normal-case text-slate-800 hover:bg-slate-100/80 transition-colors"
+                    >
+                      <GroupIcon className={`w-[18px] h-[18px] shrink-0 ${group.tone}`} />
+                      <span className="flex-1 text-sm font-bold leading-snug">{group.label}</span>
+                      <ChevronDown className={`w-4 h-4 text-slate-500 transition-transform duration-200 ${open ? 'rotate-180' : ''}`} aria-hidden="true" />
+                    </button>
+                  ) : gi > 0 && <div className="mx-2 my-2 border-t border-slate-200" aria-hidden="true" />}
+                  {open && (
+                    <div className={isEffectivelyCollapsed ? 'space-y-1 flex flex-col items-center' : 'space-y-0.5 pb-1'}>
+                      {group.rows.map(row => {
+                        const Icon = row.icon;
+                        if (isEffectivelyCollapsed) {
+                          return (
+                            <button
+                              key={row.key}
+                              type="button"
+                              onClick={row.onClick}
+                              aria-current={row.active ? 'page' : undefined}
+                              title={row.label}
+                              aria-label={row.label}
+                              className={`no-hover-fx w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${row.active ? 'bg-sky-100 text-sky-800 ring-1 ring-sky-200' : `${group.tone} hover:bg-slate-100`}`}
+                            >
+                              <Icon className="w-[18px] h-[18px]" />
+                            </button>
+                          );
+                        }
+                        return (
+                          <button
+                            key={row.key}
+                            type="button"
+                            onClick={row.onClick}
+                            aria-current={row.active ? 'page' : undefined}
+                            className={`no-hover-fx relative w-full flex items-center gap-2.5 pl-8 pr-2.5 py-2 rounded-xl text-left normal-case transition-colors ${
+                              row.active ? 'bg-sky-50 text-sky-900 ring-1 ring-sky-100' : 'text-slate-700 hover:bg-slate-100/80 hover:text-slate-950'
+                            }`}
+                          >
+                            {row.active && <span className="absolute left-0 top-1.5 bottom-1.5 w-[3px] rounded-r-full bg-sky-600" aria-hidden="true" />}
+                            <Icon className={`w-4 h-4 shrink-0 ${row.active ? 'text-sky-700' : group.tone}`} />
+                            <span className={`flex-1 text-sm leading-snug ${row.active ? 'font-bold' : 'font-medium'}`}>{row.label}</span>
+                            {row.badge && (
                               <span className={`px-1.5 py-0.5 rounded-md text-xs font-bold shrink-0 ${
-                                item.badgeType === 'count' ? 'bg-slate-100 text-slate-700'
-                                  : item.badgeType === 'new' ? 'bg-emerald-50 text-emerald-800'
+                                row.badgeType === 'count' ? 'bg-slate-100 text-slate-700'
+                                  : row.badgeType === 'new' ? 'bg-emerald-50 text-emerald-800'
+                                  : row.badgeType === 'trial' ? 'bg-amber-100 text-amber-900'
                                   : 'bg-indigo-600 text-white'
-                              }`}>{item.badge}</span>
+                              }`}>{row.badge}</span>
                             )}
-                          </span>
-                        )}
-                      </button>
-                    );
-                  })}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
-              </div>
-            );
-          })}
+              );
+            });
+          })()}
         </nav>
 
-        {/* Admin Quick Action Button: Quản trị viên nhà trường / Quản trị tối cao / BGH */}
+        {/* Tác giả ứng dụng (thông tin cố định, không lấy từ cài đặt) — gọn ở chân thanh bên */}
         {!isEffectivelyCollapsed && (
-          <div className="px-2 mb-1.5 shrink-0">
-            <button
-              onClick={() => {
-                if (canManageAccounts) {
-                  setIsAccountManagerOpen(true);
-                } else {
-                  setIsAuthModalOpen(true);
-                }
-                if (isMobileDrawer && onCloseMobile) onCloseMobile();
-              }}
-              className="w-full flex items-center justify-between p-1.5 rounded-xl bg-gradient-to-r from-rose-50 to-indigo-50 hover:from-rose-100 hover:to-indigo-100 border border-rose-200 text-rose-800 transition-colors shadow-2xs group cursor-pointer"
-              title="Quản trị tài khoản & Cơ sở dữ liệu trường học"
-            >
-              <div className="flex items-center gap-1.5">
-                <div className="w-6 h-6 rounded-lg bg-indigo-600 text-white flex items-center justify-center font-black shadow-xs">
-                  <ShieldCheck className="w-3.5 h-3.5 text-sky-200" />
-                </div>
-                <div className="text-left">
-                  <div className="text-[12px] font-black uppercase tracking-tight leading-tight text-indigo-950">QUẢN TRỊ ADMIN</div>
-                  <div className="text-[12px] text-rose-700 font-bold leading-tight">Tài khoản & DB Nhà trường</div>
-                </div>
-              </div>
-              <span className="text-[11px] font-black uppercase bg-indigo-600 text-white px-1.5 py-0.5 rounded shadow-2xs">ADMIN</span>
-            </button>
-          </div>
-        )}
-
-        {/* User Account Card */}
-        {!isEffectivelyCollapsed && (
-          <div className="px-2 mb-1.5 shrink-0">
-            <div className="p-1.5 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-between">
-              <div className="flex items-center gap-1.5 min-w-0">
-                <img 
-                  src={currentUser?.avatar || teacherProfile.avatar} 
-                  alt={getOfficialDisplayName(currentUser, allUsers) || teacherProfile.name}
-                  className="w-6 h-6 rounded-full border border-slate-200 object-cover bg-white shrink-0"
-                />
-                <div className="min-w-0">
-                  <div className="text-[12px] font-black text-slate-800 truncate leading-tight">
-                    {getOfficialDisplayName(currentUser, allUsers) || teacherProfile.name}
-                  </div>
-                  <div className="text-[11px] font-bold text-slate-400 truncate leading-tight">
-                    {getOfficialRoleTitle(currentUser)}
-                  </div>
-                </div>
-              </div>
-              <button
-                onClick={() => {
-                  setIsAuthModalOpen(true);
-                  if (isMobileDrawer && onCloseMobile) onCloseMobile();
-                }}
-                className="p-1 rounded-lg hover:bg-white text-indigo-600 border border-transparent hover:border-slate-200 transition-colors shrink-0"
-                title="Đổi tài khoản đăng nhập"
-              >
-                <LogIn className="w-3 h-3" />
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Tiện ích nhanh: lưới ô gọn, hiện đại (Nơi lưu, Drive, CDKEY, Đổi mật khẩu, Đăng ký, Zalo) */}
-        {(() => {
-          const runTool = (fn: () => void) => () => { fn(); if (isMobileDrawer && onCloseMobile) onCloseMobile(); };
-          const tools = [
-            { key: 'storage', label: 'Nơi lưu', title: 'Nơi lưu trữ data an toàn (Ổ D/E) - File JSON', icon: <HardDrive className="w-4 h-4" />, cls: 'bg-blue-50 text-blue-800 border-blue-200 hover:bg-blue-100', onClick: () => setIsDataStorageModalOpen(true) },
-            { key: 'drive', label: 'Drive', title: 'Đồng bộ Google Drive liên thông', icon: <Cloud className="w-4 h-4" />, cls: 'bg-cyan-50 text-cyan-800 border-cyan-200 hover:bg-cyan-100', onClick: () => setIsGoogleDriveModalOpen(true) },
-            { key: 'cdkey', label: isCdKeyActivated ? 'Bản PRO' : 'CDKEY', title: 'Kích hoạt mã CDKEY bản quyền phần mềm', icon: <KeyRound className="w-4 h-4" />, cls: isCdKeyActivated ? 'bg-emerald-50 text-emerald-800 border-emerald-200 hover:bg-emerald-100' : 'bg-amber-100 text-amber-900 border-amber-300 hover:bg-amber-200', onClick: () => setIsCdKeyModalOpen(true) },
-            { key: 'password', label: 'Mật khẩu', title: 'Đổi mật khẩu đăng nhập của tài khoản này', icon: <Lock className="w-4 h-4" />, cls: 'bg-indigo-50 text-indigo-800 border-indigo-200 hover:bg-indigo-100', onClick: () => window.dispatchEvent(new Event(OPEN_CHANGE_PASSWORD_EVENT)) },
-            { key: 'register', label: 'Đăng ký', title: 'Đăng ký sử dụng bản quyền phần mềm Lớp Học Hạnh Phúc', icon: <Sparkles className="w-4 h-4" />, cls: 'bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100', onClick: () => setIsRegistrationModalOpen(true) },
-            { key: 'zalo', label: 'Zalo QR', title: 'Mã QR Zalo liên hệ tác giả', icon: <span className="text-[12px] font-black leading-none">Zalo</span>, cls: 'bg-sky-50 text-sky-800 border-sky-200 hover:bg-sky-100', onClick: () => window.dispatchEvent(new Event(OPEN_ZALO_QR_EVENT)) }
-          ];
-          return !isEffectivelyCollapsed ? (
-            <div className="px-2 mb-1.5 shrink-0">
-              <div className="text-[12px] font-black text-slate-500 uppercase tracking-wider px-0.5 mb-1">Tiện ích</div>
-              <div className="grid grid-cols-3 gap-1.5">
-                {tools.map(t => (
-                  <button
-                    key={t.key}
-                    onClick={runTool(t.onClick)}
-                    title={t.title}
-                    className={`h-12 rounded-xl border flex flex-col items-center justify-center gap-0.5 text-[12px] font-bold transition-colors ${t.cls}`}
-                  >
-                    {t.icon}
-                    <span className="truncate max-w-full px-0.5">{t.label}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-          ) : (
-            <div className="px-2 mb-1.5 space-y-1.5 shrink-0 flex flex-col items-center">
-              {tools.map(t => (
-                <button
-                  key={t.key}
-                  onClick={runTool(t.onClick)}
-                  title={t.title}
-                  className={`w-9 h-9 rounded-xl border flex items-center justify-center transition-colors ${t.cls}`}
-                >
-                  {t.icon}
-                </button>
-              ))}
-            </div>
-          );
-        })()}
-
-        {/* Author Footer: CỐ ĐỊNH THEO YÊU CẦU 6 - KHÔNG LẤY TỪ CÀI ĐẶT */}
-        {!isEffectivelyCollapsed && (
-          <div className={`p-1.5 mx-2 rounded-xl bg-gradient-to-br from-indigo-50/90 via-sky-50/80 to-blue-50/80 border border-indigo-200/80 text-left hover-zoom-interactive shadow-xs shrink-0 ${
-            isMobileDrawer ? 'mb-10' : 'mb-1.5'
-          }`}>
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-black text-indigo-700 uppercase tracking-wider">
-                TÁC GIẢ ỨNG DỤNG
-              </span>
-              <span className="px-1 py-0.2 rounded bg-indigo-100 text-indigo-800 text-[11px] font-black uppercase">
-                CỐ ĐỊNH
-              </span>
-            </div>
-            <div className="text-[12px] font-black text-indigo-950 mt-0.5 uppercase leading-tight truncate">
-              {APP_AUTHOR_INFO.name}
-            </div>
-            <div className="text-[12px] text-slate-700 font-bold uppercase leading-tight truncate">
-              {APP_AUTHOR_INFO.schoolName}
-            </div>
-            <div className="text-[12px] text-blue-700 font-bold mt-1 flex items-center justify-between pt-0.5 border-t border-indigo-100/90">
-              <span className="text-slate-600 font-bold uppercase text-[11px]">ZALO HỖ TRỢ:</span>
-              <a 
-                href={APP_AUTHOR_INFO.zaloUrl} 
-                target="_blank" 
-                rel="noreferrer"
-                className="font-mono bg-white hover:bg-blue-50 px-1.5 py-0.2 rounded text-blue-700 font-black shadow-2xs border border-blue-200 transition-colors text-[12px]"
-              >
-                {APP_AUTHOR_INFO.zalo}
-              </a>
-            </div>
-            <div className="text-[12px] text-blue-700 font-bold mt-0.5 flex items-center justify-between">
-              <span className="text-slate-600 font-bold uppercase text-[11px] flex items-center gap-1">
-                <span className="w-2.5 h-2.5 rounded-full bg-blue-600 text-white flex items-center justify-center text-[11px] font-black">f</span>
-                <span>FACEBOOK:</span>
-              </span>
-              <a 
-                href={APP_AUTHOR_INFO.facebook} 
-                target="_blank" 
-                rel="noreferrer" 
-                className="bg-white hover:bg-blue-50 px-1.5 py-0.2 rounded text-blue-700 font-black shadow-2xs border border-blue-200 transition-colors text-[11px] uppercase font-bold"
-              >
-                XEM TRANG
-              </a>
-            </div>
+          <div className={`mx-2.5 pt-2 border-t border-slate-200/80 text-xs text-slate-600 leading-snug shrink-0 ${isMobileDrawer ? 'mb-10' : 'mb-2'}`}>
+            <p className="font-bold text-slate-800 truncate" title={APP_AUTHOR_INFO.name}>Tác giả: {APP_AUTHOR_INFO.name}</p>
+            <p className="truncate" title={APP_AUTHOR_INFO.schoolName}>{APP_AUTHOR_INFO.schoolName}</p>
+            <p className="flex flex-wrap items-center gap-x-1.5 mt-0.5">
+              <a href={APP_AUTHOR_INFO.zaloUrl} target="_blank" rel="noreferrer" className="font-bold text-sky-700 hover:underline">Zalo {APP_AUTHOR_INFO.zalo}</a>
+              <span aria-hidden="true">•</span>
+              <a href={APP_AUTHOR_INFO.facebook} target="_blank" rel="noreferrer" className="font-bold text-blue-700 hover:underline">Facebook</a>
+            </p>
           </div>
         )}
       </div>
@@ -549,7 +458,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       {/* Desktop Persistent Sidebar */}
       <aside 
         className={`hidden lg:flex h-full max-h-screen overflow-hidden bg-white/70 backdrop-blur-xl border-r border-white/80 shadow-[4px_0_24px_-12px_rgba(37,99,235,0.18)] flex-col transition-all duration-300 z-40 relative select-none shrink-0 ${
-          collapsed ? 'w-20' : 'w-60'
+          collapsed ? 'w-20' : 'w-64'
         }`}
       >
         {renderSidebarContent(false)}

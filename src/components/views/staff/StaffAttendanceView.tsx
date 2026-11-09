@@ -1,12 +1,12 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import * as XLSX from 'xlsx';
 import {
-  UserCheck, RefreshCw, Download, Upload, Users, Link2, Copy, Check, Plus, KeyRound, Lock, Unlock, Trash2, Search, Loader2, ShieldAlert, TrendingUp, TrendingDown, Minus,
+  UserCheck, RefreshCw, Download, Upload, Users, Link2, Copy, Check, Plus, KeyRound, Lock, Unlock, Trash2, Search, Loader2, ShieldAlert, TrendingUp, TrendingDown, Minus, Pencil, MapPin, CheckCircle2, Info,
 } from 'lucide-react';
 import { useClassroom } from '../../../context/ClassroomContext';
 import {
   staffAttendanceService, STAFF_STATUS_META, aggregate, toDateKey, addDays, fromDateKey, shortDateLabel, longDateLabel, weekdayLabel, dateRangeKeys,
-  parseStaffRows, randomPin, weekdayShort, attemptOf, attemptsOf, systemNoteOf, timeHMS, StaffMember, StaffRecord, StaffStatus, StaffUpsert, ParsedStaffRow,
+  parseStaffSheet, STAFF_TEMPLATE_HEADERS, randomPin, weekdayShort, attemptOf, attemptsOf, systemNoteOf, timeHMS, StaffMember, StaffRecord, StaffStatus, StaffUpsert, ParsedStaffRow,
 } from '../../../services/staffAttendanceService';
 import { StaffCheckInQrCard } from './StaffCheckInQr';
 
@@ -455,6 +455,8 @@ const RosterPanel: React.FC<{ canManage: boolean; auth: { username: string; pass
   const [preview, setPreview] = useState<ParsedStaffRow[] | null>(null);
   const [pinMode, setPinMode] = useState<'random' | 'birth'>('random');
   const [editing, setEditing] = useState<(StaffUpsert & { isNew?: boolean }) | null>(null);
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'locked'>('all');
+  const [posFilter, setPosFilter] = useState('');
   const fileRef = useRef<HTMLInputElement>(null);
 
   const load = useCallback(async () => {
@@ -487,11 +489,18 @@ const RosterPanel: React.FC<{ canManage: boolean; auth: { username: string; pass
     reader.onload = (ev) => {
       try {
         const wb = XLSX.read(ev.target?.result, { type: 'array' });
-        const ws = wb.Sheets[wb.SheetNames[0]];
-        const rows = XLSX.utils.sheet_to_json<Record<string, any>>(ws, { defval: '', raw: false });
-        const parsed = parseStaffRows(rows);
-        if (parsed.length === 0) { setMsg({ type: 'err', text: 'Không đọc được dòng nhân sự nào. Kiểm tra lại cột "Họ tên", "Mã định danh", "Số CMTND/TCC".' }); return; }
-        setPreview(parsed);
+        // Biểu mẫu CSDL ngành: bảng nhân sự là trang đầu (Sheet1); bỏ qua trang MA_LOI
+        const sheetName = wb.SheetNames.find(n => n.toUpperCase() !== 'MA_LOI') || wb.SheetNames[0];
+        const aoa = XLSX.utils.sheet_to_json<unknown[]>(wb.Sheets[sheetName], { header: 1, defval: '', raw: true, blankrows: false });
+        const result = parseStaffSheet(aoa);
+        if (!result.ok) {
+          const more = result.errors.length > 6 ? ` … và ${result.errors.length - 6} lỗi khác` : '';
+          setMsg({ type: 'err', text: `Tệp "${f.name}" không đúng biểu mẫu nhập nhân sự (68 cột theo CSDL ngành). ${result.errors.slice(0, 6).join('; ')}${more}. Bấm "Tải tệp mẫu" để lấy đúng biểu mẫu.` });
+          return;
+        }
+        if (result.rows.length === 0) { setMsg({ type: 'err', text: 'Tệp đúng biểu mẫu nhưng chưa có dòng nhân sự nào.' }); return; }
+        setMsg(null);
+        setPreview(result.rows);
       } catch (_) { setMsg({ type: 'err', text: 'Tệp Excel không đọc được.' }); }
     };
     reader.readAsArrayBuffer(f);
@@ -511,7 +520,7 @@ const RosterPanel: React.FC<{ canManage: boolean; auth: { username: string; pass
       const needPin = !existing.has(p.code) || !list.find(s => s.code === p.code)?.hasPin;
       return { ...rest, pin: needPin ? (pinMode === 'birth' ? birthPin(birthDate) || randomPin() : randomPin()) : undefined };
     });
-    const done = await save(items, [], `Đã nhập ${items.length} nhân sự (bỏ qua ${preview.length - ok.length} dòng thiếu thông tin).`);
+    const done = await save(items, [], `Đã nhập ${items.length} nhân sự (bỏ qua ${preview.length - ok.length} dòng lỗi).`);
     if (done) setPreview(null);
   };
 
@@ -527,88 +536,141 @@ const RosterPanel: React.FC<{ canManage: boolean; auth: { username: string; pass
   };
 
   const downloadTemplate = () => {
-    const ws = XLSX.utils.aoa_to_sheet([['STT', 'Mã định danh Bộ GD&ĐT', 'Họ tên', 'Giới tính', 'Ngày sinh', 'Trạng thái CB', 'Số CMTND/TCC', 'Điện thoại', 'Vị trí việc làm', 'Nhóm chức vụ', 'Môn dạy'],
-      [1, 'GV001', 'Nguyễn Văn A', 'Nam', '01/01/1990', 'Đang làm việc', '', '', 'Giáo viên', '', 'Toán']]);
+    // Đúng biểu mẫu CSDL ngành: 68 cột A → BP, cùng tên và thứ tự; 1 dòng ví dụ (dữ liệu giả)
+    const sample: Record<string, string> = {
+      'STT': '1', 'Mã định danh Bộ GD&ĐT': '0000000001', 'Họ tên': 'Nguyễn Văn A', 'Giới tính': 'Nam', 'Ngày sinh': '01/01/1990',
+      'Trạng thái CB': 'Đang làm việc', 'Số CMTND/TCC': '000000000000', 'Điện thoại': '0900000000', 'Vị trí việc làm': 'Giáo viên', 'Môn dạy': 'Toán',
+    };
+    const ws = XLSX.utils.aoa_to_sheet([STAFF_TEMPLATE_HEADERS, STAFF_TEMPLATE_HEADERS.map(h => sample[h] || '')]);
+    ws['!cols'] = STAFF_TEMPLATE_HEADERS.map(h => ({ wch: Math.min(28, Math.max(10, h.replace(/\s+/g, ' ').length + 2)) }));
+    // Giữ dạng chữ cho mã, CCCD, điện thoại (không mất số 0 đầu)
+    ['B', 'G', 'I'].forEach(col => { const c = ws[`${col}2`]; if (c) { c.t = 's'; c.z = '@'; } });
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Nhan su');
-    XLSX.writeFile(wb, 'Mau_DanhSach_NhanSu.xlsx');
+    XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
+    XLSX.writeFile(wb, 'Mau_Nhap_NhanSu_CSDL_nganh.xlsx');
   };
 
-  const shown = list.filter(s => !q || `${s.name} ${s.code} ${s.position || ''} ${s.dept || ''}`.toLowerCase().includes(q.toLowerCase()))
+  const norm = (t: string) => t.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/gi, 'd').toLowerCase();
+  const positions = Array.from(new Set(list.map(s => s.position || '').filter(Boolean))).sort((a, b) => a.localeCompare(b, 'vi'));
+  const shown = list
+    .filter(s => !q || norm(`${s.name} ${s.code} ${s.position || ''} ${s.dept || ''}`).includes(norm(q)))
+    .filter(s => statusFilter === 'all' || (statusFilter === 'locked' ? s.disabled : !s.disabled))
+    .filter(s => !posFilter || (s.position || '') === posFilter)
     .sort((a, b) => (a.order || 0) - (b.order || 0) || a.name.localeCompare(b.name, 'vi'));
+  const iconBtn = 'no-hover-fx w-8 h-8 inline-flex items-center justify-center rounded-lg transition-colors';
 
   return (
     <div className="space-y-3">
-      <div className="bg-white rounded-2xl border border-slate-200 p-3 flex flex-wrap items-center gap-2">
-        <div className="relative">
-          <Search className="w-4 h-4 text-slate-500 absolute left-2.5 top-1/2 -translate-y-1/2" />
-          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Tìm nhân sự…" className="pl-8 pr-3 py-2 rounded-xl border border-slate-300 text-sm" />
-        </div>
-        <span className="text-sm font-bold text-slate-700">{list.length} nhân sự • {list.filter(s => !s.disabled).length} đang hoạt động</span>
-        <div className="ml-auto flex flex-wrap gap-2">
-          <button type="button" onClick={load} disabled={loading} className="px-3 py-2 rounded-xl text-sm font-bold border border-slate-200 bg-white hover:bg-slate-50 inline-flex items-center gap-1.5">
-            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />} Tải lại
-          </button>
-          {canManage && <>
-            <button type="button" onClick={downloadTemplate} className="px-3 py-2 rounded-xl text-sm font-bold border border-slate-200 bg-white hover:bg-slate-50">Tải tệp mẫu</button>
-            <button type="button" onClick={() => setEditing({ code: '', name: '', isNew: true, pin: randomPin() })} className="px-3 py-2 rounded-xl text-sm font-bold border border-slate-200 bg-white hover:bg-slate-50 inline-flex items-center gap-1.5"><Plus className="w-4 h-4" /> Thêm</button>
-            <button type="button" onClick={exportPins} disabled={list.length === 0} className="px-3 py-2 rounded-xl text-sm font-bold border border-slate-200 bg-white hover:bg-slate-50 inline-flex items-center gap-1.5"><KeyRound className="w-4 h-4" /> Xuất mật khẩu</button>
-            <button type="button" onClick={() => fileRef.current?.click()} className="px-3.5 py-2 rounded-xl text-sm font-black bg-indigo-600 hover:bg-indigo-700 text-white inline-flex items-center gap-1.5"><Upload className="w-4 h-4" /> Nhập Excel</button>
-            <input ref={fileRef} type="file" accept=".xlsx,.xls,.csv" className="hidden" onChange={onFile} />
-          </>}
-        </div>
-      </div>
-
       {msg && <div className={`rounded-2xl px-4 py-3 text-sm font-bold border ${msg.type === 'ok' ? 'bg-emerald-50 border-emerald-200 text-emerald-900' : 'bg-rose-50 border-rose-200 text-rose-800'}`}>{msg.text}</div>}
-      {!canManage && <p className="text-sm text-slate-600">Ban giám hiệu chỉ xem danh sách. Thêm, sửa, cấp mật khẩu do tài khoản Quản trị nhà trường thực hiện.</p>}
 
-      <div className="rounded-3xl bg-white border border-slate-200 overflow-x-auto">
-        <table className="w-full text-sm min-w-[760px]">
-          <thead><tr className="text-left text-xs uppercase text-slate-600 border-b border-slate-200">
-            <th className="py-2.5 px-3">Mã GV</th><th className="py-2.5 pr-2">Họ và tên</th><th className="py-2.5 pr-2">Chức vụ</th><th className="py-2.5 pr-2">Tổ / Môn</th><th className="py-2.5 pr-2">CCCD</th>
-            {canManage && <th className="py-2.5 pr-2">Mật khẩu ĐD</th>}<th className="py-2.5 pr-2">Trạng thái</th>{canManage && <th className="py-2.5 pr-3 text-right">Thao tác</th>}
-          </tr></thead>
-          <tbody>
-            {shown.map(s => (
-              <tr key={s.code} className={`border-b border-slate-100 ${s.disabled ? 'opacity-60' : ''}`}>
-                <td className="py-2 px-3 font-mono text-xs text-slate-700">{s.code}</td>
-                <td className="py-2 pr-2 font-bold text-slate-900">{s.name}</td>
-                <td className="py-2 pr-2 text-slate-700">{s.position}</td>
-                <td className="py-2 pr-2 text-slate-700">{s.dept}</td>
-                <td className="py-2 pr-2 font-mono text-slate-700">{s.cccdLast4 ? `••••••••${s.cccdLast4}` : '—'}</td>
-                {canManage && <td className="py-2 pr-2 font-mono text-slate-800">{s.currentPin || <span className="text-rose-700 font-sans font-bold">Chưa có</span>}</td>}
-                <td className="py-2 pr-2">{s.disabled ? <span className="text-xs font-black text-slate-700 bg-slate-100 px-2 py-0.5 rounded-full">Đã khóa</span> : <span className="text-xs font-black text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-full">Hoạt động</span>}</td>
-                {canManage && (
-                  <td className="py-2 pr-3 text-right whitespace-nowrap">
-                    <button type="button" title="Sửa" onClick={() => setEditing({ code: s.code, name: s.name, position: s.position, dept: s.dept, gender: s.gender, phone: s.phone })} className="px-2 py-1 rounded-lg text-xs font-bold text-indigo-700 hover:bg-indigo-50">Sửa</button>
-                    <button type="button" title="Cấp lại mật khẩu" onClick={() => { const pin = randomPin(); if (confirm(`Cấp mật khẩu điểm danh mới cho ${s.name}: ${pin}?`)) save([{ code: s.code, pin }], [], `Đã cấp mật khẩu mới cho ${s.name}: ${pin}`); }} className="px-2 py-1 rounded-lg text-xs font-bold text-amber-800 hover:bg-amber-50"><KeyRound className="w-3.5 h-3.5 inline" /></button>
-                    <button type="button" title={s.disabled ? 'Mở khóa' : 'Khóa'} onClick={() => save([{ code: s.code, disabled: !s.disabled }], [], s.disabled ? `Đã mở khóa ${s.name}.` : `Đã khóa ${s.name}.`)} className="px-2 py-1 rounded-lg text-xs font-bold text-slate-700 hover:bg-slate-100">{s.disabled ? <Unlock className="w-3.5 h-3.5 inline" /> : <Lock className="w-3.5 h-3.5 inline" />}</button>
-                    <button type="button" title="Xóa" onClick={() => { if (confirm(`Xóa ${s.name} khỏi danh sách điểm danh? (Dữ liệu điểm danh cũ vẫn giữ trên Drive)`)) save([], [s.code], `Đã xóa ${s.name}.`); }} className="px-2 py-1 rounded-lg text-xs font-bold text-rose-700 hover:bg-rose-50"><Trash2 className="w-3.5 h-3.5 inline" /></button>
-                  </td>
-                )}
+      {/* Thẻ danh sách: tiêu đề + số người + nút thao tác → bộ lọc → bảng */}
+      <section className="rounded-2xl bg-white border border-slate-200 shadow-sm overflow-hidden" aria-label="Danh sách cán bộ, giáo viên, nhân viên">
+        <div className="px-4 py-3 flex flex-wrap items-center gap-3 border-b border-slate-100">
+          <div className="flex items-center gap-2 min-w-0 mr-auto">
+            <Users className="w-5 h-5 text-indigo-600 shrink-0" />
+            <p className="text-base font-black text-slate-900">Danh sách cán bộ, giáo viên, nhân viên</p>
+            <span className="px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-800 text-xs font-bold tabular-nums">{list.length} người</span>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            {canManage && <>
+              <button type="button" onClick={() => setEditing({ code: '', name: '', isNew: true, pin: randomPin() })} className="no-hover-fx h-9 px-3.5 rounded-lg text-sm font-bold bg-indigo-600 hover:bg-indigo-700 text-white inline-flex items-center gap-1.5"><Plus className="w-4 h-4" /> Thêm mới</button>
+              <span className="w-px h-6 bg-slate-200 mx-0.5 hidden sm:block" aria-hidden="true" />
+              <button type="button" onClick={downloadTemplate} className="no-hover-fx h-9 px-3.5 rounded-lg text-sm font-bold bg-emerald-700 hover:bg-emerald-800 text-white inline-flex items-center gap-1.5"><Download className="w-4 h-4" /> Tải mẫu</button>
+              <button type="button" onClick={() => fileRef.current?.click()} className="no-hover-fx h-9 px-3.5 rounded-lg text-sm font-bold bg-amber-600 hover:bg-amber-700 text-white inline-flex items-center gap-1.5"><Upload className="w-4 h-4" /> Nhập Excel</button>
+              <button type="button" onClick={exportPins} disabled={list.length === 0} className="no-hover-fx h-9 px-3.5 rounded-lg text-sm font-bold bg-teal-700 hover:bg-teal-800 text-white inline-flex items-center gap-1.5 disabled:opacity-50"><KeyRound className="w-4 h-4" /> Xuất mật khẩu</button>
+              <input ref={fileRef} type="file" accept=".xlsx,.xls,.csv" className="hidden" onChange={onFile} />
+            </>}
+            <button type="button" onClick={load} disabled={loading} className="no-hover-fx h-9 px-3.5 rounded-lg text-sm font-bold border border-slate-300 bg-white hover:bg-slate-50 text-slate-800 inline-flex items-center gap-1.5">
+              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />} Tải lại
+            </button>
+          </div>
+        </div>
+
+        <div className="px-4 py-3 flex flex-wrap items-center gap-2 border-b border-slate-100 bg-slate-50/60">
+          <label className="relative">
+            <span className="sr-only">Tìm kiếm nhân sự</span>
+            <Search className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
+            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Tìm kiếm nhanh…" className="h-9 w-64 max-w-full pl-9 pr-3 rounded-lg border border-slate-300 bg-white text-sm" />
+          </label>
+          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as any)} aria-label="Lọc theo trạng thái" className="h-9 px-3 rounded-lg border border-slate-300 bg-white text-sm">
+            <option value="all">Tất cả trạng thái</option>
+            <option value="active">Đang hoạt động</option>
+            <option value="locked">Đã khóa</option>
+          </select>
+          <select value={posFilter} onChange={(e) => setPosFilter(e.target.value)} aria-label="Lọc theo chức vụ" className="h-9 px-3 rounded-lg border border-slate-300 bg-white text-sm max-w-[220px]">
+            <option value="">Tất cả chức vụ</option>
+            {positions.map(p => <option key={p} value={p}>{p}</option>)}
+          </select>
+          <span className="ml-auto text-xs text-slate-600 inline-flex items-center gap-1"><Info className="w-3.5 h-3.5" />
+            {shown.length === list.length ? `${list.length} người` : `Hiển thị ${shown.length}/${list.length} người`}{canManage ? ' • Bấm biểu tượng bút để sửa' : ''}
+          </span>
+        </div>
+
+        {!canManage && <p className="px-4 pt-3 text-sm text-slate-600">Ban giám hiệu chỉ xem danh sách. Thêm, sửa, cấp mật khẩu do tài khoản Quản trị nhà trường thực hiện.</p>}
+
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm min-w-[760px]">
+            <thead>
+              <tr className="text-left text-xs font-bold uppercase tracking-wide text-slate-600 bg-slate-50 border-b border-slate-200">
+                <th className="py-3 pl-4 pr-2 w-12 text-center">STT</th>
+                <th className="py-3 pr-2">Họ và tên</th>
+                <th className="py-3 pr-2">Tổ / Môn dạy</th>
+                <th className="py-3 pr-2">CCCD</th>
+                {canManage && <th className="py-3 pr-2">Mật khẩu ĐD</th>}
+                <th className="py-3 pr-2 text-center">Trạng thái</th>
+                {canManage && <th className="py-3 pr-4 text-center">Thao tác</th>}
               </tr>
-            ))}
-            {shown.length === 0 && <tr><td colSpan={8} className="py-8 text-center text-slate-600">{loading ? 'Đang tải…' : 'Chưa có nhân sự.'}</td></tr>}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody>
+              {shown.map((s, i) => (
+                <tr key={s.code} className={`border-b border-slate-100 hover:bg-sky-50/50 transition-colors ${s.disabled ? 'bg-slate-50/70' : ''}`}>
+                  <td className="py-3 pl-4 pr-2 text-center text-slate-500 tabular-nums">{i + 1}</td>
+                  <td className="py-3 pr-2">
+                    <p className={`font-bold ${s.disabled ? 'text-slate-500' : 'text-slate-900'}`}>{s.name}</p>
+                    <p className="text-xs text-slate-600 mt-0.5"><span className="font-mono">{s.code}</span>{s.position ? <> <span className="text-slate-400">|</span> {s.position}</> : null}</p>
+                    {schoolName && <p className="text-xs text-emerald-700 mt-0.5 inline-flex items-center gap-1"><MapPin className="w-3 h-3" />{schoolName}</p>}
+                  </td>
+                  <td className="py-3 pr-2 text-indigo-800">{s.dept ? s.dept.split(/[,;]\s*/).map((d, k) => <p key={k} className="leading-snug">{d}</p>) : <span className="text-slate-400">—</span>}</td>
+                  <td className="py-3 pr-2 font-mono text-slate-700">{s.cccdLast4 ? `••••••••${s.cccdLast4}` : '—'}</td>
+                  {canManage && <td className="py-3 pr-2 font-mono text-slate-800">{s.currentPin || <span className="text-rose-700 font-sans font-bold">Chưa có</span>}</td>}
+                  <td className="py-3 pr-2 text-center">
+                    {s.disabled
+                      ? <span className="inline-flex items-center gap-1 text-xs font-bold text-slate-700 bg-slate-200/70 px-2.5 py-1 rounded-full"><Lock className="w-3 h-3" /> Đã khóa</span>
+                      : <span className="inline-flex items-center gap-1 text-xs font-bold text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded-full"><CheckCircle2 className="w-3 h-3" /> Hoạt động</span>}
+                  </td>
+                  {canManage && (
+                    <td className="py-3 pr-4 text-center whitespace-nowrap">
+                      <button type="button" title="Sửa thông tin" aria-label={`Sửa ${s.name}`} onClick={() => setEditing({ code: s.code, name: s.name, position: s.position, dept: s.dept, gender: s.gender, phone: s.phone })} className={`${iconBtn} text-blue-600 hover:bg-blue-50`}><Pencil className="w-4 h-4" /></button>
+                      <button type="button" title="Cấp lại mật khẩu điểm danh" aria-label={`Cấp lại mật khẩu cho ${s.name}`} onClick={() => { const pin = randomPin(); if (confirm(`Cấp mật khẩu điểm danh mới cho ${s.name}: ${pin}?`)) save([{ code: s.code, pin }], [], `Đã cấp mật khẩu mới cho ${s.name}: ${pin}`); }} className={`${iconBtn} text-amber-700 hover:bg-amber-50`}><KeyRound className="w-4 h-4" /></button>
+                      <button type="button" title={s.disabled ? 'Mở khóa' : 'Khóa'} aria-label={`${s.disabled ? 'Mở khóa' : 'Khóa'} ${s.name}`} onClick={() => save([{ code: s.code, disabled: !s.disabled }], [], s.disabled ? `Đã mở khóa ${s.name}.` : `Đã khóa ${s.name}.`)} className={`${iconBtn} text-orange-600 hover:bg-orange-50`}>{s.disabled ? <Unlock className="w-4 h-4" /> : <Lock className="w-4 h-4" />}</button>
+                      <button type="button" title="Xóa khỏi danh sách" aria-label={`Xóa ${s.name}`} onClick={() => { if (confirm(`Xóa ${s.name} khỏi danh sách điểm danh? (Dữ liệu điểm danh cũ vẫn giữ trên Drive)`)) save([], [s.code], `Đã xóa ${s.name}.`); }} className={`${iconBtn} text-rose-600 hover:bg-rose-50`}><Trash2 className="w-4 h-4" /></button>
+                    </td>
+                  )}
+                </tr>
+              ))}
+              {shown.length === 0 && <tr><td colSpan={8} className="py-10 text-center text-slate-600">{loading ? 'Đang tải…' : list.length ? 'Không có người phù hợp bộ lọc.' : 'Chưa có nhân sự. Bấm "Tải mẫu" rồi "Nhập Excel" để thêm danh sách.'}</td></tr>}
+            </tbody>
+          </table>
+        </div>
+      </section>
 
       {/* Xem trước nhập Excel */}
       {preview && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-sky-900/20 backdrop-blur-xs p-4" role="dialog" aria-modal="true" aria-label="Xem trước danh sách nhân sự">
           <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-4xl max-h-[90vh] flex flex-col">
             <div className="px-5 py-3.5 border-b border-slate-200 flex items-center justify-between">
-              <h3 className="text-base font-black text-slate-900">Xem trước: {preview.length} nhân sự • {preview.filter(p => p.issues.length).length} dòng thiếu thông tin</h3>
+              <h3 className="text-base font-black text-slate-900">Xem trước: {preview.length} nhân sự • {preview.filter(p => p.issues.length).length} dòng lỗi (bỏ qua)</h3>
               <button type="button" onClick={() => setPreview(null)} className="text-sm font-bold text-slate-600">Đóng</button>
             </div>
             <div className="overflow-auto flex-1 px-5">
               <table className="w-full text-sm">
                 <thead className="sticky top-0 bg-white"><tr className="text-left text-xs uppercase text-slate-600 border-b border-slate-200">
-                  <th className="py-2 pr-2">Mã</th><th className="py-2 pr-2">Họ tên</th><th className="py-2 pr-2">Chức vụ</th><th className="py-2 pr-2">Tổ/Môn</th><th className="py-2 pr-2">CCCD</th><th className="py-2">Ghi chú</th>
+                  <th className="py-2 pr-2">Dòng</th><th className="py-2 pr-2">Mã</th><th className="py-2 pr-2">Họ tên</th><th className="py-2 pr-2">Chức vụ</th><th className="py-2 pr-2">Tổ/Môn</th><th className="py-2 pr-2">CCCD</th><th className="py-2">Ghi chú</th>
                 </tr></thead>
                 <tbody>
                   {preview.map((p, i) => (
                     <tr key={i} className={`border-b border-slate-100 ${p.issues.length ? 'bg-rose-50' : ''}`}>
+                      <td className="py-1.5 pr-2 text-xs text-slate-600 tabular-nums">{p.excelRow}</td>
                       <td className="py-1.5 pr-2 font-mono text-xs">{p.code}</td>
                       <td className="py-1.5 pr-2 font-bold">{p.name}</td>
                       <td className="py-1.5 pr-2">{p.position}</td>
@@ -705,7 +767,10 @@ const LinkPanel: React.FC<{ schoolName: string; isBghOnly: boolean }> = ({ schoo
         <div className="rounded-3xl bg-white border border-slate-200 p-5 space-y-3">
           <h3 className="text-base font-black text-slate-900">Link điểm danh gửi cho giáo viên, nhân viên</h3>
           <p className="text-sm text-slate-700">Gửi vào nhóm Zalo của trường. Link chỉ chứa địa chỉ kết nối (không có mật khẩu); mỗi người vẫn phải nhập đúng số CCCD và mật khẩu điểm danh của mình.</p>
-          <div className="rounded-2xl bg-slate-50 border border-slate-200 p-3 font-mono text-xs break-all text-slate-800">{link}</div>
+          <div className="rounded-2xl bg-slate-50 border border-slate-200 p-3 font-mono text-sm break-all text-slate-800">{link}</div>
+          {/#/.test(link) && (
+            <p className="text-xs text-slate-600">Muốn link gọn nhất (chỉ còn <span className="font-mono">{link.split('#')[0]}</span>): trong dự án Vercel của trường, thêm 2 biến môi trường <span className="font-mono">VITE_DRIVE_SCRIPT_URL</span> (link Apps Script) và <span className="font-mono">VITE_DRIVE_FOLDER_ID</span> (mã thư mục Drive) rồi bấm Redeploy.</p>
+          )}
           <div className="flex flex-wrap gap-2">
             <button type="button" onClick={async () => { try { await navigator.clipboard.writeText(shareText); setCopied(true); setTimeout(() => setCopied(false), 2000); } catch (_) { /* ignore */ } }}
               className="px-4 py-2.5 rounded-2xl bg-emerald-700 hover:bg-emerald-800 text-white text-sm font-black inline-flex items-center gap-1.5">

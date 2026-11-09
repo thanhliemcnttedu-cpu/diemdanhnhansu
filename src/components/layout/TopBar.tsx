@@ -5,7 +5,7 @@ import {
   Sparkles, Award, ShieldAlert,
   ChevronDown, School, ShieldCheck, Database, LogIn, LogOut, Users,
   Menu, Monitor, Cloud, HardDrive, KeyRound, MoreHorizontal, RefreshCw
-, Search, MonitorPlay
+, Search, MonitorPlay, MapPin, CalendarDays
 } from 'lucide-react';
 import { googleDriveService } from '../../services/googleDriveService';
 import { invalidateDriveClassFilesCache, FORCE_DATA_REFRESH_EVENT } from '../../services/databaseService';
@@ -311,7 +311,7 @@ export const TopBar: React.FC<TopBarProps> = ({
         </div>
       )}
 
-      <header className="h-13 bg-white/70 backdrop-blur-xl border-b border-white/80 px-3 sm:px-4 md:px-5 flex items-center justify-between sticky top-0 z-30 shadow-2xs">
+      <header className="h-14 bg-white/80 backdrop-blur-xl border-b border-slate-200/70 px-3 sm:px-4 md:px-5 flex items-center justify-between gap-2 sticky top-0 z-30">
       {/* Zone 1: Current Page Title & Subtitle Breadcrumb matching PDF with Mobile Menu Button */}
       <div className="flex items-center gap-1.5 sm:gap-2.5 min-w-0 flex-1 pr-1 sm:pr-2.5">
         {/* Mobile/Tablet Menu Hamburger Button */}
@@ -325,8 +325,8 @@ export const TopBar: React.FC<TopBarProps> = ({
           <Menu className="w-5 h-5 text-slate-700" />
         </button>
 
-        <div className="flex flex-col justify-center min-w-[96px] flex-1">
-          <h2 className="text-sm md:text-base font-black text-slate-900 tracking-tight leading-tight truncate">
+        <div className="flex items-center gap-2.5 min-w-[96px] flex-1" title={viewInfo.subtitle}>
+          <h2 className="text-sm md:text-base font-black text-slate-900 tracking-tight leading-tight truncate shrink-0 max-w-full">
             <span className="sm:hidden">{viewInfo.shortTitle || viewInfo.title}</span>
             <span className="hidden sm:inline">{viewInfo.title}</span>
             {currentView !== 'dashboard' && currentView !== 'classes' && (
@@ -341,9 +341,13 @@ export const TopBar: React.FC<TopBarProps> = ({
               ) : null
             )}
           </h2>
-          <p className="text-[12px] sm:text-[12px] text-slate-500 font-medium leading-tight truncate hidden sm:block mt-0.5">
-            {viewInfo.subtitle}
-          </p>
+          {/* Ngữ cảnh đang làm việc: trường (quản lý) */}
+          {isManagerUser && (currentUser?.schoolName || teacherProfile.schoolName) && (
+            <span className="hidden 2xl:inline-flex items-center gap-1.5 h-8 px-3 rounded-xl bg-sky-50 border border-sky-200 text-sky-900 text-sm font-semibold max-w-[320px] min-w-0">
+              <MapPin className="w-4 h-4 text-sky-600 shrink-0" />
+              <span className="truncate">Trường: <strong className="font-bold">{currentUser?.schoolName || teacherProfile.schoolName}</strong></span>
+            </span>
+          )}
         </div>
       </div>
 
@@ -353,7 +357,7 @@ export const TopBar: React.FC<TopBarProps> = ({
         <button
           type="button"
           onClick={() => window.dispatchEvent(new Event('lhhp:open-command-palette'))}
-          className={`${chipBase} hidden xl:inline-flex bg-white text-slate-600 border-slate-200 hover:bg-slate-50 hover:text-slate-900 min-w-[150px] justify-between`}
+          className={`${chipBase} hidden lg:inline-flex bg-slate-50 text-slate-600 border-slate-200 hover:bg-white hover:text-slate-900 min-w-[170px] justify-between`}
           title="Tìm nhanh chức năng (Ctrl + K)"
         >
           <span className="inline-flex items-center gap-1.5"><Search className="w-3.5 h-3.5" />Tìm nhanh…</span>
@@ -369,67 +373,16 @@ export const TopBar: React.FC<TopBarProps> = ({
             <MonitorPlay className="w-3.5 h-3.5" /><span className="hidden xl:inline">Trình chiếu</span>
           </button>
         )}
-        <div className="hidden lg:flex items-center gap-1.5">
-          {/* ☁️ Google Drive */}
-          <button
-            onClick={() => setIsGoogleDriveModalOpen(true)}
-            className={`${chipBase} ${driveChipClass}`}
-            title="Cầu nối Google Drive: Tự động sao lưu dữ liệu lớp và liên thông BGH"
-          >
-            <Cloud className={`w-4 h-4 ${driveSyncState.status === 'syncing' ? 'animate-pulse' : ''}`} />
-            <span className="hidden xl:inline">{driveLabel}</span>
-          </button>
-
-          {/* 💾 Nơi lưu Data (Ổ D/E) */}
-          <button
-            onClick={() => setIsDataStorageModalOpen(true)}
-            className={`${chipBase} bg-blue-50 text-blue-800 border-blue-200 hover:bg-blue-100`}
-            title="Nơi lưu trữ DATA an toàn trên Ổ D / E hoặc USB"
-          >
-            <HardDrive className="w-4 h-4" />
-            <span className="hidden 2xl:inline">Ổ D / E an toàn</span>
-          </button>
-
-          {/* 🔑 Bản quyền CDKEY */}
-          <button
-            onClick={() => setIsCdKeyModalOpen(true)}
-            className={`${chipBase} ${isCdKeyActivated ? 'bg-emerald-50 text-emerald-800 border-emerald-200 hover:bg-emerald-100' : 'bg-amber-100 text-amber-900 border-amber-300 hover:bg-amber-200'}`}
-            title="Kích hoạt mã CDKEY bản quyền phần mềm"
-          >
-            <KeyRound className="w-4 h-4" />
-            <span className="hidden xl:inline">{isCdKeyActivated ? 'Bản quyền PRO' : 'Kích hoạt CDKEY'}</span>
-          </button>
-
-          {/* Đăng ký sử dụng */}
-          <button
-            onClick={() => setIsRegistrationModalOpen(true)}
-            className={`${chipBase} bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100`}
-            title="Đăng ký sử dụng bản quyền phần mềm Lớp học Hạnh phúc"
-          >
-            <Sparkles className="w-4 h-4" />
-            <span className="hidden 2xl:inline">Đăng ký sử dụng</span>
-          </button>
-
-          {/* Quản trị */}
-          <button
-            onClick={openAdmin}
-            className={`${chipBase} bg-indigo-600 text-white border-indigo-600 hover:bg-indigo-700`}
-            title="Quản trị tài khoản & Cơ sở dữ liệu trường học (Admin / Quản trị nhà trường / BGH)"
-          >
-            <ShieldCheck className="w-4 h-4" />
-            <span className="hidden xl:inline">{adminLabel}</span>
-          </button>
-
-          {/* Trợ lý AI */}
-          <button
-            onClick={() => onNavigate('ai')}
-            className={`${chipBase} bg-violet-50 text-violet-700 border-violet-200 hover:bg-violet-100`}
-            title="Mở Trợ lý Sư phạm Trí tuệ Nhân tạo AI"
-          >
-            <Sparkles className="w-4 h-4" />
-            <span className="hidden 2xl:inline">Trợ lý AI</span>
-          </button>
-        </div>
+        {/* ☁️ Trạng thái Google Drive (các tiện ích khác nằm ở nhóm "Hệ thống" của thanh bên) */}
+        <button
+          onClick={() => setIsGoogleDriveModalOpen(true)}
+          className={`${chipBase} hidden lg:inline-flex ${driveChipClass}`}
+          title={`Google Drive: ${driveLabel}`}
+          aria-label={`Google Drive: ${driveLabel}`}
+        >
+          <Cloud className={`w-4 h-4 ${driveSyncState.status === 'syncing' ? 'animate-pulse' : ''}`} />
+          <span className="hidden 2xl:inline">{driveLabel}</span>
+        </button>
 
         {/* 🔄 Cập nhật dữ liệu mới nhất của tất cả giáo viên (Quản trị tối cao / Quản trị trường / BGH) */}
         {isManagementAdmin && (
@@ -445,17 +398,6 @@ export const TopBar: React.FC<TopBarProps> = ({
               {isRefreshingAll ? 'Đang cập nhật…' : (lastRefreshAllAt ? `Đã cập nhật ${lastRefreshAllAt}` : 'Cập nhật dữ liệu')}
             </span>
           </button>
-        )}
-
-        {isBgh && (
-          <span
-            className={`${chipBase} bg-amber-100 text-amber-900 border-amber-300 cursor-default hidden sm:inline-flex`}
-            title="Tài khoản Ban Giám Hiệu (Toàn quyền giám sát & xem dữ liệu)"
-          >
-            <span>🏛️</span>
-            <span className="hidden 2xl:inline">Ban giám hiệu</span>
-            <span className="2xl:hidden">BGH</span>
-          </span>
         )}
 
           {/* Class Selector Dropdown */}
@@ -526,14 +468,22 @@ export const TopBar: React.FC<TopBarProps> = ({
           )}
 
 
-        {/* Chuông trật tự */}
-        <button
+        {/* Năm học */}
+        {(teacherProfile.academicYear || activeClass?.academicYear) && (
+          <span className={`${chipBase} hidden md:inline-flex bg-white text-slate-700 border-slate-200 cursor-default`} title="Năm học">
+            <CalendarDays className="w-4 h-4 text-slate-500" />
+            {teacherProfile.academicYear || activeClass?.academicYear}
+          </span>
+        )}
+
+        {/* Chuông trật tự (chỉ giáo viên, dùng trong lớp) */}
+        {!isManagerUser && <button
           onClick={handleQuickAlarm}
           className="w-8 h-8 rounded-xl bg-rose-600 hover:bg-rose-700 text-white flex items-center justify-center shrink-0 shadow-sm"
           title="Phát chuông ổn định trật tự lớp học ngay lập tức"
         >
           <ShieldAlert className="w-4 h-4" />
-        </button>
+        </button>}
 
         {/* Toàn màn hình */}
         <button
@@ -585,21 +535,21 @@ export const TopBar: React.FC<TopBarProps> = ({
         <div className="relative shrink-0 pl-1">
           <button 
             onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-            className="btn-3d btn-3d-sm btn-3d-light flex items-center gap-1.5 py-1 px-1.5 shrink-0 border border-sky-200/90 group"
+            className="no-hover-fx flex items-center gap-2 pl-1 pr-2 py-1 rounded-full hover:bg-slate-100 transition-colors shrink-0 group"
             title="Nhấn để đổi tài khoản hoặc xem thông tin người dùng"
           >
             <img 
               src={currentUser?.avatar || teacherProfile.avatar} 
               alt={getOfficialDisplayName(currentUser, allUsers) || teacherProfile.name}
-              className="w-6 h-6 rounded-full object-cover ring-2 ring-sky-300 group-hover:ring-sky-500 transition-all bg-slate-100 shadow-2xs shrink-0"
+              className="w-8 h-8 rounded-full object-cover ring-2 ring-sky-100 bg-slate-100 shrink-0"
               referrerPolicy="no-referrer"
             />
             <div className="hidden md:block text-left">
-              <div className="text-[12px] font-black text-slate-800 leading-tight flex items-center gap-1">
-                <span className="truncate max-w-[120px]">{getOfficialDisplayName(currentUser, allUsers) || teacherProfile.name}</span>
-                <ChevronDown className="w-2.5 h-2.5 text-slate-500 group-hover:text-slate-800 shrink-0" />
+              <div className="text-sm font-bold text-slate-800 leading-tight flex items-center gap-1">
+                <span className="truncate max-w-[140px]">{getOfficialDisplayName(currentUser, allUsers) || teacherProfile.name}</span>
+                <ChevronDown className="w-3.5 h-3.5 text-slate-500 group-hover:text-slate-800 shrink-0" />
               </div>
-              <div className="text-[12px] text-sky-700 font-bold leading-none truncate max-w-[120px]">
+              <div className="text-xs text-slate-500 font-semibold leading-tight truncate max-w-[140px]">
                 {getOfficialRoleTitle(currentUser)}
               </div>
             </div>

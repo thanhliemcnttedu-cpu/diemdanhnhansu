@@ -82,10 +82,38 @@ const decodeConn = (raw: string): Conn | null => {
   }
 };
 
+// Link rút gọn: /diemdanh#<mã script>.<mã thư mục>  (link cũ #c=... vẫn dùng được)
+const SCRIPT_ID_RE = /^https:\/\/script\.google\.com\/macros\/s\/([A-Za-z0-9_-]{20,})\/exec$/;
+const DRIVE_ID_RE = /^[A-Za-z0-9_-]{10,}$/;
+const decodeShortConn = (hash: string): Conn | null => {
+  const m = /^#?([A-Za-z0-9_-]{20,})\.([A-Za-z0-9_-]{10,})$/.exec(hash.trim());
+  return m ? { scriptUrl: `https://script.google.com/macros/s/${m[1]}/exec`, folderId: m[2] } : null;
+};
+/** Kết nối gắn sẵn khi build web (biến Vercel VITE_DRIVE_SCRIPT_URL + VITE_DRIVE_FOLDER_ID) */
+const buildTimeConn = (): Conn | null => {
+  const env = (import.meta as any).env || {};
+  const scriptUrl = googleDriveService.normalizeScriptUrl(String(env.VITE_DRIVE_SCRIPT_URL || '').trim());
+  const folderId = String(env.VITE_DRIVE_FOLDER_ID || '').trim();
+  return scriptUrl && folderId ? { scriptUrl, folderId } : null;
+};
+const readSavedConn = (): Conn | null => {
+  try {
+    const saved = JSON.parse(localStorage.getItem(CONN_KEY) || 'null');
+    return saved?.scriptUrl && saved?.folderId ? saved : null;
+  } catch (_) { return null; }
+};
+
 export const staffAttendanceService = {
-  /** Kết nối dùng cho trang điểm danh: ưu tiên link (#c=...), rồi kết nối đã nhớ, rồi kết nối của phần mềm */
+  /** Kết nối dùng cho trang điểm danh: ưu tiên link (#mã.mã hoặc #c=...), rồi kết nối đã nhớ, rồi kết nối của phần mềm */
   resolveConnection(): Conn | null {
     if (typeof window !== 'undefined') {
+      const short = decodeShortConn(window.location.hash);
+      if (short) {
+        const saved = readSavedConn();
+        const c: Conn = { ...short, schoolName: saved && saved.scriptUrl === short.scriptUrl && saved.folderId === short.folderId ? saved.schoolName || '' : '' };
+        try { localStorage.setItem(CONN_KEY, JSON.stringify(c)); } catch (_) { /* ignore */ }
+        return c;
+      }
       const m = /[#&?]c=([A-Za-z0-9_-]+)/.exec(window.location.hash + window.location.search);
       if (m) {
         const c = decodeConn(m[1]);
@@ -94,10 +122,8 @@ export const staffAttendanceService = {
           return c;
         }
       }
-      try {
-        const saved = JSON.parse(localStorage.getItem(CONN_KEY) || 'null');
-        if (saved?.scriptUrl && saved?.folderId) return saved;
-      } catch (_) { /* ignore */ }
+      const saved = readSavedConn();
+      if (saved) return saved;
     }
     const cfg = googleDriveService.getConfig();
     const scriptUrl = googleDriveService.normalizeScriptUrl(cfg.scriptUrl);
@@ -111,14 +137,42 @@ export const staffAttendanceService = {
     return { scriptUrl, folderId: cfg.folderId, schoolName };
   },
 
-  /** Link điểm danh để Quản trị gửi cho nhân sự (chứa link script + mã thư mục, không chứa mật khẩu) */
+  /**
+   * Link điểm danh để Quản trị gửi cho nhân sự (không chứa mật khẩu). Gọn nhất có thể:
+   * - Web đã gắn sẵn kết nối khi build (biến Vercel) và trùng kết nối máy này → https://truong.vercel.app/diemdanh
+   * - Link Apps Script dạng chuẩn → https://truong.vercel.app/diemdanh#<mã script>.<mã thư mục>
+   * - Trường hợp khác → dạng cũ #c=...
+   */
   buildCheckInLink(schoolName?: string, baseUrl?: string): string | null {
     const cfg = googleDriveService.getConfig();
     const scriptUrl = googleDriveService.normalizeScriptUrl(cfg.scriptUrl);
-    if (!scriptUrl || !cfg.folderId) return null;
+    const folderId = String(cfg.folderId || '').trim();
+    if (!scriptUrl || !folderId) return null;
     const origin = (baseUrl || this.getWebBaseUrl()).replace(/\/+$/, '');
     if (!origin) return null;
-    return `${origin}/diemdanh#c=${encodeConn({ scriptUrl, folderId: cfg.folderId, schoolName })}`;
+    const env = buildTimeConn();
+    const sameOrigin = typeof window !== 'undefined' && window.location.origin === origin;
+    if (env && sameOrigin && env.scriptUrl === scriptUrl && env.folderId === folderId) return `${origin}/diemdanh`;
+    const sid = SCRIPT_ID_RE.exec(scriptUrl);
+    if (sid && DRIVE_ID_RE.test(folderId)) return `${origin}/diemdanh#${sid[1]}.${folderId}`;
+    return `${origin}/diemdanh#c=${encodeConn({ scriptUrl, folderId, schoolName })}`;
+  },
+
+  /** Tên trường cho trang điểm danh (link rút gọn không chứa tên trường) – lấy từ Apps Script, nhớ lại cho lần sau */
+  async fetchSchoolName(conn: Conn): Promise<string> {
+    try {
+      const res = await fetch(`${conn.scriptUrl}${conn.scriptUrl.includes('?') ? '&' : '?'}action=listSchools&folderId=${encodeURIComponent(conn.folderId)}`);
+      const data = JSON.parse(await res.text());
+      const list = Array.isArray(data?.schools) ? data.schools : [];
+      const name = list.length === 1 ? String(list[0]?.name || '') : '';
+      if (name) {
+        const saved = readSavedConn();
+        if (saved && saved.scriptUrl === conn.scriptUrl && saved.folderId === conn.folderId) {
+          try { localStorage.setItem(CONN_KEY, JSON.stringify({ ...saved, schoolName: name })); } catch (_) { /* ignore */ }
+        }
+      }
+      return name;
+    } catch (_) { return ''; }
   },
 
   /** Địa chỉ trang web của trường: bản web lấy chính địa chỉ đang mở; bản cài đặt dùng địa chỉ đã lưu */
@@ -247,7 +301,7 @@ const pick = (row: Record<string, any>, names: string[]) => {
   return '';
 };
 
-export interface ParsedStaffRow extends StaffUpsert { inactiveReason?: string; birthDate?: string; issues: string[] }
+export interface ParsedStaffRow extends StaffUpsert { inactiveReason?: string; birthDate?: string; issues: string[]; excelRow?: number }
 
 export function parseStaffRows(rows: Record<string, any>[]): ParsedStaffRow[] {
   const out: ParsedStaffRow[] = [];
@@ -272,6 +326,159 @@ export function parseStaffRows(rows: Record<string, any>[]): ParsedStaffRow[] {
     });
   });
   return out;
+}
+
+// ---------------------------------------------------------------- Biểu mẫu nhập nhân sự (đúng tệp xuất từ CSDL ngành)
+/** 68 cột, đúng tên và thứ tự của biểu mẫu "Thong tin nhan su mau khi upload.xlsx" */
+export const STAFF_TEMPLATE_HEADERS: string[] = [
+  "STT",
+  "Mã định danh Bộ GD&ĐT",
+  "Họ tên",
+  "Giới tính",
+  "Ngày sinh",
+  "Trạng thái CB",
+  "Số CMTND/TCC",
+  "Email",
+  "Điện thoại",
+  "Dân tộc",
+  "Tôn giáo",
+  "Tỉnh/Thành phố\n(Theo địa chỉ thường trú)",
+  "Quận/Huyện\n(Theo địa chỉ thường trú)",
+  "Xã/Phường\n(Theo địa chỉ thường trú)",
+  "Tổ/Thôn/Xóm (Theo địa chỉ thường trú)",
+  "Tỉnh/Thành phố\n(Theo quê quán)",
+  "Quận/Huyện\n(Theo quê quán)",
+  "Xã/Phường\n(Theo quê quán)",
+  "Tổ/Thôn/Xóm (Theo quê quán)",
+  "Là Đoàn viên",
+  "Là Đảng viên",
+  "Số sổ BHXH",
+  "Vị trí việc làm",
+  "Nhóm chức vụ",
+  "Hình thức hợp đồng",
+  "Có CC bồi dưỡng TCCD",
+  "Ngày tuyển dụng",
+  "Cơ quan tuyển dụng",
+  "Nghề nghiệp khi được tuyển dụng",
+  "Môn dạy",
+  "Ngạch/Hạng",
+  "S.tiết thực dạy trên tuần",
+  "S.tiết thực k.nhiệm trên tuần",
+  "Đã tập huấn dạy KN sống",
+  "Dạy HSKT học hòa nhập",
+  "Dạy 1 buổi/ngày",
+  "Dạy 2 buổi/ngày",
+  "Chuyên trách đội",
+  "Mức phụ cấp thu hút nghề (%)",
+  "Mức phụ cấp thâm niên (%)",
+  "Mức phụ cấp ưu đãi nghề (%)",
+  "Mức phụ cấp chức vụ lãnh đạo (%)",
+  "Bậc lương",
+  "Phần trăm vượt khung (%)",
+  "Hệ số lương",
+  "Ngày hưởng",
+  "KQ B.dưỡng t.xuyên",
+  "T.độ c.môn n.vụ",
+  "T.độ LLCT",
+  "T.độ quản lý GD",
+  "Tham gia bồi dưỡng nghiệp vụ",
+  "Ngoại ngữ chính",
+  "Nhóm C.Chỉ N.Ngữ",
+  "Loại C.Chỉ N.Ngữ",
+  "Khung N.Lực N.Ngữ",
+  "GV có chứng chỉ tiếng dân tộc thiểu số",
+  "Trình độ đào tạo ngoại ngữ",
+  "T.độ tin học",
+  "Chuyên ngành chính",
+  "Trình độ chính",
+  "Chuyên ngành khác",
+  "Trình độ khác",
+  "Tham gia bồi dưỡng CBQL cốt cán",
+  "Tham gia bồi dưỡng thay sách",
+  "Đánh giá viên chức",
+  "Giáo viên dạy giỏi",
+  "GV chủ nhiệm giỏi",
+  "GV tổng phụ trách Đội giỏi",
+];
+const normHeader = (v: unknown) => String(v ?? '').replace(/\s+/g, ' ').trim().toLowerCase();
+const colLetter = (i: number) => { let s = ''; let n = i + 1; while (n > 0) { const r = (n - 1) % 26; s = String.fromCharCode(65 + r) + s; n = Math.floor((n - 1) / 26); } return s; };
+const cellText = (v: unknown) => (v == null ? '' : typeof v === 'number' ? (Number.isInteger(v) ? String(v) : String(v)) : String(v).trim());
+/** Số đọc từ ô kiểu số bị mất số 0 đầu (CCCD 12 số, CMND 9 số, điện thoại 10 số) */
+const digitsOf = (v: unknown, lens: number[]) => {
+  const d = (typeof v === 'number' ? String(Math.round(v)) : String(v ?? '')).replace(/\D/g, '');
+  if (typeof v === 'number') for (const L of lens) if (d.length === L - 1) return '0' + d;
+  return d;
+};
+const dateText = (v: unknown) => {
+  if (typeof v === 'number' && v > 1 && v < 80000) { // ngày kiểu số của Excel
+    const d = new Date(Math.round((v - 25569) * 86400000));
+    return `${String(d.getUTCDate()).padStart(2, '0')}/${String(d.getUTCMonth() + 1).padStart(2, '0')}/${d.getUTCFullYear()}`;
+  }
+  if (v instanceof Date && !isNaN(v.getTime())) return `${String(v.getDate()).padStart(2, '0')}/${String(v.getMonth() + 1).padStart(2, '0')}/${v.getFullYear()}`;
+  return cellText(v);
+};
+
+export interface StaffSheetResult { ok: boolean; errors: string[]; headerRow: number; rows: ParsedStaffRow[] }
+
+/**
+ * Đọc bảng Excel nhân sự (mảng các dòng, đọc với raw: true). Bắt buộc ĐÚNG biểu mẫu:
+ * đủ 68 cột, đúng tên, đúng thứ tự (A → BP). Sai biểu mẫu → trả lỗi chỉ rõ cột sai, không nhập.
+ */
+export function parseStaffSheet(aoa: unknown[][]): StaffSheetResult {
+  const want = STAFF_TEMPLATE_HEADERS.map(normHeader);
+  let h = -1;
+  for (let i = 0; i < Math.min(15, aoa.length); i++) {
+    const r = (aoa[i] || []).map(normHeader);
+    if (r.includes(want[1]) && r.includes(want[2])) { h = i; break; }
+  }
+  if (h < 0) return { ok: false, headerRow: -1, rows: [], errors: ['Không thấy dòng tiêu đề của biểu mẫu (cần có cột "Mã định danh Bộ GD&ĐT" và "Họ tên"). Hãy dùng đúng tệp xuất từ CSDL ngành hoặc tệp mẫu của phần mềm.'] };
+  const got = (aoa[h] || []).map(normHeader);
+  while (got.length && !got[got.length - 1]) got.pop();
+  const errors: string[] = [];
+  want.forEach((w, i) => {
+    if (got[i] === w) return;
+    const at = got.indexOf(w);
+    errors.push(at < 0 ? `Thiếu cột "${STAFF_TEMPLATE_HEADERS[i].replace(/\s+/g, ' ')}" (cột ${colLetter(i)})` : `Cột "${STAFF_TEMPLATE_HEADERS[i].replace(/\s+/g, ' ')}" phải ở cột ${colLetter(i)}, tệp đang để ở cột ${colLetter(at)}`);
+  });
+  errors.sort((x, y) => Number(!x.startsWith('Thiếu')) - Number(!y.startsWith('Thiếu')));
+  if (got.length > want.length) errors.push(`Tệp có thêm ${got.length - want.length} cột ngoài biểu mẫu (từ cột ${colLetter(want.length)}).`);
+  if (errors.length) return { ok: false, headerRow: h, rows: [], errors };
+
+  const C = (name: string) => want.indexOf(normHeader(name));
+  const iStt = C('STT'), iCode = C('Mã định danh Bộ GD&ĐT'), iName = C('Họ tên'), iGender = C('Giới tính'), iBirth = C('Ngày sinh'),
+    iStatus = C('Trạng thái CB'), iCccd = C('Số CMTND/TCC'), iPhone = C('Điện thoại'), iPos = C('Vị trí việc làm'), iGroup = C('Nhóm chức vụ'), iSubject = C('Môn dạy');
+  const rows: ParsedStaffRow[] = [];
+  const seenCode = new Map<string, number>();
+  const seenCccd = new Map<string, number>();
+  for (let r = h + 1; r < aoa.length; r++) {
+    const row = aoa[r] || [];
+    const name = cellText(row[iName]);
+    const code = cellText(row[iCode]).toUpperCase();
+    const cccd = digitsOf(row[iCccd], [12, 9]);
+    if (!name && !code && !cccd) continue; // dòng trống
+    const position = cellText(row[iPos]);
+    const group = cellText(row[iGroup]);
+    const subject = cellText(row[iSubject]);
+    const statusText = cellText(row[iStatus]);
+    const excelRow = r + 1;
+    const issues: string[] = [];
+    if (!code) issues.push('thiếu Mã định danh Bộ GD&ĐT');
+    if (!name) issues.push('thiếu Họ tên');
+    if (!cccd) issues.push('thiếu Số CMTND/TCC');
+    else if (cccd.length !== 12 && cccd.length !== 9) issues.push('Số CMTND/TCC phải 12 số (CCCD) hoặc 9 số (CMND)');
+    if (code && seenCode.has(code)) issues.push(`trùng mã với dòng ${seenCode.get(code)}`);
+    if (cccd && seenCccd.has(cccd)) issues.push(`trùng CCCD với dòng ${seenCccd.get(cccd)}`);
+    if (code && !seenCode.has(code)) seenCode.set(code, excelRow);
+    if (cccd && !seenCccd.has(cccd)) seenCccd.set(cccd, excelRow);
+    const inactive = Boolean(statusText) && !/đang làm việc/i.test(statusText);
+    rows.push({
+      code, name, cccd, position: position || group, dept: subject || (group && group !== position ? group : ''),
+      gender: cellText(row[iGender]), phone: digitsOf(row[iPhone], [10]), order: Number(cellText(row[iStt])) || rows.length + 1,
+      birthDate: dateText(row[iBirth]), disabled: inactive, inactiveReason: inactive ? statusText : undefined, issues,
+      excelRow,
+    });
+  }
+  return { ok: true, headerRow: h, rows, errors: [] };
 }
 
 /** Mật khẩu điểm danh ngẫu nhiên 6 chữ số */

@@ -35,7 +35,15 @@ export const StaffCheckInPage: React.FC = () => {
   // Đã điểm danh hôm nay → phải bấm "Sửa điểm danh" mới mở lại phiếu
   const [editing, setEditing] = useState(false);
 
+  const [schoolName, setSchoolName] = useState(conn?.schoolName || '');
   useEffect(() => { document.title = 'Điểm danh giáo viên – nhân viên'; }, []);
+  // Link rút gọn không chứa tên trường → hỏi Apps Script một lần rồi nhớ lại
+  useEffect(() => {
+    if (!conn || conn.schoolName) return;
+    let alive = true;
+    staffAttendanceService.fetchSchoolName(conn).then(n => { if (alive && n) setSchoolName(n); });
+    return () => { alive = false; };
+  }, [conn]);
 
   const reset = () => {
     setStaff(null); setPin(''); setStatus(''); setNote(''); setExisting(null); setDone(null); setError(''); setEditing(false);
@@ -88,7 +96,7 @@ export const StaffCheckInPage: React.FC = () => {
         <header className="text-center space-y-1">
           <img src="/logo.svg" alt="Lớp Học Hạnh Phúc" className="mx-auto w-16 h-16 rounded-[22%] shadow-md" />
           <h1 className="text-2xl font-black text-slate-900">Điểm danh giáo viên – nhân viên</h1>
-          {conn?.schoolName && <p className="text-sm font-bold text-emerald-800 uppercase">{conn.schoolName}</p>}
+          {schoolName && <p className="text-sm font-bold text-emerald-800 uppercase">{schoolName}</p>}
         </header>
 
         {!conn && (

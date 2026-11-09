@@ -1302,6 +1302,19 @@ export const databaseService = {
     }
   },
 
+  /** Gán 1 mật khẩu chung cho nhiều tài khoản (Quản trị) */
+  async resetPasswordsBulk(ids: string[], newPassword: string): Promise<{ success: boolean; count: number; failed: string[]; message?: string }> {
+    const failed: string[] = [];
+    let count = 0;
+    for (const id of ids) {
+      try {
+        const r = await (this as any).resetPassword(id, newPassword);
+        if (r?.success) count++; else failed.push(id);
+      } catch (_) { failed.push(id); }
+    }
+    return { success: count > 0 || ids.length === 0, count, failed, message: failed.length ? `Có ${failed.length} tài khoản chưa đổi được mật khẩu.` : undefined };
+  },
+
   async resetPassword(id: string, newPassword = '123456'): Promise<{ success: boolean; message?: string }> {
     const supabase = getBrowserSupabase();
     if (supabase) {
@@ -3961,7 +3974,9 @@ export const databaseService = {
   const findLocalUserById = (id: string): any => {
     try {
       const list = JSON.parse(localStorage.getItem('LHHP_USERS') || '[]');
-      return list.find((u: any) => u?.id === id || String(u?.username || '').toLowerCase() === String(id).toLowerCase());
+      // Không khớp khi id rỗng (tài khoản từ Drive không có id → trước đây khớp nhầm tài khoản đầu tiên)
+      if (!id) return null;
+      return list.find((u: any) => (u?.id && u.id === id) || String(u?.username || '').toLowerCase() === String(id).toLowerCase());
     } catch (_) {
       return null;
     }
@@ -4028,6 +4043,21 @@ export const databaseService = {
         : { success: false, message: sync.message };
     }
     return origResetPassword(id, newPassword);
+  };
+
+  // Gán mật khẩu chung hàng loạt: bản web ghi tất cả rồi đồng bộ Drive MỘT lần (không đồng bộ từng tài khoản)
+  const origResetPasswordsBulk = ds.resetPasswordsBulk.bind(ds);
+  ds.resetPasswordsBulk = async (ids: string[], newPassword: string) => {
+    if (!schoolDriveDbService.isConfigured()) return origResetPasswordsBulk(ids, newPassword);
+    const users = ids.map(id => ({ id, u: findLocalUserById(id) }));
+    const ok = users.filter(x => x.u?.username);
+    ok.forEach(x => schoolDriveDbService.setPendingPassword(x.u!.username, newPassword));
+    const sync = await schoolDriveDbService.syncNow();
+    ok.forEach(x => { origResetPassword(x.id, newPassword).catch(() => {}); });
+    const failed = users.filter(x => !x.u?.username).map(x => x.id);
+    return sync.success
+      ? { success: true, count: ok.length, failed, message: `Đã gán mật khẩu chung cho ${ok.length} tài khoản và lưu lên Google Drive.` }
+      : { success: false, count: 0, failed: ids, message: sync.message };
   };
 
   const origCreateSchool = ds.createSchool.bind(ds);

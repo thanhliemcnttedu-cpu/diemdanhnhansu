@@ -140,3 +140,21 @@
 - **Fix Applied**: (1) GVCN đăng nhập / khôi phục phiên trên bản Drive luôn GỘP THÊM dữ liệu lớp từ Drive (`mergeDriveClassForTeacher`, gộp cộng thêm không xóa); bản máy 0 lớp coi như không có. (2) `pushClassData` từ chối đẩy tệp lớp 0 học sinh khi tệp trên Drive đang có học sinh (hoặc không kiểm tra được).
 - **Prevention**: Mọi luồng tự lưu của GVCN phải coi Drive là nguồn chuẩn khi dữ liệu máy rỗng; không bao giờ để một bản rỗng ghi đè bản có dữ liệu.
 - **Status**: Fixed
+
+---
+
+## [2026-11-09 21:00] - Bản web (Drive): đặt lại mật khẩu / xóa tài khoản tác động nhầm vào tài khoản Quản trị đang đăng nhập
+
+- **Type**: Logic
+- **Severity**: Critical
+- **File**: `src/services/databaseService.ts` (`findLocalUserById` trong adapter Drive), `src/components/modals/AccountManagementModal.tsx`
+- **Agent**: Claude
+- **Root Cause**: Tài khoản tải từ `csdl_truong.json` không có trường `id`. Màn Quản trị gọi `resetPassword(user.id)` / `deleteUser(user.id)` với `undefined`; `findLocalUserById` so `u.id === id` → `undefined === undefined` khớp **tài khoản đầu tiên** trong `LHHP_USERS` (thường là chính Quản trị). Ô chọn hàng loạt cũng dùng `u.id` nên tích 1 ô = tích tất cả; `isSelf` luôn đúng.
+- **Error Message**:
+  ```
+  Gán mật khẩu cho gvcntest, bghtest → chỉ qttest (Quản trị) đổi mật khẩu; gvcntest/bghtest: "Sai mật khẩu."
+  ```
+- **Fix Applied**: `findLocalUserById` trả null khi id rỗng và chỉ so id khi tài khoản có id; màn Quản trị dùng `uidOf(u) = u.id || u.username` cho xóa, đặt lại mật khẩu, chọn hàng loạt, `isSelf`, key dòng.
+- **Prevention**: Không dùng `id` làm khóa cho tài khoản đến từ Drive; khóa chuẩn là `username` (viết thường). Mọi hàm tìm theo khóa phải từ chối khóa rỗng.
+- **Status**: Fixed
+
