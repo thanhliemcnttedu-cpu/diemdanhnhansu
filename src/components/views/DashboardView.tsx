@@ -193,148 +193,104 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
   return (
     <div className="p-2.5 sm:p-3.5 md:p-4 max-w-7xl mx-auto space-y-2.5 sm:space-y-3">
-      {/* 1. Main Welcome Banner matching Requirement 5: TÊN GIÁO VIÊN, ĐƠN VỊ CÔNG TÁC, NĂM HỌC */}
+      {/* 1. Lời chào + việc cần làm hôm nay + lối tắt (bảng điều khiển) */}
       {(() => {
         const isManagementAccount = Boolean(isBgh || isSchoolAdmin || currentUser?.role === 'admin' || currentUser?.role === 'guest_admin');
         const officialName = getOfficialDisplayName(currentUser, allUsers);
         const greetingUserName = isManagementAccount
           ? officialName
           : (officialName || activeClass?.teacherName || teacherProfile.name);
-        const displaySchoolName = currentUser?.schoolName || teacherProfile.schoolName || 'TRƯỜNG HỌC HẠNH PHÚC';
+        const displaySchoolName = currentUser?.schoolName || teacherProfile.schoolName || 'Trường học hạnh phúc';
         const displayAvatar = currentUser?.avatar || teacherProfile.avatar;
-        const roleBadge = isBgh 
-          ? { text: 'BGH', bg: 'bg-amber-600' }
-          : isSchoolAdmin 
-          ? { text: 'QUẢN TRỊ TRƯỜNG', bg: 'bg-rose-600' }
-          : currentUser?.role === 'admin'
-          ? { text: 'SUPER ADMIN', bg: 'bg-rose-700' }
-          : currentUser?.role === 'guest_admin'
-          ? { text: 'QUẢN TRỊ CÁ NHÂN', bg: 'bg-purple-600' }
-          : { text: 'GVCN', bg: 'bg-indigo-600' };
+        const roleText = isBgh ? 'Ban giám hiệu' : isSchoolAdmin ? 'Quản trị trường' : currentUser?.role === 'admin' ? 'Quản trị tối cao'
+          : currentUser?.role === 'guest_admin' ? 'Quản trị cá nhân' : 'Giáo viên chủ nhiệm';
+        const now = new Date();
+        const WD = ['Chủ nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'];
+        const dateLine = `${WD[now.getDay()]}, ${now.getDate()}/${now.getMonth() + 1}/${now.getFullYear()}`;
+
+        type Task = { key: string; title: string; detail: string; done: boolean; onClick: () => void; action: string };
+        const tasks: Task[] = isManagementAccount ? [
+          { key: 'rep', title: 'Chuyên cần học sinh hôm nay', detail: hasAttendanceToday ? `${displayPresentCount}/${displayTotalStudents} học sinh có mặt (${displayAttendanceRate}%)` : 'Chưa có lớp nào báo cáo', done: hasAttendanceToday, onClick: () => onNavigate('reports'), action: 'Xem báo cáo' },
+          { key: 'staff', title: 'Chấm công giáo viên – nhân viên', detail: 'Xem ai đã điểm danh đi làm hôm nay', done: false, onClick: () => onNavigate('staff_attendance'), action: 'Mở chấm công' },
+          { key: 'cls', title: 'Lớp học toàn trường', detail: `${homeroomClasses.length} lớp chủ nhiệm • ${homeroomStudents.length} học sinh`, done: homeroomClasses.length > 0, onClick: () => onNavigate('classes'), action: 'Xem lớp' },
+        ] : [
+          { key: 'att', title: 'Điểm danh lớp', detail: displayTotalStudents === 0 ? 'Lớp chưa có học sinh' : hasAttendanceToday ? `Đã điểm danh • ${displayPresentCount}/${displayTotalStudents} có mặt` : 'Chưa điểm danh hôm nay', done: hasAttendanceToday, onClick: () => onNavigate('attendance'), action: hasAttendanceToday ? 'Xem lại' : 'Điểm danh ngay' },
+          { key: 'tkb', title: 'Thời khóa biểu hôm nay', detail: todaySlots.length > 0 ? `${todaySlots.length} tiết: ${todaySlots.slice(0, 3).map(t => t.subject).filter(Boolean).join(', ')}${todaySlots.length > 3 ? '…' : ''}` : 'Chưa có tiết nào cho hôm nay', done: todaySlots.length > 0, onClick: () => onNavigate('schedule'), action: 'Mở TKB' },
+          { key: 'stu', title: 'Học sinh của lớp', detail: displayTotalStudents > 0 ? `${displayTotalStudents} học sinh • TB ${displayAvgCoins} xu/em` : 'Chưa có học sinh – thêm danh sách', done: displayTotalStudents > 0, onClick: () => (displayTotalStudents > 0 ? onNavigate('students') : (onOpenAddStudent ? onOpenAddStudent() : onNavigate('students'))), action: displayTotalStudents > 0 ? 'Xem học sinh' : 'Thêm học sinh' },
+        ];
+
+        const shortcuts: Array<{ key: string; label: string; icon: React.ReactNode; onClick: () => void; tone: string }> = isManagementAccount ? [
+          { key: 'r', label: 'Báo cáo realtime', icon: <ShieldCheck className="w-5 h-5" />, onClick: () => onNavigate('reports'), tone: 'text-indigo-700 bg-indigo-50' },
+          { key: 's', label: 'Chấm công', icon: <CheckSquare className="w-5 h-5" />, onClick: () => onNavigate('staff_attendance'), tone: 'text-emerald-800 bg-emerald-50' },
+          { key: 'c', label: 'Lớp học', icon: <School className="w-5 h-5" />, onClick: () => onNavigate('classes'), tone: 'text-sky-800 bg-sky-50' },
+          { key: 'k', label: 'Tìm nhanh', icon: <TrendingUp className="w-5 h-5" />, onClick: () => window.dispatchEvent(new Event('lhhp:open-command-palette')), tone: 'text-slate-700 bg-slate-100' },
+        ] : [
+          { key: 'a', label: 'Điểm danh', icon: <CheckSquare className="w-5 h-5" />, onClick: () => onNavigate('attendance'), tone: 'text-emerald-800 bg-emerald-50' },
+          { key: 'p', label: 'Gọi tên', icon: <Sparkles className="w-5 h-5" />, onClick: () => onNavigate('picker'), tone: 'text-violet-700 bg-violet-50' },
+          { key: 'g', label: 'Đổi quà', icon: <Gift className="w-5 h-5" />, onClick: () => onNavigate('rewards'), tone: 'text-rose-700 bg-rose-50' },
+          { key: 'c', label: 'Thư khen', icon: <Award className="w-5 h-5" />, onClick: () => onNavigate('certificate'), tone: 'text-amber-800 bg-amber-50' },
+          { key: 'i', label: 'Infographic', icon: <BookOpen className="w-5 h-5" />, onClick: () => onNavigate('infographic'), tone: 'text-sky-800 bg-sky-50' },
+          { key: 't', label: 'Trình chiếu', icon: <Flame className="w-5 h-5" />, onClick: () => window.dispatchEvent(new Event('lhhp:toggle-presentation')), tone: 'text-slate-800 bg-slate-100' },
+        ];
 
         return (
-          <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-violet-100 via-indigo-50 to-blue-100 p-2.5 sm:p-3 px-3 sm:px-4 border border-indigo-200/80 shadow-2xs hover-zoom-card">
-            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-2 relative z-10">
-              {/* Left Greeting & Avatar */}
-              <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
-                <div className="relative shrink-0">
-                  <img
-                    src={displayAvatar}
-                    alt={greetingUserName}
-                    className="w-10 h-10 sm:w-11 sm:h-11 rounded-lg object-cover ring-2 ring-white shadow-xs bg-white hover-zoom-interactive"
-                  />
-                  <span className={`absolute -bottom-1 -right-1 px-1.5 py-0.2 ${roleBadge.bg} text-white font-black text-[11px] rounded-full shadow-xs uppercase tracking-tight whitespace-nowrap`}>
-                    {roleBadge.text}
-                  </span>
-                </div>
-
-                <div className="space-y-0.5 min-w-0">
-                  <div className="flex flex-wrap items-center gap-1">
-                    <span className="inline-flex items-center gap-1 px-2 py-0.2 rounded-md bg-white/95 text-[12px] font-black text-indigo-700 shadow-2xs border border-indigo-100 uppercase">
-                      {isManagementAccount ? 'TÀI KHOẢN: ' : 'GV: '}
-                      <strong className="text-indigo-950 font-black">{greetingUserName}</strong>
-                    </span>
-                    <span className="inline-flex items-center gap-1 px-2 py-0.2 rounded-md bg-emerald-50 text-[12px] font-black text-emerald-800 border border-emerald-200 shadow-2xs uppercase">
-                      {displaySchoolName}
-                    </span>
-                    <span className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded-md bg-amber-50 text-[12px] font-black text-amber-800 border border-amber-200 shadow-2xs uppercase">
-                      NH: {teacherProfile.academicYear || activeClass?.academicYear || '2026–2027'}
-                    </span>
-                  </div>
-
-                  <div className="flex flex-wrap items-center gap-1.5">
-                    <h1 className="text-xs sm:text-base font-black text-indigo-950 tracking-tight uppercase leading-snug truncate">
-                      {getGreeting()}, <span className="text-indigo-600">{greetingUserName}</span>! 👋
+          <section className="rounded-3xl bg-white border border-slate-200 shadow-xs overflow-hidden" aria-label="Bảng điều khiển hôm nay">
+            {/* Lời chào */}
+            <div className="relative px-4 sm:px-6 pt-5 pb-4 bg-gradient-to-br from-sky-50 via-indigo-50 to-violet-50">
+              <div className="absolute -right-10 -top-16 w-64 h-64 rounded-full bg-gradient-to-br from-sky-200/50 to-violet-200/40 blur-2xl pointer-events-none" aria-hidden="true" />
+              <div className="relative flex flex-col xl:flex-row xl:items-center justify-between gap-4">
+                <div className="flex items-center gap-3.5 min-w-0">
+                  <img src={displayAvatar} alt={greetingUserName} className="w-14 h-14 rounded-2xl object-cover ring-4 ring-white shadow-sm bg-white shrink-0" />
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-indigo-800">{dateLine} • {roleText}</p>
+                    <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight leading-tight truncate">
+                      {(() => { const g = String(getGreeting()).toLocaleLowerCase('vi-VN'); return g.charAt(0).toLocaleUpperCase('vi-VN') + g.slice(1); })()}, {greetingUserName}!
                     </h1>
-                    <span className="text-[12px] text-slate-600 font-bold uppercase hidden sm:inline">
-                      {isManagementAccount ? (
-                        <>• TOÀN TRƯỜNG: <strong className="text-indigo-700 font-black">{homeroomClasses.length} LỚP GVCN • {homeroomStudents.length} HỌC SINH</strong></>
-                      ) : (
-                        <>• LỚP: <strong className="text-indigo-700 font-black">{activeClass ? `LỚP ${activeClass.name}` : 'CHƯA CÓ'}</strong></>
-                      )}
-                      {currentUser?.phone && ` • SĐT/ZALO: ${currentUser.phone}`}
-                    </span>
+                    <p className="text-sm text-slate-700 truncate">
+                      {isManagementAccount
+                        ? <>Toàn trường: <strong>{homeroomClasses.length} lớp</strong> • <strong>{homeroomStudents.length} học sinh</strong></>
+                        : <>Lớp <strong>{activeClass?.name || 'chưa có'}</strong></>}
+                      {' • '}{displaySchoolName} • NH {teacherProfile.academicYear || activeClass?.academicYear || '2026–2027'}
+                    </p>
                   </div>
+                </div>
+                {/* Lối tắt */}
+                <div className={`grid gap-2 ${isManagementAccount ? 'grid-cols-4' : 'grid-cols-3 sm:grid-cols-6'} w-full xl:w-auto shrink-0`}>
+                  {shortcuts.map(sc => (
+                    <button key={sc.key} type="button" onClick={sc.onClick}
+                      className="no-hover-fx group flex flex-col items-center gap-1 px-2 py-2 rounded-2xl bg-white/80 hover:bg-white border border-white hover:border-slate-200 hover:shadow-sm transition-all min-w-[72px]">
+                      <span className={`w-10 h-10 rounded-xl flex items-center justify-center ${sc.tone} transition-transform group-hover:-translate-y-0.5`}>{sc.icon}</span>
+                      <span className="text-xs font-bold text-slate-800 whitespace-nowrap">{sc.label}</span>
+                    </button>
+                  ))}
                 </div>
               </div>
+            </div>
 
-          {/* Quick Action Buttons: Quản trị viên chỉ có nút Báo cáo Realtime. Ẩn 5 nút thao tác lớp (Điểm danh, Thêm HS, Vòng quay, Đổi xu, Infographic) vì là chức năng của GVCN */}
-          <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-1 sm:gap-1.5 shrink-0 pt-2 lg:pt-0 w-full lg:w-auto">
-            {isManagementAccount ? (
-              <button
-                onClick={() => onNavigate('reports')}
-                className="px-3.5 py-1.5 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-800 hover:to-indigo-800 text-white rounded-xl font-black text-xs flex items-center justify-center gap-1.5 shadow-sm shadow-indigo-900/30 hover-zoom-btn uppercase cursor-pointer"
-              >
-                <ShieldCheck className="w-4 h-4 text-amber-300" />
-                <span>BÁO CÁO REALTIME</span>
+            {/* Việc cần làm hôm nay */}
+            <div className="px-4 sm:px-6 py-4 grid grid-cols-1 md:grid-cols-3 gap-3">
+              {tasks.map(t => (
+                <button key={t.key} type="button" onClick={t.onClick}
+                  className={`no-hover-fx text-left rounded-2xl border p-3.5 flex items-start gap-3 transition-colors ${t.done ? 'border-emerald-200 bg-emerald-50/50 hover:bg-emerald-50' : 'border-amber-200 bg-amber-50/60 hover:bg-amber-50'}`}>
+                  <span className={`mt-0.5 w-7 h-7 rounded-full flex items-center justify-center shrink-0 text-white text-sm font-black ${t.done ? 'bg-emerald-700' : 'bg-amber-700'}`} aria-hidden="true">{t.done ? '✓' : '!'}</span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-sm font-black text-slate-900">{t.title}</span>
+                    <span className="block text-sm text-slate-700 truncate">{t.detail}</span>
+                    <span className={`inline-flex items-center gap-1 mt-1.5 text-xs font-bold ${t.done ? 'text-emerald-800' : 'text-amber-900'}`}>{t.action} <ChevronRight className="w-3.5 h-3.5" /></span>
+                  </span>
+                </button>
+              ))}
+            </div>
+
+            {/* Câu cảm hứng */}
+            <div className="px-4 sm:px-6 pb-4 -mt-1 flex items-center gap-2 text-sm text-slate-700">
+              <Brain className="w-4 h-4 text-indigo-600 shrink-0" />
+              <span className="italic truncate flex-1">{dailyQuote}</span>
+              <button onClick={fetchAiQuote} disabled={loadingQuote} className="no-hover-fx text-xs font-bold text-indigo-700 hover:text-indigo-900 shrink-0">
+                {loadingQuote ? 'Đang tải…' : 'Cảm hứng AI'}
               </button>
-            ) : (
-              <>
-                <button
-                  onClick={() => onNavigate('attendance')}
-                  className="px-2.5 py-1.5 sm:py-1 bg-emerald-700 hover:bg-emerald-800 text-white rounded-lg font-black text-[12px] flex items-center justify-center gap-1 shadow-2xs hover-zoom-btn uppercase cursor-pointer"
-                >
-                  <CheckSquare className="w-3 h-3" />
-                  <span>ĐIỂM DANH</span>
-                </button>
-
-                <button
-                  onClick={() => onOpenAddStudent ? onOpenAddStudent() : onNavigate('students')}
-                  className="px-2.5 py-1.5 sm:py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-black text-[12px] flex items-center justify-center gap-1 shadow-2xs hover-zoom-btn uppercase cursor-pointer"
-                >
-                  <Plus className="w-3 h-3" />
-                  <span>THÊM HỌC SINH</span>
-                </button>
-
-                <button
-                  onClick={() => onNavigate('wheel')}
-                  className="px-2.5 py-1.5 sm:py-1 bg-sky-700 hover:bg-sky-800 text-white rounded-lg font-black text-[12px] flex items-center justify-center gap-1 shadow-2xs hover-zoom-btn uppercase cursor-pointer"
-                >
-                  <Sparkles className="w-3 h-3" />
-                  <span>VÒNG QUAY</span>
-                </button>
-
-                <button
-                  onClick={() => onNavigate('rewards')}
-                  className="px-2.5 py-1.5 sm:py-1 bg-rose-600 hover:bg-rose-700 text-white rounded-lg font-black text-[12px] flex items-center justify-center gap-1 shadow-2xs hover-zoom-btn uppercase cursor-pointer"
-                >
-                  <Gift className="w-3 h-3" />
-                  <span>ĐỔI XU</span>
-                </button>
-
-                <button
-                  onClick={() => onNavigate('infographic')}
-                  className="col-span-2 sm:col-span-1 px-2.5 py-1.5 sm:py-1 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white rounded-lg font-black text-[12px] flex items-center justify-center gap-1 shadow-2xs hover-zoom-btn uppercase cursor-pointer"
-                >
-                  <Sparkles className="w-3 h-3 text-amber-300" />
-                  <span>INFOGRAPHIC</span>
-                </button>
-              </>
-            )}
-          </div>
-        </div>
-
-        {/* AI Daily Inspiration & Author Information - compact row */}
-        <div className="mt-2 pt-1.5 border-t border-indigo-200/50 flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-[12px] text-indigo-900">
-          <div className="flex items-center gap-1.5 italic flex-1 truncate">
-            <Brain className="w-3 h-3 text-indigo-600 shrink-0" />
-            <span className="truncate">{dailyQuote}</span>
-          </div>
-          <div className="flex items-center gap-2 shrink-0 text-[12px]">
-            <button
-              onClick={fetchAiQuote}
-              disabled={loadingQuote}
-              className="font-black text-indigo-600 hover:text-indigo-800 underline hover-zoom-interactive uppercase"
-            >
-              {loadingQuote ? 'ĐANG TẢI...' : 'LẤY CẢM HỨNG AI'}
-            </button>
-            <span className="text-slate-500 hidden md:inline">|</span>
-            <span className="text-slate-600 hidden md:inline font-bold uppercase">
-              TÁC GIẢ: <strong className="text-indigo-800 font-black">{APP_AUTHOR_INFO.name}</strong> • ZALO: <a href={APP_AUTHOR_INFO.zaloUrl} className="text-blue-700 underline decoration-dotted underline-offset-2 hover:text-blue-800" title="Bấm để hiện mã QR Zalo">{APP_AUTHOR_INFO.zalo}</a>
-            </span>
-          </div>
-        </div>
-      </div>
+            </div>
+          </section>
         );
       })()}
 

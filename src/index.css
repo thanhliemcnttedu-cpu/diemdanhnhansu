@@ -3,6 +3,8 @@
 @theme {
   --font-sans: 'Be Vietnam Pro', sans-serif;
   --font-display: 'Be Vietnam Pro', sans-serif;
+  /* Mã số, giờ, số liệu: vẫn dùng Be Vietnam Pro, chữ số đều cột (tabular) thay cho phông máy đánh chữ */
+  --font-mono: 'Be Vietnam Pro', ui-sans-serif, system-ui, sans-serif;
   /* 🔎 Cỡ chữ tối thiểu dễ đọc (máy chiếu, giáo viên lớn tuổi): kể cả khi màn hình thấp tự thu nhỏ cỡ chữ gốc,
      chữ "xs" không dưới 12px và "sm" không dưới 14px */
   --text-xs: max(12px, 0.75rem);
@@ -35,6 +37,9 @@
 
   html, body {
     font-family: 'Be Vietnam Pro', sans-serif !important;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
     color: #0f172a;
     background: linear-gradient(135deg, #f0f7ff 0%, #f8fbff 50%, #edf5fd 100%);
     color-scheme: light; /* luôn giao diện sáng, kể cả khi Windows bật chế độ tối */
@@ -536,4 +541,10 @@ img {
 .btn-3d.btn-3d-light:hover > span,
 .btn-3d.btn-3d-light:hover > svg {
   transform: none;
+}
+
+/* Chữ số đều cột cho mã số / giờ / bảng số liệu (Be Vietnam Pro hỗ trợ tabular-nums) */
+.font-mono {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.01em;
 }

@@ -208,6 +208,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
     return true;
   });
 
+  // Nhóm menu: dễ tìm, gọn mắt
+  const NAV_GROUPS: Array<{ key: string; label: string; ids: NavigationMenuId[] }> = [
+    { key: 'class', label: 'Lớp học', ids: ['dashboard', 'classes', 'students', 'attendance', 'seating', 'schedule'] },
+    { key: 'activity', label: 'Hoạt động', ids: ['picker', 'rewards', 'certificate', 'infographic', 'noise', 'timer'] },
+    { key: 'manage', label: 'Quản lý & báo cáo', ids: ['reports', 'staff_attendance', 'data', 'links', 'ai'] },
+  ];
+
   const renderSidebarContent = (isMobileDrawer = false) => {
     const isEffectivelyCollapsed = isMobileDrawer ? false : collapsed;
     const handleItemClick = (id: NavigationMenuId) => {
@@ -223,9 +230,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <div className="h-13 border-b border-slate-200/80 flex items-center px-3 justify-between shrink-0">
           {!isEffectivelyCollapsed ? (
             <div className="flex items-center gap-2 overflow-hidden">
-              <div className="w-8 h-8 rounded-xl bg-amber-400 text-amber-950 flex items-center justify-center font-black shadow-xs shrink-0 hover-zoom-interactive">
-                <BookOpen className="w-4 h-4 text-amber-950" />
-              </div>
+              <img src="/logo.svg" alt="Lớp Học Hạnh Phúc" className="w-9 h-9 rounded-[22%] shadow-sm shrink-0" />
               <div className="truncate">
                 <h1 className="text-[12px] font-black text-indigo-900 tracking-tight leading-tight truncate flex items-center gap-1 uppercase">
                   LỚP HỌC HẠNH PHÚC
@@ -237,9 +242,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             </div>
           ) : (
             <div className="w-full flex justify-center">
-              <div className="w-8 h-8 rounded-xl bg-amber-400 text-amber-950 flex items-center justify-center font-black shadow-xs hover-zoom-interactive">
-                <BookOpen className="w-4 h-4 text-amber-950" />
-              </div>
+              <img src="/logo.svg" alt="Lớp Học Hạnh Phúc" className="w-9 h-9 rounded-[22%] shadow-sm shrink-0" />
             </div>
           )}
 
@@ -326,64 +329,61 @@ export const Sidebar: React.FC<SidebarProps> = ({
           )
         )}
 
-        {/* Navigation Items */}
-        <nav className="flex-1 overflow-y-auto px-2.5 py-2 space-y-1.5 scrollbar-thin">
-          {MENU_ITEMS.map((item) => {
-            const Icon = item.icon;
-            const isActive = currentView === item.id;
-
+        {/* Navigation Items — chia nhóm cho dễ tìm */}
+        <nav className="flex-1 overflow-y-auto px-2.5 py-2 scrollbar-thin" aria-label="Điều hướng chính">
+          {NAV_GROUPS.map((group, gi) => {
+            const items = MENU_ITEMS.filter(it => group.ids.includes(it.id))
+              .sort((x, y) => group.ids.indexOf(x.id) - group.ids.indexOf(y.id));
+            if (items.length === 0) return null;
             return (
-              <button
-                key={item.id}
-                onClick={() => handleItemClick(item.id)}
-                className={`w-full flex items-center gap-3 px-3 py-2 rounded-2xl text-left normal-case sidebar-nav-item sidebar-float-item group select-none transition-all duration-200 ${
-                  isActive 
-                    ? 'sidebar-active bg-[#4f46e5] text-white font-bold border-2 border-slate-950 shadow-[0_8px_20px_-3px_rgba(79,70,229,0.38)]' 
-                    : item.badgeType === 'ai'
-                    ? 'bg-gradient-to-r from-indigo-50/70 to-purple-50/70 text-indigo-950 font-semibold border border-indigo-100/60 hover:bg-white hover:border-slate-200/80 hover:text-slate-950'
-                    : 'text-slate-700 font-semibold border border-transparent hover:border-slate-200/80 hover:bg-white hover:text-slate-950'
-                }`}
-                title={isEffectivelyCollapsed ? item.label : undefined}
-              >
-                <div className={`p-1.5 rounded-xl shrink-0 transition-all duration-200 flex items-center justify-center ${
-                  isActive 
-                    ? 'bg-white/20 text-white shadow-2xs' 
-                    : item.badgeType === 'ai'
-                    ? 'bg-indigo-600 text-white group-hover:scale-110 shadow-xs shadow-indigo-600/20'
-                    : 'text-slate-500 group-hover:text-indigo-600 group-hover:scale-110'
-                }`}>
-                  <Icon className="w-4 h-4" />
+              <div key={group.key} className={gi > 0 ? 'mt-3' : ''}>
+                {!isEffectivelyCollapsed
+                  ? <p className="px-3 pb-1 text-xs font-bold uppercase tracking-wider text-slate-500">{group.label}</p>
+                  : gi > 0 && <div className="mx-2 mb-2 border-t border-slate-200" aria-hidden="true" />}
+                <div className="space-y-0.5">
+                  {items.map((item) => {
+                    const Icon = item.icon;
+                    const isActive = currentView === item.id;
+                    const showBadge = item.badge && item.badgeType !== 'hot';
+                    return (
+                      <button
+                        key={item.id}
+                        onClick={() => handleItemClick(item.id)}
+                        aria-current={isActive ? 'page' : undefined}
+                        className={`no-hover-fx relative w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl text-left normal-case group select-none transition-colors duration-150 ${
+                          isActive
+                            ? 'bg-indigo-50 text-indigo-900 ring-1 ring-indigo-200'
+                            : 'text-slate-700 hover:bg-white hover:text-slate-950'
+                        }`}
+                        title={isEffectivelyCollapsed ? item.label : undefined}
+                      >
+                        {isActive && <span className="absolute left-0 top-1.5 bottom-1.5 w-1 rounded-r-full bg-indigo-600" aria-hidden="true" />}
+                        <span className={`w-8 h-8 rounded-lg shrink-0 flex items-center justify-center transition-colors ${
+                          isActive
+                            ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-600/30'
+                            : item.badgeType === 'ai'
+                            ? 'bg-gradient-to-br from-indigo-600 to-violet-600 text-white'
+                            : 'bg-slate-100 text-slate-600 group-hover:bg-indigo-100 group-hover:text-indigo-700'
+                        }`}>
+                          <Icon className="w-4 h-4" />
+                        </span>
+                        {!isEffectivelyCollapsed && (
+                          <span className="truncate flex-1 flex items-center justify-between gap-1.5">
+                            <span className={`text-sm truncate leading-tight ${isActive ? 'font-bold' : 'font-semibold'}`}>{item.label}</span>
+                            {showBadge && (
+                              <span className={`px-1.5 py-0.5 rounded-md text-xs font-bold shrink-0 ${
+                                item.badgeType === 'count' ? 'bg-slate-100 text-slate-700'
+                                  : item.badgeType === 'new' ? 'bg-emerald-50 text-emerald-800'
+                                  : 'bg-indigo-600 text-white'
+                              }`}>{item.badge}</span>
+                            )}
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
                 </div>
-
-                {!isEffectivelyCollapsed && (
-                  <div className="truncate flex-1 flex items-center justify-between">
-                    <span className={`text-[13px] tracking-tight truncate leading-tight normal-case ${
-                      isActive ? 'font-bold text-white' : 'font-semibold text-slate-700 group-hover:text-slate-950'
-                    }`}>
-                      {item.label}
-                    </span>
-
-                    {/* Badges matching screenshot exactly */}
-                    {item.badge && (
-                      <span className={`px-2 py-0.5 rounded-full text-[12px] font-extrabold uppercase tracking-wide shrink-0 ml-1.5 transition-transform duration-200 group-hover:scale-105 ${
-                        isActive 
-                          ? 'bg-white/25 text-white backdrop-blur-xs font-bold'
-                          : item.badgeType === 'count'
-                          ? 'bg-blue-100 text-blue-700 shadow-2xs font-bold'
-                          : item.badgeType === 'hot'
-                          ? 'bg-rose-100 text-rose-600 shadow-2xs font-bold'
-                          : item.badgeType === 'new'
-                          ? 'bg-emerald-100 text-emerald-700 shadow-2xs font-bold'
-                          : item.badgeType === 'ai'
-                          ? 'bg-indigo-600 text-white shadow-xs shadow-indigo-600/20 font-bold'
-                          : 'bg-rose-100 text-rose-600 shadow-2xs font-bold'
-                      }`}>
-                        {item.badge}
-                      </span>
-                    )}
-                  </div>
-                )}
-              </button>
+              </div>
             );
           })}
         </nav>

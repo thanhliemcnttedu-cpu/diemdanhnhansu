@@ -5,6 +5,7 @@ import {
   Sparkles, Award, ShieldAlert,
   ChevronDown, School, ShieldCheck, Database, LogIn, LogOut, Users,
   Menu, Monitor, Cloud, HardDrive, KeyRound, MoreHorizontal, RefreshCw
+, Search, MonitorPlay
 } from 'lucide-react';
 import { googleDriveService } from '../../services/googleDriveService';
 import { invalidateDriveClassFilesCache, FORCE_DATA_REFRESH_EVENT } from '../../services/databaseService';
@@ -142,6 +143,8 @@ export const TopBar: React.FC<TopBarProps> = ({
     dbSyncStatus, lastDbSyncTime, syncDatabaseNow, isAdmin, isSchoolAdmin,
     isDemo, isBgh, canManageAccounts, setIsRegistrationModalOpen, demoWarningMessage
   } = useClassroom();
+  const isManagerUser = Boolean(currentUser?.role === 'admin' || currentUser?.role === 'school_admin' || currentUser?.isSchoolAdmin || currentUser?.role === 'bgh' || currentUser?.isBgh);
+  const [trialBannerHidden, setTrialBannerHidden] = React.useState(() => { try { return sessionStorage.getItem('lhhp_trial_banner_hidden') === '1'; } catch (_) { return false; } });
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isClassDropdownOpen, setIsClassDropdownOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
@@ -297,21 +300,14 @@ export const TopBar: React.FC<TopBarProps> = ({
         </div>
       )}
 
-      {/* ⚠️ Cảnh Báo Chế Độ Dùng Thử (Trial Mode) - Chuẩn Ảnh 3 & 8 */}
-      {!isCdKeyActivated && (
-        <div className="bg-gradient-to-r from-orange-700 via-orange-700 to-red-600 text-white text-[12px] md:text-xs font-black py-1 px-3.5 flex items-center justify-between shadow-xs sticky top-0 z-31 animate-in slide-in-from-top duration-300">
-          <div className="flex items-center gap-2 truncate">
-            <span>⚠️</span>
-            <span className="truncate">
-              Bản Dùng Thử: Giới hạn tối đa 01 lớp và 10 học sinh/lớp. Vui lòng nhập CDKEY bản quyền để mở khóa Full!
-            </span>
-          </div>
-          <button
-            onClick={() => setIsCdKeyModalOpen(true)}
-            className="px-2.5 py-0.5 rounded-lg bg-yellow-400 hover:bg-yellow-300 text-amber-950 font-black text-[12px] uppercase shadow-xs transition-transform active:scale-95 shrink-0 cursor-pointer ml-2"
-          >
-            NHẬP CDKEY BẢN FULL
-          </button>
+      {/* ⚠️ Bản dùng thử: dải mỏng, tông sáng, tắt được trong phiên (nút CDKEY vẫn ở thanh trên) */}
+      {!isCdKeyActivated && !trialBannerHidden && (
+        <div className="bg-amber-50 border-b border-amber-200 text-amber-950 text-xs font-semibold py-1 px-3 flex items-center gap-2" role="status">
+          <span className="w-1.5 h-1.5 rounded-full bg-amber-600 shrink-0" aria-hidden="true" />
+          <span className="truncate flex-1">Bản dùng thử: tối đa 01 lớp, 10 học sinh/lớp.</span>
+          <button onClick={() => setIsCdKeyModalOpen(true)} className="no-hover-fx px-2.5 py-0.5 rounded-md bg-amber-700 hover:bg-amber-800 text-white font-bold shrink-0">Nhập CDKEY</button>
+          <button onClick={() => { setTrialBannerHidden(true); try { sessionStorage.setItem('lhhp_trial_banner_hidden', '1'); } catch (_) { /* ignore */ } }}
+            className="no-hover-fx w-6 h-6 rounded-md text-amber-900 hover:bg-amber-100 flex items-center justify-center shrink-0" aria-label="Ẩn thông báo bản dùng thử">✕</button>
         </div>
       )}
 
@@ -353,6 +349,26 @@ export const TopBar: React.FC<TopBarProps> = ({
 
       {/* Zone 2: tiện ích dạng "chip" gọn gàng (máy tính) + menu ⋯ (màn hình nhỏ), chọn lớp, tài khoản */}
       <div className="flex items-center gap-1.5 shrink-0 max-w-full">
+        {/* ⌘ Tìm nhanh + 🎦 Trình chiếu */}
+        <button
+          type="button"
+          onClick={() => window.dispatchEvent(new Event('lhhp:open-command-palette'))}
+          className={`${chipBase} hidden xl:inline-flex bg-white text-slate-600 border-slate-200 hover:bg-slate-50 hover:text-slate-900 min-w-[150px] justify-between`}
+          title="Tìm nhanh chức năng (Ctrl + K)"
+        >
+          <span className="inline-flex items-center gap-1.5"><Search className="w-3.5 h-3.5" />Tìm nhanh…</span>
+          <kbd className="text-[12px] font-bold text-slate-500 border border-slate-200 rounded px-1">Ctrl K</kbd>
+        </button>
+        {!isManagerUser && (
+          <button
+            type="button"
+            onClick={() => window.dispatchEvent(new Event('lhhp:toggle-presentation'))}
+            className={`${chipBase} bg-slate-900 text-white border-slate-900 hover:bg-slate-800`}
+            title="Chế độ trình chiếu lớp học: ẩn khung điều hướng, chữ to, toàn màn hình (Ctrl + Shift + F)"
+          >
+            <MonitorPlay className="w-3.5 h-3.5" /><span className="hidden xl:inline">Trình chiếu</span>
+          </button>
+        )}
         <div className="hidden lg:flex items-center gap-1.5">
           {/* ☁️ Google Drive */}
           <button

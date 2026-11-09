@@ -5,9 +5,10 @@
 
 import React from 'react';
 import { 
-  Home, Users, Award, BarChart3, Menu, Sparkles
+  Home, Users, BarChart3, Menu, Sparkles, CheckSquare, UserCheck
 } from 'lucide-react';
 import { NavigationMenuId } from './Sidebar';
+import { useClassroom } from '../../context/ClassroomContext';
 
 interface MobileBottomNavProps {
   currentView: NavigationMenuId;
@@ -20,32 +21,21 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
   onNavigate,
   onOpenMenu
 }) => {
-  const navItems = [
-    {
-      id: 'dashboard' as NavigationMenuId,
-      label: 'Trang chủ',
-      icon: Home,
-      action: () => onNavigate('dashboard')
-    },
-    {
-      id: 'students' as NavigationMenuId,
-      label: 'Học sinh',
-      icon: Users,
-      action: () => onNavigate('students')
-    },
-    {
-      id: 'rewards' as NavigationMenuId,
-      label: 'Đổi thưởng',
-      icon: Award,
-      action: () => onNavigate('rewards')
-    },
-    {
-      id: 'reports' as NavigationMenuId,
-      label: 'Báo cáo',
-      icon: BarChart3,
-      action: () => onNavigate('reports')
-    },
-  ];
+  const { currentUser, isBgh, isSchoolAdmin } = useClassroom();
+  const isManager = Boolean(currentUser?.role === 'admin' || isSchoolAdmin || isBgh);
+  const navItems: Array<{ id: NavigationMenuId; label: string; icon: React.ComponentType<{ className?: string }>; action: () => void }> = isManager
+    ? [
+        { id: 'dashboard', label: 'Trang chủ', icon: Home, action: () => onNavigate('dashboard') },
+        { id: 'staff_attendance', label: 'Chấm công', icon: UserCheck, action: () => onNavigate('staff_attendance') },
+        { id: 'students', label: 'Học sinh', icon: Users, action: () => onNavigate('students') },
+        { id: 'reports', label: 'Báo cáo', icon: BarChart3, action: () => onNavigate('reports') },
+      ]
+    : [
+        { id: 'dashboard', label: 'Trang chủ', icon: Home, action: () => onNavigate('dashboard') },
+        { id: 'attendance', label: 'Điểm danh', icon: CheckSquare, action: () => onNavigate('attendance') },
+        { id: 'students', label: 'Học sinh', icon: Users, action: () => onNavigate('students') },
+        { id: 'picker', label: 'Gọi tên', icon: Sparkles, action: () => onNavigate('picker') },
+      ];
 
   return (
     <nav 

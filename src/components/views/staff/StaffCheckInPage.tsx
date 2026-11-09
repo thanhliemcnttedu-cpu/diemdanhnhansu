@@ -86,9 +86,7 @@ export const StaffCheckInPage: React.FC = () => {
     <div className="min-h-screen bg-gradient-to-b from-sky-50 via-white to-emerald-50 flex flex-col items-center px-4 py-6 sm:py-10">
       <div className="w-full max-w-md space-y-4">
         <header className="text-center space-y-1">
-          <div className="mx-auto w-14 h-14 rounded-2xl bg-emerald-700 text-white flex items-center justify-center shadow-md">
-            <ShieldCheck className="w-7 h-7" />
-          </div>
+          <img src="/logo.svg" alt="Lớp Học Hạnh Phúc" className="mx-auto w-16 h-16 rounded-[22%] shadow-md" />
           <h1 className="text-2xl font-black text-slate-900">Điểm danh giáo viên – nhân viên</h1>
           {conn?.schoolName && <p className="text-sm font-bold text-emerald-800 uppercase">{conn.schoolName}</p>}
         </header>

@@ -74,7 +74,7 @@ export const LuckyWheelView: React.FC = () => {
     if (activeItems.length === 0) {
       ctx.fillStyle = '#94a3b8';
       ctx.textAlign = 'center';
-      ctx.font = '14px Plus Jakarta Sans';
+      ctx.font = '600 14px "Be Vietnam Pro", sans-serif';
       ctx.fillText('Không có dữ liệu quay', center, center);
       return;
     }
@@ -102,7 +102,7 @@ export const LuckyWheelView: React.FC = () => {
       ctx.rotate(sliceAngle + arc / 2);
       ctx.textAlign = 'right';
       ctx.fillStyle = '#ffffff';
-      ctx.font = activeItems.length > 20 ? 'bold 10px Plus Jakarta Sans' : 'bold 13px Plus Jakarta Sans';
+      ctx.font = activeItems.length > 20 ? '700 10px "Be Vietnam Pro", sans-serif' : '700 13px "Be Vietnam Pro", sans-serif';
       ctx.shadowColor = 'rgba(0,0,0,0.4)';
       ctx.shadowBlur = 3;
       
@@ -128,7 +128,7 @@ export const LuckyWheelView: React.FC = () => {
     ctx.stroke();
 
     ctx.fillStyle = '#f8fafc';
-    ctx.font = 'bold 11px Plus Jakarta Sans';
+    ctx.font = '700 11px "Be Vietnam Pro", sans-serif';
     ctx.textAlign = 'center';
     ctx.fillText('QUAY', center, center + 4);
   };

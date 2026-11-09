@@ -1,3 +1,4 @@
+import { loadDecorativeFonts } from './decorativeFonts';
 /**
  * 🎨 BỘ MÁY BỐ CỤC THƯ KHEN THEO ẢNH NỀN
  *
@@ -320,6 +321,7 @@ export function fitFontSize(text: string, el: CertLayoutElement, boxWidth: numbe
 /** Nạp sẵn các phông dùng trên thư khen để đo chữ chính xác */
 export async function ensureCertificateFonts() {
   if (typeof document === 'undefined' || !(document as any).fonts?.load) return;
+  await loadDecorativeFonts();
   const specs = new Set<string>();
   CERT_TYPOGRAPHY.forEach(t => {
     specs.add(`${t.title.weight} 64px ${t.title.family}`);

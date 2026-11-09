@@ -18,6 +18,7 @@ import {
   CERT_TYPOGRAPHY, type TemplateAnalysis, type CertComposition, type CertContent,
 } from '../../utils/certificateLayout';
 import { renderCertificateCanvas } from '../../utils/certificateRenderer';
+import { loadDecorativeFonts } from '../../utils/decorativeFonts';
 
 // Canvas Native Resolution 1920 x 1080 Full HD
 const CANVAS_WIDTH = 1920;
@@ -480,6 +481,8 @@ export const CertificateView: React.FC = () => {
   useEffect(() => {
     refreshTemplates();
   }, []);
+
+  useEffect(() => { loadDecorativeFonts(); }, []);
 
   // Compute live responsive scale factor based on container dimensions
   useEffect(() => {

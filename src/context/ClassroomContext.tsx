@@ -1538,8 +1538,11 @@ export const ClassroomProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     if (!currentUser) return;
 
     let isChecking = false;
+    let lastScopedSignature = '';
     const checkRemoteChanges = async () => {
       if (!isRemoteDataLoadedRef.current || isChecking) return;
+      // ⚡ Nhẹ máy: tab đang ẩn thì không làm mới (khi quay lại tab sẽ làm mới ngay)
+      if (typeof document !== 'undefined' && document.hidden) return;
       if (Date.now() < remoteUpdateLockUntilRef.current) return;
       isChecking = true;
       try {
@@ -1555,6 +1558,13 @@ export const ClassroomProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         if (currentUser.role === 'admin' || currentUser.username?.toLowerCase() === 'adminquantri' || isExecutive) {
           const scoped = await databaseService.getExecutiveScopedData(currentUser);
           if (scoped && Array.isArray(scoped.classes)) {
+            // ⚡ Chỉ cập nhật giao diện khi dữ liệu tổng hợp thật sự thay đổi (tránh vẽ lại toàn ứng dụng mỗi 12 giây)
+            let signature = '';
+            try {
+              signature = JSON.stringify([scoped.classes, scoped.students, scoped.attendanceRecords, scoped.boardingRecords, (scoped.transactions || []).length]);
+            } catch (_) { signature = String(Date.now()); }
+            if (signature === lastScopedSignature) return;
+            lastScopedSignature = signature;
             markRemoteUpdateActive(1200);
             const cleanClasses = (scoped.classes || []).filter(c => c && c.teacherRole !== 'subject' && !c.id.startsWith('class-sub-'));
             const cleanStudents = (scoped.students || []).filter(s => s && s.classId !== 'class-1791592764810' && !s.classId.startsWith('class-sub-'));

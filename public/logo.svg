@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Lớp Học Hạnh Phúc">
+  <title>Lớp Học Hạnh Phúc</title>
+  <defs>
+    <linearGradient id="lhhp-bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0ea5e9"/>
+      <stop offset="0.45" stop-color="#2563eb"/>
+      <stop offset="1" stop-color="#7c3aed"/>
+    </linearGradient>
+    <linearGradient id="lhhp-glass" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.32"/>
+      <stop offset="0.55" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="lhhp-page" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#e0e7ff"/>
+    </linearGradient>
+    <radialGradient id="lhhp-glow" cx="0.78" cy="0.22" r="0.5">
+      <stop offset="0" stop-color="#67e8f9" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#67e8f9" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- App tile -->
+  <rect width="512" height="512" rx="124" fill="url(#lhhp-bg)"/>
+  <rect width="512" height="512" rx="124" fill="url(#lhhp-glow)"/>
+  <rect x="10" y="10" width="492" height="492" rx="116" fill="none" stroke="#ffffff" stroke-opacity="0.22" stroke-width="4"/>
+  <path d="M10 134 Q10 10 134 10 H378 Q502 10 502 134 V220 Q256 300 10 220 Z" fill="url(#lhhp-glass)"/>
+
+  <!-- Circuit traces (công nghệ) -->
+  <g stroke="#ffffff" stroke-opacity="0.28" stroke-width="6" stroke-linecap="round" fill="none">
+    <path d="M70 300 H104 L124 280"/>
+    <path d="M442 300 H408 L388 280"/>
+  </g>
+  <g fill="#ffffff" fill-opacity="0.45">
+    <circle cx="64" cy="300" r="9"/>
+    <circle cx="448" cy="300" r="9"/>
+  </g>
+
+  <!-- Open book = heart (two pages with spine gap) -->
+  <path d="M247 196 C 210 140, 128 136, 118 206 C 110 262, 150 312, 247 386 Z" fill="url(#lhhp-page)"/>
+  <path d="M265 196 C 302 140, 384 136, 394 206 C 402 262, 362 312, 265 386 Z" fill="url(#lhhp-page)"/>
+  <!-- page lines -->
+  <g stroke="#6366f1" stroke-opacity="0.35" stroke-width="7" stroke-linecap="round" fill="none">
+    <path d="M160 214 Q196 204 224 222"/>
+    <path d="M156 252 Q194 242 226 262"/>
+    <path d="M174 290 Q204 284 226 300"/>
+    <path d="M352 214 Q316 204 288 222"/>
+    <path d="M356 252 Q318 242 286 262"/>
+    <path d="M338 290 Q308 284 286 300"/>
+  </g>
+
+  <!-- Smile = book base -->
+  <path d="M150 392 Q256 462 362 392" fill="none" stroke="#ffffff" stroke-width="22" stroke-linecap="round"/>
+
+  <!-- Spark (AI / tương lai) -->
+  <path d="M388 92 C 392 120, 400 128, 428 132 C 400 136, 392 144, 388 172 C 384 144, 376 136, 348 132 C 376 128, 384 120, 388 92 Z" fill="#fcd34d"/>
+  <circle cx="436" cy="186" r="10" fill="#fcd34d" fill-opacity="0.85"/>
+</svg>

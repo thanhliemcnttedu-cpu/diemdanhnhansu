@@ -13,7 +13,6 @@ import { databaseService } from '../../services/databaseService';
 import { googleDriveService } from '../../services/googleDriveService';
 import { schoolDriveDbService } from '../../services/schoolDriveDbService';
 import { StaffCheckInQrModal } from '../views/staff/StaffCheckInQr';
-import schoolDbLogo from '../../assets/school_db_logo.png';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -352,13 +351,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         <div className="flex items-center justify-between px-3 sm:px-4 pb-2 shrink-0">
           <div className="flex items-center gap-3 sm:gap-4 min-w-0">
             {/* Logo */}
-            <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full border-[3px] border-white/40 overflow-hidden shadow-2xl bg-white shrink-0 flex items-center justify-center p-0.5">
-              <img 
-                src={schoolDbLogo} 
-                alt="Logo Hệ Quản Trị CSDL Trường Học" 
-                className="w-full h-full object-contain"
-              />
-            </div>
+            <img src="/logo.svg" alt="Logo Lớp Học Hạnh Phúc" className="w-12 h-12 sm:w-16 sm:h-16 shrink-0 rounded-[22%] shadow-2xl ring-2 ring-white/50" />
             {/* Title */}
             <div className="min-w-0">
               <h1 className="text-base sm:text-lg md:text-xl lg:text-xl font-black text-white tracking-tight drop-shadow-lg leading-tight whitespace-nowrap" style={{

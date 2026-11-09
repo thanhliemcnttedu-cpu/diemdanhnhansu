@@ -5,7 +5,6 @@ import {
   ZoomIn, Download, AlertTriangle
 } from 'lucide-react';
 import { databaseService } from '../../services/databaseService';
-import schoolDbLogo from '../../assets/school_db_logo.png';
 
 interface RegistrationModalProps {
   isOpen: boolean;
@@ -109,13 +108,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
         <div className="flex items-center justify-between px-4 sm:px-6 py-1.5 shrink-0">
           <div className="flex items-center gap-3 sm:gap-4 min-w-0">
             {/* Logo */}
-            <div className="w-[80px] h-[80px] sm:w-[120px] sm:h-[120px] rounded-full border-[3px] border-white/40 overflow-hidden shadow-2xl bg-white shrink-0 flex items-center justify-center p-1">
-              <img 
-                src={schoolDbLogo} 
-                alt="Logo Hệ Quản Trị CSDL Trường Học" 
-                className="w-full h-full object-contain"
-              />
-            </div>
+            <img src="/logo.svg" alt="Logo Lớp Học Hạnh Phúc" className="w-[80px] h-[80px] sm:w-[110px] sm:h-[110px] shrink-0 rounded-[22%] shadow-2xl ring-2 ring-white/50" />
             {/* Title */}
             <div className="min-w-0">
               <h1 className="text-sm sm:text-base md:text-lg lg:text-xl font-black text-white tracking-tight drop-shadow-lg leading-tight whitespace-nowrap uppercase" style={{

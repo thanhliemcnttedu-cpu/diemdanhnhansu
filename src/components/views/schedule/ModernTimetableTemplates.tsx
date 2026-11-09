@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useEffect } from 'react';
+import { loadDecorativeFonts } from '../../../utils/decorativeFonts';
 import type { TimetableDisplaySettings } from '../../modals/TimetableConfigModal';
 
 /**
@@ -86,11 +87,11 @@ const Header: React.FC<{ settings: TimetableDisplaySettings; theme: ModernTimeta
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-2 border-b-2 border-slate-900 pb-3">
         <div>
           <p className="text-xs font-bold uppercase tracking-[0.25em] text-slate-600">{settings.schoolName}</p>
-          <h2 className="text-3xl font-black uppercase tracking-tight text-slate-950" style={{ fontFamily: '"Montserrat", sans-serif' }}>
+          <h2 className="text-3xl font-black uppercase tracking-tight text-slate-950" style={{ fontFamily: '"Be Vietnam Pro", sans-serif' }}>
             {settings.title}
           </h2>
         </div>
-        <div className="text-sm text-slate-800 sm:text-right" style={{ fontFamily: '"Montserrat", sans-serif' }}>
+        <div className="text-sm text-slate-800 sm:text-right" style={{ fontFamily: '"Be Vietnam Pro", sans-serif' }}>
           <p className="text-2xl font-black text-slate-950">LỚP {settings.className}</p>
           <p className="text-xs font-semibold text-slate-600">
             {settings.showTeacherInfo && <>GVCN {settings.teacherName} • </>}{settings.semester} • {settings.academicYear}
@@ -134,6 +135,7 @@ const Legend: React.FC<{ subjects: SubjectMeta[]; dark?: boolean }> = ({ subject
 
 // ------------------------------------------------------------------ main component
 export const ModernTimetable: React.FC<Props> = ({ theme, settings, days, morningPeriods, afternoonPeriods, getSubject, getMeta, onSlotClick }) => {
+  useEffect(() => { if (theme === 'luxe_navy' || theme === 'pastel_soft') loadDecorativeFonts(); }, [theme]);
   const sessions: Array<{ id: 'morning' | 'afternoon'; label: string; count: number; times: string[] }> = [
     { id: 'morning', label: 'Sáng', count: morningPeriods, times: settings.morningTimes },
     { id: 'afternoon', label: 'Chiều', count: afternoonPeriods, times: settings.afternoonTimes },
@@ -176,7 +178,7 @@ export const ModernTimetable: React.FC<Props> = ({ theme, settings, days, mornin
         );
       case 'minimal_mono':
         return (
-          <div className="flex items-center justify-center gap-1.5 font-extrabold text-[15px] text-slate-950" style={{ fontFamily: '"Montserrat", sans-serif' }}>
+          <div className="flex items-center justify-center gap-1.5 font-extrabold text-[15px] text-slate-950" style={{ fontFamily: '"Be Vietnam Pro", sans-serif' }}>
             <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: color }} />
             <span className="leading-tight">{sub}</span>
           </div>
@@ -254,7 +256,7 @@ export const ModernTimetable: React.FC<Props> = ({ theme, settings, days, mornin
     <div className={`space-y-4 ${isLuxe ? 'p-6 rounded-2xl' : ''}`} style={wrapStyle}>
       <Header settings={settings} theme={theme} />
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[760px] table-fixed border-collapse text-sm" style={isMono ? { fontFamily: '"Montserrat", sans-serif' } : undefined}>
+        <table className="w-full min-w-[760px] table-fixed border-collapse text-sm" style={isMono ? { fontFamily: '"Be Vietnam Pro", sans-serif' } : undefined}>
           <thead>
             <tr>
               <th className="py-3 px-2 w-16 text-xs font-black uppercase"

@@ -19,6 +19,11 @@ import { DesktopRoleSetupModal } from './components/modals/DesktopRoleSetupModal
 import { ChangePasswordModal } from './components/modals/ChangePasswordModal';
 import { ZaloQrModal } from './components/modals/ZaloQrModal';
 import { schoolDriveDbService } from './services/schoolDriveDbService';
+import { CommandPalette } from './components/layout/CommandPalette';
+import { OPEN_CHANGE_PASSWORD_EVENT } from './components/modals/ChangePasswordModal';
+import { MonitorX, Maximize, Minimize } from 'lucide-react';
+
+export const TOGGLE_PRESENTATION_EVENT = 'lhhp:toggle-presentation';
 
 // ⚡ Tải chậm (code-split): mỗi màn hình chỉ tải khi giáo viên mở → khởi động nhanh, nhẹ máy
 const ClassesStudentsView = lazy(() => import('./components/views/ClassesStudentsView').then(m => ({ default: m.ClassesStudentsView })));
@@ -83,6 +88,41 @@ function ClassroomApp() {
     setCurrentView(view);
     setIsMobileSidebarOpen(false);
   };
+
+  // 🎦 CHẾ ĐỘ TRÌNH CHIẾU LỚP HỌC: ẩn khung điều hướng, chữ to hơn, toàn màn hình (máy chiếu / TV)
+  const [isPresenting, setIsPresenting] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const enterPresentation = () => {
+    setIsPresenting(true);
+    setIsMobileSidebarOpen(false);
+    try { document.documentElement.requestFullscreen?.().catch(() => {}); } catch (_) { /* ignore */ }
+  };
+  const exitPresentation = () => {
+    setIsPresenting(false);
+    try { if (document.fullscreenElement) document.exitFullscreen().catch(() => {}); } catch (_) { /* ignore */ }
+  };
+  useEffect(() => {
+    document.documentElement.style.fontSize = isPresenting ? '115%' : '';
+    document.body.classList.toggle('presentation-mode', isPresenting);
+    return () => { document.documentElement.style.fontSize = ''; };
+  }, [isPresenting]);
+  useEffect(() => {
+    const onToggle = () => (isPresenting ? exitPresentation() : enterPresentation());
+    const onKey = (e: KeyboardEvent) => {
+      if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'f') { e.preventDefault(); onToggle(); }
+      // Esc thoát trình chiếu khi không có hộp thoại đang mở (Esc của hộp thoại ưu tiên đóng hộp thoại)
+      if (e.key === 'Escape' && isPresenting && !document.querySelector('[role="dialog"]') && !document.fullscreenElement) exitPresentation();
+    };
+    const onFs = () => setIsFullscreen(Boolean(document.fullscreenElement));
+    window.addEventListener(TOGGLE_PRESENTATION_EVENT, onToggle);
+    window.addEventListener('keydown', onKey);
+    document.addEventListener('fullscreenchange', onFs);
+    return () => {
+      window.removeEventListener(TOGGLE_PRESENTATION_EVENT, onToggle);
+      window.removeEventListener('keydown', onKey);
+      document.removeEventListener('fullscreenchange', onFs);
+    };
+  }, [isPresenting]);
 
   // Guard: Nếu là GVBM, không cho vào Điểm danh, Sơ đồ, Infographic
   useEffect(() => {
@@ -172,37 +212,61 @@ function ClassroomApp() {
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-slate-50 font-sans text-slate-800">
       {/* Exact Sidebar matching PDF navigation with Mobile Drawer support */}
-      <Sidebar
+      {!isPresenting && <Sidebar
         currentView={currentView}
         onNavigate={handleNavigate}
         collapsed={isSidebarCollapsed}
         onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
         isMobileOpen={isMobileSidebarOpen}
         onCloseMobile={() => setIsMobileSidebarOpen(false)}
-      />
+      />}
 
       {/* Main Container */}
       <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
         {/* Top Header matching PDF with Mobile Hamburger Menu */}
-        <TopBar
+        {!isPresenting && <TopBar
           currentView={currentView}
           onNavigate={handleNavigate}
           onOpenQuickNoise={() => handleNavigate('noise')}
           onOpenProfile={() => handleNavigate('dashboard')}
           onToggleMobileSidebar={() => setIsMobileSidebarOpen(prev => !prev)}
-        />
+        />}
 
         {/* Viewport Content with bottom padding on mobile for MobileBottomNav - Tông màu Xanh tươi sáng công nghệ */}
-        <main className="flex-1 overflow-y-auto bg-gradient-to-br from-[#f0f7ff]/90 via-[#f8fbff] to-[#edf5fd]/90 pb-32 sm:pb-24 lg:pb-6">
+        <main className={`flex-1 overflow-y-auto bg-gradient-to-br from-[#f0f7ff]/90 via-[#f8fbff] to-[#edf5fd]/90 ${isPresenting ? 'pb-6' : 'pb-32 sm:pb-24 lg:pb-6'}`}>
           <Suspense fallback={<ViewLoading />}>{renderCurrentView()}</Suspense>
         </main>
       </div>
 
       {/* Floating Bottom Navigation Bar for Mobile and Tablet */}
-      <MobileBottomNav
+      {!isPresenting && <MobileBottomNav
         currentView={currentView}
         onNavigate={handleNavigate}
         onOpenMenu={() => setIsMobileSidebarOpen(true)}
+      />}
+
+      {/* Thanh nổi khi trình chiếu */}
+      {isPresenting && (
+        <div className="fixed bottom-4 right-4 z-[60] flex items-center gap-1.5 bg-white/90 backdrop-blur-sm border border-slate-200 rounded-2xl shadow-lg p-1.5 opacity-70 hover:opacity-100 transition-opacity">
+          <button type="button" onClick={() => { try { isFullscreen ? document.exitFullscreen() : document.documentElement.requestFullscreen(); } catch (_) { /* ignore */ } }}
+            className="no-hover-fx px-3 py-2 rounded-xl text-sm font-bold text-slate-700 hover:bg-slate-100 inline-flex items-center gap-1.5" title="Bật/tắt toàn màn hình">
+            {isFullscreen ? <Minimize className="w-4 h-4" /> : <Maximize className="w-4 h-4" />} {isFullscreen ? 'Thu nhỏ' : 'Toàn màn hình'}
+          </button>
+          <button type="button" onClick={exitPresentation}
+            className="no-hover-fx px-3 py-2 rounded-xl text-sm font-black bg-slate-900 text-white hover:bg-slate-800 inline-flex items-center gap-1.5" title="Thoát chế độ trình chiếu (Ctrl+Shift+F)">
+            <MonitorX className="w-4 h-4" /> Thoát trình chiếu
+          </button>
+        </div>
+      )}
+
+      {/* ⌘ Tìm nhanh chức năng (Ctrl+K) */}
+      <CommandPalette
+        isMacroAdmin={isMacroAdmin}
+        isSubjectTeacher={teacherRole === 'subject'}
+        onNavigate={handleNavigate}
+        onPresentation={enterPresentation}
+        onOpenCdKey={() => setIsCdKeyModalOpen(true)}
+        onChangePassword={() => window.dispatchEvent(new Event(OPEN_CHANGE_PASSWORD_EVENT))}
       />
 
       {/* Login & Switch User Modal */}

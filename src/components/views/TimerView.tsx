@@ -386,7 +386,7 @@ export const TimerView: React.FC = () => {
                       fill="#0f172a"
                       fontSize="19"
                       fontWeight="900"
-                      fontFamily="Cabinet Grotesk, sans-serif"
+                      fontFamily="Be Vietnam Pro, sans-serif"
                     >
                       {cn.num}
                     </text>
