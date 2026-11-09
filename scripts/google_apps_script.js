@@ -13,6 +13,8 @@
  * - CHỈ tổng hợp tệp của GVCN (gvcn_*.json, teacherRole = homeroom). Tệp GV bộ môn (gvbm_*.json),
  *   BGH, Quản trị không được tính để không dôi số lớp / số học sinh.
  *
+ * - V4.4: Lưu số CCCD đầy đủ ngay trong hồ sơ nhân sự (nhansu_truong.json, tệp được khóa, không tải trực tiếp được)
+ *   và hiển thị đầy đủ cho Quản trị / BGH trong danh sách + tổng hợp. Nhập lại Excel 1 lần để có số đầy đủ.
  * - V4.3: Quản trị xem được ĐẦY ĐỦ số CCCD của nhân sự (bản xem lưu ở Script Properties "scccd:<mã>",
  *   KHÔNG nằm trong thư mục Drive; chỉ trả về cho tài khoản Quản trị). Nhân sự nhập trước 4.3 cần nhập lại
  *   tệp Excel (hoặc sửa CCCD) để lưu số đầy đủ. Cập nhật: dán lại mã -> Triển khai -> Phiên bản mới (giữ URL).
@@ -37,7 +39,7 @@
 var FOLDER_ID = "__FOLDER_ID__";
 var TARGET_FILENAME = "du_lieu_lop_hoc_hanh_phuc.json";
 var REPORT_PREFIX = "bc_";
-var SCRIPT_VERSION = "4.3";
+var SCRIPT_VERSION = "4.4";
 
 // ---------------------------------------------------------------------------------------
 // HTTP POST: lưu dữ liệu lớp
@@ -842,7 +844,7 @@ function readStaffDb(folder) {
 function publicStaff(s) {
   return {
     code: s.code, name: s.name, position: s.position || "", dept: s.dept || "", gender: s.gender || "",
-    phone: s.phone || "", order: s.order || 0, cccdLast4: s.cccdLast4 || "", disabled: !!s.disabled,
+    phone: s.phone || "", order: s.order || 0, cccdLast4: s.cccdLast4 || "", cccd: s.cccdFull || "", disabled: !!s.disabled,
     hasPin: !!s.pinHash, updatedAt: s.updatedAt || ""
   };
 }
@@ -987,7 +989,7 @@ function handleSaveStaffRoster(folder, payload) {
           var dup = null;
           for (var k in byCode) if (byCode[k] !== s && byCode[k].cccdHash === h) dup = byCode[k];
           if (dup) { errors.push(code + ": số CCCD trùng với " + dup.code + "."); if (isNew) continue; }
-          else { s.cccdHash = h; s.cccdLast4 = digits.slice(-4); props.setProperty("scccd:" + code, digits); }
+          else { s.cccdHash = h; s.cccdLast4 = digits.slice(-4); s.cccdFull = digits; props.setProperty("scccd:" + code, digits); }
         }
       }
       if (isNew && !s.cccdHash) { errors.push(code + ": thiếu số CCCD."); continue; }

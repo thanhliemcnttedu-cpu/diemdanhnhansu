@@ -506,6 +506,8 @@ const RosterPanel: React.FC<{ canManage: boolean; auth: { username: string; pass
   const [selected, setSelected] = useState<string[]>([]);
   // Hiện số CCCD đầy đủ (chỉ Quản trị; Apps Script 4.3 trở lên)
   const [showAllCccd, setShowAllCccd] = useState(true);
+  const [scriptVersion, setScriptVersion] = useState('');
+  useEffect(() => { staffAttendanceService.getScriptVersion().then(setScriptVersion); }, []);
   const [revealedCccd, setRevealedCccd] = useState<string[]>([]);
   const [bulkPinOpen, setBulkPinOpen] = useState(false);
   const [bulkPinMode, setBulkPinMode] = useState<'random' | 'common'>('random');
@@ -694,7 +696,10 @@ const RosterPanel: React.FC<{ canManage: boolean; auth: { username: string; pass
 
         {canManage && list.length > 0 && !list.some(s => s.currentCccd) && (
           <p className="px-4 pt-3 text-sm text-slate-700 inline-flex items-start gap-1.5"><Info className="w-4 h-4 mt-0.5 text-sky-700 shrink-0" />
-            <span>Muốn xem đầy đủ số CCCD: cập nhật Apps Script lên <strong>4.3</strong> (dán mã mới → Triển khai → Phiên bản mới), rồi bấm <strong>Nhập Excel</strong> lại tệp danh sách. Mật khẩu đã cấp được giữ nguyên.</span>
+            <span>
+              Chưa có số CCCD đầy đủ. Bấm <strong>Nhập Excel</strong> lại tệp danh sách để lưu số đầy đủ (mật khẩu đã cấp được giữ nguyên).
+              {scriptVersion && Number(scriptVersion) < 4.4 && <> Apps Script đang chạy là <strong>V{scriptVersion}</strong> — để mọi máy đều thấy đủ số, dán mã mới rồi chọn <strong>Triển khai → Quản lý triển khai → sửa (bút chì) → Phiên bản: Phiên bản mới → Triển khai</strong> (không tạo triển khai mới).</>}
+            </span>
           </p>
         )}
         {!canManage && <p className="px-4 pt-3 text-sm text-slate-600">Ban giám hiệu chỉ xem danh sách. Thêm, sửa, cấp mật khẩu do tài khoản Quản trị nhà trường thực hiện.</p>}

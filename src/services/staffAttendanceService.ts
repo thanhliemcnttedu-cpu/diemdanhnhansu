@@ -29,8 +29,9 @@ export interface StaffMember {
   disabled?: boolean;
   hasPin?: boolean;
   currentPin?: string;
-  /** Số CCCD đầy đủ – chỉ Quản trị nhận được (Apps Script 4.3+) */
+  /** Số CCCD đầy đủ (Apps Script 4.3: chỉ Quản trị; 4.4: lưu trong hồ sơ, trả về trường `cccd`) */
   currentCccd?: string;
+  cccd?: string;
   updatedAt?: string;
 }
 
@@ -258,10 +259,22 @@ export const staffAttendanceService = {
     const cache = this.readCccdCache();
     res.staff = res.staff.map(s => {
       if (s.currentCccd) return s;
+      if (s.cccd) return { ...s, currentCccd: s.cccd };
       const d = cache[String(s.code).toUpperCase()];
       return d && (!s.cccdLast4 || d.endsWith(s.cccdLast4)) ? { ...s, currentCccd: d } : s;
     });
     return res;
+  },
+
+  /** Phiên bản Apps Script đang thực sự chạy (để biết đã triển khai bản mới hay chưa) */
+  async getScriptVersion(): Promise<string> {
+    const c = this.resolveConnection();
+    if (!c) return '';
+    try {
+      const res = await fetch(`${c.scriptUrl}${c.scriptUrl.includes('?') ? '&' : '?'}action=ping`);
+      const data = JSON.parse(await res.text());
+      return String(data?.version || '');
+    } catch (_) { return ''; }
   },
 
   async getRoster(auth?: { username: string; password: string } | null) {
