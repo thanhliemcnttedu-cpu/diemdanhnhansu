@@ -7,6 +7,7 @@
  * - Quản trị (admin / school_admin) quản lý danh sách; BGH + Quản trị xem tổng hợp (cần mật khẩu phiên).
  */
 import { googleDriveService } from './googleDriveService';
+import { saveManagerAuth, readManagerAuth, clearManagerAuth } from '../utils/persistedAuth';
 
 export type StaffStatus = 'present' | 'sick_leave' | 'personal_unpaid';
 
@@ -262,14 +263,24 @@ export const staffAttendanceService = {
     return this.call({ action: 'staffCheckIn', cccd, pin, status, note, date });
   },
 
-  // ---------------- phiên Quản trị / BGH (sessionStorage, mất khi đóng tab)
-  rememberViewerAuth(username: string, password: string) {
+  // ---------------- phiên Quản trị / BGH: nhớ trên máy tới khi Đăng xuất (utils/persistedAuth)
+  rememberViewerAuth(username: string, password: string, isAdmin?: boolean) {
     try { sessionStorage.setItem(VIEWER_KEY, JSON.stringify({ username: username.trim().toLowerCase(), password })); } catch (_) { /* ignore */ }
+    saveManagerAuth(username, password, isAdmin);
   },
   getViewerAuth(): { username: string; password: string } | null {
-    try { return JSON.parse(sessionStorage.getItem(VIEWER_KEY) || 'null'); } catch (_) { return null; }
+    try {
+      const s = JSON.parse(sessionStorage.getItem(VIEWER_KEY) || 'null');
+      if (s?.username && s?.password) return s;
+    } catch (_) { /* ignore */ }
+    const p = readManagerAuth();
+    return p ? { username: p.username, password: p.password } : null;
   },
-  clearViewerAuth() { try { sessionStorage.removeItem(VIEWER_KEY); } catch (_) { /* ignore */ } },
+  /** Apps Script từ chối (mật khẩu đã đổi nơi khác) → quên phiên để hỏi lại */
+  clearViewerAuth() {
+    try { sessionStorage.removeItem(VIEWER_KEY); } catch (_) { /* ignore */ }
+    clearManagerAuth();
+  },
 
   // ---------------- số CCCD đầy đủ nhớ trên máy Quản trị (khi nhập Excel / sửa) — dùng khi Apps Script chưa trả `currentCccd`
   cccdCacheKey() {

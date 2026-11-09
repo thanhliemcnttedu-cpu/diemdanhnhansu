@@ -1,5 +1,6 @@
 import { UserAccount, SchoolEntity } from '../types';
 import { googleDriveService } from './googleDriveService';
+import { saveManagerAuth, readManagerAuth, clearManagerAuth } from '../utils/persistedAuth';
 
 /**
  * 🏫 CƠ SỞ DỮ LIỆU NHÀ TRƯỜNG TRÊN GOOGLE DRIVE (Apps Script V4: csdl_truong.json)
@@ -160,6 +161,8 @@ export const schoolDriveDbService = {
         }
         if (user.role === 'admin' || user.role === 'school_admin' || user.isSchoolAdmin || user.role === 'bgh' || user.isBgh) {
           try { sessionStorage.setItem('lhhp_staff_viewer_auth', JSON.stringify({ username: user.username.trim().toLowerCase(), password })); } catch (_) { /* ignore */ }
+          // Nhớ trên máy tới khi Đăng xuất → không hỏi lại mật khẩu khi xem chấm công / ghi CSDL
+          saveManagerAuth(user.username, password, user.role === 'admin' || user.role === 'school_admin' || Boolean(user.isSchoolAdmin));
         }
         return { status: 'ok', user, schools: data.schools || [] };
       }
@@ -195,11 +198,17 @@ export const schoolDriveDbService = {
   // ---------------- Phiên Quản trị (ký các lần ghi CSDL) ----------------
   rememberAdminAuth(username: string, password: string) {
     writeJson(session, ADMIN_SECRET_KEY, { username: username.trim().toLowerCase(), password });
+    saveManagerAuth(username, password, true);
   },
   getAdminAuth(): { username: string; password: string } | null {
-    return readJson(session, ADMIN_SECRET_KEY, null);
+    const s = readJson<{ username: string; password: string } | null>(session, ADMIN_SECRET_KEY, null);
+    if (s) return s;
+    // Mở lại trình duyệt: dùng phiên Quản trị đã nhớ trên máy (chỉ tài khoản Quản trị, không dùng phiên BGH)
+    const p = readManagerAuth();
+    return p && p.isAdmin ? { username: p.username, password: p.password } : null;
   },
   clearSession() {
+    clearManagerAuth();
     try {
       session?.removeItem(ADMIN_SECRET_KEY);
       session?.removeItem(PENDING_PASSWORDS_KEY);
@@ -454,6 +463,7 @@ export const schoolDriveDbService = {
       if (!data?.success) return { success: false, message: data?.message || 'Không khởi tạo được cơ sở dữ liệu nhà trường.' };
       this.rememberAdminAuth(adminKey, adminPassword);
       try { sessionStorage.setItem('lhhp_staff_viewer_auth', JSON.stringify({ username: adminKey, password: adminPassword })); } catch (_) { /* ignore */ }
+      saveManagerAuth(adminKey, adminPassword, true);
       payloadUsers.forEach(u => { if (u.username !== adminKey) this.setIssuedPassword(u.username, u.password); });
       this.applyAuthoritative(data.users, data.schools);
       return { success: true, count: payloadUsers.length, message: `Đã khởi tạo lại cơ sở dữ liệu nhà trường trên Google Drive: ${schools.length} trường, ${payloadUsers.length} tài khoản.` };

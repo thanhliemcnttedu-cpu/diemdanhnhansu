@@ -90,7 +90,11 @@ export const StaffAttendanceView: React.FC = () => {
   const schoolName = currentUser?.schoolName || '';
 
   const [tab, setTab] = useState<Tab>('summary');
-  const [auth, setAuth] = useState(() => staffAttendanceService.getViewerAuth());
+  // Phiên đã nhớ phải đúng tài khoản đang đăng nhập phần mềm
+  const [auth, setAuth] = useState(() => {
+    const a = staffAttendanceService.getViewerAuth();
+    return a && (!currentUser?.username || a.username === currentUser.username.trim().toLowerCase()) ? a : null;
+  });
   const [authPassword, setAuthPassword] = useState('');
   const [authError, setAuthError] = useState('');
 
@@ -186,7 +190,7 @@ export const StaffAttendanceView: React.FC = () => {
         setAuthError(d && d.kind !== 'ok' && d.kind !== 'unknown' ? d.message : (r?.message || 'Sai mật khẩu.'));
         return;
       }
-      staffAttendanceService.rememberViewerAuth(a.username, a.password);
+      staffAttendanceService.rememberViewerAuth(a.username, a.password, canManage);
       setAuth(a); setAuthPassword('');
     } catch (err: any) {
       const d = err?.code === 'NETWORK' ? await staffAttendanceService.diagnoseFailure() : null;
@@ -261,7 +265,7 @@ export const StaffAttendanceView: React.FC = () => {
             <div className="w-11 h-11 rounded-2xl bg-indigo-600 text-white flex items-center justify-center"><Lock className="w-5 h-5" /></div>
             <div>
               <h2 className="text-lg font-black text-slate-900">Xác nhận để xem chấm công nhân sự</h2>
-              <p className="text-sm text-slate-600">Dữ liệu nhân sự được bảo vệ. Nhập lại mật khẩu tài khoản <strong>{currentUser?.username}</strong> (chỉ nhớ đến khi đóng trình duyệt).</p>
+              <p className="text-sm text-slate-600">Dữ liệu nhân sự được bảo vệ. Nhập mật khẩu tài khoản <strong>{currentUser?.username}</strong> một lần — phần mềm nhớ trên máy này cho tới khi Đăng xuất.</p>
             </div>
           </div>
           <input type="password" value={authPassword} onChange={(e) => setAuthPassword(e.target.value)} autoComplete="current-password" placeholder="Mật khẩu đăng nhập"
