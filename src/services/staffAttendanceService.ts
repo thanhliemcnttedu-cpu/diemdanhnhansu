@@ -9,10 +9,13 @@
 import { googleDriveService } from './googleDriveService';
 import { saveManagerAuth, readManagerAuth, clearManagerAuth } from '../utils/persistedAuth';
 
-export type StaffStatus = 'present' | 'sick_leave' | 'personal_unpaid';
+export type StaffStatus = 'present' | 'business_trip' | 'sick_leave' | 'personal_unpaid';
+/** Thứ tự hiển thị trạng thái (Đi công tác = có làm việc, tính vào tỷ lệ đi làm) */
+export const STAFF_STATUS_ORDER: Array<StaffStatus | 'missing'> = ['present', 'business_trip', 'sick_leave', 'personal_unpaid', 'missing'];
 
 export const STAFF_STATUS_META: Record<StaffStatus | 'missing', { label: string; short: string; color: string; soft: string; text: string }> = {
   present: { label: 'Có mặt đi làm', short: 'Có mặt', color: '#047857', soft: '#ecfdf5', text: '#065f46' },
+  business_trip: { label: 'Đi công tác', short: 'Công tác', color: '#1d4ed8', soft: '#eff6ff', text: '#1e40af' },
   sick_leave: { label: 'Nghỉ ốm có phép', short: 'Nghỉ ốm', color: '#b45309', soft: '#fffbeb', text: '#92400e' },
   personal_unpaid: { label: 'Nghỉ việc riêng không hưởng lương', short: 'Việc riêng', color: '#be123c', soft: '#fff1f2', text: '#9f1239' },
   missing: { label: 'Chưa điểm danh', short: 'Chưa ĐD', color: '#64748b', soft: '#f1f5f9', text: '#334155' },
@@ -359,8 +362,8 @@ export const dateRangeKeys = (from: string, to: string) => {
 };
 
 // ---------------------------------------------------------------- aggregation
-export interface DayStat { date: string; total: number; present: number; sick_leave: number; personal_unpaid: number; missing: number; marked: number; workRate: number; markRate: number }
-export interface PersonStat { staff: StaffMember; present: number; sick_leave: number; personal_unpaid: number; missing: number; workDays: number; workRate: number }
+export interface DayStat { date: string; total: number; present: number; business_trip: number; sick_leave: number; personal_unpaid: number; missing: number; marked: number; workRate: number; markRate: number }
+export interface PersonStat { staff: StaffMember; present: number; business_trip: number; sick_leave: number; personal_unpaid: number; missing: number; workDays: number; workRate: number }
 
 /** Ngày làm việc: Thứ Hai – Thứ Sáu, hoặc ngày Thứ Bảy/Chủ nhật có người điểm danh; không tính ngày tương lai */
 export function workingDays(from: string, to: string, today: string, days: Record<string, Record<string, StaffRecord>>) {
@@ -376,20 +379,20 @@ export function aggregate(staff: StaffMember[], days: Record<string, Record<stri
   const pct = (a: number, b: number) => (b > 0 ? Math.round((a / b) * 1000) / 10 : 0);
   const daily: DayStat[] = wd.map(date => {
     const recs = days[date] || {};
-    const c = { present: 0, sick_leave: 0, personal_unpaid: 0 } as Record<StaffStatus, number>;
+    const c = { present: 0, business_trip: 0, sick_leave: 0, personal_unpaid: 0 } as Record<StaffStatus, number>;
     active.forEach(s => { const r = recs[s.code]; if (r && c[r.status] !== undefined) c[r.status]++; });
-    const marked = c.present + c.sick_leave + c.personal_unpaid;
-    return { date, total: active.length, ...c, missing: Math.max(0, active.length - marked), marked, workRate: pct(c.present, active.length), markRate: pct(marked, active.length) };
+    const marked = c.present + c.business_trip + c.sick_leave + c.personal_unpaid;
+    return { date, total: active.length, ...c, missing: Math.max(0, active.length - marked), marked, workRate: pct(c.present + c.business_trip, active.length), markRate: pct(marked, active.length) };
   });
   const people: PersonStat[] = active.map(s => {
-    const p = { present: 0, sick_leave: 0, personal_unpaid: 0, missing: 0 };
-    wd.forEach(date => { const r = (days[date] || {})[s.code]; if (r) p[r.status]++; else p.missing++; });
-    return { staff: s, ...p, workDays: wd.length, workRate: pct(p.present, wd.length) };
+    const p = { present: 0, business_trip: 0, sick_leave: 0, personal_unpaid: 0, missing: 0 };
+    wd.forEach(date => { const r = (days[date] || {})[s.code]; if (r && p[r.status] !== undefined) p[r.status]++; else if (!r) p.missing++; });
+    return { staff: s, ...p, workDays: wd.length, workRate: pct(p.present + p.business_trip, wd.length) };
   });
-  const sum = daily.reduce((a, d) => ({ present: a.present + d.present, sick_leave: a.sick_leave + d.sick_leave, personal_unpaid: a.personal_unpaid + d.personal_unpaid, missing: a.missing + d.missing }),
-    { present: 0, sick_leave: 0, personal_unpaid: 0, missing: 0 });
+  const sum = daily.reduce((a, d) => ({ present: a.present + d.present, business_trip: a.business_trip + d.business_trip, sick_leave: a.sick_leave + d.sick_leave, personal_unpaid: a.personal_unpaid + d.personal_unpaid, missing: a.missing + d.missing }),
+    { present: 0, business_trip: 0, sick_leave: 0, personal_unpaid: 0, missing: 0 });
   const slots = daily.length * active.length;
-  return { daily, people, workingDays: wd, totals: { ...sum, slots, workRate: pct(sum.present, slots), markRate: pct(slots - sum.missing, slots) }, activeCount: active.length };
+  return { daily, people, workingDays: wd, totals: { ...sum, slots, workRate: pct(sum.present + sum.business_trip, slots), markRate: pct(slots - sum.missing, slots) }, activeCount: active.length };
 }
 
 // ---------------------------------------------------------------- Excel import (CSDL ngành Bộ GD&ĐT hoặc mẫu đơn giản)

@@ -13,6 +13,7 @@
  * - CHỈ tổng hợp tệp của GVCN (gvcn_*.json, teacherRole = homeroom). Tệp GV bộ môn (gvbm_*.json),
  *   BGH, Quản trị không được tính để không dôi số lớp / số học sinh.
  *
+ * - V4.6: Thêm trạng thái điểm danh "Đi công tác" (business_trip) – ghi chú ghi nơi / nội dung công tác.
  * - V4.5: BGH / Quản trị KHÓA hoặc MỞ KHÓA điểm danh trong ngày (1 người, nhiều người hoặc tất cả):
  *   action=staffLock; khi bị khóa, nhân sự điểm danh sẽ nhận thông báo "đã khóa chốt số liệu".
  * - V4.4: Lưu số CCCD đầy đủ ngay trong hồ sơ nhân sự (nhansu_truong.json, tệp được khóa, không tải trực tiếp được)
@@ -41,7 +42,7 @@
 var FOLDER_ID = "__FOLDER_ID__";
 var TARGET_FILENAME = "du_lieu_lop_hoc_hanh_phuc.json";
 var REPORT_PREFIX = "bc_";
-var SCRIPT_VERSION = "4.5";
+var SCRIPT_VERSION = "4.6";
 
 // ---------------------------------------------------------------------------------------
 // HTTP POST: lưu dữ liệu lớp
@@ -801,7 +802,7 @@ function aggregateSingleDay(folder, reportDate) {
 // =======================================================================================
 var STAFF_FILE = "nhansu_truong.json";
 var STAFF_ATT_PREFIX = "chamcong_nhansu_";
-var STAFF_STATUSES = { present: true, sick_leave: true, personal_unpaid: true };
+var STAFF_STATUSES = { present: true, business_trip: true, sick_leave: true, personal_unpaid: true };
 var STAFF_TZ = "GMT+7";
 
 function isProtectedFile(name) {

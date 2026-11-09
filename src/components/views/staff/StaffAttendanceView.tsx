@@ -16,7 +16,7 @@ type Tab = 'summary' | 'roster' | 'link';
 type Period = 'today' | 'yesterday' | 'week' | 'month' | 'custom';
 type DaysMap = Record<string, Record<string, StaffRecord>>;
 
-const STATUS_ORDER: Array<StaffStatus | 'missing'> = ['present', 'sick_leave', 'personal_unpaid', 'missing'];
+const STATUS_ORDER: Array<StaffStatus | 'missing'> = ['present', 'business_trip', 'sick_leave', 'personal_unpaid', 'missing'];
 
 // ---------------------------------------------------------------- small charts (SVG, không cần thư viện)
 const Donut: React.FC<{ parts: Array<{ key: string; value: number; color: string; label: string }>; centerTop: string; centerSub: string }> = ({ parts, centerTop, centerSub }) => {
@@ -206,29 +206,29 @@ export const StaffAttendanceView: React.FC = () => {
 
     // 1. Tổng hợp theo ngày
     const s1: any[][] = [[title], [sub], [],
-      ['Ngày', 'Thứ', 'Tổng nhân sự', 'Có mặt', 'Nghỉ ốm có phép', 'Nghỉ việc riêng KHL', 'Chưa điểm danh', 'Tỷ lệ đi làm (%)', 'Tỷ lệ đã điểm danh (%)']];
-    stats.daily.forEach(d => s1.push([d.date.split('-').reverse().join('/'), weekdayLabel(d.date), d.total, d.present, d.sick_leave, d.personal_unpaid, d.missing, d.workRate, d.markRate]));
-    s1.push(['TỔNG CỘNG', '', stats.totals.slots, stats.totals.present, stats.totals.sick_leave, stats.totals.personal_unpaid, stats.totals.missing, stats.totals.workRate, stats.totals.markRate]);
+      ['Ngày', 'Thứ', 'Tổng nhân sự', 'Có mặt', 'Đi công tác', 'Nghỉ ốm có phép', 'Nghỉ việc riêng KHL', 'Chưa điểm danh', 'Tỷ lệ đi làm (%)', 'Tỷ lệ đã điểm danh (%)']];
+    stats.daily.forEach(d => s1.push([d.date.split('-').reverse().join('/'), weekdayLabel(d.date), d.total, d.present, d.business_trip, d.sick_leave, d.personal_unpaid, d.missing, d.workRate, d.markRate]));
+    s1.push(['TỔNG CỘNG', '', stats.totals.slots, stats.totals.present, stats.totals.business_trip, stats.totals.sick_leave, stats.totals.personal_unpaid, stats.totals.missing, stats.totals.workRate, stats.totals.markRate]);
     const ws1 = XLSX.utils.aoa_to_sheet(s1);
-    ws1['!cols'] = [{ wch: 12 }, { wch: 10 }, { wch: 13 }, { wch: 10 }, { wch: 16 }, { wch: 19 }, { wch: 15 }, { wch: 16 }, { wch: 20 }];
+    ws1['!cols'] = [{ wch: 12 }, { wch: 10 }, { wch: 13 }, { wch: 10 }, { wch: 12 }, { wch: 16 }, { wch: 19 }, { wch: 15 }, { wch: 16 }, { wch: 20 }];
     XLSX.utils.book_append_sheet(wb, ws1, 'Tong hop theo ngay');
 
     // 2. Tổng hợp theo nhân sự
     const s2: any[][] = [[title], [sub], [],
-      ['STT', 'Mã GV', 'Họ và tên', 'Chức vụ', 'Tổ / bộ phận', 'Số ngày làm việc', 'Có mặt', 'Nghỉ ốm có phép', 'Nghỉ việc riêng KHL', 'Chưa điểm danh', 'Tỷ lệ đi làm (%)', 'Số ngày có điểm danh lại']];
-    stats.people.forEach((p, i) => s2.push([i + 1, p.staff.code, p.staff.name, p.staff.position || '', p.staff.dept || '', p.workDays, p.present, p.sick_leave, p.personal_unpaid, p.missing, p.workRate,
+      ['STT', 'Mã GV', 'Họ và tên', 'Chức vụ', 'Tổ / bộ phận', 'Số ngày làm việc', 'Có mặt', 'Đi công tác', 'Nghỉ ốm có phép', 'Nghỉ việc riêng KHL', 'Chưa điểm danh', 'Tỷ lệ đi làm (%)', 'Số ngày có điểm danh lại']];
+    stats.people.forEach((p, i) => s2.push([i + 1, p.staff.code, p.staff.name, p.staff.position || '', p.staff.dept || '', p.workDays, p.present, p.business_trip, p.sick_leave, p.personal_unpaid, p.missing, p.workRate,
       stats.workingDays.filter(d => attemptOf((days[d] || {})[p.staff.code]) > 1).length]));
     const ws2 = XLSX.utils.aoa_to_sheet(s2);
-    ws2['!cols'] = [{ wch: 5 }, { wch: 14 }, { wch: 26 }, { wch: 18 }, { wch: 16 }, { wch: 14 }, { wch: 9 }, { wch: 15 }, { wch: 18 }, { wch: 14 }, { wch: 15 }, { wch: 20 }];
+    ws2['!cols'] = [{ wch: 5 }, { wch: 14 }, { wch: 26 }, { wch: 18 }, { wch: 16 }, { wch: 14 }, { wch: 9 }, { wch: 12 }, { wch: 15 }, { wch: 18 }, { wch: 14 }, { wch: 15 }, { wch: 20 }];
     XLSX.utils.book_append_sheet(wb, ws2, 'Tong hop theo nhan su');
 
     // 3. Bảng chấm công chi tiết (người × ngày)
-    const code = (r?: StaffRecord) => (!r ? '–' : r.status === 'present' ? 'X' : r.status === 'sick_leave' ? 'Ô' : 'R');
-    const s3: any[][] = [[title], [sub, '', '', 'Ký hiệu: X = có mặt, Ô = nghỉ ốm có phép, R = nghỉ việc riêng không hưởng lương, – = chưa điểm danh'], [],
-      ['STT', 'Mã GV', 'Họ và tên', ...stats.workingDays.map(d => `${shortDateLabel(d)} ${weekdayShort(d)}`), 'X', 'Ô', 'R', '–']];
-    stats.people.forEach((p, i) => s3.push([i + 1, p.staff.code, p.staff.name, ...stats.workingDays.map(d => code((days[d] || {})[p.staff.code])), p.present, p.sick_leave, p.personal_unpaid, p.missing]));
+    const code = (r?: StaffRecord) => (!r ? '–' : r.status === 'present' ? 'X' : r.status === 'business_trip' ? 'CT' : r.status === 'sick_leave' ? 'Ô' : 'R');
+    const s3: any[][] = [[title], [sub, '', '', 'Ký hiệu: X = có mặt, CT = đi công tác, Ô = nghỉ ốm có phép, R = nghỉ việc riêng không hưởng lương, – = chưa điểm danh'], [],
+      ['STT', 'Mã GV', 'Họ và tên', ...stats.workingDays.map(d => `${shortDateLabel(d)} ${weekdayShort(d)}`), 'X', 'CT', 'Ô', 'R', '–']];
+    stats.people.forEach((p, i) => s3.push([i + 1, p.staff.code, p.staff.name, ...stats.workingDays.map(d => code((days[d] || {})[p.staff.code])), p.present, p.business_trip, p.sick_leave, p.personal_unpaid, p.missing]));
     const ws3 = XLSX.utils.aoa_to_sheet(s3);
-    ws3['!cols'] = [{ wch: 5 }, { wch: 14 }, { wch: 26 }, ...stats.workingDays.map(() => ({ wch: 8 })), { wch: 5 }, { wch: 5 }, { wch: 5 }, { wch: 5 }];
+    ws3['!cols'] = [{ wch: 5 }, { wch: 14 }, { wch: 26 }, ...stats.workingDays.map(() => ({ wch: 8 })), { wch: 5 }, { wch: 5 }, { wch: 5 }, { wch: 5 }, { wch: 5 }];
     XLSX.utils.book_append_sheet(wb, ws3, 'Cham cong chi tiet');
 
     // 4. Nhật ký điểm danh: MỖI LẦN điểm danh một dòng (lần 1, lần 2…) – giờ đầy đủ & ghi chú
@@ -352,13 +352,13 @@ export const StaffAttendanceView: React.FC = () => {
           {staff.length > 0 && todayStats && (
             <>
               {/* KPI hôm nay + so sánh hôm qua */}
-              <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
+              <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3">
                 <div className="rounded-2xl bg-white border border-slate-200 p-4">
                   <p className="text-xs font-black uppercase text-slate-600">Tổng nhân sự</p>
                   <p className="text-3xl font-black text-slate-900">{todayStats.total}</p>
                   <p className="text-xs text-slate-600">Đã điểm danh hôm nay: {todayStats.marked} ({todayStats.markRate}%)</p>
                 </div>
-                {(['present', 'sick_leave', 'personal_unpaid', 'missing'] as const).map(k => (
+                {STATUS_ORDER.map(k => (
                   <div key={k} className="rounded-2xl border p-4" style={{ background: STAFF_STATUS_META[k].soft, borderColor: STAFF_STATUS_META[k].color + '40' }}>
                     <p className="text-xs font-black uppercase" style={{ color: STAFF_STATUS_META[k].text }}>{STAFF_STATUS_META[k].label}</p>
                     <p className="text-3xl font-black" style={{ color: STAFF_STATUS_META[k].text }}>{todayStats[k]}
@@ -514,16 +514,19 @@ Người bị khóa sẽ không điểm danh / sửa điểm danh được và n
       {lockMsg && <p className={`mx-4 mt-2 text-sm font-bold ${lockMsg.type === 'ok' ? 'text-emerald-800' : 'text-rose-700'}`}>{lockMsg.text}</p>}
 
       <div className="overflow-x-auto p-4">
-        <table className="w-full text-sm min-w-[1060px]">
+        <table className="w-full text-sm table-fixed min-w-[700px]">
+          <colgroup>
+            <col className="w-8" /><col className="w-[28%]" /><col className="w-[140px]" /><col className="w-[170px]" /><col className="w-[100px]" /><col />
+          </colgroup>
           <thead><tr className="text-left text-xs uppercase text-slate-600 border-b border-slate-200 whitespace-nowrap">
-            <th className="py-2 pr-2 w-8">
+            <th className="py-2 pr-2">
               <input type="checkbox" className="w-4 h-4 rounded border-slate-300 cursor-pointer align-middle"
                 checked={rows.length > 0 && rows.every(x => picked.includes(x.s.code))}
                 ref={el => { if (el) el.indeterminate = rows.some(x => picked.includes(x.s.code)) && !rows.every(x => picked.includes(x.s.code)); }}
                 onChange={() => setPicked(prev => rows.every(x => prev.includes(x.s.code)) ? prev.filter(c => !rows.some(x => x.s.code === c)) : Array.from(new Set([...prev, ...rows.map(x => x.s.code)])))}
                 aria-label="Chọn tất cả nhân sự đang hiển thị" title="Chọn tất cả (theo bộ lọc đang hiển thị)" />
             </th>
-            <th className="py-2 pr-2">Mã GV</th><th className="py-2 pr-2">Họ và tên</th>
+            <th className="py-2 pr-2">Họ và tên</th>
             <th className="py-2 pr-2">
               <span className="inline-flex items-center gap-1">
                 Số CCCD
@@ -536,20 +539,25 @@ Người bị khóa sẽ không điểm danh / sửa điểm danh được và n
                 )}
               </span>
             </th>
-            <th className="py-2 pr-2">Chức vụ / Tổ</th><th className="py-2 pr-2">Trạng thái</th><th className="py-2 pr-2">Khóa</th><th className="py-2 pr-2">Giờ điểm danh</th><th className="py-2 pr-2">Lần</th><th className="py-2">Ghi chú</th>
+            <th className="py-2 pr-2">Trạng thái</th><th className="py-2 pr-2">Giờ / lần</th><th className="py-2">Ghi chú</th>
           </tr></thead>
           <tbody>
             {rows.map(({ s, r }) => {
               const meta = STAFF_STATUS_META[r ? r.status : 'missing'];
               const n = attemptOf(r);
+              const locked = isLockedFor(dayLock, s.code);
+              const sub = [s.code, s.position, s.dept].filter(Boolean).join(' • ');
+              const noteText = [r?.note || '', systemNoteOf(r)].filter(Boolean).join(' • ');
               return (
-                <tr key={s.code} className={`border-b border-slate-100 ${picked.includes(s.code) ? 'bg-amber-50' : ''}`}>
+                <tr key={s.code} className={`border-b border-slate-100 align-top ${picked.includes(s.code) ? 'bg-amber-50' : ''}`}>
                   <td className="py-2 pr-2">
-                    <input type="checkbox" className="w-4 h-4 rounded border-slate-300 cursor-pointer align-middle" checked={picked.includes(s.code)}
+                    <input type="checkbox" className="w-4 h-4 rounded border-slate-300 cursor-pointer align-middle mt-1" checked={picked.includes(s.code)}
                       onChange={() => setPicked(prev => prev.includes(s.code) ? prev.filter(c => c !== s.code) : [...prev, s.code])} aria-label={`Chọn ${s.name}`} />
                   </td>
-                  <td className="py-2 pr-2 font-mono text-xs text-slate-700 whitespace-nowrap">{s.code}</td>
-                  <td className="py-2 pr-2 font-bold text-slate-900 whitespace-nowrap">{s.name}</td>
+                  <td className="py-2 pr-2 min-w-0">
+                    <p className="font-bold text-slate-900 truncate" title={s.name}>{s.name}</p>
+                    <p className="text-xs text-slate-600 truncate" title={sub}>{sub}</p>
+                  </td>
                   <td className="py-2 pr-2 font-mono text-slate-700 whitespace-nowrap">
                     {(() => {
                       const open = Boolean(s.currentCccd) && (showCccd || revealed.includes(s.code));
@@ -567,24 +575,31 @@ Người bị khóa sẽ không điểm danh / sửa điểm danh được và n
                       );
                     })()}
                   </td>
-                  <td className="py-2 pr-2 text-slate-700 whitespace-nowrap max-w-[240px] truncate" title={[s.position, s.dept].filter(Boolean).join(' • ')}>{[s.position, s.dept].filter(Boolean).join(' • ')}</td>
-                  <td className="py-2 pr-2 whitespace-nowrap"><span className="px-2 py-0.5 rounded-full text-xs font-black whitespace-nowrap" style={{ background: meta.soft, color: meta.text }}>{meta.label}</span></td>
-                  <td className="py-2 pr-2 whitespace-nowrap">{isLockedFor(dayLock, s.code)
-                    ? <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-black bg-rose-50 text-rose-800"><Lock className="w-3 h-3" /> Đã khóa</span>
-                    : <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-800"><Unlock className="w-3 h-3" /> Mở</span>}</td>
-                  <td className="py-2 pr-2 text-slate-700 font-mono text-xs whitespace-nowrap" title={r ? attemptsOf(r).map((a, i) => `Lần ${i + 1}: ${timeHMS(a.at)} – ${STAFF_STATUS_META[a.status]?.short}`).join('\n') : ''}>{r ? timeHMS(r.at) : ''}</td>
-                  <td className="py-2 pr-2 whitespace-nowrap">{n > 1 ? <span className="px-2 py-0.5 rounded-full text-xs font-black bg-amber-50 text-amber-900 border border-amber-200 whitespace-nowrap">Lần {n}</span> : n === 1 ? <span className="text-xs text-slate-600">1</span> : ''}</td>
-                  <td className="py-2 text-slate-700 max-w-[300px]" title={[r?.note || '', systemNoteOf(r)].filter(Boolean).join(' • ')}>
-                    <span className="block truncate whitespace-nowrap">
+                  <td className="py-2 pr-2">
+                    <span className="inline-flex flex-wrap items-center gap-1">
+                      <span className="px-2 py-0.5 rounded-full text-xs font-black whitespace-nowrap" style={{ background: meta.soft, color: meta.text }} title={meta.label}>{r ? meta.short : meta.label}</span>
+                      {locked
+                        ? <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-xs font-black bg-rose-50 text-rose-800 whitespace-nowrap" title="Đã khóa điểm danh hôm nay"><Lock className="w-3 h-3" /> Khóa</span>
+                        : null}
+                    </span>
+                  </td>
+                  <td className="py-2 pr-2 whitespace-nowrap" title={r ? attemptsOf(r).map((a, i) => `Lần ${i + 1}: ${timeHMS(a.at)} – ${STAFF_STATUS_META[a.status]?.short}`).join('\n') : ''}>
+                    {r ? <>
+                      <span className="font-mono text-xs text-slate-700">{timeHMS(r.at)}</span>
+                      {n > 1 && <span className="ml-1 px-1.5 py-0.5 rounded-full text-xs font-black bg-amber-50 text-amber-900 border border-amber-200">L{n}</span>}
+                    </> : <span className="text-slate-400">—</span>}
+                  </td>
+                  <td className="py-2 text-slate-700 min-w-0" title={noteText}>
+                    <p className="truncate">
                       {r?.note || ''}
                       {r?.note && systemNoteOf(r) ? <span className="text-slate-400"> • </span> : null}
                       {systemNoteOf(r) && <span className="text-xs font-bold text-amber-800">{systemNoteOf(r)}</span>}
-                    </span>
+                    </p>
                   </td>
                 </tr>
               );
             })}
-            {rows.length === 0 && <tr><td colSpan={10} className="py-6 text-center text-slate-600">Không có nhân sự phù hợp.</td></tr>}
+            {rows.length === 0 && <tr><td colSpan={6} className="py-6 text-center text-slate-600">Không có nhân sự phù hợp.</td></tr>}
           </tbody>
         </table>
       </div>

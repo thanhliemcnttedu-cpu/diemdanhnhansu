@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { CheckCircle2, Eye, EyeOff, LogOut, ShieldCheck, Stethoscope, Briefcase, CalendarDays, Loader2, AlertTriangle, PencilLine, Lock } from 'lucide-react';
+import { CheckCircle2, Eye, EyeOff, LogOut, ShieldCheck, Stethoscope, Briefcase, CalendarDays, Loader2, AlertTriangle, PencilLine, Lock, Plane } from 'lucide-react';
 import { staffAttendanceService, STAFF_STATUS_META, longDateLabel, StaffStatus, StaffMember, StaffRecord, attemptOf, attemptsOf, timeSpoken, timeHMS } from '../../../services/staffAttendanceService';
 
 /**
@@ -10,10 +10,18 @@ import { staffAttendanceService, STAFF_STATUS_META, longDateLabel, StaffStatus, 
  * mọi lần đều được máy chủ ghi giờ (nhà trường / kế toán thấy "Thực hiện điểm danh lại lần N").
  */
 const REMEMBER_KEY = 'lhhp_staff_checkin_remember_cccd';
+/** Ghi chú đi công tác: "Nơi công tác: … • Nội dung: … • ghi chú thêm" (ghép / tách để sửa lại) */
+const composeTripNote = (place: string, content: string, extra: string) =>
+  [`Nơi công tác: ${place.trim()}`, content.trim() ? `Nội dung: ${content.trim()}` : '', extra.trim()].filter(Boolean).join(' • ').slice(0, 300);
+const parseTripNote = (note: string) => {
+  const m = /^Nơi công tác: (.*?)(?: • Nội dung: (.*?))?(?: • (.*))?$/.exec(note || '');
+  return m ? { place: m[1] || '', content: m[2] || '', extra: m[3] || '' } : { place: '', content: '', extra: note || '' };
+};
 const LOCK_MESSAGE = 'Hiện tại chức năng điểm danh trong ngày đã được quản trị nhà trường khóa chốt số liệu.';
 
 const OPTIONS: Array<{ id: StaffStatus; icon: React.ReactNode; hint: string }> = [
   { id: 'present', icon: <Briefcase className="w-6 h-6" />, hint: 'Đi làm bình thường' },
+  { id: 'business_trip', icon: <Plane className="w-6 h-6" />, hint: 'Ghi rõ nơi công tác và nội dung' },
   { id: 'sick_leave', icon: <Stethoscope className="w-6 h-6" />, hint: 'Có giấy tờ / đã xin phép' },
   { id: 'personal_unpaid', icon: <CalendarDays className="w-6 h-6" />, hint: 'Đã báo nhà trường' },
 ];
@@ -32,6 +40,9 @@ export const StaffCheckInPage: React.FC = () => {
   const [existing, setExisting] = useState<StaffRecord | null>(null);
   const [status, setStatus] = useState<StaffStatus | ''>('');
   const [note, setNote] = useState('');
+  // Đi công tác: nơi công tác (bắt buộc) + nội dung công tác
+  const [tripPlace, setTripPlace] = useState('');
+  const [tripContent, setTripContent] = useState('');
   const [done, setDone] = useState<StaffRecord | null>(null);
   // Đã điểm danh hôm nay → phải bấm "Sửa điểm danh" mới mở lại phiếu
   const [editing, setEditing] = useState(false);
@@ -65,7 +76,9 @@ export const StaffCheckInPage: React.FC = () => {
       if (!r?.success) { setError(r?.message || 'Không kiểm tra được thông tin.'); return; }
       try { if (remember) localStorage.setItem(REMEMBER_KEY, digits); else localStorage.removeItem(REMEMBER_KEY); } catch (_) { /* ignore */ }
       setStaff(r.staff); setToday(r.today); setExisting(r.record || null);
-      setStatus(r.record?.status || ''); setNote(r.record?.note || '');
+      setStatus(r.record?.status || '');
+      if (r.record?.status === 'business_trip') { const t = parseTripNote(r.record.note || ''); setTripPlace(t.place); setTripContent(t.content); setNote(t.extra); }
+      else { setNote(r.record?.note || ''); setTripPlace(''); setTripContent(''); }
       setLockedMsg(r.locked ? (r.lockMessage || LOCK_MESSAGE) : '');
       setEditing(!r.record && !r.locked);
     } catch (err: any) {
@@ -77,14 +90,18 @@ export const StaffCheckInPage: React.FC = () => {
 
   const handleConfirm = async () => {
     if (!status) { setError('Hãy chọn một trạng thái điểm danh.'); return; }
+    if (status === 'business_trip' && !tripPlace.trim()) { setError('Đi công tác: hãy ghi rõ nơi công tác.'); return; }
+    const finalNote = status === 'business_trip' ? composeTripNote(tripPlace, tripContent, note) : note.trim();
     setError('');
     setBusy(true);
     try {
-      const r = await staffAttendanceService.checkIn(cccd.replace(/\D/g, ''), pin, status, note.trim(), today);
+      const r = await staffAttendanceService.checkIn(cccd.replace(/\D/g, ''), pin, status, finalNote, today);
       if (!r?.success) {
         if (r?.code === 'NOT_TODAY' && r.today) setToday(r.today);
         if (r?.code === 'LOCKED') { setLockedMsg(r.message || LOCK_MESSAGE); setEditing(false); setDone(null); return; }
-        setError(r?.message || 'Chưa ghi nhận được điểm danh.');
+        setError(status === 'business_trip' && /Trạng thái điểm danh không hợp lệ/i.test(String(r?.message || ''))
+          ? 'Hệ thống của trường chưa cập nhật chức năng "Đi công tác" (Apps Script 4.6). Vui lòng báo Quản trị nhà trường.'
+          : (r?.message || 'Chưa ghi nhận được điểm danh.'));
         return;
       }
       setDone(r.record); setExisting(r.record); setEditing(false);
@@ -243,13 +260,28 @@ export const StaffCheckInPage: React.FC = () => {
                 })}
               </div>
 
+              {status === 'business_trip' && (
+                <div className="rounded-2xl border-2 border-blue-200 bg-blue-50/60 p-3.5 space-y-3">
+                  <label className="block space-y-1.5">
+                    <span className="text-sm font-black text-blue-950">Nơi công tác <span className="text-rose-700">*</span></span>
+                    <input value={tripPlace} onChange={(e) => setTripPlace(e.target.value.slice(0, 120))} placeholder="Ví dụ: Phòng GD&ĐT huyện, Trường TH số 2…"
+                      className="w-full px-4 py-3 rounded-2xl border-2 border-blue-200 focus:border-blue-600 outline-none text-base text-slate-900 bg-white" />
+                  </label>
+                  <label className="block space-y-1.5">
+                    <span className="text-sm font-black text-blue-950">Nội dung công tác</span>
+                    <input value={tripContent} onChange={(e) => setTripContent(e.target.value.slice(0, 150))} placeholder="Ví dụ: Tập huấn chương trình GDPT 2018…"
+                      className="w-full px-4 py-3 rounded-2xl border-2 border-blue-200 focus:border-blue-600 outline-none text-base text-slate-900 bg-white" />
+                  </label>
+                </div>
+              )}
+
               <label className="block space-y-1.5">
-                <span className="text-sm font-black text-slate-800">Ghi chú (nếu có)</span>
+                <span className="text-sm font-black text-slate-800">{status === 'business_trip' ? 'Ghi chú thêm (nếu có)' : 'Ghi chú (nếu có)'}</span>
                 <textarea
                   value={note}
                   onChange={(e) => setNote(e.target.value.slice(0, 300))}
                   rows={3}
-                  placeholder="Ví dụ: đi công tác tại Phòng GD, có giấy khám bệnh…"
+                  placeholder="Ví dụ: có giấy khám bệnh, đã báo tổ trưởng…"
                   className="w-full px-4 py-3 rounded-2xl border-2 border-slate-300 focus:border-emerald-600 outline-none text-base text-slate-900"
                 />
               </label>
