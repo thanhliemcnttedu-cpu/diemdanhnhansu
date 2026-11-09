@@ -7,6 +7,7 @@ import {
   Code2, Eye, EyeOff
 } from 'lucide-react';
 import { googleDriveService } from '../../services/googleDriveService';
+import { appsScriptSetupService } from '../../services/appsScriptSetupService';
 import { schoolDriveDbService } from '../../services/schoolDriveDbService';
 import { GoogleDriveConfig, DriveFolderHistoryItem, SchoolWideAggregationReport } from '../../types/driveSync';
 import { useClassroom } from '../../context/ClassroomContext';
@@ -402,6 +403,16 @@ export const GoogleDriveSyncModal: React.FC<GoogleDriveSyncModalProps> = ({ isOp
                 <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
                 3 BƯỚC KẾT NỐI TỰ ĐỘNG - KHÔNG CẦN CÀI ĐẶT PHỨC TẠP
               </span>
+              {(isAdmin || isSchoolAdmin) && (
+                <button
+                  type="button"
+                  onClick={() => appsScriptSetupService.open()}
+                  className="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer whitespace-nowrap"
+                  title="Hướng dẫn từng bước cài / cập nhật Apps Script, tự kiểm tra link /exec"
+                >
+                  <Sparkles className="w-3.5 h-3.5" /> Trình cài đặt Apps Script
+                </button>
+              )}
               <a
                 href="https://drive.google.com"
                 target="_blank"

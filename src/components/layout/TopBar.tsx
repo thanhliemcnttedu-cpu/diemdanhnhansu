@@ -5,7 +5,7 @@ import {
   Sparkles, Award, ShieldAlert,
   ChevronDown, School, ShieldCheck, Database, LogIn, LogOut, Users,
   Menu, Monitor, Cloud, HardDrive, KeyRound, MoreHorizontal, RefreshCw
-, Search, MonitorPlay, MapPin, CalendarDays
+, Search, MonitorPlay, MapPin, CalendarDays, AlertTriangle
 } from 'lucide-react';
 import { googleDriveService } from '../../services/googleDriveService';
 import { invalidateDriveClassFilesCache, FORCE_DATA_REFRESH_EVENT } from '../../services/databaseService';
@@ -13,6 +13,7 @@ import { adminEditsService } from '../../services/adminEditsService';
 import { playNoiseAlertSound } from '../../utils/audio';
 import { NavigationMenuId } from './Sidebar';
 import { getOfficialDisplayName, getOfficialRoleTitle } from '../../utils/accountIdentity';
+import { appsScriptSetupService } from '../../services/appsScriptSetupService';
 
 interface TopBarProps {
   currentView: NavigationMenuId;
@@ -176,6 +177,20 @@ export const TopBar: React.FC<TopBarProps> = ({
   const isManagementAdmin = isSuperAdmin || isSchoolAdminAccount;
 
   // 🔄 Quản trị tối cao / Quản trị nhà trường / BGH: cập nhật ngay dữ liệu mới nhất của mọi GVCN
+  // 🧭 Apps Script của trường cũ hơn mã trong phần mềm → nhắc cập nhật (chỉ tài khoản quản lý)
+  const [gasUpdate, setGasUpdate] = useState<{ current: string; latest: string } | null>(null);
+  useEffect(() => {
+    if (!isManagerUser) { setGasUpdate(null); return; }
+    let alive = true;
+    const check = (force = false) => appsScriptSetupService.checkForUpdate(force)
+      .then(r => { if (alive) setGasUpdate(r && r.outdated ? { current: r.current, latest: r.latest } : null); })
+      .catch(() => { /* ignore */ });
+    check();
+    const onUpdated = () => check(true);
+    window.addEventListener('lhhp:apps-script-updated', onUpdated);
+    return () => { alive = false; window.removeEventListener('lhhp:apps-script-updated', onUpdated); };
+  }, [isManagerUser]);
+
   const [isRefreshingAll, setIsRefreshingAll] = useState(false);
   const [lastRefreshAllAt, setLastRefreshAllAt] = useState<string>('');
   const handleRefreshAllData = async () => {
@@ -383,6 +398,21 @@ export const TopBar: React.FC<TopBarProps> = ({
           <Cloud className={`w-4 h-4 ${driveSyncState.status === 'syncing' ? 'animate-pulse' : ''}`} />
           <span className="hidden 2xl:inline">{driveLabel}</span>
         </button>
+
+        {/* 🧭 Nhắc cập nhật Apps Script */}
+        {gasUpdate && (
+          <button
+            type="button"
+            onClick={() => appsScriptSetupService.open('update')}
+            className={`${chipBase} bg-amber-100 text-amber-950 border-amber-300 hover:bg-amber-200`}
+            title={`Apps Script của trường đang chạy V${gasUpdate.current}, phần mềm đã có V${gasUpdate.latest}. Bấm để mở hướng dẫn cập nhật.`}
+            aria-label={`Cần cập nhật Apps Script từ V${gasUpdate.current} lên V${gasUpdate.latest}`}
+          >
+            <AlertTriangle className="w-4 h-4 text-amber-700" />
+            <span className="max-sm:hidden">Cần cập nhật Apps Script</span>
+            <span className="sm:hidden">V{gasUpdate.latest}</span>
+          </button>
+        )}
 
         {/* 🔄 Cập nhật dữ liệu mới nhất của tất cả giáo viên (Quản trị tối cao / Quản trị trường / BGH) */}
         {isManagementAdmin && (

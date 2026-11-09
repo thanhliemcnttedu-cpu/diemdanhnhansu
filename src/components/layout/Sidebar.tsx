@@ -7,6 +7,7 @@ import {
   HardDrive, Cloud, KeyRound, Lock, ChevronDown, Settings2, MessageCircle
 } from 'lucide-react';
 import { useState } from 'react';
+import { appsScriptSetupService } from '../../services/appsScriptSetupService';
 import { useClassroom } from '../../context/ClassroomContext';
 import { OPEN_CHANGE_PASSWORD_EVENT } from '../modals/ChangePasswordModal';
 import { APP_AUTHOR_INFO } from '../../data/initialData';
@@ -339,6 +340,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             const systemActions: Array<{ key: string; label: string; icon: React.ComponentType<{ className?: string }>; badge?: string; onClick: () => void }> = [
               { key: 'accounts', label: canManageAccounts ? 'Tài khoản & CSDL' : 'Đăng nhập quản trị', icon: ShieldCheck, onClick: () => (canManageAccounts ? setIsAccountManagerOpen(true) : setIsAuthModalOpen(true)) },
               { key: 'drive', label: 'Google Drive', icon: Cloud, onClick: () => setIsGoogleDriveModalOpen(true) },
+              ...(canManageAccounts ? [{ key: 'gas', label: 'Cài đặt Apps Script', icon: Settings2, onClick: () => appsScriptSetupService.open() }] : []),
               { key: 'storage', label: 'Nơi lưu dữ liệu', icon: HardDrive, onClick: () => setIsDataStorageModalOpen(true) },
               { key: 'password', label: 'Đổi mật khẩu', icon: Lock, onClick: () => window.dispatchEvent(new Event(OPEN_CHANGE_PASSWORD_EVENT)) },
               { key: 'cdkey', label: isCdKeyActivated ? 'Bản quyền PRO' : 'Kích hoạt CDKEY', icon: KeyRound, onClick: () => setIsCdKeyModalOpen(true) },
