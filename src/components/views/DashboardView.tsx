@@ -234,9 +234,9 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         ];
 
         return (
-          <section className="rounded-3xl bg-white border border-slate-200 shadow-xs overflow-hidden" aria-label="Bảng điều khiển hôm nay">
+          <section className="rounded-3xl bg-white/75 backdrop-blur-xl border border-white shadow-[0_10px_40px_-18px_rgba(37,99,235,0.35)] overflow-hidden" aria-label="Bảng điều khiển hôm nay">
             {/* Lời chào */}
-            <div className="relative px-4 sm:px-6 pt-5 pb-4 bg-gradient-to-br from-sky-50 via-indigo-50 to-violet-50">
+            <div className="relative px-4 sm:px-6 pt-5 pb-4 bg-gradient-to-br from-sky-50/70 via-indigo-50/60 to-violet-50/70">
               <div className="absolute -right-10 -top-16 w-64 h-64 rounded-full bg-gradient-to-br from-sky-200/50 to-violet-200/40 blur-2xl pointer-events-none" aria-hidden="true" />
               <div className="relative flex flex-col xl:flex-row xl:items-center justify-between gap-4">
                 <div className="flex items-center gap-3.5 min-w-0">

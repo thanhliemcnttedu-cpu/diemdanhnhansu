@@ -210,7 +210,20 @@ function ClassroomApp() {
   };
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-slate-50 font-sans text-slate-800">
+    <div className="relative flex h-screen w-screen overflow-hidden app-tech-bg font-sans text-slate-800">
+      {/* 🌐 Nền công nghệ tông sáng (tĩnh, nhẹ máy): vầng sáng + lưới tọa độ + đường mạch */}
+      <div className="absolute inset-0 pointer-events-none z-0" aria-hidden="true">
+        <div className="app-glow app-glow-1" />
+        <div className="app-glow app-glow-2" />
+        <div className="app-glow app-glow-3" />
+        <div className="absolute inset-0 app-grid" />
+        <svg className="absolute right-0 bottom-0 w-[520px] h-[420px] text-sky-500/15" viewBox="0 0 520 420" fill="none">
+          <g stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+            <path d="M520 80 H380 L330 130 H210" /><path d="M520 190 H430 L380 240 H280 L240 280" /><path d="M500 320 H360 L310 370 H180" />
+          </g>
+          <g fill="currentColor"><circle cx="210" cy="130" r="6" /><circle cx="240" cy="280" r="6" /><circle cx="180" cy="370" r="6" /><circle cx="380" cy="80" r="4" /></g>
+        </svg>
+      </div>
       {/* Exact Sidebar matching PDF navigation with Mobile Drawer support */}
       {!isPresenting && <Sidebar
         currentView={currentView}
@@ -222,7 +235,7 @@ function ClassroomApp() {
       />}
 
       {/* Main Container */}
-      <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
+      <div className="relative z-10 flex-1 flex flex-col min-w-0 h-full overflow-hidden">
         {/* Top Header matching PDF with Mobile Hamburger Menu */}
         {!isPresenting && <TopBar
           currentView={currentView}
@@ -233,7 +246,7 @@ function ClassroomApp() {
         />}
 
         {/* Viewport Content with bottom padding on mobile for MobileBottomNav - Tông màu Xanh tươi sáng công nghệ */}
-        <main className={`flex-1 overflow-y-auto bg-gradient-to-br from-[#f0f7ff]/90 via-[#f8fbff] to-[#edf5fd]/90 ${isPresenting ? 'pb-6' : 'pb-32 sm:pb-24 lg:pb-6'}`}>
+        <main className={`flex-1 overflow-y-auto bg-transparent ${isPresenting ? 'pb-6' : 'pb-32 sm:pb-24 lg:pb-6'}`}>
           <Suspense fallback={<ViewLoading />}>{renderCurrentView()}</Suspense>
         </main>
       </div>

@@ -579,3 +579,26 @@ img {
   0% { transform: translate3d(0, 0, 0) scale(1); }
   100% { transform: translate3d(60px, 40px, 0) scale(1.12); }
 }
+
+/* ========================================================================= */
+/* 🌐 NỀN KHUNG ỨNG DỤNG – CÙNG PHONG CÁCH MÀN ĐĂNG NHẬP (TĨNH, NHẸ MÁY)      */
+/* ========================================================================= */
+.app-tech-bg {
+  background: linear-gradient(160deg, #f5f9ff 0%, #eef4ff 50%, #f4f0ff 100%);
+}
+.app-grid {
+  background-image:
+    linear-gradient(rgba(79, 70, 229, 0.085) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(79, 70, 229, 0.085) 1px, transparent 1px);
+  background-size: 44px 44px;
+  -webkit-mask-image: radial-gradient(ellipse 85% 80% at 60% 40%, #000 30%, transparent 100%);
+  mask-image: radial-gradient(ellipse 85% 80% at 60% 40%, #000 30%, transparent 100%);
+}
+.app-glow {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(80px);
+}
+.app-glow-1 { width: 560px; height: 560px; left: 10%; top: -220px; background: rgba(125, 211, 252, 0.6); }
+.app-glow-2 { width: 620px; height: 620px; right: -200px; bottom: -240px; background: rgba(196, 181, 253, 0.6); }
+.app-glow-3 { width: 420px; height: 420px; right: 25%; top: 30%; background: rgba(165, 243, 252, 0.35); }

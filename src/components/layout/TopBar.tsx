@@ -311,7 +311,7 @@ export const TopBar: React.FC<TopBarProps> = ({
         </div>
       )}
 
-      <header className="h-13 bg-white/95 backdrop-blur-md border-b border-slate-200/90 px-3 sm:px-4 md:px-5 flex items-center justify-between sticky top-0 z-30 shadow-2xs">
+      <header className="h-13 bg-white/70 backdrop-blur-xl border-b border-white/80 px-3 sm:px-4 md:px-5 flex items-center justify-between sticky top-0 z-30 shadow-2xs">
       {/* Zone 1: Current Page Title & Subtitle Breadcrumb matching PDF with Mobile Menu Button */}
       <div className="flex items-center gap-1.5 sm:gap-2.5 min-w-0 flex-1 pr-1 sm:pr-2.5">
         {/* Mobile/Tablet Menu Hamburger Button */}

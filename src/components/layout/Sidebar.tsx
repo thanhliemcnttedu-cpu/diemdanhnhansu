@@ -548,7 +548,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     <>
       {/* Desktop Persistent Sidebar */}
       <aside 
-        className={`hidden lg:flex h-full max-h-screen overflow-hidden bg-[#f8fafc]/90 border-r border-slate-200/90 flex-col transition-all duration-300 z-40 relative select-none shrink-0 ${
+        className={`hidden lg:flex h-full max-h-screen overflow-hidden bg-white/70 backdrop-blur-xl border-r border-white/80 shadow-[4px_0_24px_-12px_rgba(37,99,235,0.18)] flex-col transition-all duration-300 z-40 relative select-none shrink-0 ${
           collapsed ? 'w-20' : 'w-60'
         }`}
       >
