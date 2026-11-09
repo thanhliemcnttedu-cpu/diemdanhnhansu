@@ -1049,7 +1049,14 @@ function handleStaffAttendanceRange(folder, payload) {
     month = y + "-" + (mo < 10 ? "0" : "") + mo;
   }
   var db = readStaffDb(folder);
-  return { success: true, today: today, from: from, to: to, staff: db.staff.map(publicStaff), days: days };
+  var showCccd = isAdminUser(actor);
+  var props = PropertiesService.getScriptProperties();
+  var staff = db.staff.map(function (s) {
+    var p = publicStaff(s);
+    if (showCccd) p.currentCccd = props.getProperty("scccd:" + s.code) || "";
+    return p;
+  });
+  return { success: true, today: today, from: from, to: to, staff: staff, days: days };
 }
 
 function createJsonResponse(obj) {

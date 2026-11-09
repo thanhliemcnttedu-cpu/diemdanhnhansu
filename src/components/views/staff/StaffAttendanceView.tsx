@@ -359,7 +359,7 @@ export const StaffAttendanceView: React.FC = () => {
               <div className="rounded-3xl bg-white border border-slate-200 overflow-hidden">
                 <h3 className="px-4 pt-4 text-sm font-black uppercase text-slate-800">Tổng hợp theo ngày</h3>
                 <div className="overflow-x-auto p-4">
-                  <table className="w-full text-sm min-w-[680px]">
+                  <table className="w-full text-sm min-w-[680px] whitespace-nowrap">
                     <thead><tr className="text-left text-xs uppercase text-slate-600 border-b border-slate-200">
                       <th className="py-2 pr-2">Ngày</th><th className="py-2 pr-2 text-right">Tổng</th>
                       {STATUS_ORDER.map(k => <th key={k} className="py-2 pr-2 text-right">{STAFF_STATUS_META[k].short}</th>)}
@@ -401,28 +401,45 @@ export const StaffAttendanceView: React.FC = () => {
 const TodayDetail: React.FC<{ staff: StaffMember[]; records: Record<string, StaffRecord> }> = ({ staff, records }) => {
   const [filter, setFilter] = useState<StaffStatus | 'missing' | 'all'>('all');
   const [q, setQ] = useState('');
+  const [showCccd, setShowCccd] = useState(false);
+  const [revealed, setRevealed] = useState<string[]>([]);
+  const hasFullCccd = staff.some(s => s.currentCccd);
+  const norm = (t: string) => t.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/gi, 'd').toLowerCase();
   const rows = staff.filter(s => !s.disabled).map(s => ({ s, r: records[s.code] }))
     .filter(x => filter === 'all' || (filter === 'missing' ? !x.r : x.r?.status === filter))
-    .filter(x => !q || `${x.s.name} ${x.s.code} ${x.s.dept || ''}`.toLowerCase().includes(q.toLowerCase()));
+    .filter(x => !q || norm(`${x.s.name} ${x.s.code} ${x.s.position || ''} ${x.s.dept || ''} ${x.s.currentCccd || x.s.cccdLast4 || ''}`).includes(norm(q)));
   return (
     <div className="rounded-3xl bg-white border border-slate-200 overflow-hidden">
       <div className="px-4 pt-4 flex flex-wrap items-center gap-2">
         <h3 className="text-sm font-black uppercase text-slate-800 mr-auto">Chi tiết hôm nay</h3>
         <div className="relative">
           <Search className="w-4 h-4 text-slate-500 absolute left-2.5 top-1/2 -translate-y-1/2" />
-          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Tìm tên, mã, tổ…" className="pl-8 pr-3 py-1.5 rounded-xl border border-slate-300 text-sm" />
+          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Tìm tên, mã, tổ, CCCD…" aria-label="Tìm nhân sự" className="pl-8 pr-3 py-1.5 rounded-xl border border-slate-300 text-sm" />
         </div>
         {(['all', ...STATUS_ORDER] as const).map(k => (
           <button key={k} type="button" onClick={() => setFilter(k)}
-            className={`px-2.5 py-1 rounded-lg text-xs font-black border ${filter === k ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-700 border-slate-200'}`}>
+            className={`px-2.5 py-1 rounded-lg text-xs font-black border whitespace-nowrap ${filter === k ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-700 border-slate-200'}`}>
             {k === 'all' ? 'Tất cả' : STAFF_STATUS_META[k].short}
           </button>
         ))}
       </div>
       <div className="overflow-x-auto p-4">
-        <table className="w-full text-sm min-w-[640px]">
-          <thead><tr className="text-left text-xs uppercase text-slate-600 border-b border-slate-200">
-            <th className="py-2 pr-2">Mã GV</th><th className="py-2 pr-2">Họ và tên</th><th className="py-2 pr-2">Chức vụ / Tổ</th><th className="py-2 pr-2">Trạng thái</th><th className="py-2 pr-2">Giờ điểm danh</th><th className="py-2 pr-2">Lần</th><th className="py-2">Ghi chú</th>
+        <table className="w-full text-sm min-w-[980px]">
+          <thead><tr className="text-left text-xs uppercase text-slate-600 border-b border-slate-200 whitespace-nowrap">
+            <th className="py-2 pr-2">Mã GV</th><th className="py-2 pr-2">Họ và tên</th>
+            <th className="py-2 pr-2">
+              <span className="inline-flex items-center gap-1">
+                Số CCCD
+                {hasFullCccd && (
+                  <button type="button" onClick={() => { setShowCccd(v => !v); setRevealed([]); }}
+                    className="no-hover-fx w-7 h-7 inline-flex items-center justify-center rounded-md text-slate-600 hover:bg-slate-200"
+                    title={showCccd ? 'Ẩn số CCCD' : 'Hiện đầy đủ số CCCD của tất cả'} aria-label={showCccd ? 'Ẩn số CCCD' : 'Hiện đầy đủ số CCCD của tất cả'}>
+                    {showCccd ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                )}
+              </span>
+            </th>
+            <th className="py-2 pr-2">Chức vụ / Tổ</th><th className="py-2 pr-2">Trạng thái</th><th className="py-2 pr-2">Giờ điểm danh</th><th className="py-2 pr-2">Lần</th><th className="py-2">Ghi chú</th>
           </tr></thead>
           <tbody>
             {rows.map(({ s, r }) => {
@@ -430,17 +447,40 @@ const TodayDetail: React.FC<{ staff: StaffMember[]; records: Record<string, Staf
               const n = attemptOf(r);
               return (
                 <tr key={s.code} className="border-b border-slate-100">
-                  <td className="py-2 pr-2 font-mono text-xs text-slate-700">{s.code}</td>
-                  <td className="py-2 pr-2 font-bold text-slate-900">{s.name}</td>
-                  <td className="py-2 pr-2 text-slate-700">{[s.position, s.dept].filter(Boolean).join(' • ')}</td>
-                  <td className="py-2 pr-2"><span className="px-2 py-0.5 rounded-full text-xs font-black" style={{ background: meta.soft, color: meta.text }}>{meta.label}</span></td>
-                  <td className="py-2 pr-2 text-slate-700 font-mono text-xs" title={r ? attemptsOf(r).map((a, i) => `Lần ${i + 1}: ${timeHMS(a.at)} – ${STAFF_STATUS_META[a.status]?.short}`).join('\n') : ''}>{r ? timeHMS(r.at) : ''}</td>
-                  <td className="py-2 pr-2">{n > 1 ? <span className="px-2 py-0.5 rounded-full text-xs font-black bg-amber-50 text-amber-900 border border-amber-200">Lần {n}</span> : n === 1 ? <span className="text-xs text-slate-600">1</span> : ''}</td>
-                  <td className="py-2 text-slate-700">{r?.note || ''}{systemNoteOf(r) && <span className="block text-xs font-bold text-amber-800">{systemNoteOf(r)}</span>}</td>
+                  <td className="py-2 pr-2 font-mono text-xs text-slate-700 whitespace-nowrap">{s.code}</td>
+                  <td className="py-2 pr-2 font-bold text-slate-900 whitespace-nowrap">{s.name}</td>
+                  <td className="py-2 pr-2 font-mono text-slate-700 whitespace-nowrap">
+                    {(() => {
+                      const open = Boolean(s.currentCccd) && (showCccd || revealed.includes(s.code));
+                      return (
+                        <span className="inline-flex items-center gap-1">
+                          <span className={open ? 'text-slate-900 font-semibold' : ''}>{open ? s.currentCccd : s.cccdLast4 ? `••••••••${s.cccdLast4}` : '—'}</span>
+                          {s.currentCccd && !showCccd && (
+                            <button type="button" onClick={() => setRevealed(prev => prev.includes(s.code) ? prev.filter(c => c !== s.code) : [...prev, s.code])}
+                              className="no-hover-fx w-6 h-6 inline-flex items-center justify-center rounded-md text-slate-500 hover:text-slate-800 hover:bg-slate-100"
+                              title={open ? 'Ẩn số CCCD' : 'Xem đầy đủ số CCCD'} aria-label={`${open ? 'Ẩn' : 'Xem'} số CCCD của ${s.name}`}>
+                              {open ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                            </button>
+                          )}
+                        </span>
+                      );
+                    })()}
+                  </td>
+                  <td className="py-2 pr-2 text-slate-700 whitespace-nowrap max-w-[240px] truncate" title={[s.position, s.dept].filter(Boolean).join(' • ')}>{[s.position, s.dept].filter(Boolean).join(' • ')}</td>
+                  <td className="py-2 pr-2 whitespace-nowrap"><span className="px-2 py-0.5 rounded-full text-xs font-black whitespace-nowrap" style={{ background: meta.soft, color: meta.text }}>{meta.label}</span></td>
+                  <td className="py-2 pr-2 text-slate-700 font-mono text-xs whitespace-nowrap" title={r ? attemptsOf(r).map((a, i) => `Lần ${i + 1}: ${timeHMS(a.at)} – ${STAFF_STATUS_META[a.status]?.short}`).join('\n') : ''}>{r ? timeHMS(r.at) : ''}</td>
+                  <td className="py-2 pr-2 whitespace-nowrap">{n > 1 ? <span className="px-2 py-0.5 rounded-full text-xs font-black bg-amber-50 text-amber-900 border border-amber-200 whitespace-nowrap">Lần {n}</span> : n === 1 ? <span className="text-xs text-slate-600">1</span> : ''}</td>
+                  <td className="py-2 text-slate-700 max-w-[300px]" title={[r?.note || '', systemNoteOf(r)].filter(Boolean).join(' • ')}>
+                    <span className="block truncate whitespace-nowrap">
+                      {r?.note || ''}
+                      {r?.note && systemNoteOf(r) ? <span className="text-slate-400"> • </span> : null}
+                      {systemNoteOf(r) && <span className="text-xs font-bold text-amber-800">{systemNoteOf(r)}</span>}
+                    </span>
+                  </td>
                 </tr>
               );
             })}
-            {rows.length === 0 && <tr><td colSpan={7} className="py-6 text-center text-slate-600">Không có nhân sự phù hợp.</td></tr>}
+            {rows.length === 0 && <tr><td colSpan={8} className="py-6 text-center text-slate-600">Không có nhân sự phù hợp.</td></tr>}
           </tbody>
         </table>
       </div>
