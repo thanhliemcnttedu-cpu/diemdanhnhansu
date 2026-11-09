@@ -22,6 +22,11 @@ interface TopBarProps {
 }
 
 const VIEW_TITLES: Record<NavigationMenuId, { title: string; shortTitle: string; subtitle: string }> = {
+  staff_attendance: {
+    title: 'CHẤM CÔNG NHÂN SỰ',
+    shortTitle: 'CHẤM CÔNG',
+    subtitle: 'ĐIỂM DANH GIÁO VIÊN – NHÂN VIÊN TOÀN TRƯỜNG, TỔNG HỢP & XUẤT EXCEL'
+  },
   dashboard: {
     title: 'TRANG CHỦ',
     shortTitle: 'TRANG CHỦ',

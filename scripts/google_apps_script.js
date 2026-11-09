@@ -13,6 +13,10 @@
  * - CHỈ tổng hợp tệp của GVCN (gvcn_*.json, teacherRole = homeroom). Tệp GV bộ môn (gvbm_*.json),
  *   BGH, Quản trị không được tính để không dôi số lớp / số học sinh.
  *
+ * - V4.2: CHẤM CÔNG GIÁO VIÊN – NHÂN VIÊN (nhansu_truong.json + chamcong_nhansu_YYYY-MM.json):
+ *   nhân sự điểm danh bằng số CCCD + mật khẩu điểm danh, chỉ cho NGÀY HÔM NAY theo giờ máy chủ.
+ *   ⚠️ Cập nhật từ V4.1: dán lại toàn bộ mã này rồi Triển khai -> Quản lý triển khai -> sửa -> Phiên bản mới
+ *   (giữ nguyên URL /exec).
  * - V4: CSDL nhà trường (csdl_truong.json: trường + tài khoản, mật khẩu băm SHA-256) do Quản trị
  *   khởi tạo; đăng nhập BGH / giáo viên được kiểm tra tại đây (action=login). Tệp CSDL không bao giờ
  *   được trả ra ngoài.
@@ -30,7 +34,7 @@
 var FOLDER_ID = "__FOLDER_ID__";
 var TARGET_FILENAME = "du_lieu_lop_hoc_hanh_phuc.json";
 var REPORT_PREFIX = "bc_";
-var SCRIPT_VERSION = "4.1";
+var SCRIPT_VERSION = "4.2";
 
 // ---------------------------------------------------------------------------------------
 // HTTP POST: lưu dữ liệu lớp
@@ -44,6 +48,16 @@ function doPost(e) {
     var folderId = payload.folderId || "";
     var action = payload.action || "saveClassData";
 
+    if (action === "staffAuth" || action === "staffCheckIn" || action === "getStaffRoster" || action === "saveStaffRoster" || action === "staffAttendanceRange") {
+      var staffFolder = resolveFolder(folderId);
+      if (!staffFolder) return createJsonResponse({ success: false, message: "Không tìm thấy thư mục Google Drive: " + folderId });
+      if (action === "staffAuth") return createJsonResponse(handleStaffAuth(staffFolder, payload));
+      if (action === "staffCheckIn") return createJsonResponse(handleStaffCheckIn(staffFolder, payload));
+      if (action === "getStaffRoster") return createJsonResponse(handleGetStaffRoster(staffFolder, payload));
+      if (action === "saveStaffRoster") return createJsonResponse(handleSaveStaffRoster(staffFolder, payload));
+      return createJsonResponse(handleStaffAttendanceRange(staffFolder, payload));
+    }
+
     if (action === "saveSchoolDb" || action === "getSchoolDb" || action === "login" || action === "changePassword") {
       var dbFolder = resolveFolder(folderId);
       if (!dbFolder) return createJsonResponse({ success: false, message: "Không tìm thấy thư mục Google Drive: " + folderId });
@@ -54,7 +68,7 @@ function doPost(e) {
     }
 
     var fileName = sanitizeFileName(payload.fileName || TARGET_FILENAME);
-    if (PROTECTED_FILES[fileName.toLowerCase()]) {
+    if (isProtectedFile(fileName)) {
       return createJsonResponse({ success: false, message: "Không được ghi trực tiếp tệp cơ sở dữ liệu nhà trường." });
     }
     var jsonData = payload.data || payload;
@@ -114,6 +128,7 @@ function doGet(e) {
         success: true,
         message: "Cầu nối Google Apps Script V" + SCRIPT_VERSION + " hoạt động tốt!",
         version: SCRIPT_VERSION,
+        features: ["schoolDb", "staffAttendance"],
         timestamp: new Date().toISOString()
       });
     }
@@ -127,7 +142,7 @@ function doGet(e) {
 
     if (action === "getLatest" || action === "getFile") {
       var fileName = sanitizeFileName(params.fileName || params.targetFile || TARGET_FILENAME);
-      if (PROTECTED_FILES[fileName.toLowerCase()]) {
+      if (isProtectedFile(fileName)) {
         return createJsonResponse({ success: false, message: "Tệp cơ sở dữ liệu nhà trường được bảo vệ." });
       }
       var files = folder.getFilesByName(fileName);
@@ -150,7 +165,7 @@ function doGet(e) {
         var n = f.getName();
         if (!/\.json$/i.test(n)) continue;
         if (n.indexOf(REPORT_PREFIX) === 0) continue; // tệp báo cáo nội bộ
-        if (PROTECTED_FILES[n.toLowerCase()]) continue; // CSDL nhà trường (có mật khẩu băm)
+        if (isProtectedFile(n)) continue; // CSDL nhà trường / nhân sự / chấm công (được bảo vệ)
         list.push({
           id: f.getId(),
           name: n,
@@ -765,6 +780,270 @@ function aggregateSingleDay(folder, reportDate) {
     missingClasses: missing,
     generatedAt: new Date().toISOString()
   };
+}
+
+// =======================================================================================
+// 👩‍🏫 V4.2: CHẤM CÔNG (ĐIỂM DANH) GIÁO VIÊN – NHÂN VIÊN TOÀN TRƯỜNG
+//   - nhansu_truong.json: danh sách nhân sự. Số CCCD & mật khẩu điểm danh chỉ lưu dạng BĂM
+//     (CCCD băm với "muối chung" giữ trong Script Properties để tra cứu; mật khẩu băm + salt riêng).
+//   - chamcong_nhansu_YYYY-MM.json: điểm danh theo tháng { days: { "YYYY-MM-DD": { maGV: {...} } } }.
+//   - NGÀY ĐIỂM DANH DO MÁY CHỦ QUYẾT ĐỊNH (giờ Việt Nam) → không điểm danh bù ngày cũ / ngày chưa tới.
+//   - Hai tệp trên được bảo vệ: không trả ra qua getLatest / listFiles, không ghi trực tiếp được.
+//   - Quản trị (admin / school_admin) quản lý danh sách; BGH + Quản trị xem tổng hợp.
+// =======================================================================================
+var STAFF_FILE = "nhansu_truong.json";
+var STAFF_ATT_PREFIX = "chamcong_nhansu_";
+var STAFF_STATUSES = { present: true, sick_leave: true, personal_unpaid: true };
+var STAFF_TZ = "GMT+7";
+
+function isProtectedFile(name) {
+  var n = String(name || "").toLowerCase();
+  return PROTECTED_FILES[n] === true || n === STAFF_FILE || n.indexOf(STAFF_ATT_PREFIX) === 0;
+}
+
+function staffToday() {
+  return Utilities.formatDate(new Date(), STAFF_TZ, "yyyy-MM-dd");
+}
+
+function staffPepper() {
+  var props = PropertiesService.getScriptProperties();
+  var p = props.getProperty("staff_pepper");
+  if (!p) { p = newSalt(); props.setProperty("staff_pepper", p); }
+  return p;
+}
+
+function normalizeCccd(v) {
+  return String(v || "").replace(/\D/g, "");
+}
+
+function cccdHash(cccd) {
+  return hashPassword(normalizeCccd(cccd), "cccd::" + staffPepper());
+}
+
+function normalizeStaffCode(v) {
+  return String(v || "").trim().toUpperCase();
+}
+
+function readJsonFile(folder, name, fallback) {
+  var files = folder.getFilesByName(name);
+  if (!files.hasNext()) return fallback;
+  try { return JSON.parse(files.next().getBlob().getDataAsString()); } catch (_) { return fallback; }
+}
+
+function readStaffDb(folder) {
+  var db = readJsonFile(folder, STAFF_FILE, null);
+  if (!db || !db.staff) db = { staff: [] };
+  return db;
+}
+
+function publicStaff(s) {
+  return {
+    code: s.code, name: s.name, position: s.position || "", dept: s.dept || "", gender: s.gender || "",
+    phone: s.phone || "", order: s.order || 0, cccdLast4: s.cccdLast4 || "", disabled: !!s.disabled,
+    hasPin: !!s.pinHash, updatedAt: s.updatedAt || ""
+  };
+}
+
+function findStaffByCccd(db, cccd) {
+  var digits = normalizeCccd(cccd);
+  if (digits.length < 9) return null;
+  var h = cccdHash(digits);
+  for (var i = 0; i < db.staff.length; i++) if (db.staff[i].cccdHash === h) return db.staff[i];
+  return null;
+}
+
+function verifyStaff(folder, cccd, pin) {
+  var db = readStaffDb(folder);
+  var s = findStaffByCccd(db, cccd);
+  if (!s || !s.pinHash) return { ok: false, code: "INVALID", message: "Số CCCD hoặc mật khẩu điểm danh không đúng." };
+  if (hashPassword(String(pin || ""), s.salt) !== s.pinHash) return { ok: false, code: "INVALID", message: "Số CCCD hoặc mật khẩu điểm danh không đúng." };
+  if (s.disabled) return { ok: false, code: "DISABLED", message: "Tài khoản điểm danh đã bị khóa. Liên hệ Quản trị nhà trường." };
+  return { ok: true, staff: s, db: db };
+}
+
+function monthFileName(dateStr) {
+  return STAFF_ATT_PREFIX + String(dateStr).slice(0, 7) + ".json";
+}
+
+function readMonth(folder, dateStr) {
+  var m = readJsonFile(folder, monthFileName(dateStr), null);
+  if (!m || !m.days) m = { month: String(dateStr).slice(0, 7), days: {} };
+  return m;
+}
+
+/** Quản trị (admin/school_admin) hoặc BGH đã xác thực bằng tài khoản trong csdl_truong.json */
+function staffActor(folder, auth, needAdmin) {
+  var sdb = readSchoolDb(folder);
+  var actor = sdb ? verifyUser(sdb, (auth || {}).username, (auth || {}).password) : null;
+  if (!actor || actor.disabled) return null;
+  if (isAdminUser(actor)) return actor;
+  if (!needAdmin && (actor.role === "bgh" || actor.isBgh)) return actor;
+  return null;
+}
+
+// --- Giáo viên/nhân viên: xác thực + xem trạng thái hôm nay
+function handleStaffAuth(folder, payload) {
+  var v = verifyStaff(folder, payload.cccd, payload.pin);
+  if (!v.ok) return { success: false, code: v.code, message: v.message };
+  var today = staffToday();
+  var month = readMonth(folder, today);
+  var rec = (month.days[today] || {})[v.staff.code] || null;
+  return { success: true, staff: publicStaff(v.staff), today: today, record: rec, serverTime: new Date().toISOString() };
+}
+
+// --- Giáo viên/nhân viên: điểm danh CHO HÔM NAY (ngày do máy chủ xác định)
+function handleStaffCheckIn(folder, payload) {
+  var status = String(payload.status || "");
+  if (!STAFF_STATUSES[status]) return { success: false, message: "Trạng thái điểm danh không hợp lệ." };
+  var today = staffToday();
+  if (payload.date && String(payload.date) !== today) {
+    return { success: false, code: "NOT_TODAY", today: today, message: "Chỉ điểm danh được cho ngày hôm nay (" + today + ")." };
+  }
+  var lock = LockService.getScriptLock();
+  try { lock.waitLock(20000); } catch (_) {}
+  try {
+    var v = verifyStaff(folder, payload.cccd, payload.pin);
+    if (!v.ok) return { success: false, code: v.code, message: v.message };
+    var month = readMonth(folder, today);
+    if (!month.days[today]) month.days[today] = {};
+    var prev = month.days[today][v.staff.code];
+    var nowIso = new Date().toISOString();
+    var cleanNote = String(payload.note || "").slice(0, 300);
+    // Lịch sử MỌI lần điểm danh trong ngày (lần 1, lần 2…) để nhà trường / kế toán đối chiếu
+    var history = (prev && prev.history) ? prev.history.slice(0, 19)
+      : (prev ? [{ status: prev.status, note: prev.note || "", at: prev.at }] : []);
+    history.push({ status: status, note: cleanNote, at: nowIso });
+    month.days[today][v.staff.code] = {
+      status: status,
+      note: cleanNote,
+      at: nowIso,
+      firstAt: prev && prev.firstAt ? prev.firstAt : nowIso,
+      attempt: history.length,
+      edits: history.length - 1,
+      history: history
+    };
+    month.updatedAt = nowIso;
+    writeFileOverwrite(folder, monthFileName(today), JSON.stringify(month));
+    return { success: true, today: today, record: month.days[today][v.staff.code], staff: publicStaff(v.staff), message: "Đã ghi nhận điểm danh ngày " + today + "." };
+  } finally {
+    try { lock.releaseLock(); } catch (_) {}
+  }
+}
+
+// --- Quản trị: đọc danh sách nhân sự (kèm mật khẩu điểm danh đang dùng để cấp lại cho nhân sự)
+function handleGetStaffRoster(folder, payload) {
+  var actor = staffActor(folder, payload.auth, false);
+  if (!actor) return { success: false, code: "UNAUTHORIZED", message: "Chỉ Quản trị / BGH được xem danh sách nhân sự." };
+  var db = readStaffDb(folder);
+  var withPins = isAdminUser(actor);
+  var props = PropertiesService.getScriptProperties();
+  var list = db.staff.map(function (s) {
+    var p = publicStaff(s);
+    if (withPins) p.currentPin = props.getProperty("spin:" + s.code) || "";
+    return p;
+  });
+  return { success: true, staff: list, today: staffToday(), updatedAt: db.updatedAt || "" };
+}
+
+// --- Quản trị: thêm / sửa / xóa nhân sự (chế độ gộp theo mã GV)
+function handleSaveStaffRoster(folder, payload) {
+  var actor = staffActor(folder, payload.auth, true);
+  if (!actor) return { success: false, code: "UNAUTHORIZED", message: "Chỉ tài khoản Quản trị được cập nhật danh sách nhân sự." };
+  var lock = LockService.getScriptLock();
+  try { lock.waitLock(20000); } catch (_) {}
+  try {
+    var db = readStaffDb(folder);
+    var props = PropertiesService.getScriptProperties();
+    var byCode = {};
+    for (var i = 0; i < db.staff.length; i++) byCode[db.staff[i].code] = db.staff[i];
+    var errors = [];
+    var upserts = payload.staff || [];
+    for (var j = 0; j < upserts.length; j++) {
+      var it = upserts[j] || {};
+      var code = normalizeStaffCode(it.code);
+      if (!code) { errors.push("Dòng " + (j + 1) + ": thiếu mã giáo viên."); continue; }
+      var s = byCode[code];
+      var isNew = !s;
+      if (isNew) { s = { code: code, salt: newSalt(), createdAt: new Date().toISOString() }; }
+      if (it.name !== undefined) s.name = String(it.name || "").trim();
+      if (!s.name) { errors.push(code + ": thiếu họ tên."); if (isNew) continue; }
+      if (it.position !== undefined) s.position = String(it.position || "").trim();
+      if (it.dept !== undefined) s.dept = String(it.dept || "").trim();
+      if (it.gender !== undefined) s.gender = String(it.gender || "").trim();
+      if (it.phone !== undefined) s.phone = String(it.phone || "").trim();
+      if (it.order !== undefined) s.order = Number(it.order) || 0;
+      if (it.disabled !== undefined) s.disabled = !!it.disabled;
+      if (it.cccd) {
+        var digits = normalizeCccd(it.cccd);
+        if (digits.length < 9 || digits.length > 12) { errors.push(code + ": số CCCD không hợp lệ."); if (isNew) continue; }
+        else {
+          var h = cccdHash(digits);
+          var dup = null;
+          for (var k in byCode) if (byCode[k] !== s && byCode[k].cccdHash === h) dup = byCode[k];
+          if (dup) { errors.push(code + ": số CCCD trùng với " + dup.code + "."); if (isNew) continue; }
+          else { s.cccdHash = h; s.cccdLast4 = digits.slice(-4); }
+        }
+      }
+      if (isNew && !s.cccdHash) { errors.push(code + ": thiếu số CCCD."); continue; }
+      if (it.pin) {
+        var pin = String(it.pin);
+        if (pin.length < 4) { errors.push(code + ": mật khẩu điểm danh phải có ít nhất 4 ký tự."); }
+        else {
+          s.salt = newSalt();
+          s.pinHash = hashPassword(pin, s.salt);
+          props.setProperty("spin:" + code, pin);
+        }
+      }
+      s.updatedAt = new Date().toISOString();
+      byCode[code] = s;
+    }
+    var deleted = payload.deletedCodes || [];
+    for (var d = 0; d < deleted.length; d++) {
+      var dc = normalizeStaffCode(deleted[d]);
+      if (byCode[dc]) { delete byCode[dc]; try { props.deleteProperty("spin:" + dc); } catch (_) {} }
+    }
+    db.staff = Object.keys(byCode).map(function (c) { return byCode[c]; });
+    db.updatedAt = new Date().toISOString();
+    db.updatedBy = actor.username;
+    writeFileOverwrite(folder, STAFF_FILE, JSON.stringify(db));
+    return handleGetStaffRosterResult(db, props, errors);
+  } finally {
+    try { lock.releaseLock(); } catch (_) {}
+  }
+}
+
+function handleGetStaffRosterResult(db, props, errors) {
+  return {
+    success: true,
+    errors: errors,
+    staff: db.staff.map(function (s) { var p = publicStaff(s); p.currentPin = props.getProperty("spin:" + s.code) || ""; return p; }),
+    today: staffToday(),
+    updatedAt: db.updatedAt
+  };
+}
+
+// --- BGH / Quản trị: dữ liệu điểm danh trong khoảng ngày (tối đa 400 ngày)
+function handleStaffAttendanceRange(folder, payload) {
+  var actor = staffActor(folder, payload.auth, false);
+  if (!actor) return { success: false, code: "UNAUTHORIZED", message: "Chỉ Quản trị / BGH được xem tổng hợp chấm công." };
+  var today = staffToday();
+  var from = String(payload.from || today).slice(0, 10);
+  var to = String(payload.to || today).slice(0, 10);
+  if (from > to) { var t = from; from = to; to = t; }
+  var days = {};
+  var month = from.slice(0, 7);
+  var guard = 0;
+  while (month <= to.slice(0, 7) && guard++ < 14) {
+    var m = readJsonFile(folder, STAFF_ATT_PREFIX + month + ".json", null);
+    if (m && m.days) {
+      for (var dk in m.days) if (dk >= from && dk <= to) days[dk] = m.days[dk];
+    }
+    var y = Number(month.slice(0, 4)), mo = Number(month.slice(5, 7)) + 1;
+    if (mo > 12) { mo = 1; y++; }
+    month = y + "-" + (mo < 10 ? "0" : "") + mo;
+  }
+  var db = readStaffDb(folder);
+  return { success: true, today: today, from: from, to: to, staff: db.staff.map(publicStaff), days: days };
 }
 
 function createJsonResponse(obj) {

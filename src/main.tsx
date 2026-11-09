@@ -37,8 +37,22 @@ schoolDriveDbService.ensureCacheOwnership();
 // 🛡️ Ảnh avatar học sinh lỗi ở bất kỳ màn hình nào → tự sửa / dùng ảnh dự phòng
 installGlobalAvatarFallback();
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <App />
-  </StrictMode>,
-);
+// 📲 Trang điểm danh giáo viên – nhân viên (/diemdanh): giao diện riêng, nhẹ, không cần đăng nhập phần mềm
+const isStaffCheckInRoute = typeof window !== 'undefined'
+  && (/^\/diemdanh\/?$/i.test(window.location.pathname) || /^#\/?diemdanh/i.test(window.location.hash));
+
+if (isStaffCheckInRoute) {
+  import('./components/views/staff/StaffCheckInPage').then(({ StaffCheckInPage }) => {
+    createRoot(document.getElementById('root')!).render(
+      <StrictMode>
+        <StaffCheckInPage />
+      </StrictMode>,
+    );
+  });
+} else {
+  createRoot(document.getElementById('root')!).render(
+    <StrictMode>
+      <App />
+    </StrictMode>,
+  );
+}

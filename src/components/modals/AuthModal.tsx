@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   X, Lock, User, Eye, EyeOff, 
   CheckCircle2, AlertCircle, LogIn, Sparkles,
-  School, ShieldCheck, UserCheck, Crown, Users,
+  School, ShieldCheck, UserCheck, Crown, Users, QrCode,
   ArrowRight, Phone, Globe, ChevronDown, ChevronUp,
   Cloud, HardDrive, KeyRound, RefreshCw, Award,
   Volume2, Dices, CalendarCheck, Check
@@ -12,6 +12,7 @@ import { useClassroom } from '../../context/ClassroomContext';
 import { databaseService } from '../../services/databaseService';
 import { googleDriveService } from '../../services/googleDriveService';
 import { schoolDriveDbService } from '../../services/schoolDriveDbService';
+import { StaffCheckInQrModal } from '../views/staff/StaffCheckInQr';
 import schoolDbLogo from '../../assets/school_db_logo.png';
 
 interface AuthModalProps {
@@ -54,6 +55,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
   // 🏫 THƯ MỤC DÙNG CHUNG CỦA NHÀ TRƯỜNG (Google Drive) — bắt buộc trước khi đăng nhập vai trò trường
   const [driveConfigured, setDriveConfigured] = useState<boolean>(() => schoolDriveDbService.isConfigured());
+  const [isCheckInQrOpen, setIsCheckInQrOpen] = useState(false);
   // Dùng kết quả lần đọc trước (nếu có) để không khóa nhấp nháy các vai trò trong lúc đang tải
   const [driveInitialized, setDriveInitialized] = useState<boolean>(() => {
     try {
@@ -646,6 +648,30 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   {loading ? 'Đang xử lý đăng nhập...' : 'ĐĂNG NHẬP VÀO HỆ THỐNG'}
                 </button>
               </form>
+
+              {/* Điểm danh giáo viên – nhân viên trên máy tính (dùng kết nối Drive sẵn có của máy, không cần đăng nhập) */}
+              {driveConfigured && (
+                <div className="mt-2.5 flex gap-2">
+                  <a
+                    href="/diemdanh"
+                    className="flex-1 py-2.5 rounded-2xl bg-white/95 hover:bg-white text-emerald-900 font-black text-sm flex items-center justify-center gap-2 shadow-sm"
+                    title="Giáo viên, nhân viên điểm danh đi làm hôm nay bằng số CCCD + mật khẩu điểm danh"
+                  >
+                    <UserCheck className="w-4 h-4 text-emerald-700" />
+                    ĐIỂM DANH GV – NV
+                  </a>
+                  <button
+                    type="button"
+                    onClick={() => setIsCheckInQrOpen(true)}
+                    className="px-3.5 py-2.5 rounded-2xl bg-white/95 hover:bg-white text-emerald-900 font-black text-sm flex items-center justify-center gap-1.5 shadow-sm"
+                    title="Hiện mã QR để giáo viên quét bằng Zalo / camera điện thoại và điểm danh"
+                  >
+                    <QrCode className="w-4 h-4 text-emerald-700" />
+                    MÃ QR
+                  </button>
+                </div>
+              )}
+              <StaffCheckInQrModal open={isCheckInQrOpen} onClose={() => setIsCheckInQrOpen(false)} />
 
               {/* ─────────── CỨU HỘ & KHÔI PHỤC DỮ LIỆU (gọn 1 dòng) ─────────── */}
               <div className="mt-3 pt-2.5 border-t border-white/10 flex items-center gap-2">

@@ -29,6 +29,7 @@ export type NavigationMenuId =
   | 'timer'
   | 'links'
   | 'reports'
+  | 'staff_attendance'
   | 'data'
   | 'settings'
   | 'ai';
@@ -149,6 +150,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
       icon: BarChart3,
     },
     {
+      id: 'staff_attendance',
+      label: 'Chấm công nhân sự',
+      icon: UserCheck,
+      badge: 'NEW',
+      badgeType: 'new'
+    },
+    {
       id: 'data',
       label: 'Dữ liệu',
       icon: Database,
@@ -181,6 +189,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const MENU_ITEMS = ALL_MENU_ITEMS.filter(item => {
     // Loại bỏ hoàn toàn mục "Cài đặt" với mọi role
     if (item.id === 'settings') return false;
+
+    // Chấm công giáo viên – nhân viên: chỉ Quản trị tối cao, Quản trị trường, BGH
+    if (item.id === 'staff_attendance' && !isMacroAdmin) return false;
 
     // Tài khoản quản lý vĩ mô: chỉ giữ menu quản trị cốt lõi
     if (isMacroAdmin) {

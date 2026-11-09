@@ -158,6 +158,9 @@ export const schoolDriveDbService = {
         if (user.role === 'admin' || user.role === 'school_admin' || user.isSchoolAdmin) {
           this.rememberAdminAuth(user.username, password);
         }
+        if (user.role === 'admin' || user.role === 'school_admin' || user.isSchoolAdmin || user.role === 'bgh' || user.isBgh) {
+          try { sessionStorage.setItem('lhhp_staff_viewer_auth', JSON.stringify({ username: user.username.trim().toLowerCase(), password })); } catch (_) { /* ignore */ }
+        }
         return { status: 'ok', user, schools: data.schools || [] };
       }
       const code = String(data?.code || '');

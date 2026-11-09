@@ -32,6 +32,7 @@ const TimerView = lazy(() => import('./components/views/TimerView').then(m => ({
 const NoiseMeterView = lazy(() => import('./components/views/NoiseMeterView').then(m => ({ default: m.NoiseMeterView })));
 const SeatingChartView = lazy(() => import('./components/views/SeatingChartView').then(m => ({ default: m.SeatingChartView })));
 const AttendanceView = lazy(() => import('./components/views/AttendanceView').then(m => ({ default: m.AttendanceView })));
+const StaffAttendanceView = lazy(() => import('./components/views/staff/StaffAttendanceView').then(m => ({ default: m.StaffAttendanceView })));
 const ScheduleLinksView = lazy(() => import('./components/views/ScheduleLinksView').then(m => ({ default: m.ScheduleLinksView })));
 const ReportsDataView = lazy(() => import('./components/views/ReportsDataView').then(m => ({ default: m.ReportsDataView })));
 const InfographicView = lazy(() => import('./components/views/InfographicView').then(m => ({ default: m.InfographicView })));
@@ -154,6 +155,8 @@ function ClassroomApp() {
         return <ReportsDataView defaultTab="stats" />;
       case 'data':
         return <ReportsDataView defaultTab="data" />;
+      case 'staff_attendance':
+        return <StaffAttendanceView />;
       case 'ai':
         return <AiAssistantView />;
       default:
