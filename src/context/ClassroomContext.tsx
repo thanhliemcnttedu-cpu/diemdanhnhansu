@@ -1,3 +1,4 @@
+import { isViewOnly, getViewAs, setViewAs, subscribeViewAs, ViewAsInfo } from '../utils/viewOnlyMode';
 import { saveTeacherAuth, clearTeacherAuth } from '../utils/teacherAuth';
 import React, { createContext, useContext, useState, useEffect, useRef, useMemo } from 'react';
 import { AlertCircle, X } from 'lucide-react';
@@ -164,6 +165,11 @@ interface ClassroomContextType {
   loginUser: (username: string, password: string, selectedRoleScope?: LoginRoleScope, selectedSchoolName?: string) => Promise<{ success: boolean; message?: string }>;
   logoutUser: () => void;
   switchUserAccount: (username: string) => Promise<boolean>;
+  /** 👁️ Quản trị / BGH vào xem lớp của giáo viên ở CHẾ ĐỘ CHỈ XEM (không đổi phiên, không ghi) */
+  viewAsTeacher: (username: string) => Promise<boolean>;
+  /** Thoát chế độ chỉ xem → tải lại trang với tài khoản quản trị */
+  exitViewAs: () => void;
+  viewAs: ViewAsInfo | null;
   refreshUsersList: () => Promise<void>;
   logUserActivity: (actionType: string, description: string, details?: any) => void;
   isAuthModalOpen: boolean;
@@ -1123,7 +1129,7 @@ export const ClassroomProvider: React.FC<{ children: React.ReactNode }> = ({ chi
             setCurrentUser(updatedUser);
             currentUserRef.current = updatedUser;
             try {
-              localStorage.setItem(LOCAL_AUTH_KEY, JSON.stringify(updatedUser));
+              if (!isViewOnly()) localStorage.setItem(LOCAL_AUTH_KEY, JSON.stringify(updatedUser));
             } catch (_) {}
 
             setTeacherProfile(prev => ({
@@ -1970,6 +1976,47 @@ export const ClassroomProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     databaseService.logout();
     setCurrentUser(null);
     setIsAuthModalOpen(true);
+  };
+
+  // 👁️ CHẾ ĐỘ CHỈ XEM: Quản trị / BGH xem lớp của giáo viên mà KHÔNG đăng nhập thay giáo viên.
+  // Phiên trong localStorage vẫn là tài khoản quản trị (tải lại trang = quay về), mọi lệnh ghi bị chặn ở tầng dịch vụ.
+  const [viewAs, setViewAsState] = useState<ViewAsInfo | null>(getViewAs());
+  useEffect(() => subscribeViewAs(setViewAsState), []);
+
+  const viewAsTeacher = async (username: string): Promise<boolean> => {
+    const admin = currentUserRef.current;
+    const target = allUsers.find(u => u.username.toLowerCase() === username.toLowerCase());
+    if (!admin || !target) return false;
+    const officialName = getOfficialDisplayName(target, allUsers);
+    setViewAs({
+      adminUsername: admin.username, adminFullName: admin.fullName,
+      targetUsername: target.username, targetFullName: officialName, targetRole: target.role,
+      className: target.role === 'homeroom' ? target.assignedClassName : target.subjectName,
+    });
+    const viewUser: UserAccount = { ...target, fullName: officialName };
+    setCurrentUser(viewUser);
+    currentUserRef.current = viewUser;
+    setTeacherRoleState(target.role === 'subject' ? 'subject' : 'homeroom');
+    markRemoteUpdateActive(1500);
+    // Dữ liệu: bản trên máy (nếu có) → gộp lớp đang có trên Drive dùng chung; không sinh học sinh mẫu, không lưu
+    let data: UserClassroomData | null = null;
+    try { data = await databaseService.loadUserData(target.username); } catch (_) { data = null; }
+    let start: UserClassroomData = data && Array.isArray(data.classes) && data.classes.length > 0
+      ? data
+      : { ...buildDefaultDataForUser(viewUser), students: [], transactions: [] };
+    try {
+      const fileName = googleDriveService.getFileNameForUser(viewUser, viewUser.assignedClassName, start.teacherRole);
+      const pulled = await googleDriveService.pullClassData(start, fileName, viewUser);
+      if (pulled.success && pulled.mergedData) start = pulled.mergedData;
+    } catch (_) { /* chỉ xem: dùng dữ liệu đang có */ }
+    applyUserClassroomData(start);
+    return true;
+  };
+
+  const exitViewAs = () => {
+    setViewAs(null);
+    // Phiên quản trị vẫn nằm trong localStorage → tải lại là về đúng tài khoản quản trị, dữ liệu quản trị đầy đủ
+    window.location.reload();
   };
 
   const switchUserAccount = async (username: string): Promise<boolean> => {
@@ -4158,7 +4205,7 @@ export const ClassroomProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       };
 
       try {
-        localStorage.setItem(LOCAL_AUTH_KEY, JSON.stringify(updatedUser));
+        if (!isViewOnly()) localStorage.setItem(LOCAL_AUTH_KEY, JSON.stringify(updatedUser));
       } catch (_) {}
 
       // Đồng bộ cập nhật lên Supabase Cloud & database users table
@@ -4579,6 +4626,9 @@ export const ClassroomProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       loginUser,
       logoutUser,
       switchUserAccount,
+      viewAsTeacher,
+      exitViewAs,
+      viewAs,
       refreshUsersList,
       logUserActivity,
       isAuthModalOpen,

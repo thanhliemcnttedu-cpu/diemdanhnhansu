@@ -387,6 +387,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                       type="button"
                       onClick={() => toggleGroup(group.key)}
                       aria-expanded={open}
+                      data-viewonly-allow="" 
                       className="no-hover-fx w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-left normal-case text-slate-800 hover:bg-slate-100/80 transition-colors"
                     >
                       <GroupIcon className={`w-[18px] h-[18px] shrink-0 ${group.tone}`} />
@@ -405,6 +406,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                               type="button"
                               onClick={row.onClick}
                               aria-current={row.active ? 'page' : undefined}
+                              data-viewonly-allow={group.key !== 'system' ? '' : undefined}
                               title={row.label}
                               aria-label={row.label}
                               className={`no-hover-fx w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${row.active ? 'bg-sky-100 text-sky-800 ring-1 ring-sky-200' : `${group.tone} hover:bg-slate-100`}`}
@@ -419,6 +421,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                             type="button"
                             onClick={row.onClick}
                             aria-current={row.active ? 'page' : undefined}
+                            data-viewonly-allow={group.key !== 'system' ? '' : undefined}
                             className={`no-hover-fx relative w-full flex items-center gap-2 pl-7 pr-2 py-2 rounded-xl text-left normal-case transition-colors ${
                               row.active ? 'bg-sky-50 text-sky-900 ring-1 ring-sky-100' : 'text-slate-700 hover:bg-slate-100/80 hover:text-slate-950'
                             }`}

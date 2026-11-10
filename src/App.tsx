@@ -23,7 +23,7 @@ import { ReinitSchoolDbModal } from './components/modals/ReinitSchoolDbModal';
 import { schoolDriveDbService } from './services/schoolDriveDbService';
 import { CommandPalette } from './components/layout/CommandPalette';
 import { OPEN_CHANGE_PASSWORD_EVENT } from './components/modals/ChangePasswordModal';
-import { MonitorX, Maximize, Minimize } from 'lucide-react';
+import { MonitorX, Maximize, Minimize, Eye, ArrowLeftCircle } from 'lucide-react';
 
 export const TOGGLE_PRESENTATION_EVENT = 'lhhp:toggle-presentation';
 
@@ -57,7 +57,7 @@ const ViewLoading = () => (
 function ClassroomApp() {
   const { 
     teacherRole, currentUser, allUsers, loginUser, logoutUser, 
-    switchUserAccount, refreshUsersList, isAuthModalOpen, 
+    switchUserAccount, viewAsTeacher, exitViewAs, viewAs, refreshUsersList, isAuthModalOpen, 
     setIsAuthModalOpen, isAccountManagerOpen, setIsAccountManagerOpen,
     isGithubModalOpen, setIsGithubModalOpen,
     isGoogleDriveModalOpen, setIsGoogleDriveModalOpen,
@@ -157,6 +157,54 @@ function ClassroomApp() {
     }
   }, [isMacroAdmin, currentView]);
 
+  // 👁️ "Vào xem" lớp của giáo viên từ màn Quản trị: CHẾ ĐỘ CHỈ XEM (không đăng nhập thay giáo viên)
+  const handleSwitchToUser = async (username: string): Promise<boolean> => {
+    const target = allUsers.find(u => u.username.toLowerCase() === username.toLowerCase());
+    if (isMacroAdmin && target && (target.role === 'homeroom' || target.role === 'subject')) {
+      const ok = await viewAsTeacher(username);
+      if (ok) { setCurrentView('dashboard'); setIsAccountManagerOpen(false); }
+      return ok;
+    }
+    return switchUserAccount(username);
+  };
+
+  // Chặn MỌI thao tác (bấm, nhập, kéo thả) ngoài thanh điều hướng & dải "Quay lại" khi đang chỉ xem
+  const [viewOnlyToast, setViewOnlyToast] = useState(false);
+  useEffect(() => {
+    if (!viewAs) return;
+    let toastTimer: ReturnType<typeof setTimeout> | null = null;
+    const notify = () => {
+      setViewOnlyToast(true);
+      if (toastTimer) clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => setViewOnlyToast(false), 2200);
+    };
+    const allowed = (t: EventTarget | null) => t instanceof Element && Boolean(t.closest('[data-viewonly-allow]'));
+    const editable = (t: EventTarget | null) => t instanceof Element && Boolean(t.closest('input, textarea, select, [contenteditable="true"]'));
+    const block = (e: Event) => {
+      if (allowed(e.target)) return;
+      if (e.type === 'keydown') {
+        const k = (e as KeyboardEvent).key;
+        if (!editable(e.target) && !['Enter', ' '].includes(k)) return; // phím cuộn / Tab vẫn dùng được
+        if (k === 'Tab' || k === 'Escape') return;
+      }
+      if (e.type === 'mousedown' || e.type === 'pointerdown') {
+        // Không chặn mặc định để vẫn kéo được thanh cuộn; chỉ chặn sự kiện tới các nút của React
+        if (editable(e.target)) e.preventDefault();
+        e.stopPropagation();
+        return;
+      }
+      e.preventDefault();
+      e.stopPropagation();
+      if (e.type === 'click' || e.type === 'keydown' || e.type === 'submit') notify();
+    };
+    const types = ['pointerdown', 'mousedown', 'click', 'dblclick', 'keydown', 'submit', 'change', 'input', 'dragstart', 'drop', 'contextmenu'];
+    types.forEach(t => document.addEventListener(t, block, true));
+    return () => {
+      types.forEach(t => document.removeEventListener(t, block, true));
+      if (toastTimer) clearTimeout(toastTimer);
+    };
+  }, [viewAs]);
+
   const renderCurrentView = () => {
     switch (currentView) {
       case 'dashboard':
@@ -242,6 +290,27 @@ function ClassroomApp() {
       {/* Main Container */}
       {/* Không đặt z-index ở đây: hộp thoại (fixed z-50) bên trong các màn phải nổi trên thanh bên (z-40) */}
       <div className="relative flex-1 flex flex-col min-w-0 h-full overflow-hidden">
+        {viewAs && (
+          <div data-viewonly-allow="" role="status"
+            className="shrink-0 flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-2.5 bg-amber-50 border-b-2 border-amber-400 text-amber-950">
+            <Eye className="w-5 h-5 shrink-0 text-amber-700" aria-hidden="true" />
+            <p className="flex-1 min-w-[16rem] text-sm leading-snug">
+              <strong>Chế độ CHỈ XEM</strong> — bạn đang xem giao diện lớp của giáo viên{' '}
+              <strong>{viewAs.targetFullName}</strong>
+              {viewAs.className ? <> ({viewAs.targetRole === 'subject' ? 'môn' : 'lớp'} <strong>{viewAs.className}</strong>)</> : null}
+              {' '}bằng tài khoản quản trị <strong>{viewAs.adminFullName}</strong>. Mọi nút lệnh và chỉnh sửa đều bị khóa.
+            </p>
+            <button type="button" onClick={exitViewAs}
+              className="no-hover-fx shrink-0 h-9 px-4 rounded-xl bg-amber-700 hover:bg-amber-800 text-white text-sm font-black inline-flex items-center gap-2 whitespace-nowrap">
+              <ArrowLeftCircle className="w-4 h-4" /> Quay lại tài khoản quản trị
+            </button>
+          </div>
+        )}
+        {viewAs && viewOnlyToast && (
+          <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[80] px-4 py-2 rounded-xl bg-white border border-amber-300 shadow-lg text-sm font-bold text-amber-900" role="alert">
+            Chế độ chỉ xem: không thao tác được. Bấm "Quay lại tài khoản quản trị" để tiếp tục làm việc.
+          </div>
+        )}
         {/* Top Header matching PDF with Mobile Hamburger Menu */}
         {!isPresenting && <TopBar
           currentView={currentView}
@@ -306,7 +375,7 @@ function ClassroomApp() {
         currentUser={currentUser}
         allUsers={allUsers}
         onRefreshUsers={refreshUsersList}
-        onSwitchToUser={switchUserAccount}
+        onSwitchToUser={handleSwitchToUser}
       />
       </Suspense>
       )}

@@ -5,6 +5,7 @@ import {
   GoogleDriveConfig 
 } from '../types/driveSync';
 import { dataAdapter } from './dataAdapter';
+import { isViewOnly } from '../utils/viewOnlyMode';
 import { getAppliedAdminEdits, mergeAppliedAdminEdits } from './adminEditsStore';
 import { getRoleScopedDataFileName } from './dataStorageService';
 import appsScriptSource from '../../scripts/google_apps_script.js?raw';
@@ -372,6 +373,8 @@ export const googleDriveService = {
     targetClassId?: string,
     isManual = false
   ): Promise<{ success: boolean; message: string; fileUrl?: string; isAuthError?: boolean }> {
+    // 👁️ Chế độ chỉ xem: không đẩy dữ liệu của giáo viên đang được xem
+    if (isViewOnly()) return { success: true, message: 'Chế độ chỉ xem — không lưu.' };
     const config = this.getConfig();
     const scriptUrl = this.normalizeScriptUrl(config.scriptUrl);
     const folderId = config.folderId?.trim();

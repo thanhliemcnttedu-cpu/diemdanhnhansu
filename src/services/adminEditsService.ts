@@ -13,6 +13,7 @@
  */
 import type { Classroom, Student } from '../types';
 import { googleDriveService } from './googleDriveService';
+import { isViewOnly } from '../utils/viewOnlyMode';
 import type { AppliedAdminEdits } from './adminEditsStore';
 
 export const ADMIN_EDITS_FILE = 'dieuchinh_quantri.json';
@@ -144,7 +145,7 @@ export const adminEditsService = {
 
   /** Ghi nhận 1 điều chỉnh (gọi từ databaseService.updateAdminClass / updateAdminStudent). */
   record(kind: 'class' | 'student', obj: any, isDelete = false) {
-    if (!obj || !obj.id || !this.isActive()) return;
+    if (!obj || !obj.id || !this.isActive() || isViewOnly()) return;
     const user = sessionUser()!;
     const store = known[kind];
     const prev = store.get(obj.id);

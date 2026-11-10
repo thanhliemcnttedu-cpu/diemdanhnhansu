@@ -13,6 +13,8 @@ import {
 import { UserAccount, UserRole, SchoolEntity } from '../../types';
 import { databaseService, DatabaseStats, AuditLogItem, UserSummaryItem } from '../../services/databaseService';
 import { schoolDriveDbService } from '../../services/schoolDriveDbService';
+import { driveOverviewService } from '../../services/driveOverviewService';
+import { googleDriveService } from '../../services/googleDriveService';
 import { useClassroom } from '../../context/ClassroomContext';
 
 interface AccountManagementModalProps {
@@ -37,6 +39,11 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
   const [searchTerm, setSearchTerm] = useState('');
   const [editingUser, setEditingUser] = useState<UserAccount | null>(null);
   const [stats, setStats] = useState<DatabaseStats | null>(null);
+  // Bản web (không có máy chủ Express): số liệu 3 thẻ Mô hình lớp / Lịch sử / Data JSON đọc từ Google Drive dùng chung
+  const [driveMode, setDriveMode] = useState(false);
+  const [driveFileCount, setDriveFileCount] = useState(0);
+  // Hộp xác nhận trước khi vào xem lớp của giáo viên (chế độ chỉ xem)
+  const [viewConfirm, setViewConfirm] = useState<{ username: string; fullName: string; role: string; className?: string } | null>(null);
   const [loading, setLoading] = useState(false);
   const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
@@ -135,11 +142,6 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
   const [loadingSummaries, setLoadingSummaries] = useState(false);
 
   // Audit logs state
-  const [auditLogs, setAuditLogs] = useState<AuditLogItem[]>([]);
-  const [loadingLogs, setLoadingLogs] = useState(false);
-  const [selectedLogUser, setSelectedLogUser] = useState<string>('ALL');
-  const [selectedLogAction, setSelectedLogAction] = useState<string>('ALL');
-  const [logSearchTerm, setLogSearchTerm] = useState<string>('');
 
   // Gán mật khẩu chung cho nhiều tài khoản
   const [bulkPwOpen, setBulkPwOpen] = useState(false);
@@ -190,11 +192,18 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
       loadStats();
       onRefreshUsers();
       loadSummaries();
-      loadAuditLogs();
       loadRegistrations();
       setLocalUsage(databaseService.getLocalStorageUsage());
     }
   }, [isOpen]);
+
+  // Mở thẻ / danh sách tài khoản thay đổi → tính lại số liệu thẻ đang xem (Drive có bộ nhớ đệm 60 giây)
+  useEffect(() => {
+    if (!isOpen) return;
+    if (activeTab === 'real_data') loadSummaries();
+    else if (activeTab === 'database') { loadStats(); setLocalUsage(databaseService.getLocalStorageUsage()); }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab, allUsers]);
 
   const loadSchools = async () => {
     try {
@@ -205,36 +214,77 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
     } catch (_) {}
   };
 
-  const loadStats = async () => {
+  const fmtBytes = (b: number) => b >= 1048576 ? `${(b / 1048576).toFixed(2)} MB` : `${(b / 1024).toFixed(1)} KB`;
+
+  const loadStats = async (force = false) => {
     try {
+      if (driveOverviewService.isAvailable()) {
+        const ov = await driveOverviewService.load(force);
+        if (ov) {
+          const classFiles = ov.files.filter(f => f.kind === 'homeroom' || f.kind === 'subject');
+          const classBytes = classFiles.reduce((x, f) => x + f.sizeBytes, 0);
+          const total = ov.totalBytes || 1;
+          const otherFiles = ov.files.filter(f => !(f.kind === 'homeroom' || f.kind === 'subject'));
+          const otherBytes = otherFiles.reduce((x, f) => x + f.sizeBytes, 0);
+          const pct = (b: number) => Math.round((b / total) * 1000) / 10;
+          const byUser = new Map<string, { classes: number; students: number; bytes: number; name?: string }>();
+          classFiles.forEach(f => {
+            const k = f.teacherUsername || f.name;
+            const cur = byUser.get(k) || { classes: 0, students: 0, bytes: 0, name: f.teacherName };
+            cur.classes++; cur.bytes += f.sizeBytes;
+            if (f.kind === 'homeroom') cur.students += f.studentCount || 0;
+            byUser.set(k, cur);
+          });
+          const userBreakdown = [...byUser.entries()].map(([username, v]) => {
+            const acc = allUsers.find(u => u.username.toLowerCase() === username);
+            return { username, fullName: acc?.fullName || v.name || username, role: acc?.role || 'homeroom',
+              classesCount: v.classes, studentsCount: v.students, bytes: v.bytes,
+              sizeKB: Math.round((v.bytes / 1024) * 10) / 10, percentOfTotal: pct(v.bytes) };
+          }).sort((a, b) => b.bytes - a.bytes);
+          const quotaMB = 15360;
+          setStats({
+            userCount: allUsers.length, users: [], lastSync: new Date(ov.at).toISOString(),
+            totalClasses: classFiles.length,
+            totalStudents: classFiles.filter(f => f.kind === 'homeroom').reduce((x, f) => x + (f.studentCount || 0), 0),
+            fileSizeBytes: ov.totalBytes, fileSizeKB: Math.round(ov.totalBytes / 102.4) / 10, formattedSize: fmtBytes(ov.totalBytes),
+            storageQuotaMB: quotaMB, percentOfQuota: Math.max(0.01, Math.round((ov.totalBytes / (quotaMB * 1048576)) * 10000) / 100),
+            storageBreakdown: {
+              userData: { bytes: classBytes, sizeKB: Math.round(classBytes / 102.4) / 10, percent: pct(classBytes) },
+              auditLogs: { bytes: 0, sizeKB: 0, count: 0, percent: 0 },
+              users: { bytes: otherBytes, sizeKB: Math.round(otherBytes / 102.4) / 10, count: otherFiles.length, percent: pct(otherBytes) },
+            },
+            userBreakdown,
+          });
+          setDriveMode(true);
+          setDriveFileCount(ov.files.length);
+          return;
+        }
+      }
       const s = await databaseService.getDatabaseStats();
       if (s) setStats(s);
     } catch (_) {}
   };
 
-  const loadSummaries = async () => {
+  const loadSummaries = async (force = false) => {
     setLoadingSummaries(true);
     try {
+      if (driveOverviewService.isAvailable()) {
+        const ov = await driveOverviewService.load(force);
+        if (ov) {
+          const list = driveOverviewService.summaries(ov, allUsers) as unknown as UserSummaryItem[];
+          // Giáo viên có lớp lên trước, rồi theo tên
+          list.sort((a, b) => (b.classCount > 0 ? 1 : 0) - (a.classCount > 0 ? 1 : 0) || a.fullName.localeCompare(b.fullName, 'vi'));
+          setUserSummaries(list);
+          setDriveMode(true);
+          setDriveFileCount(ov.files.length);
+          return;
+        }
+      }
       const data = await databaseService.getUserDataSummaries();
       setUserSummaries(data);
     } catch (_) {}
     finally {
       setLoadingSummaries(false);
-    }
-  };
-
-  const loadAuditLogs = async () => {
-    setLoadingLogs(true);
-    try {
-      const logs = await databaseService.getAuditLogs({
-        username: selectedLogUser !== 'ALL' ? selectedLogUser : undefined,
-        actionType: selectedLogAction !== 'ALL' ? selectedLogAction : undefined,
-        limit: 300
-      });
-      setAuditLogs(logs);
-    } catch (_) {}
-    finally {
-      setLoadingLogs(false);
     }
   };
 
@@ -248,6 +298,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
       setLoadingRegistrations(false);
     }
   };
+
 
   const handleApproveRegistration = async (reg: any) => {
     try {
@@ -704,19 +755,27 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
     e.target.value = '';
   };
 
-  const handleClearLogs = async () => {
-    if (!window.confirm('Bạn có chắc chắn muốn xóa toàn bộ lịch sử thao tác không?')) return;
-    const ok = await databaseService.clearAuditLogs();
-    if (ok) {
-      setAuditLogs([]);
-      showNotify('success', 'Đã xóa toàn bộ lịch sử thao tác hệ thống!');
-    } else {
-      showNotify('error', 'Không thể xóa lịch sử thao tác.');
-    }
-  };
-
   const handleDownloadTeacherData = async (u: UserAccount | UserSummaryItem | any) => {
     try {
+      if (driveOverviewService.isAvailable()) {
+        const ov = await driveOverviewService.load();
+        const mine = (ov?.files || []).filter(f => (f.kind === 'homeroom' || f.kind === 'subject') && f.teacherUsername === String(u.username).toLowerCase());
+        if (!mine.length) { showNotify('error', `${u.fullName || u.username} chưa có tệp lớp trên Google Drive.`); return; }
+        const cfg = googleDriveService.getConfig();
+        const url = googleDriveService.normalizeScriptUrl(cfg.scriptUrl);
+        const sep = url.includes('?') ? '&' : '?';
+        for (const f of mine) {
+          const text = await (await fetch(`${url}${sep}action=getLatest&strict=1&folderId=${encodeURIComponent(cfg.folderId || '')}&fileName=${encodeURIComponent(f.name)}`)).text();
+          const blob = new Blob([text], { type: 'application/json' });
+          const link = document.createElement('a');
+          link.href = URL.createObjectURL(blob);
+          link.download = f.name;
+          link.click();
+          URL.revokeObjectURL(link.href);
+        }
+        showNotify('success', `Đã tải ${mine.length} tệp dữ liệu lớp của ${u.fullName || u.username}.`);
+        return;
+      }
       const data = await databaseService.loadUserData(u.username);
       if (!data) {
         showNotify('error', `Tài khoản ${u.username} chưa có dữ liệu riêng.`);
@@ -1046,7 +1105,13 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
     }
   };
 
-  const handleQuickSwitch = async (username: string) => {
+  const handleQuickSwitch = async (username: string, confirmed = false) => {
+    const target = allUsers.find(u => u.username.toLowerCase() === username.toLowerCase());
+    if (!confirmed && target && (target.role === 'homeroom' || target.role === 'subject')) {
+      setViewConfirm({ username: target.username, fullName: target.fullName, role: target.role,
+        className: target.role === 'homeroom' ? target.assignedClassName : target.subjectName });
+      return;
+    }
     if (isSchoolAdmin) {
       const targetUser = allUsers.find(u => u.username.toLowerCase() === username.toLowerCase());
       if (targetUser && (targetUser.schoolName !== currentSchoolScope || targetUser.role === 'admin' || targetUser.isGuestAdmin)) {
@@ -1058,7 +1123,9 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
     setLoading(true);
     try {
       await onSwitchToUser(username);
-      showNotify('success', `Đã chuyển sang không gian làm việc của: ${username}`);
+      showNotify('success', target && (target.role === 'homeroom' || target.role === 'subject')
+        ? `Đang xem lớp của ${target.fullName} (chế độ chỉ xem).`
+        : `Đã chuyển sang không gian làm việc của: ${username}`);
       setTimeout(() => {
         onClose();
       }, 700);
@@ -1624,20 +1691,6 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
               <span>Mô Hình Lớp & HS</span>
             </button>
 
-            {isSuperAdmin && (
-              <button
-                onClick={() => setActiveTab('logs')}
-                className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 uppercase whitespace-nowrap shrink-0 ${
-                  activeTab === 'logs'
-                    ? 'bg-violet-600 text-white shadow-xs shadow-violet-600/20'
-                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-                }`}
-              >
-                <History className="w-3.5 h-3.5" />
-                <span>Lịch Sử Thao Tác</span>
-              </button>
-            )}
-
             <button
               onClick={() => setActiveTab('import')}
               className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 uppercase whitespace-nowrap shrink-0 ${
@@ -1696,12 +1749,12 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
           <button
             onClick={() => {
               onRefreshUsers();
-              loadStats();
-              loadSummaries();
-              loadAuditLogs();
-              showNotify('success', 'Đã làm mới dữ liệu người dùng & nhật ký!');
+              driveOverviewService.invalidate();
+              loadStats(true);
+              loadSummaries(true);
+              showNotify('success', 'Đã làm mới dữ liệu người dùng!');
             }}
-            title="Làm mới dữ liệu tài khoản & nhật ký" aria-label="Làm mới dữ liệu"
+            title="Làm mới dữ liệu tài khoản" aria-label="Làm mới dữ liệu"
             className="no-hover-fx shrink-0 w-9 h-9 flex items-center justify-center bg-white hover:bg-slate-50 rounded-xl border border-slate-200 text-slate-700 transition-colors shadow-2xs"
           >
             <RefreshCw className="w-4 h-4 text-indigo-600" />
@@ -3361,13 +3414,15 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                   <Activity className="w-4 h-4 text-blue-600" />
                   <span>Dữ Liệu Thực Tế Của Từng Giáo Viên Trên Hệ Thống</span>
                 </h3>
-                <p className="text-xs text-blue-800/80 mt-0.5">
-                  Dữ liệu được lưu trữ độc lập và cập nhật trực tuyến tức thì khi giáo viên thêm/xóa/sửa lớp hay học sinh.
+                <p className="text-sm text-blue-900 mt-0.5">
+                  {driveMode
+                    ? 'Số liệu đọc từ tệp lớp của từng giáo viên trên Google Drive dùng chung (giáo viên lưu là cập nhật). Bấm Cập nhật để đọc lại ngay.'
+                    : 'Dữ liệu được lưu trữ độc lập và cập nhật trực tuyến tức thì khi giáo viên thêm/xóa/sửa lớp hay học sinh.'}
                 </p>
               </div>
 
               <button
-                onClick={loadSummaries}
+                onClick={() => loadSummaries(true)}
                 disabled={loadingSummaries}
                 className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-black uppercase flex items-center gap-1.5 shadow-xs shrink-0 self-start sm:self-auto cursor-pointer"
               >
@@ -3477,17 +3532,18 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                           <td className="py-2 px-2">
                             <div className="flex flex-wrap gap-1 max-w-xs">
                               {u.classes && u.classes.length > 0 ? (
-                                u.classes.map((c, cIdx) => (
-                                  <span 
-                                    key={c.id || cIdx} 
-                                    className="px-2 py-0.5 rounded-md bg-slate-100 border border-slate-200 text-[12px] font-bold text-slate-700"
-                                    title={`Lớp ${c.name} - ${c.studentCount} học sinh`}
+                                u.classes.map((c: any, cIdx) => (
+                                  <span
+                                    key={c.id || cIdx}
+                                    className={`px-2 py-0.5 rounded-md border text-xs font-bold whitespace-nowrap ${c.kind === 'subject' ? 'bg-emerald-50 border-emerald-200 text-emerald-900' : 'bg-sky-50 border-sky-200 text-sky-900'}`}
+                                    title={[`Lớp ${c.name}`, c.kind === 'subject' ? 'lớp dạy bộ môn' : `${c.studentCount} học sinh`, c.campus, c.branch].filter(Boolean).join(' • ')}
                                   >
-                                    {c.name} ({c.studentCount} HS)
+                                    {c.name}{c.kind === 'subject' ? ' · BM' : ` · ${c.studentCount} HS`}
+                                    {(c.campus || c.branch) && <span className="font-medium text-slate-600"> · {c.campus || c.branch}</span>}
                                   </span>
                                 ))
                               ) : (
-                                <span className="text-slate-400 italic text-[12px]">Chưa khởi tạo lớp</span>
+                                <span className="text-slate-600 text-xs">{driveMode ? 'Chưa có tệp lớp trên Drive' : 'Chưa khởi tạo lớp'}</span>
                               )}
                             </div>
                           </td>
@@ -3500,9 +3556,9 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                           <td className="py-2 px-2 text-right space-x-1.5 whitespace-nowrap">
                             <button
                               onClick={() => handleQuickSwitch(u.username)}
-                              disabled={loading || isCurrent}
+                              disabled={loading || isCurrent || !(u.role === 'homeroom' || u.role === 'subject')}
                               className="px-2.5 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 text-[12px] font-black uppercase transition-colors inline-flex items-center gap-1 disabled:opacity-40 cursor-pointer"
-                              title="Chuyển vào xem trực tiếp toàn bộ dữ liệu, lớp và học sinh của giáo viên này"
+                              title="Xem giao diện lớp của giáo viên này ở chế độ chỉ xem (không sửa được)"
                             >
                               <Eye className="w-3 h-3" />
                               <span>Vào Xem</span>
@@ -3526,172 +3582,31 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
           </div>
         )}
 
-        {/* Tab: Audit Logs (Lịch sử thao tác của các tài khoản) */}
-        {activeTab === 'logs' && (
-          <div className="flex-1 overflow-y-auto p-5 md:p-7 flex flex-col space-y-4">
-            {/* Filter and search bar */}
-            <div className="bg-slate-50 border border-slate-200/90 rounded-2xl p-4 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
-              <div className="flex flex-wrap items-center gap-2.5 flex-1">
-                {/* User filter */}
-                <div className="flex items-center gap-1.5 text-xs font-bold text-slate-700">
-                  <Filter className="w-3.5 h-3.5 text-slate-400" />
-                  <span>Giáo viên:</span>
-                  <select
-                    value={selectedLogUser}
-                    onChange={(e) => setSelectedLogUser(e.target.value)}
-                    className="px-2.5 py-1.5 rounded-xl bg-white border border-slate-300 text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  >
-                    <option value="ALL">Tất cả giáo viên</option>
-                    {allUsers.map(u => (
-                      <option key={u.id} value={u.username}>
-                        {u.fullName} (@{u.username})
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Action filter */}
-                <div className="flex items-center gap-1.5 text-xs font-bold text-slate-700">
-                  <span>Hành động:</span>
-                  <select
-                    value={selectedLogAction}
-                    onChange={(e) => setSelectedLogAction(e.target.value)}
-                    className="px-2.5 py-1.5 rounded-xl bg-white border border-slate-300 text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  >
-                    <option value="ALL">Tất cả thao tác</option>
-                    <option value="CREATE_CLASS">Mở thêm lớp học</option>
-                    <option value="UPDATE_CLASS">Chỉnh sửa lớp học</option>
-                    <option value="DELETE_CLASS">Xóa lớp học</option>
-                    <option value="ADD_STUDENT">Thêm mới học sinh</option>
-                    <option value="UPDATE_STUDENT">Chỉnh sửa học sinh</option>
-                    <option value="DELETE_STUDENT">Xóa học sinh</option>
-                    <option value="BATCH_STUDENTS">Thêm hàng loạt học sinh</option>
-                    <option value="AWARD_POINTS">Cộng/trừ xu thi đua</option>
-                    <option value="ATTENDANCE">Điểm danh lớp</option>
-                    <option value="RESTORE_DATA">Khôi phục dữ liệu</option>
-                    <option value="OTHER">Đăng nhập / Thao tác khác</option>
-                  </select>
-                </div>
-
-                {/* Search input */}
-                <div className="relative flex-1 min-w-[160px]">
-                  <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5" />
-                  <input
-                    type="text"
-                    value={logSearchTerm}
-                    onChange={(e) => setLogSearchTerm(e.target.value)}
-                    placeholder="Tìm trong nhật ký..."
-                    className="w-full pl-9 pr-3 py-1.5 bg-white border border-slate-300 rounded-xl text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  />
+        {viewConfirm && (
+          <div className="fixed inset-0 z-[70] flex items-center justify-center bg-sky-900/20 backdrop-blur-xs p-4" role="dialog" aria-modal="true" aria-labelledby="view-confirm-title">
+            <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 max-w-md w-full p-6 space-y-4">
+              <div className="flex items-start gap-3">
+                <div className="w-11 h-11 rounded-2xl bg-amber-50 border border-amber-200 text-amber-700 flex items-center justify-center shrink-0"><Eye className="w-5 h-5" /></div>
+                <div>
+                  <h3 id="view-confirm-title" className="text-base font-black text-slate-900">Chuyển sang chế độ xem lớp của giáo viên</h3>
+                  <p className="text-sm text-slate-700 mt-1 leading-relaxed">
+                    Bạn đang chuyển sang giao diện với vai trò <strong>xem</strong> lớp của giáo viên{' '}
+                    <strong className="text-slate-900">{viewConfirm.fullName}</strong>
+                    {viewConfirm.className ? <> ({viewConfirm.role === 'subject' ? 'môn' : 'lớp'} <strong>{viewConfirm.className}</strong>)</> : null}.
+                  </p>
                 </div>
               </div>
-
-              {/* Action buttons */}
-              <div className="flex items-center gap-2 shrink-0">
-                <button
-                  onClick={loadAuditLogs}
-                  disabled={loadingLogs}
-                  className="px-3 py-1.5 rounded-xl bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 text-xs font-black uppercase transition-colors flex items-center gap-1.5 shadow-2xs cursor-pointer"
-                >
-                  <RefreshCw className={`w-3.5 h-3.5 ${loadingLogs ? 'animate-spin text-indigo-600' : ''}`} />
-                  <span>Làm mới</span>
+              <ul className="text-sm text-slate-700 space-y-1.5 rounded-2xl bg-slate-50 border border-slate-200 p-3">
+                <li>• Chỉ xem: không sửa được thông tin, không bấm được nút lệnh hay chức năng nào.</li>
+                <li>• Dữ liệu của giáo viên được giữ nguyên, không bị ghi đè.</li>
+                <li>• Bấm <strong>Quay lại tài khoản quản trị</strong> ở dải vàng phía trên để tiếp tục làm việc.</li>
+              </ul>
+              <div className="flex items-center justify-end gap-2">
+                <button type="button" onClick={() => setViewConfirm(null)} className="no-hover-fx h-10 px-4 rounded-xl text-sm font-bold text-slate-700 hover:bg-slate-100">Hủy</button>
+                <button type="button" onClick={() => { const u = viewConfirm.username; setViewConfirm(null); handleQuickSwitch(u, true); }}
+                  className="no-hover-fx h-10 px-5 rounded-xl bg-amber-700 hover:bg-amber-800 text-white text-sm font-black inline-flex items-center gap-2">
+                  <Eye className="w-4 h-4" /> Vào xem (chỉ xem)
                 </button>
-                <button
-                  onClick={handleClearLogs}
-                  className="px-3 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-black uppercase transition-colors flex items-center gap-1.5 cursor-pointer"
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                  <span>Xóa lịch sử</span>
-                </button>
-              </div>
-            </div>
-
-            {/* Log List */}
-            <div className="flex-1 border border-slate-200 rounded-2xl overflow-hidden shadow-2xs bg-white">
-              <div className="overflow-x-auto h-full">
-                <table className="w-full text-left border-collapse text-xs">
-                  <thead className="bg-slate-50 border-b border-slate-200 text-[12px] font-black text-slate-500 uppercase tracking-wider sticky top-0 z-10">
-                    <tr>
-                      <th className="py-2 px-2 text-center w-12">STT</th>
-                      <th className="py-2 px-2 w-40">Thời Gian</th>
-                      <th className="py-2 px-2 w-48">Tài Khoản Thao Tác</th>
-                      <th className="py-2 px-2 w-36 text-center">Phân Loại</th>
-                      <th className="py-2 px-2">Chi Tiết Thao Tác Thực Tế</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100 font-medium">
-                    {auditLogs
-                      .filter(l => 
-                        !logSearchTerm.trim() || 
-                        l.description.toLowerCase().includes(logSearchTerm.toLowerCase()) ||
-                        l.username.toLowerCase().includes(logSearchTerm.toLowerCase()) ||
-                        l.userFullName.toLowerCase().includes(logSearchTerm.toLowerCase())
-                      )
-                      .map((log, idx) => {
-                        const actionColor = 
-                          log.actionType === 'DELETE_STUDENT' || log.actionType === 'DELETE_CLASS'
-                            ? 'bg-rose-100 text-rose-700 border-rose-200'
-                            : log.actionType === 'CREATE_CLASS' || log.actionType === 'ADD_STUDENT' || log.actionType === 'BATCH_STUDENTS'
-                            ? 'bg-emerald-100 text-emerald-700 border-emerald-200'
-                            : log.actionType === 'AWARD_POINTS'
-                            ? 'bg-amber-100 text-amber-700 border-amber-200'
-                            : log.actionType === 'ATTENDANCE'
-                            ? 'bg-blue-100 text-blue-700 border-blue-200'
-                            : log.actionType === 'RESTORE_DATA'
-                            ? 'bg-purple-100 text-purple-700 border-purple-200'
-                            : 'bg-slate-100 text-slate-700 border-slate-200';
-
-                        const actionLabel = 
-                          log.actionType === 'CREATE_CLASS' ? 'Mở thêm lớp' :
-                          log.actionType === 'UPDATE_CLASS' ? 'Chỉnh sửa lớp' :
-                          log.actionType === 'DELETE_CLASS' ? 'Xóa lớp học' :
-                          log.actionType === 'ADD_STUDENT' ? 'Thêm học sinh' :
-                          log.actionType === 'UPDATE_STUDENT' ? 'Sửa học sinh' :
-                          log.actionType === 'DELETE_STUDENT' ? 'Xóa học sinh' :
-                          log.actionType === 'BATCH_STUDENTS' ? 'Thêm hàng loạt' :
-                          log.actionType === 'AWARD_POINTS' ? 'Cộng/trừ xu' :
-                          log.actionType === 'ATTENDANCE' ? 'Điểm danh' :
-                          log.actionType === 'RESTORE_DATA' ? 'Khôi phục dữ liệu' : 'Hoạt động';
-
-                        return (
-                          <tr key={log.id || idx} className="hover:bg-slate-50/80 transition-colors">
-                            <td className="py-2.5 px-3.5 text-center font-bold text-slate-400">
-                              {idx + 1}
-                            </td>
-                            <td className="py-2.5 px-3.5 font-mono text-[12px] text-slate-600 whitespace-nowrap">
-                              <div className="flex items-center gap-1.5">
-                                <Clock className="w-3 h-3 text-slate-400 shrink-0" />
-                                <span>{new Date(log.timestamp).toLocaleString('vi-VN')}</span>
-                              </div>
-                            </td>
-                            <td className="py-2.5 px-3.5">
-                              <div className="font-bold text-slate-900 leading-tight">
-                                {log.userFullName}
-                              </div>
-                              <div className="text-[12px] text-slate-400 font-mono">
-                                @{log.username} ({log.role === 'admin' ? 'Quản trị' : log.role === 'subject' ? 'GV Bộ môn' : 'GVCN'})
-                              </div>
-                            </td>
-                            <td className="py-2.5 px-3.5 text-center whitespace-nowrap">
-                              <span className={`inline-block px-2 py-0.5 rounded-full text-[12px] font-black uppercase border ${actionColor}`}>
-                                {actionLabel}
-                              </span>
-                            </td>
-                            <td className="py-2.5 px-3.5 text-slate-800 font-bold leading-relaxed">
-                              {log.description}
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    {auditLogs.length === 0 && (
-                      <tr>
-                        <td colSpan={5} className="py-12 text-center text-slate-400 italic">
-                          Chưa có lịch sử thao tác nào được ghi nhận. Các hoạt động như tạo lớp, xóa học sinh, cho điểm... sẽ hiển thị tại đây theo thời gian thực.
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
               </div>
             </div>
           </div>
@@ -3700,167 +3615,87 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
         {/* Tab: Database & GitHub Sync */}
         {activeTab === 'database' && (
           <div className="flex-1 overflow-y-auto p-5 md:p-8 space-y-6">
-            {/* Database Storage & System Quota Stats Card (Yêu cầu 4) */}
-            <div className="bg-gradient-to-br from-sky-700 via-indigo-600 to-indigo-600 text-white rounded-3xl p-6 md:p-7 shadow-xl border border-slate-800 space-y-6">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div className="flex items-center gap-3.5">
-                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-700 to-teal-700 text-white flex items-center justify-center font-black shadow-lg shadow-emerald-500/20 shrink-0">
-                    <Database className="w-6 h-6" />
+            {/* Thống kê dung lượng dữ liệu (tông sáng; bản web đọc từ Google Drive dùng chung) */}
+            <section className="bg-white border border-slate-200 rounded-3xl p-5 md:p-6 shadow-xs space-y-5">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-11 h-11 rounded-2xl bg-indigo-50 border border-indigo-100 text-indigo-700 flex items-center justify-center shrink-0">
+                    <Database className="w-5 h-5" />
                   </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <h3 className="text-base md:text-lg font-black uppercase tracking-tight">
-                        Thống Kê Toàn Bộ Dung Lượng Database Hệ Thống
-                      </h3>
-                      <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[12px] font-black uppercase flex items-center gap-1.5">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-700 animate-pulse" />
-                        Trực Tuyến
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h3 className="text-base font-black text-slate-900">Dung lượng dữ liệu hệ thống</h3>
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-600" />
+                        {driveMode ? 'Google Drive dùng chung' : 'Máy chủ dữ liệu'}
                       </span>
                     </div>
-                    <p className="text-xs text-slate-300 font-medium mt-0.5">
-                      Đo lường dung lượng tệp JSON máy chủ, phân bổ theo từng giáo viên và bộ nhớ cache trình duyệt
+                    <p className="text-sm text-slate-600 mt-0.5">
+                      {driveMode
+                        ? `${driveFileCount} tệp trong thư mục dùng chung của trường • phân bổ theo từng giáo viên`
+                        : 'Đo dung lượng tệp dữ liệu máy chủ, phân bổ theo từng giáo viên và bộ nhớ đệm trình duyệt'}
                     </p>
                   </div>
                 </div>
-
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={loadStats}
-                    className="px-3.5 py-2 bg-white/10 hover:bg-white/20 text-white text-xs font-black rounded-xl border border-white/15 transition-all hover-zoom-btn flex items-center gap-1.5 uppercase"
-                    title="Làm mới lại thống kê dung lượng database"
-                  >
-                    <RotateCcw className="w-3.5 h-3.5" />
-                    <span>Làm Mới</span>
+                <div className="flex items-center gap-2 shrink-0">
+                  <button type="button" onClick={() => loadStats(true)} title="Đọc lại số liệu dung lượng"
+                    className="no-hover-fx h-9 px-3 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-800 text-sm font-bold inline-flex items-center gap-1.5">
+                    <RotateCcw className="w-4 h-4" /> Làm mới
                   </button>
-
-                  <button
-                    type="button"
-                    onClick={handleCompactDatabase}
-                    className="px-3.5 py-2 bg-gradient-to-r from-emerald-700 to-teal-700 hover:from-emerald-800 hover:to-teal-800 text-white text-xs font-black rounded-xl shadow-md shadow-emerald-600/25 transition-all hover-zoom-btn flex items-center gap-1.5 uppercase"
-                    title="Nén và tối ưu hóa tệp dữ liệu database"
-                  >
-                    <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-                    <span>Tối Ưu Hóa DB</span>
-                  </button>
+                  {!driveMode && (
+                    <button type="button" onClick={handleCompactDatabase} title="Nén và tối ưu hóa tệp dữ liệu"
+                      className="no-hover-fx h-9 px-3 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white text-sm font-bold inline-flex items-center gap-1.5">
+                      <Sparkles className="w-4 h-4" /> Tối ưu hóa
+                    </button>
+                  )}
                 </div>
               </div>
 
-              {/* 4 Primary Storage Stat Cards */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
-                {/* Total File Size */}
-                <div className="bg-white/5 backdrop-blur-md rounded-2xl p-4 border border-white/10 hover:border-white/20 transition-colors">
-                  <div className="text-[12px] text-slate-400 uppercase font-black flex items-center justify-between">
-                    <span>Tổng Tệp Database</span>
-                    <span>💾</span>
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                {[
+                  { label: driveMode ? 'Tổng dữ liệu trên Drive' : 'Tổng tệp dữ liệu', value: stats?.formattedSize || `${stats?.fileSizeKB || 0} KB`,
+                    sub: driveMode ? `${driveFileCount} tệp` : (stats?.fileSizeBytes ? `${stats.fileSizeBytes.toLocaleString('vi-VN')} byte` : 'data/classroom_database.json'),
+                    tone: 'bg-indigo-50 border-indigo-200 text-indigo-800' },
+                  { label: 'Dữ liệu lớp học', value: `${stats?.storageBreakdown?.userData.sizeKB || 0} KB`,
+                    sub: `${stats?.storageBreakdown?.userData.percent || 0}% • ${stats?.totalClasses || 0} lớp, ${stats?.totalStudents || 0} HS`,
+                    tone: 'bg-emerald-50 border-emerald-200 text-emerald-800' },
+                  { label: driveMode ? 'Tài khoản & cấu hình' : 'Hồ sơ tài khoản', value: `${stats?.storageBreakdown?.users.sizeKB || 0} KB`,
+                    sub: driveMode ? `${stats?.storageBreakdown?.users.count || 0} tệp • ${stats?.storageBreakdown?.users.percent || 0}%` : `${stats?.storageBreakdown?.users.count || 0} tài khoản`,
+                    tone: 'bg-amber-50 border-amber-200 text-amber-800' },
+                  { label: 'Bộ nhớ trên máy này', value: localUsage?.formatted || '0 KB',
+                    sub: 'Bộ nhớ đệm trình duyệt',
+                    tone: 'bg-sky-50 border-sky-200 text-sky-800' },
+                ].map(t => (
+                  <div key={t.label} className={`rounded-2xl border p-4 ${t.tone}`}>
+                    <div className="text-xs font-bold uppercase tracking-wide">{t.label}</div>
+                    <div className="text-2xl font-black text-slate-900 mt-1 tabular-nums whitespace-nowrap">{t.value}</div>
+                    <div className="text-sm text-slate-700 mt-0.5 truncate" title={t.sub}>{t.sub}</div>
                   </div>
-                  <div className="text-2xl font-black text-amber-400 mt-1 font-mono">
-                    {stats?.formattedSize || `${stats?.fileSizeKB || 0} KB`}
-                  </div>
-                  <div className="text-[12px] text-slate-400 mt-1">
-                    {stats?.fileSizeBytes ? `${stats.fileSizeBytes.toLocaleString()} bytes` : 'data/classroom_database.json'}
-                  </div>
-                </div>
-
-                {/* User Classroom Data Size */}
-                <div className="bg-white/5 backdrop-blur-md rounded-2xl p-4 border border-white/10 hover:border-white/20 transition-colors">
-                  <div className="text-[12px] text-slate-400 uppercase font-black flex items-center justify-between">
-                    <span>Dữ Liệu Giáo Viên</span>
-                    <span>👥</span>
-                  </div>
-                  <div className="text-2xl font-black text-emerald-400 mt-1 font-mono">
-                    {stats?.storageBreakdown?.userData.sizeKB || 0} KB
-                  </div>
-                  <div className="text-[12px] text-emerald-300 font-bold mt-1">
-                    Chiếm {stats?.storageBreakdown?.userData.percent || 0}% dung lượng
-                  </div>
-                </div>
-
-                {/* Audit Logs Size */}
-                <div className="bg-white/5 backdrop-blur-md rounded-2xl p-4 border border-white/10 hover:border-white/20 transition-colors">
-                  <div className="text-[12px] text-slate-400 uppercase font-black flex items-center justify-between">
-                    <span>Nhật Ký Thao Tác</span>
-                    <span>📜</span>
-                  </div>
-                  <div className="text-2xl font-black text-violet-400 mt-1 font-mono">
-                    {stats?.storageBreakdown?.auditLogs.sizeKB || 0} KB
-                  </div>
-                  <div className="text-[12px] text-violet-300 font-bold mt-1">
-                    {stats?.storageBreakdown?.auditLogs.count || 0} bản ghi thao tác
-                  </div>
-                </div>
-
-                {/* Browser LocalStorage Cache */}
-                <div className="bg-white/5 backdrop-blur-md rounded-2xl p-4 border border-white/10 hover:border-white/20 transition-colors">
-                  <div className="text-[12px] text-slate-400 uppercase font-black flex items-center justify-between">
-                    <span>Bộ Nhớ Trình Duyệt</span>
-                    <span>⚡</span>
-                  </div>
-                  <div className="text-2xl font-black text-cyan-400 mt-1 font-mono">
-                    {localUsage?.formatted || '0 KB'}
-                  </div>
-                  <div className="text-[12px] text-cyan-300 font-bold mt-1">
-                    Cache offline trình duyệt
-                  </div>
-                </div>
+                ))}
               </div>
 
-              {/* Visual Storage Meter & Quota Bar */}
-              <div className="bg-black/30 rounded-2xl p-4 border border-white/10 space-y-2.5">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="font-black text-slate-300 uppercase flex items-center gap-1.5">
-                    <span>📊</span>
-                    <span>Định Mức Sử Dụng Hệ Thống:</span>
-                    <strong className="text-amber-400">{stats?.formattedSize || `${stats?.fileSizeKB || 0} KB`}</strong>
-                    <span className="text-slate-400">/ Định mức {stats?.storageQuotaMB || 50} MB</span>
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 space-y-2.5">
+                <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
+                  <span className="text-slate-800">
+                    Đã dùng <strong className="text-slate-900">{stats?.formattedSize || `${stats?.fileSizeKB || 0} KB`}</strong>
+                    <span className="text-slate-600"> / định mức {driveMode ? '15 GB (Google Drive miễn phí)' : `${stats?.storageQuotaMB || 50} MB`}</span>
                   </span>
-                  <span className="text-xs font-mono font-bold text-emerald-400">
-                    Đã dùng: {stats?.percentOfQuota || 0.1}%
-                  </span>
+                  <span className="font-bold text-emerald-800 tabular-nums">{stats?.percentOfQuota ?? 0}% định mức</span>
                 </div>
-
-                {/* Multi-segment Progress Bar */}
-                <div className="w-full h-3 rounded-full bg-slate-100 overflow-hidden flex shadow-inner">
-                  <div 
-                    className="h-full bg-emerald-700 transition-all duration-500" 
-                    style={{ width: `${Math.max(stats?.storageBreakdown?.userData.percent || 60, 5)}%` }}
-                    title={`Dữ liệu Giáo viên: ${stats?.storageBreakdown?.userData.sizeKB || 0} KB`}
-                  />
-                  <div 
-                    className="h-full bg-violet-600 transition-all duration-500" 
-                    style={{ width: `${Math.max(stats?.storageBreakdown?.auditLogs.percent || 25, 5)}%` }}
-                    title={`Nhật ký Audit: ${stats?.storageBreakdown?.auditLogs.sizeKB || 0} KB`}
-                  />
-                  <div 
-                    className="h-full bg-amber-700 transition-all duration-500" 
-                    style={{ width: `${Math.max(stats?.storageBreakdown?.users.percent || 15, 3)}%` }}
-                    title={`Tài khoản người dùng: ${stats?.storageBreakdown?.users.sizeKB || 0} KB`}
-                  />
+                <div className="w-full h-3 rounded-full bg-white border border-slate-200 overflow-hidden flex" role="img"
+                  aria-label={`Lớp học ${stats?.storageBreakdown?.userData.percent || 0}%, tài khoản và cấu hình ${stats?.storageBreakdown?.users.percent || 0}%`}>
+                  <div className="h-full bg-emerald-600" style={{ width: `${stats?.storageBreakdown?.userData.percent || 0}%` }} />
+                  <div className="h-full bg-amber-600" style={{ width: `${stats?.storageBreakdown?.users.percent || 0}%` }} />
                 </div>
-
-                {/* Legend */}
-                <div className="flex flex-wrap items-center justify-between text-[12px] text-slate-400 pt-1">
-                  <div className="flex flex-wrap items-center gap-4">
-                    <span className="flex items-center gap-1.5">
-                      <span className="w-2.5 h-2.5 rounded-full bg-emerald-700" />
-                      <span>Dữ liệu học tập các lớp ({stats?.storageBreakdown?.userData.percent || 0}%)</span>
-                    </span>
-                    <span className="flex items-center gap-1.5">
-                      <span className="w-2.5 h-2.5 rounded-full bg-violet-600" />
-                      <span>Nhật ký Audit Logs ({stats?.storageBreakdown?.auditLogs.percent || 0}%)</span>
-                    </span>
-                    <span className="flex items-center gap-1.5">
-                      <span className="w-2.5 h-2.5 rounded-full bg-amber-700" />
-                      <span>Hồ sơ Tài khoản ({stats?.storageBreakdown?.users.percent || 0}%)</span>
-                    </span>
+                <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 text-sm text-slate-700">
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+                    <span className="inline-flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-emerald-600" /> Dữ liệu lớp học ({stats?.storageBreakdown?.userData.percent || 0}%)</span>
+                    <span className="inline-flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-amber-600" /> {driveMode ? 'Tài khoản, cấu hình, báo cáo' : 'Hồ sơ tài khoản'} ({stats?.storageBreakdown?.users.percent || 0}%)</span>
                   </div>
-
-                  <span className="text-[12px] text-slate-400 font-mono">
-                    Đồng bộ lần cuối: <strong className="text-slate-200">{stats?.lastSync ? new Date(stats.lastSync).toLocaleString('vi-VN') : 'Vừa xong'}</strong>
-                  </span>
+                  <span className="text-slate-600">Cập nhật: <strong className="text-slate-800">{stats?.lastSync ? new Date(stats.lastSync).toLocaleString('vi-VN') : '—'}</strong></span>
                 </div>
               </div>
-            </div>
+            </section>
 
             {/* BẢNG THỐNG KÊ CHI TIẾT DUNG LƯỢNG TỪNG TÀI KHOẢN GIÁO VIÊN (Yêu cầu 4) */}
             <div className="bg-white border border-slate-200 rounded-3xl p-5 md:p-6 shadow-xs space-y-4">
@@ -3938,8 +3773,9 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                               <button
                                 type="button"
                                 onClick={() => handleQuickSwitch(item.username)}
-                                className="px-2 py-1 text-[12px] font-black text-slate-700 hover:bg-slate-100 rounded-lg border border-slate-300 transition-colors uppercase"
-                                title="Chuyển sang tài khoản này"
+                                disabled={!(item.role === 'homeroom' || item.role === 'subject')}
+                                className="px-2 py-1 text-xs font-black text-slate-800 hover:bg-slate-100 rounded-lg border border-slate-300 transition-colors uppercase disabled:opacity-40"
+                                title="Xem giao diện lớp của giáo viên này ở chế độ chỉ xem"
                               >
                                 Xem
                               </button>
@@ -3948,32 +3784,11 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                         </tr>
                       ))
                     ) : (
-                      allUsers.map((u) => (
-                        <tr key={uidOf(u)} className="hover:bg-slate-50/80 transition-colors">
-                          <td className="py-2 px-2">
-                            <div className="font-black text-slate-900">{u.fullName}</div>
-                            <div className="text-[12px] font-mono text-indigo-600">@{u.username}</div>
-                          </td>
-                          <td className="py-3 px-3">
-                            <span className="px-2.5 py-0.5 rounded-full text-[12px] font-black uppercase bg-slate-100 text-slate-700">
-                              {u.role}
-                            </span>
-                          </td>
-                          <td className="py-3 px-3 text-center font-bold text-slate-700">1 lớp</td>
-                          <td className="py-3 px-3 text-center font-bold text-slate-700">30 HS</td>
-                          <td className="py-3 px-3 text-right font-black font-mono text-indigo-900">~12 KB</td>
-                          <td className="py-3 px-3 text-center font-mono">15%</td>
-                          <td className="py-3 px-3 text-right">
-                            <button
-                              type="button"
-                              onClick={() => handleQuickSwitch(u.username)}
-                              className="px-2 py-1 text-[12px] font-black text-slate-700 hover:bg-slate-100 rounded-lg border border-slate-300 transition-colors uppercase"
-                            >
-                              Xem
-                            </button>
-                          </td>
-                        </tr>
-                      ))
+                      <tr>
+                        <td colSpan={7} className="py-10 text-center text-sm text-slate-600">
+                          {driveMode ? 'Chưa có tệp lớp nào của giáo viên trên Google Drive dùng chung.' : 'Chưa đọc được thống kê dung lượng. Bấm Làm mới để thử lại.'}
+                        </td>
+                      </tr>
                     )}
                   </tbody>
                 </table>

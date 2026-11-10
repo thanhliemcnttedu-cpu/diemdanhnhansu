@@ -7,6 +7,7 @@ import { googleDriveService } from './googleDriveService';
 import { schoolDriveDbService } from './schoolDriveDbService';
 import { adminEditsService, schoolBranchesDrive } from './adminEditsService';
 import { DEFAULT_SUBJECT_TEACHER_CONFIG } from '../data/initialData';
+import { isViewOnly } from '../utils/viewOnlyMode';
 
 export function getApiBaseUrl(): string {
   if (typeof window !== 'undefined' && window.location.protocol === 'file:') {
@@ -1532,6 +1533,8 @@ export const databaseService = {
   },
 
   async saveUserData(username: string, data: UserClassroomData): Promise<boolean> {
+    // 👁️ Chế độ chỉ xem (Quản trị đang xem lớp của giáo viên): KHÔNG ghi gì
+    if (isViewOnly()) return true;
     const cleanUser = username.trim().toLowerCase();
     let isSuccess = false;
 
@@ -2437,6 +2440,7 @@ export const databaseService = {
 
   // Admin Unified Data Sync: Save and distribute classes and students to all teachers
   async syncAdminAllData(classes: Classroom[], students: Student[]): Promise<boolean> {
+    if (isViewOnly()) return true;
     let synced = false;
 
     // 1. Direct Supabase Cloud Sync
@@ -2528,6 +2532,7 @@ export const databaseService = {
   },
 
   async updateAdminClass(classData: any, targetUsername?: string, isDelete = false): Promise<boolean> {
+    if (isViewOnly()) return true;
     // ☁️ Bản web (Drive): ghi điều chỉnh của Quản trị/BGH vào tệp dieuchinh_quantri.json
     try { adminEditsService.record('class', classData, isDelete); } catch (_) {}
     const username = (targetUsername || classData?.teacherUsername || '').trim().toLowerCase();
@@ -2764,6 +2769,7 @@ export const databaseService = {
   },
 
   async updateAdminStudent(studentData: any, targetUsername?: string, isDelete = false, schoolName?: string): Promise<boolean> {
+    if (isViewOnly()) return true;
     // ☁️ Bản web (Drive): ghi điều chỉnh của Quản trị tối cao vào tệp dieuchinh_quantri.json
     try { adminEditsService.record('student', studentData, isDelete); } catch (_) {}
     const username = (targetUsername || '').trim().toLowerCase();
@@ -2957,6 +2963,7 @@ export const databaseService = {
   },
 
   async saveSchoolBranches(schoolName: string, branches: SchoolBranch[]): Promise<boolean> {
+    if (isViewOnly()) return true;
     const cleanSchool = (schoolName || '').trim();
     if (!cleanSchool) return false;
 
@@ -3369,6 +3376,11 @@ export const databaseService = {
     description: string;
     details?: any;
   }): Promise<boolean> {
+    // Đã bỏ chức năng "Lịch sử thao tác" (11/2026): không ghi nhật ký để mọi lần lưu / tải nhanh nhất.
+    // Giữ hàm (nhiều nơi gọi) nhưng không làm gì.
+    void entry;
+    return true;
+    // eslint-disable-next-line no-unreachable
     try {
       const res = await fetch('/api/audit-logs', {
         method: 'POST',
