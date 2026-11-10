@@ -10,12 +10,12 @@ type GridRow = { id: string; label: string; hint: string; get: (wk: string) => n
 const dm = (k: string) => `${k.slice(8, 10)}/${k.slice(5, 7)}`;
 
 /** Bảng nhập số tiết: dòng = mục / môn, cột = Tuần 1…5 của tháng (giống mẫu bảng kê của nhà trường) */
-const WeekGrid: React.FC<{ title: string; color: string; wks: MonthWeek[]; locked: boolean; rows: GridRow[]; extra?: React.ReactNode; warn?: string; showTotalRow?: boolean }> = ({ title, color, wks, locked, rows, extra, warn, showTotalRow }) => {
+const WeekGrid: React.FC<{ title: React.ReactNode; color: string; wks: MonthWeek[]; locked: boolean; rows: GridRow[]; extra?: React.ReactNode; warn?: string; showTotalRow?: boolean }> = ({ title, color, wks, locked, rows, extra, warn, showTotalRow }) => {
   const rowTotal = (r: GridRow) => wks.reduce((a, w) => a + r.get(w.key), 0);
   return (
     <div className="rounded-2xl border border-slate-200 overflow-hidden">
       <div className="px-3 py-2 bg-slate-50 border-b border-slate-200 flex items-center justify-between gap-2">
-        <p className="text-sm font-black" style={{ color }}>{title}</p>
+        <p className="text-sm font-black whitespace-nowrap truncate min-w-0" style={{ color }}>{title}</p>
         {!locked && extra}
       </div>
       <div className="overflow-x-auto">
@@ -70,7 +70,16 @@ const LIST_FIELDS: Array<{ key: 'classesPE' | 'classesDisabled' | 'classesEnglis
   { key: 'classesDisabled', label: 'Lớp dạy có học sinh khuyết tật', hint: 'Ví dụ: 2A3, 5A1' },
   { key: 'classesEnglish', label: 'Lớp dạy thừa giờ Tiếng Anh', hint: 'Ví dụ: 3A1, 3A2, 4A1, 4A2' },
 ];
-const splitList = (t: string) => t.split(/[,;\n]/).map(s => s.trim()).filter(Boolean);
+/** Tách danh sách lớp; tên lớp tự viết hoa và bỏ khoảng trắng thừa: "3a4,  4 a6" → ["3A4", "4A6"] */
+const splitList = (t: string) => t.split(/[,;\n]/).map(s => s.replace(/\s+/g, '').toUpperCase()).filter(Boolean);
+const upperList = (l?: string[]) => (l || []).map(s => s.replace(/\s+/g, '').toUpperCase());
+
+/** Nhãn tròn hiển thị danh sách lớp / môn đã khai báo */
+const Chips: React.FC<{ items: string[]; bg: string; fg: string }> = ({ items, bg, fg }) => (
+  items.length
+    ? <div className="flex flex-wrap gap-1.5 mt-1">{items.map(x => <span key={x} className="px-2 py-0.5 rounded-lg text-sm font-bold whitespace-nowrap" style={{ background: bg, color: fg }}>{x}</span>)}</div>
+    : <p className="mt-0.5 text-sm text-slate-400">Không có</p>
+);
 
 export const TeachingLogPanel: React.FC<{ cccd: string; pin: string; today: string }> = ({ cccd, pin, today }) => {
   const thisMonth = (today || new Date().toISOString()).slice(0, 7);
@@ -111,7 +120,7 @@ export const TeachingLogPanel: React.FC<{ cccd: string; pin: string; today: stri
   const startEdit = (p: TeachProfile | null) => {
     const base = p || EMPTY_PROFILE;
     setDraft({ ...base, overtimeSubjects: base.overtimeSubjects || [] });
-    setListText({ classesPE: base.classesPE.join(', '), classesDisabled: base.classesDisabled.join(', '), classesEnglish: base.classesEnglish.join(', ') });
+    setListText({ classesPE: upperList(base.classesPE).join(', '), classesDisabled: upperList(base.classesDisabled).join(', '), classesEnglish: upperList(base.classesEnglish).join(', ') });
     setOtherSubject('');
     setEditing(true);
   };
@@ -199,7 +208,7 @@ export const TeachingLogPanel: React.FC<{ cccd: string; pin: string; today: stri
   }
 
   return (
-    <div className="flex flex-col gap-4 lg:grid lg:grid-cols-[minmax(0,21rem)_minmax(0,1fr)] lg:gap-5 lg:items-start">
+    <div className="flex flex-col gap-4 lg:grid lg:grid-cols-[minmax(0,24rem)_minmax(0,1fr)] lg:gap-5 lg:items-start">
       {msg && (
         <p className={`lg:col-span-2 rounded-2xl px-4 py-3 text-sm font-bold border ${msg.ok ? 'bg-emerald-50 border-emerald-200 text-emerald-900' : 'bg-rose-50 border-rose-200 text-rose-800'}`} role="status">{msg.text}</p>
       )}
@@ -209,7 +218,7 @@ export const TeachingLogPanel: React.FC<{ cccd: string; pin: string; today: stri
         {/* Bước 1: khai báo */}
         <section className={`max-lg:order-1 bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden`}>
           <div className="px-5 py-3.5 border-b border-slate-100 flex items-center justify-between gap-2">
-            <p className="text-base font-black text-slate-900 inline-flex items-center gap-2"><BookOpenCheck className="w-5 h-5 text-indigo-600" /> 1. Khai báo phân công</p>
+            <p className="text-base font-black text-slate-900 inline-flex items-center gap-2 whitespace-nowrap min-w-0"><BookOpenCheck className="w-5 h-5 text-indigo-600 shrink-0" /> 1. Khai báo phân công</p>
             {!editing && profile && (
               <button type="button" onClick={() => startEdit(profile)} className="no-hover-fx h-9 px-3 rounded-xl border border-slate-300 text-sm font-bold text-slate-800 hover:bg-slate-50 inline-flex items-center gap-1.5 whitespace-nowrap"><Pencil className="w-4 h-4" /> Sửa</button>
             )}
@@ -239,7 +248,7 @@ export const TeachingLogPanel: React.FC<{ cccd: string; pin: string; today: stri
               {LIST_FIELDS.map(f => (
                 <label key={f.key} className="block space-y-1.5">
                   <span className="text-sm font-black text-slate-800">{f.label}</span>
-                  <input value={listText[f.key] || ''} onChange={(e) => setListText(t => ({ ...t, [f.key]: e.target.value }))} placeholder={f.hint}
+                  <input value={listText[f.key] || ''} onChange={(e) => setListText(t => ({ ...t, [f.key]: e.target.value.toUpperCase() }))} placeholder={f.hint}
                     className="w-full h-11 px-3 rounded-xl border border-slate-300 text-base" />
                   <span className="block text-xs text-slate-600">Ghi tên lớp, cách nhau bằng dấu phẩy. Để trống nếu không dạy.</span>
                 </label>
@@ -268,12 +277,21 @@ export const TeachingLogPanel: React.FC<{ cccd: string; pin: string; today: stri
               </div>
             </div>
           ) : profile ? (
-            <dl className="p-5 grid grid-cols-1 gap-2 text-sm">
-              <div><dt className="font-black text-slate-700">Môn dạy</dt><dd className="text-slate-900">{profile.subjects.join(', ') || '—'}</dd></div>
-              {LIST_FIELDS.map(f => (
-                <div key={f.key}><dt className="font-black text-slate-700">{f.label}</dt><dd className="text-slate-900">{profile[f.key].join(', ') || '—'}</dd></div>
+            <dl className="divide-y divide-slate-100">
+              {([
+                ['Môn dạy được phân công', profile.subjects, '#eef2ff', '#3730a3', '#4f46e5'],
+                ['Lớp dạy Giáo dục thể chất', upperList(profile.classesPE), TEACH_META.pe.soft, TEACH_META.pe.text, TEACH_META.pe.color],
+                ['Lớp dạy có học sinh khuyết tật', upperList(profile.classesDisabled), TEACH_META.disabled.soft, TEACH_META.disabled.text, TEACH_META.disabled.color],
+                ['Lớp dạy thừa giờ Tiếng Anh', upperList(profile.classesEnglish), TEACH_META.english.soft, TEACH_META.english.text, TEACH_META.english.color],
+                ['Dạy thừa giờ các môn khác', (profile.overtimeSubjects || []).map(subjectLabel), TEACH_META.overtime.soft, TEACH_META.overtime.text, TEACH_META.overtime.color],
+              ] as Array<[string, string[], string, string, string]>).map(([label, items, bg, fg, dot]) => (
+                <div key={label} className="px-5 py-3">
+                  <dt className="text-xs font-bold text-slate-500 inline-flex items-center gap-1.5 whitespace-nowrap">
+                    <span className="w-2 h-2 rounded-full shrink-0" style={{ background: items.length ? dot : '#cbd5e1' }} />{label}
+                  </dt>
+                  <dd><Chips items={items} bg={bg} fg={fg} /></dd>
+                </div>
               ))}
-              <div><dt className="font-black text-slate-700">Dạy thừa giờ các môn khác</dt><dd className="text-slate-900">{(profile.overtimeSubjects || []).map(subjectLabel).join(', ') || '—'}</dd></div>
             </dl>
           ) : null}
         </section>
@@ -290,7 +308,7 @@ export const TeachingLogPanel: React.FC<{ cccd: string; pin: string; today: stri
                 return (
                   <li key={m.month} className={`px-4 py-3 flex items-center gap-3 ${current ? 'bg-indigo-50/60' : ''}`}>
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm font-black text-slate-900 flex items-center gap-2 flex-wrap">
+                      <p className="text-sm font-black text-slate-900 flex items-center gap-2 whitespace-nowrap">
                         {monthLabel(m.month)}
                         {m.locked
                           ? <span className="inline-flex items-center gap-1 text-xs font-bold text-rose-800 bg-rose-50 border border-rose-200 px-2 py-0.5 rounded-full whitespace-nowrap"><Lock className="w-3 h-3" /> Đã khóa</span>
@@ -303,7 +321,7 @@ export const TeachingLogPanel: React.FC<{ cccd: string; pin: string; today: stri
                     <button type="button" disabled={current}
                       onClick={() => { setMonth(m.month); setTimeout(() => logRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50); }}
                       className="no-hover-fx h-9 px-3 rounded-xl border border-slate-300 text-sm font-bold text-slate-800 hover:bg-slate-50 inline-flex items-center gap-1.5 whitespace-nowrap disabled:opacity-60">
-                      {current ? 'Đang xem' : m.locked ? 'Xem' : <><Pencil className="w-4 h-4" /> Xem / sửa</>}
+                      {current ? 'Đang xem' : m.locked ? 'Xem' : <><Pencil className="w-4 h-4" /> Sửa</>}
                     </button>
                   </li>
                 );
@@ -317,7 +335,7 @@ export const TeachingLogPanel: React.FC<{ cccd: string; pin: string; today: stri
       {profile && !editing && (
         <section ref={logRef} className="max-lg:order-2 bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden scroll-mt-4 lg:col-start-2">
           <div className="px-5 py-3.5 border-b border-slate-100 flex items-center justify-between gap-2">
-            <p className="text-base font-black text-slate-900">2. Kê khai số tiết</p>
+            <p className="text-base font-black text-slate-900 whitespace-nowrap"><span className="sm:hidden">2. Số tiết</span><span className="max-sm:hidden">2. Kê khai số tiết</span></p>
             <div className="flex items-center gap-1">
               <button type="button" onClick={() => setMonth(m => addMonths(m, -1))} aria-label="Tháng trước" className="no-hover-fx w-9 h-9 rounded-xl hover:bg-slate-100 inline-flex items-center justify-center"><ChevronLeft className="w-5 h-5" /></button>
               <span className="text-sm font-black text-slate-900 whitespace-nowrap min-w-[110px] text-center">{monthLabel(month)}</span>
@@ -343,7 +361,7 @@ export const TeachingLogPanel: React.FC<{ cccd: string; pin: string; today: stri
                   />
               )}
               {keys.includes('disabled') && (
-                <WeekGrid title="Lớp có HS khuyết tật (theo môn)" color={TEACH_META.disabled.text} wks={wks} locked={locked} showTotalRow
+                <WeekGrid title={<>Lớp có HS khuyết tật<span className="max-sm:hidden"> (theo môn)</span></>} color={TEACH_META.disabled.text} wks={wks} locked={locked} showTotalRow
                   rows={ktCodes.map(code => {
                     const h = HSKT_SUBJECTS.find(x => x.code === code)!;
                     return { id: code, label: h.label, hint: `Tiết ${h.label} dạy ở lớp có HS khuyết tật`, get: (wk: string) => ktOf(weeks[wk], code), set: (wk: string, v: string) => setKt(wk, code, v) };

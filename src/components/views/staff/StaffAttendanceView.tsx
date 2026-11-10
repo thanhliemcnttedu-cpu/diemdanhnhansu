@@ -373,7 +373,7 @@ export const StaffAttendanceView: React.FC = () => {
 
           {staff.length > 0 && todayStats && (
             <>
-              {/* KPI hôm nay + so sánh hôm qua */}
+              {/* KPI hôm nay (so sánh nằm ở khối "So sánh số liệu" bên dưới, người dùng tự chọn kỳ) */}
               <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3">
                 <div className="rounded-2xl bg-white border border-slate-200 p-4">
                   <p className="text-xs font-black uppercase text-slate-600">Tổng nhân sự</p>
@@ -385,7 +385,6 @@ export const StaffAttendanceView: React.FC = () => {
                     <p className="text-xs font-black uppercase" style={{ color: STAFF_STATUS_META[k].text }}>{STAFF_STATUS_META[k].label}</p>
                     <p className="text-3xl font-black" style={{ color: STAFF_STATUS_META[k].text }}>{todayStats[k]}
                       <span className="text-base font-bold ml-1.5">({todayStats.total ? Math.round(todayStats[k] / todayStats.total * 1000) / 10 : 0}%)</span></p>
-                    <p className="text-xs font-bold">So với {prevLabel}: {yStats ? delta(todayStats[k], yStats[k]) : '—'}</p>
                   </div>
                 ))}
               </div>
@@ -394,12 +393,17 @@ export const StaffAttendanceView: React.FC = () => {
                 {/* Hôm nay */}
                 <div className="rounded-3xl bg-white border border-slate-200 p-4 space-y-3">
                   <h3 className="text-sm font-black uppercase text-slate-800">Hôm nay • {shortDateLabel(today)}</h3>
-                  <div className="flex items-center gap-4">
+                  <div className="flex flex-col items-center gap-3 2xl:flex-row 2xl:gap-4">
                     <Donut centerTop={`${todayStats.workRate}%`} centerSub="đi làm" parts={STATUS_ORDER.map(k => ({ key: k, value: todayStats[k], color: STAFF_STATUS_META[k].color, label: STAFF_STATUS_META[k].label }))} />
-                    <div className="space-y-1.5 text-sm">
-                      <p className="font-bold text-slate-800">{prevLabel}: <span className="text-slate-900">{yStats ? `${yStats.workRate}%` : '—'}</span> đi làm</p>
-                      <p className="font-bold text-slate-800">Chênh lệch: {yStats ? delta(todayStats.workRate, yStats.workRate) : '—'} điểm %</p>
-                      <p className="text-slate-600">Tự làm mới mỗi phút.</p>
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-1 w-full text-sm min-w-0 2xl:grid-cols-1 2xl:w-auto 2xl:flex-1">
+                      {STATUS_ORDER.map(k => (
+                        <p key={k} className="flex items-center gap-1.5 text-slate-800">
+                          <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: STAFF_STATUS_META[k].color }} />
+                          <span className="whitespace-nowrap">{STAFF_STATUS_META[k].short}</span>
+                          <strong className="ml-auto tabular-nums">{todayStats[k]}</strong>
+                        </p>
+                      ))}
+                      <p className="col-span-2 text-xs text-slate-500 pt-1">Tự làm mới mỗi phút.</p>
                     </div>
                   </div>
                 </div>
@@ -443,6 +447,9 @@ export const StaffAttendanceView: React.FC = () => {
                 </div>
               </div>
 
+              {/* 📊 So sánh số liệu: người dùng chọn 2 ngày / tuần này – tuần trước / tháng này – tháng trước */}
+              <ComparePanel staff={staff} auth={auth} today={today} />
+
               {/* Hôm nay: chi tiết từng người */}
               <TodayDetail staff={staff} records={days[dd] || {}} today={today} date={dd} dayLock={locks[dd] || null} auth={auth}
                 loadingDate={detailLoading} onDateChange={(d) => setDetailDate(d >= today ? '' : d)}
@@ -456,6 +463,123 @@ export const StaffAttendanceView: React.FC = () => {
       {tab === 'roster' && <RosterPanel canManage={canManage} auth={auth} schoolName={schoolName} />}
       {tab === 'teach' && auth && <TeachingReportPanel auth={auth} schoolName={schoolName} today={today} />}
       {tab === 'link' && <LinkPanel schoolName={schoolName} isBghOnly={Boolean(isBgh && !canManage)} />}
+    </div>
+  );
+};
+
+// ---------------------------------------------------------------- so sánh số liệu giữa 2 kỳ (người dùng chọn)
+type CmpMode = 'day' | 'week' | 'month';
+type Period2 = { from: string; to: string; label: string };
+const prevWorkday = (k: string) => { let d = addDays(k, -1); while ([0, 6].includes(fromDateKey(d).getDay())) d = addDays(d, -1); return d; };
+const weekOfKey = (k: string): Period2 => {
+  const dow = (fromDateKey(k).getDay() + 6) % 7; const from = addDays(k, -dow); const to = addDays(from, 6);
+  return { from, to, label: `Tuần ${shortDateLabel(from)} – ${shortDateLabel(to)}` };
+};
+const monthOfKey = (k: string): Period2 => {
+  const d = fromDateKey(k);
+  return { from: toDateKey(new Date(d.getFullYear(), d.getMonth(), 1)), to: toDateKey(new Date(d.getFullYear(), d.getMonth() + 1, 0)), label: `Tháng ${d.getMonth() + 1}/${d.getFullYear()}` };
+};
+const dayPeriod = (k: string): Period2 => ({ from: k, to: k, label: `${weekdayLabel(k)} ${shortDateLabel(k)}/${k.slice(0, 4)}` });
+
+const ComparePanel: React.FC<{ staff: StaffMember[]; auth: { username: string; password: string } | null; today: string }> = ({ staff, auth, today }) => {
+  const [mode, setMode] = useState<CmpMode>('day');
+  const [dayA, setDayA] = useState(today);
+  const [dayB, setDayB] = useState(() => prevWorkday(today));
+  const [days, setDays] = useState<DaysMap>({});
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState('');
+  useEffect(() => { setDayA(today); setDayB(prevWorkday(today)); }, [today]);
+
+  const [A, B] = useMemo<[Period2, Period2]>(() => {
+    if (mode === 'week') { const a = weekOfKey(today); return [{ ...a, label: `Tuần này (${a.label.slice(5)})` }, { ...weekOfKey(addDays(a.from, -7)), label: `Tuần trước (${weekOfKey(addDays(a.from, -7)).label.slice(5)})` }]; }
+    if (mode === 'month') { const a = monthOfKey(today); const b = monthOfKey(addDays(a.from, -1)); return [{ ...a, label: `Tháng này (${a.label.slice(6)})` }, { ...b, label: `Tháng trước (${b.label.slice(6)})` }]; }
+    return [dayPeriod(dayA > today ? today : dayA), dayPeriod(dayB > today ? today : dayB)];
+  }, [mode, today, dayA, dayB]);
+
+  useEffect(() => {
+    if (!auth) return;
+    let alive = true;
+    setBusy(true); setErr('');
+    const clip = (p: Period2) => ({ from: p.from, to: p.to > today ? today : p.to });
+    Promise.all([A, B].map(p => { const c = clip(p); return staffAttendanceService.range(c.from, c.to, auth); }))
+      .then(rs => {
+        if (!alive) return;
+        const bad = rs.find(r => !r?.success);
+        if (bad) { setErr(bad?.message || 'Không tải được số liệu để so sánh.'); return; }
+        setDays(Object.assign({}, ...rs.map(r => r.days || {})));
+      })
+      .catch((e: any) => { if (alive) setErr(e?.message || 'Lỗi kết nối.'); })
+      .finally(() => { if (alive) setBusy(false); });
+    return () => { alive = false; };
+  }, [A.from, A.to, B.from, B.to, auth, today]);
+
+  const sa = useMemo(() => aggregate(staff, days, A.from, A.to, today), [staff, days, A, today]);
+  const sb = useMemo(() => aggregate(staff, days, B.from, B.to, today), [staff, days, B, today]);
+  const multi = mode !== 'day';
+  const unit = multi ? 'lượt' : 'người';
+  const rows: Array<{ label: string; a: number; b: number; goodUp: boolean | null; pct?: boolean }> = [
+    ...STATUS_ORDER.map(k => ({ label: STAFF_STATUS_META[k].label, a: sa.totals[k], b: sb.totals[k], goodUp: k === 'present' ? true : k === 'business_trip' ? null : false } as { label: string; a: number; b: number; goodUp: boolean | null; pct?: boolean })),
+    { label: 'Tỷ lệ đi làm', a: sa.totals.workRate, b: sb.totals.workRate, goodUp: true, pct: true },
+    { label: 'Tỷ lệ đã điểm danh', a: sa.totals.markRate, b: sb.totals.markRate, goodUp: true, pct: true },
+    ...(multi ? [{ label: 'Số ngày làm việc', a: sa.workingDays.length, b: sb.workingDays.length, goodUp: null }] : []),
+  ];
+  const Delta: React.FC<{ a: number; b: number; goodUp: boolean | null; pct?: boolean }> = ({ a, b, goodUp, pct }) => {
+    const d = Math.round((a - b) * 10) / 10;
+    if (d === 0) return <span className="inline-flex items-center gap-0.5 text-slate-600"><Minus className="w-3.5 h-3.5" />0</span>;
+    const good = goodUp === null ? null : (d > 0) === goodUp;
+    const cls = good === null ? 'text-slate-700' : good ? 'text-emerald-800' : 'text-rose-700';
+    return <span className={`inline-flex items-center gap-0.5 font-black ${cls}`}>{d > 0 ? <TrendingUp className="w-3.5 h-3.5" /> : <TrendingDown className="w-3.5 h-3.5" />}{d > 0 ? '+' : ''}{d}{pct ? ' điểm %' : ''}</span>;
+  };
+  return (
+    <div className="rounded-3xl bg-white border border-slate-200 overflow-hidden">
+      <div className="px-4 pt-4 flex flex-wrap items-center gap-2">
+        <h3 className="text-sm font-black uppercase text-slate-800 mr-auto inline-flex items-center gap-2">So sánh số liệu {busy && <Loader2 className="w-4 h-4 animate-spin text-slate-500" />}</h3>
+        <div className="flex gap-1 bg-slate-100 p-1 rounded-xl" role="tablist" aria-label="Kiểu so sánh">
+          {([['day', 'Hai ngày'], ['week', 'Tuần này – tuần trước'], ['month', 'Tháng này – tháng trước']] as Array<[CmpMode, string]>).map(([v, l]) => (
+            <button key={v} type="button" role="tab" aria-selected={mode === v} onClick={() => setMode(v)}
+              className={`no-hover-fx h-8 px-3 rounded-lg text-sm font-bold whitespace-nowrap ${mode === v ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600 hover:text-slate-900'}`}>{l}</button>
+          ))}
+        </div>
+      </div>
+      {mode === 'day' && (
+        <div className="px-4 pt-3 flex flex-wrap items-center gap-2 text-sm">
+          <label className="inline-flex items-center gap-1.5 font-bold text-slate-700">Ngày
+            <input type="date" value={dayA} max={today} onChange={(e) => e.target.value && setDayA(e.target.value)} className="h-9 px-2 rounded-lg border border-slate-300 font-bold text-slate-900" />
+          </label>
+          <span className="text-slate-500 font-bold">so với</span>
+          <label className="inline-flex items-center gap-1.5 font-bold text-slate-700">ngày
+            <input type="date" value={dayB} max={today} onChange={(e) => e.target.value && setDayB(e.target.value)} className="h-9 px-2 rounded-lg border border-slate-300 font-bold text-slate-900" />
+          </label>
+        </div>
+      )}
+      {err && <p className="mx-4 mt-3 rounded-xl bg-rose-50 border border-rose-200 px-3 py-2 text-sm font-bold text-rose-800">{err}</p>}
+      <div className="overflow-x-auto p-4">
+        <table className="w-full text-sm min-w-[560px]">
+          <thead>
+            <tr className="text-left text-xs uppercase text-slate-600 border-b border-slate-200">
+              <th className="py-2 pr-3">Chỉ số</th>
+              <th className="py-2 px-3 text-right">{A.label}</th>
+              <th className="py-2 px-3 text-right">{B.label}</th>
+              <th className="py-2 pl-3 text-right">Chênh lệch</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map(r => (
+              <tr key={r.label} className="border-b border-slate-100">
+                <td className="py-2 pr-3 font-bold text-slate-800">{r.label}</td>
+                <td className="py-2 px-3 text-right tabular-nums font-black text-slate-900">{r.a}{r.pct ? '%' : ''}</td>
+                <td className="py-2 px-3 text-right tabular-nums text-slate-700">{r.b}{r.pct ? '%' : ''}</td>
+                <td className="py-2 pl-3 text-right tabular-nums"><Delta a={r.a} b={r.b} goodUp={r.goodUp} pct={r.pct} /></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <p className="mt-2 text-xs text-slate-600">
+          {multi
+            ? `Số liệu tính theo ${unit} (người × ngày làm việc); kỳ hiện tại tính đến hôm nay nên nên so sánh theo tỷ lệ %.`
+            : 'Số người theo từng trạng thái của mỗi ngày; chênh lệch = ngày thứ nhất trừ ngày thứ hai.'}
+        </p>
+      </div>
     </div>
   );
 };
