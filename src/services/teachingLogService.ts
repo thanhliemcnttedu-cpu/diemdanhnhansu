@@ -119,7 +119,7 @@ export function schoolYearOf(ym: string) {
 const friendly = (e: any) => {
   const msg = String(e?.message || '');
   if (/Hành động không hợp lệ|phiên bản 4\.2/.test(msg)) {
-    return 'Hệ thống của trường chưa có đủ chức năng Kê khai tiết dạy (cần Apps Script 4.9). Vui lòng báo Quản trị nhà trường cập nhật.';
+    return 'Hệ thống của trường chưa có đủ chức năng Kê khai tiết dạy (cần Apps Script 4.10). Vui lòng báo Quản trị nhà trường cập nhật.';
   }
   return msg || 'Không kết nối được máy chủ.';
 };
@@ -155,5 +155,9 @@ export const teachingLogService = {
   /** BGH / Quản trị: khóa (lock = true) hoặc mở khóa kê khai tháng `month` cho cả trường (all) hoặc các mã `codes` */
   lock(month: string, lock: boolean, target: { all?: boolean; codes?: string[] }, auth?: { username: string; password: string } | null): Promise<{ success: boolean; message?: string; lock?: TeachLock | null }> {
     return safeCall({ action: 'teachLock', auth: auth ?? staffAttendanceService.getViewerAuth(), month, lock, all: !!target.all, codes: target.codes || [] });
+  },
+  /** BGH / Quản trị (Apps Script 4.10): xóa bảng kê tháng `month` của các mã `codes` để giáo viên kê lại; unlock = mở khóa cho họ */
+  deleteLog(month: string, codes: string[], opts: { reason?: string; unlock?: boolean } = {}, auth?: { username: string; password: string } | null): Promise<{ success: boolean; message?: string; removed?: string[]; lock?: TeachLock | null }> {
+    return safeCall({ action: 'teachDeleteLog', auth: auth ?? staffAttendanceService.getViewerAuth(), month, codes, reason: opts.reason || '', unlock: opts.unlock !== false });
   },
 };

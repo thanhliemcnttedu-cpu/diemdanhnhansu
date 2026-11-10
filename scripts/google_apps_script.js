@@ -13,6 +13,8 @@
  * - CHỈ tổng hợp tệp của GVCN (gvcn_*.json, teacherRole = homeroom). Tệp GV bộ môn (gvbm_*.json),
  *   BGH, Quản trị không được tính để không dôi số lớp / số học sinh.
  *
+ * - V4.10: BGH / Quản trị XÓA bảng kê tiết dạy 1 tháng của 1 / nhiều giáo viên (teachDeleteLog) khi số liệu sai
+ *   hoặc yêu cầu kê lại; mặc định mở khóa luôn cho người bị xóa để kê lại được. Ghi nhật ký db.deletions (200 mục gần nhất).
  * - V4.9: KHÓA CHỐT KÊ KHAI TIẾT DẠY theo tháng (teachLock: BGH / Quản trị; cả trường hoặc từng giáo viên).
  *   Giáo viên kê / sửa bất cứ lúc nào (mọi tuần của tháng hiện tại và các tháng trước) cho tới khi bị khóa;
  *   mở khóa là kê tiếp được. teachGet trả danh sách các tháng đã kê (months) + trạng thái khóa.
@@ -50,7 +52,7 @@
 var FOLDER_ID = "__FOLDER_ID__";
 var TARGET_FILENAME = "du_lieu_lop_hoc_hanh_phuc.json";
 var REPORT_PREFIX = "bc_";
-var SCRIPT_VERSION = "4.9";
+var SCRIPT_VERSION = "4.10";
 
 // ---------------------------------------------------------------------------------------
 // HTTP POST: lưu dữ liệu lớp
@@ -65,7 +67,7 @@ function doPost(e) {
     var action = payload.action || "saveClassData";
 
     if (action === "staffAuth" || action === "staffCheckIn" || action === "getStaffRoster" || action === "saveStaffRoster" || action === "staffAttendanceRange" || action === "staffLock" || action === "staffProxyCheckIn"
-        || action === "teachGet" || action === "teachSaveProfile" || action === "teachSaveLog" || action === "teachReport" || action === "teachLock") {
+        || action === "teachGet" || action === "teachSaveProfile" || action === "teachSaveLog" || action === "teachReport" || action === "teachLock" || action === "teachDeleteLog") {
       var staffFolder = resolveFolder(folderId);
       if (!staffFolder) return createJsonResponse({ success: false, message: "Không tìm thấy thư mục Google Drive: " + folderId });
       if (action === "staffAuth") return createJsonResponse(handleStaffAuth(staffFolder, payload));
@@ -79,6 +81,7 @@ function doPost(e) {
       if (action === "teachSaveLog") return createJsonResponse(handleTeachSaveLog(staffFolder, payload));
       if (action === "teachReport") return createJsonResponse(handleTeachReport(staffFolder, payload));
       if (action === "teachLock") return createJsonResponse(handleTeachLock(staffFolder, payload));
+      if (action === "teachDeleteLog") return createJsonResponse(handleTeachDeleteLog(staffFolder, payload));
       return createJsonResponse(handleStaffAttendanceRange(staffFolder, payload));
     }
 
@@ -1067,6 +1070,56 @@ function teachMonthsOf(db, code) {
   }
   out.sort(function (a, b) { return a.month < b.month ? 1 : -1; });
   return out;
+}
+
+// ---------------------------------------------------------------- V4.10: xóa bảng kê của giáo viên để kê lại
+// payload: { auth, month, codes: [...], unlock (mặc định true), reason }
+function handleTeachDeleteLog(folder, payload) {
+  var actor = staffActor(folder, payload.auth, false);
+  if (!actor) return { success: false, code: "UNAUTHORIZED", message: "Chỉ BGH / Quản trị được xóa dữ liệu kê khai." };
+  var month = cleanMonth(payload.month);
+  var codes = (payload.codes || []).map(normalizeStaffCode).filter(function (c) { return !!c; });
+  if (!codes.length) return { success: false, message: "Chưa chọn giáo viên cần xóa kê khai." };
+  var unlock = payload.unlock !== false;
+  var reason = String(payload.reason || "").slice(0, 200);
+  var lock = LockService.getScriptLock();
+  try { lock.waitLock(20000); } catch (_) {}
+  try {
+    var db = readTeachDb(folder);
+    var at = new Date().toISOString();
+    var removed = [];
+    if (!db.deletions) db.deletions = [];
+    for (var i = 0; i < codes.length; i++) {
+      var c = codes[i];
+      if (db.logs[month] && db.logs[month][c]) {
+        delete db.logs[month][c];
+        removed.push(c);
+        db.deletions.push({ month: month, code: c, at: at, by: actor.username, reason: reason });
+      }
+    }
+    if (db.logs[month] && Object.keys(db.logs[month]).length === 0) delete db.logs[month];
+    if (db.deletions.length > 200) db.deletions = db.deletions.slice(-200);
+    // Mở khóa cho người bị xóa để kê lại (đang khóa cả trường -> chuyển sang khóa từng người trừ họ)
+    if (unlock && db.locks && db.locks[month]) {
+      var L = db.locks[month];
+      if (L.all) {
+        var keep = {};
+        var sdb = readStaffDb(folder);
+        for (var j = 0; j < sdb.staff.length; j++) keep[sdb.staff[j].code] = true;
+        for (var k = 0; k < codes.length; k++) delete keep[codes[k]];
+        L.all = false;
+        L.codes = keep;
+      } else if (L.codes) {
+        for (var n = 0; n < codes.length; n++) delete L.codes[codes[n]];
+      }
+      L.at = at; L.by = actor.username;
+      if (!L.all && Object.keys(L.codes || {}).length === 0) delete db.locks[month];
+    }
+    db.updatedAt = at;
+    writeFileOverwrite(folder, TEACH_FILE, JSON.stringify(db));
+    return { success: true, month: month, removed: removed, lock: (db.locks || {})[month] || null,
+      message: removed.length ? "Đã xóa kê khai tháng " + month + " của " + removed.length + " giáo viên." : "Không có dữ liệu kê khai để xóa." };
+  } finally { try { lock.releaseLock(); } catch (_) {} }
 }
 
 // BGH / Quản trị: khóa hoặc mở khóa kê khai 1 tháng cho cả trường (all) hoặc từng mã giáo viên (codes)
