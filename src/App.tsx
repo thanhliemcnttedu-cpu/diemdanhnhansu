@@ -39,6 +39,7 @@ const TimerView = lazy(() => import('./components/views/TimerView').then(m => ({
 const NoiseMeterView = lazy(() => import('./components/views/NoiseMeterView').then(m => ({ default: m.NoiseMeterView })));
 const SeatingChartView = lazy(() => import('./components/views/SeatingChartView').then(m => ({ default: m.SeatingChartView })));
 const AttendanceView = lazy(() => import('./components/views/AttendanceView').then(m => ({ default: m.AttendanceView })));
+const StaffCheckInPage = lazy(() => import('./components/views/staff/StaffCheckInPage').then(m => ({ default: m.StaffCheckInPage })));
 const StaffAttendanceView = lazy(() => import('./components/views/staff/StaffAttendanceView').then(m => ({ default: m.StaffAttendanceView })));
 const ScheduleLinksView = lazy(() => import('./components/views/ScheduleLinksView').then(m => ({ default: m.ScheduleLinksView })));
 const ReportsDataView = lazy(() => import('./components/views/ReportsDataView').then(m => ({ default: m.ReportsDataView })));
@@ -199,6 +200,8 @@ function ClassroomApp() {
         return <ReportsDataView defaultTab="data" />;
       case 'staff_attendance':
         return <StaffAttendanceView />;
+      case 'my_checkin':
+        return <StaffCheckInPage embedded onExit={() => handleNavigate('dashboard')} presetCccd={/^\d{9,12}$/.test(String(currentUser?.username || '')) ? String(currentUser?.username) : ''} />;
       case 'ai':
         return <AiAssistantView />;
       default:

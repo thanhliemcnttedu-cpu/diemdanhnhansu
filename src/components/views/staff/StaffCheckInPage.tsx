@@ -21,9 +21,24 @@ const OPTIONS: Array<{ id: StaffStatus; icon: React.ReactNode; hint: string }> =
 ];
 
 
-export const StaffCheckInPage: React.FC = () => {
+/** Mật khẩu vừa dùng đăng nhập phần mềm (tài khoản dùng chung, tên đăng nhập = số CCCD) — chỉ trong phiên tab */
+export const STAFF_PIN_HINT_KEY = 'lhhp_staff_pin_hint';
+export function readStaffPinHint(): { u: string; p: string } | null {
+  try {
+    const raw = sessionStorage.getItem(STAFF_PIN_HINT_KEY);
+    if (!raw) return null;
+    const v = JSON.parse(decodeURIComponent(atob(raw)));
+    return v && v.u && v.p ? v : null;
+  } catch (_) { return null; }
+}
+
+/**
+ * `embedded`: mở ngay trong phần mềm (mục "Chấm công của tôi" của giáo viên) — bỏ nền toàn trang,
+ * điền sẵn số CCCD (= tên đăng nhập) và tự kiểm tra bằng mật khẩu vừa đăng nhập phần mềm (thường chính là mật khẩu điểm danh).
+ */
+export const StaffCheckInPage: React.FC<{ embedded?: boolean; presetCccd?: string; onExit?: () => void }> = ({ embedded = false, presetCccd = '', onExit }) => {
   const conn = useMemo(() => staffAttendanceService.resolveConnection(), []);
-  const [cccd, setCccd] = useState(() => { try { return localStorage.getItem(REMEMBER_KEY) || ''; } catch (_) { return ''; } });
+  const [cccd, setCccd] = useState(() => { if (presetCccd) return presetCccd; try { return localStorage.getItem(REMEMBER_KEY) || ''; } catch (_) { return ''; } });
   const [remember, setRemember] = useState(() => { try { return Boolean(localStorage.getItem(REMEMBER_KEY)); } catch (_) { return false; } });
   const [pin, setPin] = useState('');
   const [showPin, setShowPin] = useState(false);
@@ -46,7 +61,7 @@ export const StaffCheckInPage: React.FC = () => {
   const [lockedMsg, setLockedMsg] = useState('');
 
   const [schoolName, setSchoolName] = useState(conn?.schoolName || '');
-  useEffect(() => { document.title = 'Điểm danh giáo viên – nhân viên'; }, []);
+  useEffect(() => { if (!embedded) document.title = 'Điểm danh giáo viên – nhân viên'; }, [embedded]);
   // Link rút gọn không chứa tên trường → hỏi Apps Script một lần rồi nhớ lại
   useEffect(() => {
     if (!conn || conn.schoolName) return;
@@ -56,21 +71,28 @@ export const StaffCheckInPage: React.FC = () => {
   }, [conn]);
 
   const reset = () => {
+    // Trong phần mềm: "Thoát / Xong" = quay về Trang chủ, giữ phiên để lần sau mở lại không phải nhập
+    if (embedded && onExit) { setDone(null); setEditing(false); setError(''); onExit(); return; }
     setStaff(null); setPin(''); setStatus(''); setNote(''); setExisting(null); setDone(null); setError(''); setEditing(false); setLockedMsg(''); setMainTab('checkin');
-    if (!remember) setCccd('');
+    if (!remember && !presetCccd) setCccd('');
   };
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
+    await doAuth(cccd, pin);
+  };
+
+  const doAuth = async (cccdValue: string, pinValue: string, silent = false) => {
     setError('');
-    const digits = cccd.replace(/\D/g, '');
-    if (digits.length < 9) { setError('Vui lòng nhập đúng số căn cước công dân (12 chữ số).'); return; }
-    if (!pin) { setError('Vui lòng nhập mật khẩu điểm danh.'); return; }
+    const digits = cccdValue.replace(/\D/g, '');
+    if (digits.length < 9) { if (!silent) setError('Vui lòng nhập đúng số căn cước công dân (12 chữ số).'); return; }
+    if (!pinValue) { if (!silent) setError('Vui lòng nhập mật khẩu điểm danh.'); return; }
     setBusy(true);
     try {
-      const r = await staffAttendanceService.staffAuth(digits, pin);
-      if (!r?.success) { setError(r?.message || 'Không kiểm tra được thông tin.'); return; }
-      try { if (remember) localStorage.setItem(REMEMBER_KEY, digits); else localStorage.removeItem(REMEMBER_KEY); } catch (_) { /* ignore */ }
+      const r = await staffAttendanceService.staffAuth(digits, pinValue);
+      if (!r?.success) { if (!silent) setError(r?.message || 'Không kiểm tra được thông tin.'); return; }
+      setPin(pinValue);
+      if (!embedded) { try { if (remember) localStorage.setItem(REMEMBER_KEY, digits); else localStorage.removeItem(REMEMBER_KEY); } catch (_) { /* ignore */ } }
       setStaff(r.staff); setToday(r.today); setExisting(r.record || null);
       setStatus(r.record?.status || '');
       if (r.record?.status === 'business_trip') { const t = parseTripNote(r.record.note || ''); setTripPlace(t.place); setTripContent(t.content); setNote(t.extra); }
@@ -78,11 +100,19 @@ export const StaffCheckInPage: React.FC = () => {
       setLockedMsg(r.locked ? (r.lockMessage || LOCK_MESSAGE) : '');
       setEditing(!r.record && !r.locked);
     } catch (err: any) {
-      setError(err?.message || 'Không kết nối được máy chủ.');
+      if (!silent) setError(err?.message || 'Không kết nối được máy chủ.');
     } finally {
       setBusy(false);
     }
   };
+
+  // Trong phần mềm: tự kiểm tra một lần bằng mật khẩu vừa đăng nhập (đúng tài khoản = số CCCD); sai thì để giáo viên tự nhập
+  useEffect(() => {
+    if (!embedded || !conn || !presetCccd) return;
+    const hint = readStaffPinHint();
+    if (hint && hint.u === presetCccd) doAuth(presetCccd, hint.p, true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [embedded, conn, presetCccd]);
 
   const handleConfirm = async () => {
     if (!status) { setError('Hãy chọn một trạng thái điểm danh.'); return; }
@@ -109,19 +139,21 @@ export const StaffCheckInPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-sky-50 via-white to-emerald-50 flex flex-col items-center px-4 py-6 sm:py-10">
+    <div className={embedded ? 'flex flex-col items-center px-3 py-4 sm:px-6 sm:py-6' : 'min-h-screen bg-gradient-to-b from-sky-50 via-white to-emerald-50 flex flex-col items-center px-4 py-6 sm:py-10'}>
       {/* Điện thoại: khổ hẹp max-w-md. Máy tính (lg): sau khi đăng nhập mở rộng — điểm danh 4xl, kê khai tiết dạy 6xl */}
       <div className={`w-full space-y-4 ${!staff ? 'max-w-md' : mainTab === 'teach' ? 'max-w-md lg:max-w-6xl' : 'max-w-md lg:max-w-4xl'}`}>
         <header className="text-center space-y-1">
-          <img src="/logo.svg" alt="Lớp Học Hạnh Phúc" className="mx-auto w-16 h-16 rounded-[22%] shadow-md" />
+          {!embedded && <img src="/logo.svg" alt="Lớp Học Hạnh Phúc" className="mx-auto w-16 h-16 rounded-[22%] shadow-md" />}
           <h1 className="font-black text-slate-900 whitespace-nowrap text-[clamp(0.95rem,4.3vw,1.5rem)]">Điểm danh giáo viên – nhân viên</h1>
           {schoolName && <p className="text-sm font-bold text-emerald-800 uppercase">{schoolName}</p>}
         </header>
 
         {!conn && (
           <div className="rounded-2xl border-2 border-amber-300 bg-amber-50 p-4 text-sm text-amber-950">
-            Trang này chưa có kết nối của nhà trường. Hãy mở đúng <strong>link điểm danh</strong> do Quản trị nhà trường gửi
-            (link có dạng <code>…/diemdanh#c=…</code>).
+            {embedded
+              ? <>Máy này chưa kết nối Google Drive dùng chung của nhà trường. Vào <strong>Hệ thống → Google Drive</strong> dán "thông tin kết nối" do Quản trị gửi, hoặc mở <strong>link điểm danh</strong> của trường.</>
+              : <>Trang này chưa có kết nối của nhà trường. Hãy mở đúng <strong>link điểm danh</strong> do Quản trị nhà trường gửi
+            (link có dạng <code>…/diemdanh#c=…</code>).</>}
           </div>
         )}
 
@@ -172,7 +204,7 @@ export const StaffCheckInPage: React.FC = () => {
           <div className="space-y-2 lg:space-y-0 lg:flex lg:items-center lg:gap-4">
             <div className="flex items-center justify-between gap-2 px-1 lg:flex-1 lg:min-w-0 lg:justify-start lg:gap-4">
               <p className="text-sm lg:text-base text-slate-700 truncate">Xin chào <strong className="text-slate-900">{staff.name}</strong><span className="max-lg:hidden text-slate-500"> • {[staff.position, staff.dept].filter(Boolean).join(' • ')}</span></p>
-              <button type="button" onClick={reset} className="shrink-0 text-sm font-bold text-slate-600 hover:text-slate-900 inline-flex items-center gap-1"><LogOut className="w-4 h-4" /> Thoát</button>
+              {!embedded && <button type="button" onClick={reset} className="shrink-0 text-sm font-bold text-slate-600 hover:text-slate-900 inline-flex items-center gap-1"><LogOut className="w-4 h-4" /> Thoát</button>}
             </div>
             <div className="flex gap-1 bg-slate-200/70 p-1 rounded-2xl lg:w-[28rem] lg:shrink-0" role="tablist" aria-label="Chức năng">
               <button type="button" role="tab" aria-selected={mainTab === 'checkin'} onClick={() => setMainTab('checkin')}
@@ -203,7 +235,7 @@ export const StaffCheckInPage: React.FC = () => {
                   <p className="text-lg font-black text-slate-900 truncate">{staff.name}</p>
                   <p className="text-sm text-slate-600 truncate">{[staff.code, staff.position, staff.dept].filter(Boolean).join(' • ')}</p>
                 </div>
-                <button type="button" onClick={reset} className="shrink-0 text-sm font-bold text-slate-600 hover:text-slate-900 flex items-center gap-1">
+                <button type="button" onClick={reset} className={`shrink-0 text-sm font-bold text-slate-600 hover:text-slate-900 flex items-center gap-1 ${embedded ? 'hidden' : ''}`}>
                   <LogOut className="w-4 h-4" /> Thoát
                 </button>
               </div>
@@ -354,7 +386,7 @@ export const StaffCheckInPage: React.FC = () => {
           </div>
         )}
 
-        <p className="text-xs text-center text-slate-600">Lớp Học Hạnh Phúc • Dữ liệu lưu trên Google Drive của nhà trường • <a href="/" className="underline font-bold">Về trang phần mềm</a></p>
+        {!embedded && <p className="text-xs text-center text-slate-600">Lớp Học Hạnh Phúc • Dữ liệu lưu trên Google Drive của nhà trường • <a href="/" className="underline font-bold">Về trang phần mềm</a></p>}
       </div>
     </div>
   );

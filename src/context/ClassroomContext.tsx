@@ -1814,6 +1814,13 @@ export const ClassroomProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     // 2. Perform login
     const res = await databaseService.login(username, password, selectedRoleScope, selectedSchoolName);
     if (res.success && res.user) {
+      // Tài khoản dùng chung với chấm công (tên đăng nhập = số CCCD): nhớ mật khẩu trong PHIÊN TAB để mục
+      // "Chấm công của tôi" tự kiểm tra (sessionStorage — đóng tab là mất; Đăng xuất xóa ngay)
+      try {
+        const un = String(res.user.username || '').trim();
+        if (/^\d{9,12}$/.test(un)) sessionStorage.setItem('lhhp_staff_pin_hint', btoa(encodeURIComponent(JSON.stringify({ u: un, p: password }))));
+        else sessionStorage.removeItem('lhhp_staff_pin_hint');
+      } catch (_) { /* ignore */ }
       const officialName = getOfficialDisplayName(res.user, allUsers);
       const newUser: UserAccount = {
         ...res.user,
@@ -1934,6 +1941,7 @@ export const ClassroomProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   const logoutUser = async () => {
     setDemoWarningMessage(null);
+    try { sessionStorage.removeItem('lhhp_staff_pin_hint'); } catch (_) { /* ignore */ }
     // Bắt buộc lưu dữ liệu đầy đủ lên hệ thống máy chủ trước khi đăng xuất
     if (currentUser) {
       databaseService.addAuditLog({

@@ -32,6 +32,7 @@ export type NavigationMenuId =
   | 'links'
   | 'reports'
   | 'staff_attendance'
+  | 'my_checkin'
   | 'data'
   | 'settings'
   | 'ai';
@@ -157,6 +158,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
       icon: UserCheck,
     },
     {
+      id: 'my_checkin',
+      label: 'Chấm công của tôi',
+      icon: UserCheck,
+    },
+    {
       id: 'data',
       label: 'Dữ liệu',
       icon: Database,
@@ -192,6 +198,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
     // Chấm công giáo viên – nhân viên: chỉ Quản trị tối cao, Quản trị trường, BGH
     if (item.id === 'staff_attendance' && !isMacroAdmin) return false;
+    // Giáo viên: tự điểm danh đi làm hằng ngày + kê khai tiết dạy (quản lý dùng màn Chấm công nhân sự)
+    if (item.id === 'my_checkin' && isMacroAdmin) return false;
 
     // Tài khoản quản lý vĩ mô: chỉ giữ menu quản trị cốt lõi
     if (isMacroAdmin) {
@@ -212,7 +220,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const NAV_GROUPS: Array<{ key: string; label: string; icon: React.ComponentType<{ className?: string }>; tone: string; ids: NavigationMenuId[] }> = [
     { key: 'class', label: 'Lớp học', icon: School, tone: 'text-sky-600', ids: ['dashboard', 'classes', 'students', 'attendance', 'seating', 'schedule'] },
     { key: 'activity', label: 'Hoạt động', icon: Sparkles, tone: 'text-violet-600', ids: ['picker', 'rewards', 'certificate', 'infographic', 'noise', 'timer'] },
-    { key: 'manage', label: 'Quản lý & báo cáo', icon: BarChart3, tone: 'text-emerald-700', ids: ['reports', 'staff_attendance', 'data', 'links', 'ai'] },
+    { key: 'manage', label: 'Quản lý & báo cáo', icon: BarChart3, tone: 'text-emerald-700', ids: ['reports', 'staff_attendance', 'my_checkin', 'data', 'links', 'ai'] },
   ];
   const [closedGroups, setClosedGroups] = useState<string[]>(() => {
     try { return JSON.parse(localStorage.getItem('lhhp_nav_closed_groups') || '[]'); } catch (_) { return []; }

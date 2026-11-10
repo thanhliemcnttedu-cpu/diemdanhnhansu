@@ -24,6 +24,11 @@ interface TopBarProps {
 }
 
 const VIEW_TITLES: Record<NavigationMenuId, { title: string; shortTitle: string; subtitle: string }> = {
+  my_checkin: {
+    title: 'CHẤM CÔNG CỦA TÔI',
+    shortTitle: 'CHẤM CÔNG',
+    subtitle: 'ĐIỂM DANH ĐI LÀM HẰNG NGÀY VÀ KÊ KHAI TIẾT DẠY'
+  },
   staff_attendance: {
     title: 'CHẤM CÔNG NHÂN SỰ',
     shortTitle: 'CHẤM CÔNG',
