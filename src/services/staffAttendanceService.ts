@@ -50,10 +50,23 @@ export interface StaffRecord { status: StaffStatus; note?: string; at: string; f
 /** Lần điểm danh hiện tại trong ngày (1 = lần đầu) */
 export const attemptOf = (r?: StaffRecord | null) => (r ? r.attempt || (r.history?.length) || (r.edits || 0) + 1 : 0);
 /** Ghi chú hệ thống khi điểm danh lại: "Thực hiện điểm danh lại lần 2" */
-export const systemNoteOf = (r?: StaffRecord | null) => [
-  attemptOf(r) > 1 ? `Thực hiện điểm danh lại lần ${attemptOf(r)}` : '',
-  r?.proxy && r.by ? `Điểm danh hộ bởi ${r.by}` : '',
-].filter(Boolean).join(' • ');
+export const systemNoteOf = (r?: StaffRecord | null) => {
+  const proxyBefore = !r?.proxy ? lastProxyOf(r) : null;
+  return [
+    attemptOf(r) > 1 ? `Thực hiện điểm danh lại lần ${attemptOf(r)}` : '',
+    r?.proxy && r.by ? `Điểm danh hộ bởi ${r.by}` : '',
+    // Đã được điểm danh hộ, sau đó nhân sự TỰ điểm danh lại → kết quả tính theo lần tự điểm danh
+    proxyBefore ? `Tự điểm danh lại sau khi được điểm danh hộ bởi ${proxyBefore.by}` : '',
+  ].filter(Boolean).join(' • ');
+};
+/** Lần điểm danh hộ gần nhất trong ngày (nếu có) */
+export function lastProxyOf(r?: StaffRecord | null): StaffAttempt | null {
+  const h = r?.history || [];
+  for (let i = h.length - 1; i >= 0; i--) if (h[i].by) return h[i];
+  return null;
+}
+/** Bản ghi hiện tại là do BGH / Quản trị điểm danh hộ (lần cuối) */
+export const isProxyRecord = (r?: StaffRecord | null) => !!(r?.proxy && r.by);
 
 /** Ghi chú đi công tác: "Nơi công tác: … • Nội dung: … • ghi chú thêm" (ghép / tách để sửa lại) */
 export const composeTripNote = (place: string, content: string, extra: string) =>
@@ -231,7 +244,7 @@ export const staffAttendanceService = {
         throw new Error(/accounts\.google\.com|ServiceLogin/i.test(text) ? 'Apps Script chưa mở quyền "Bất kỳ ai" (Anyone).' : 'Máy chủ Apps Script trả về nội dung không hợp lệ.');
       }
       if (data && data.success === false && /Hành động không hợp lệ/i.test(String(data.message || ''))) {
-        throw new Error('Apps Script của nhà trường chưa được cập nhật lên phiên bản 4.2 (có chức năng chấm công). Quản trị cần dán mã mới và triển khai lại.');
+        throw new Error('Apps Script của nhà trường chưa được cập nhật lên phiên bản có chức năng chấm công. Quản trị cần dán mã mới và triển khai lại (Hệ thống → Cài đặt Apps Script → Cập nhật).');
       }
       return data;
     } catch (e: any) {

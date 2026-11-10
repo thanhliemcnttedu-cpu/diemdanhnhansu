@@ -13,7 +13,7 @@ import { adminEditsService } from '../../services/adminEditsService';
 import { playNoiseAlertSound } from '../../utils/audio';
 import { NavigationMenuId } from './Sidebar';
 import { getOfficialDisplayName, getOfficialRoleTitle } from '../../utils/accountIdentity';
-import { appsScriptSetupService } from '../../services/appsScriptSetupService';
+import { appsScriptSetupService, versionLabel } from '../../services/appsScriptSetupService';
 
 interface TopBarProps {
   currentView: NavigationMenuId;
@@ -408,11 +408,11 @@ export const TopBar: React.FC<TopBarProps> = ({
             type="button"
             onClick={() => appsScriptSetupService.open('update')}
             className={`${chipBase} max-md:hidden bg-emerald-50 text-emerald-800 border-emerald-200 hover:bg-emerald-100`}
-            title={`Apps Script của trường đang chạy V${gasUpdate.current} — đã là bản mới nhất. Bấm để mở trình cài đặt / kiểm tra.`}
-            aria-label={`Apps Script V${gasUpdate.current}, đã cập nhật mới nhất`}
+            title={`Apps Script của trường đang chạy ${versionLabel(gasUpdate.current)} — đã là bản mới nhất. Bấm để mở trình cài đặt / kiểm tra.`}
+            aria-label={`Apps Script ${versionLabel(gasUpdate.current)}, đã cập nhật mới nhất`}
           >
             <CheckCircle2 className="w-4 h-4 text-emerald-700" />
-            <span className="max-xl:hidden">Apps Script</span> V{gasUpdate.current}
+            <span className="max-xl:hidden">Apps Script</span> {gasUpdate.current}
           </button>
         )}
         {gasUpdate && gasUpdate.outdated && (
@@ -420,12 +420,12 @@ export const TopBar: React.FC<TopBarProps> = ({
             type="button"
             onClick={() => appsScriptSetupService.open('update')}
             className={`${chipBase} bg-amber-100 text-amber-950 border-amber-300 hover:bg-amber-200`}
-            title={`Apps Script của trường đang chạy V${gasUpdate.current}, phần mềm đã có V${gasUpdate.latest}. Bấm để mở hướng dẫn cập nhật.`}
-            aria-label={`Cần cập nhật Apps Script từ V${gasUpdate.current} lên V${gasUpdate.latest}`}
+            title={`Apps Script của trường đang chạy ${versionLabel(gasUpdate.current)}, phần mềm đã có ${versionLabel(gasUpdate.latest)}. Bấm để mở hướng dẫn cập nhật.`}
+            aria-label={`Cần cập nhật Apps Script từ ${versionLabel(gasUpdate.current)} lên ${versionLabel(gasUpdate.latest)}`}
           >
             <AlertTriangle className="w-4 h-4 text-amber-700" />
             <span className="max-sm:hidden">Cần cập nhật Apps Script</span>
-            <span className="sm:hidden">V{gasUpdate.latest}</span>
+            <span className="sm:hidden">{gasUpdate.latest}</span>
           </button>
         )}
 

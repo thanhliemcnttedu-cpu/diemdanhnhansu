@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { CheckCircle2, Eye, EyeOff, LogOut, ShieldCheck, Stethoscope, Briefcase, CalendarDays, Loader2, AlertTriangle, PencilLine, Lock, Plane, UserCheck, BookOpenCheck } from 'lucide-react';
 import { TeachingLogPanel } from './TeachingLogPanel';
-import { staffAttendanceService, composeTripNote, parseTripNote, STAFF_STATUS_META, longDateLabel, StaffStatus, StaffMember, StaffRecord, attemptOf, attemptsOf, timeSpoken, timeHMS } from '../../../services/staffAttendanceService';
+import { staffAttendanceService, composeTripNote, parseTripNote, STAFF_STATUS_META, longDateLabel, StaffStatus, StaffMember, StaffRecord, attemptOf, attemptsOf, timeSpoken, timeHMS, isProxyRecord } from '../../../services/staffAttendanceService';
 
 /**
  * 📲 TRANG ĐIỂM DANH GIÁO VIÊN – NHÂN VIÊN (/diemdanh)
@@ -96,7 +96,7 @@ export const StaffCheckInPage: React.FC = () => {
         if (r?.code === 'NOT_TODAY' && r.today) setToday(r.today);
         if (r?.code === 'LOCKED') { setLockedMsg(r.message || LOCK_MESSAGE); setEditing(false); setDone(null); return; }
         setError(status === 'business_trip' && /Trạng thái điểm danh không hợp lệ/i.test(String(r?.message || ''))
-          ? 'Hệ thống của trường chưa cập nhật chức năng "Đi công tác" (Apps Script 4.6). Vui lòng báo Quản trị nhà trường.'
+          ? 'Hệ thống của trường chưa cập nhật chức năng "Đi công tác" (cần Apps Script phiên bản mới nhất). Vui lòng báo Quản trị nhà trường.'
           : (r?.message || 'Chưa ghi nhận được điểm danh.'));
         return;
       }
@@ -211,7 +211,9 @@ export const StaffCheckInPage: React.FC = () => {
                     <div className="text-sm text-rose-950 space-y-1">
                       <p className="font-black text-base">{lockedMsg}</p>
                       {existing
-                        ? <p>Bạn đã điểm danh lần {attemptOf(existing)} lúc {timeSpoken(existing.at)}: <strong>{STAFF_STATUS_META[existing.status].label}</strong>{existing.note ? <> — {existing.note}</> : null}.</p>
+                        ? isProxyRecord(existing)
+                          ? <p>Bạn đã được <strong>{existing.by}</strong> điểm danh hộ lúc {timeSpoken(existing.at)}: <strong>{STAFF_STATUS_META[existing.status].label}</strong>{existing.note ? <> — {existing.note}</> : null}.</p>
+                          : <p>Bạn đã điểm danh lần {attemptOf(existing)} lúc {timeSpoken(existing.at)}: <strong>{STAFF_STATUS_META[existing.status].label}</strong>{existing.note ? <> — {existing.note}</> : null}.</p>
                         : <p>Bạn <strong>chưa điểm danh</strong> hôm nay. Vui lòng liên hệ Ban giám hiệu / Quản trị nhà trường nếu cần điều chỉnh.</p>}
                     </div>
                   </div>
@@ -224,24 +226,36 @@ export const StaffCheckInPage: React.FC = () => {
                   <div className="flex items-start gap-2.5">
                     <AlertTriangle className="w-6 h-6 text-amber-700 shrink-0 mt-0.5" />
                     <div className="text-sm text-amber-950 space-y-1">
-                      <p className="font-black text-base">
-                        Bạn đã thực hiện điểm danh lần {attemptOf(existing)} vào lúc {timeSpoken(existing.at)}, {longDateLabel(today)}.
-                      </p>
-                      <p>Nội dung: <strong>{STAFF_STATUS_META[existing.status].label}</strong>{existing.note ? <> — {existing.note}</> : null}</p>
+                      {isProxyRecord(existing) ? (
+                        <>
+                          <p className="font-black text-base">
+                            Hôm nay bạn đã được <span className="underline decoration-amber-500">{existing.by}</span> điểm danh hộ vào lúc {timeSpoken(existing.at)}, {longDateLabel(today)}.
+                          </p>
+                          <p>Nội dung: <strong>{STAFF_STATUS_META[existing.status].label}</strong>{existing.note ? <> — {existing.note}</> : null}</p>
+                          <p>Nếu thông tin đúng, bạn <strong>không cần điểm danh lại</strong>. Nếu chưa đúng (ví dụ bạn đi công tác, nghỉ ốm…), hãy điểm danh lại: lần tự điểm danh của bạn sẽ được tính, lần điểm danh hộ vẫn được lưu để nhà trường đối chiếu.</p>
+                        </>
+                      ) : (
+                        <>
+                          <p className="font-black text-base">
+                            Bạn đã thực hiện điểm danh lần {attemptOf(existing)} vào lúc {timeSpoken(existing.at)}, {longDateLabel(today)}.
+                          </p>
+                          <p>Nội dung: <strong>{STAFF_STATUS_META[existing.status].label}</strong>{existing.note ? <> — {existing.note}</> : null}</p>
+                        </>
+                      )}
                       {attemptsOf(existing).length > 1 && (
                         <ul className="text-xs text-amber-900 list-disc pl-4">
                           {attemptsOf(existing).map((a, i) => (
-                            <li key={i}>Lần {i + 1}: {timeHMS(a.at)} – {STAFF_STATUS_META[a.status]?.short || a.status}{a.note ? ` (${a.note})` : ''}</li>
+                            <li key={i}>Lần {i + 1}: {timeHMS(a.at)} – {STAFF_STATUS_META[a.status]?.short || a.status}{a.note ? ` (${a.note})` : ''}{a.by ? ` — điểm danh hộ bởi ${a.by}` : ' — tự điểm danh'}</li>
                           ))}
                         </ul>
                       )}
-                      <p className="font-bold">Bạn muốn sửa điểm danh?</p>
+                      {!isProxyRecord(existing) && <p className="font-bold">Bạn muốn sửa điểm danh?</p>}
                     </div>
                   </div>
                   <div className="flex gap-2">
-                    <button type="button" onClick={reset} className="flex-1 py-3 rounded-2xl bg-white border border-amber-300 hover:bg-amber-100 text-amber-950 font-black text-sm">Không, thoát</button>
+                    <button type="button" onClick={reset} className="flex-1 py-3 rounded-2xl bg-white border border-amber-300 hover:bg-amber-100 text-amber-950 font-black text-sm">{isProxyRecord(existing) ? 'Đúng rồi, thoát' : 'Không, thoát'}</button>
                     <button type="button" onClick={() => { setEditing(true); setError(''); }} className="flex-[2] py-3 rounded-2xl bg-amber-700 hover:bg-amber-800 text-white font-black text-sm inline-flex items-center justify-center gap-1.5">
-                      <PencilLine className="w-4 h-4" /> Sửa điểm danh (lần {attemptOf(existing) + 1})
+                      <PencilLine className="w-4 h-4" /> {isProxyRecord(existing) ? 'Tự điểm danh lại' : 'Sửa điểm danh'} (lần {attemptOf(existing) + 1})
                     </button>
                   </div>
                   <p className="text-xs text-amber-900">Mọi lần sửa đều được ghi lại thời gian để nhà trường đối chiếu.</p>

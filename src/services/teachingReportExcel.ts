@@ -8,10 +8,11 @@
  *  - TH2: trang "TonghopGDTC" (mỗi GV 1 dòng, tối thiểu 12 dòng như mẫu) + trang "1", "2"…
  *  - TH3: trang "TongTA" (tối thiểu 3 dòng như mẫu) + trang "1", "2"…
  *  - Thêm: bảng kê tiết GDTC dạy ngoài trời (dùng khuôn TH2, đổi tiêu đề)
+ *  - Thêm: bảng kê thừa giờ các môn khác (khuôn TH3, mỗi môn của giáo viên 1 dòng, cột Môn ghi tên môn)
  * Cột Tổng và dòng Tổng là công thức SUM như tệp gốc (có sẵn giá trị tính trước, Excel tự tính lại khi mở).
  */
 import JSZip from 'jszip';
-import { MonthWeek, HSKT_SUBJECTS, ktOf, TeachLog, WeekCounts, schoolYearOf } from './teachingLogService';
+import { MonthWeek, HSKT_SUBJECTS, ktOf, otOf, subjectLabel, OVERTIME_SUBJECTS, TeachLog, WeekCounts, schoolYearOf } from './teachingLogService';
 
 export interface ExcelHeader { org: string; school: string; month: string; wks: MonthWeek[] }
 type Entry = { name: string; log: TeachLog | null };
@@ -38,6 +39,8 @@ interface RenderOpts {
   /** Mọi dòng dữ liệu dùng kiểu của dòng đầu (mẫu gốc để lẫn chữ đậm / thường giữa các dòng) */
   uniformRows?: boolean;
   rowName?: (i: number) => string | null;
+  /** Ghi đè chữ ở các cột Môn (C, E, G, I, K, M) của dòng i; null = để trống */
+  rowLabel?: (i: number) => string | null;
   /** Số tiết dòng i, tuần k (0…4); null = để trống */
   value: (i: number, k: number, tplRow: TplRow) => number | null;
 }
@@ -95,6 +98,7 @@ function renderSheet(t: TplSheet, o: RenderOpts) {
         return;
       }
       if (c.c === 'N') { out.push(cellXml(ref, c.s, { f: `SUM(${WEEK_COLS.map(x => x + r).join(',')})`, num: rowSum })); return; }
+      if (o.rowLabel && ['C', 'E', 'G', 'I', 'K', 'M'].includes(c.c)) { out.push(cellXml(ref, c.s, { text: o.rowLabel(i) })); return; }
       out.push(cellXml(ref, c.s, { text: c.text ?? null, num: c.num }));
     });
     colTotals.N = (colTotals.N || 0) + rowSum;
@@ -207,6 +211,41 @@ export async function exportTH2(h: ExcelHeader, list: Entry[]) {
 export async function exportOutdoor(h: ExcelHeader, list: Entry[]) {
   const t = (await loadTemplates()).th2;
   await perTeacherBook(t, 'TonghopNgoaiTroi', h, list, w => Number(w.outdoor) || 0, `BANG KE GDTC DAY NGOAI TROI ${h.month}.xlsx`, 'BẢNG KÊ TIẾT GDTC DẠY NGOÀI TRỜI');
+}
+
+/** Bảng kê thừa giờ các môn khác (khuôn TH3): mỗi (giáo viên, môn) 1 dòng; trang "1", "2"… mỗi giáo viên */
+export async function exportOvertime(h: ExcelHeader, list: Array<Entry & { subjects?: string[] }>) {
+  const t = (await loadTemplates()).th3;
+  const title = 'BẢNG KÊ TIẾT DẠY THỪA GIỜ CÁC MÔN';
+  const codesOf = (x: Entry & { subjects?: string[] }) => {
+    const used = new Set<string>(x.subjects || []);
+    Object.values(x.log?.weeks || {}).forEach(w => Object.keys(w?.ot || {}).forEach(c => used.add(c)));
+    return OVERTIME_SUBJECTS.map(s => s.code).filter(c => used.has(c));
+  };
+  const lines = list.flatMap(x => codesOf(x).map(code => ({ x, code })));
+  const val = (x: Entry, code: string, k: number) => (h.wks[k] ? otOf(weekOf(h, x.log, k) || undefined, code) : null);
+  const sheets = [{
+    name: 'TongTG',
+    xml: renderSheet(t.summary, {
+      ...base(h), title, rowCount: lines.length, uniformRows: true,
+      rowName: (i) => lines[i]?.x.name ?? null,
+      rowLabel: (i) => (lines[i] ? subjectLabel(lines[i].code) : null),
+      value: (i, k) => (lines[i] ? val(lines[i].x, lines[i].code, k) : null),
+    }),
+  }];
+  list.forEach((x, idx) => {
+    const codes = codesOf(x);
+    sheets.push({
+      name: String(idx + 1),
+      xml: renderSheet(t.teacher, {
+        ...base(h), title, rowCount: codes.length, uniformRows: true,
+        rowName: (i) => (i === 0 ? x.name : null),
+        rowLabel: (i) => (codes[i] ? subjectLabel(codes[i]) : null),
+        value: (i, k) => (codes[i] ? val(x, codes[i], k) : null),
+      }),
+    });
+  });
+  await download(t, sheets, `BANG KE THUA GIO CAC MON ${h.month}.xlsx`);
 }
 
 /** TH3 – Bảng kê tiết dạy thừa giờ Tiếng Anh */

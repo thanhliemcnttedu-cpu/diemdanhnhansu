@@ -13,6 +13,10 @@
  * - CHỈ tổng hợp tệp của GVCN (gvcn_*.json, teacherRole = homeroom). Tệp GV bộ môn (gvbm_*.json),
  *   BGH, Quản trị không được tính để không dôi số lớp / số học sinh.
  *
+ * - V4.12: THỪA GIỜ CÁC MÔN KHÁC (ngoài Tiếng Anh): khai báo profiles.overtimeSubjects (mã môn), kê theo tuần
+ *   weeks[..].ot = { mã môn: số tiết }, overtime = tổng các môn (mục "overtime" trong báo cáo).
+ * - V4.11: teachDeleteLog thêm removeProfile — xóa cả KHAI BÁO PHÂN CÔNG (giáo viên khai báo nhầm) để bỏ hẳn
+ *   khỏi bảng tổng hợp; giáo viên vào lại sẽ phải khai báo từ đầu nếu cần.
  * - V4.10: BGH / Quản trị XÓA bảng kê tiết dạy 1 tháng của 1 / nhiều giáo viên (teachDeleteLog) khi số liệu sai
  *   hoặc yêu cầu kê lại; mặc định mở khóa luôn cho người bị xóa để kê lại được. Ghi nhật ký db.deletions (200 mục gần nhất).
  * - V4.9: KHÓA CHỐT KÊ KHAI TIẾT DẠY theo tháng (teachLock: BGH / Quản trị; cả trường hoặc từng giáo viên).
@@ -52,7 +56,9 @@
 var FOLDER_ID = "__FOLDER_ID__";
 var TARGET_FILENAME = "du_lieu_lop_hoc_hanh_phuc.json";
 var REPORT_PREFIX = "bc_";
-var SCRIPT_VERSION = "4.10";
+// QUY TẮC ĐẶT TÊN PHIÊN BẢN (từ 11/2026): "Phiên bản A.B.C" — mỗi lần sửa mã tăng C thêm 1;
+// C tối đa 20: sau 1.1.20 là 1.2.1, sau 1.2.20 là 1.3.1… Các bản cũ dạng "4.x" (4.1 → 4.12) được coi là cũ hơn 1.1.2.
+var SCRIPT_VERSION = "1.1.2";
 
 // ---------------------------------------------------------------------------------------
 // HTTP POST: lưu dữ liệu lớp
@@ -153,7 +159,7 @@ function doGet(e) {
     if (action === "ping") {
       return createJsonResponse({
         success: true,
-        message: "Cầu nối Google Apps Script V" + SCRIPT_VERSION + " hoạt động tốt!",
+        message: "Cầu nối Google Apps Script phiên bản " + SCRIPT_VERSION + " hoạt động tốt!",
         version: SCRIPT_VERSION,
         features: ["schoolDb", "staffAttendance"],
         timestamp: new Date().toISOString()
@@ -933,7 +939,7 @@ function isStaffLocked(month, dateStr, code) {
 // ---------------------------------------------------------------- V4.8: KÊ KHAI TIẾT DẠY
 // kekhai_tietday.json = { profiles: { MÃ: { subjects, classesDisabled, classesPE, classesEnglish, updatedAt } },
 //                         logs: { "YYYY-MM": { MÃ: { weeks: { "YYYY-MM-DD"(Thứ Hai): { outdoor, pe, disabled, english } }, note, updatedAt } } } }
-var TEACH_KEYS = ["outdoor", "pe", "disabled", "english"];
+var TEACH_KEYS = ["outdoor", "pe", "disabled", "english", "overtime"];
 
 function readTeachDb(folder) {
   var db = readJsonFile(folder, TEACH_FILE, null);
@@ -980,6 +986,7 @@ function handleTeachSaveProfile(folder, payload) {
     db.profiles[v.staff.code] = {
       subjects: cleanList(p.subjects), classesDisabled: cleanList(p.classesDisabled),
       classesPE: cleanList(p.classesPE), classesEnglish: cleanList(p.classesEnglish),
+      overtimeSubjects: cleanList(p.overtimeSubjects).filter(function (c) { return /^[a-z0-9_]{1,16}$/.test(c); }),
       updatedAt: new Date().toISOString()
     };
     db.updatedAt = new Date().toISOString();
@@ -1007,6 +1014,19 @@ function handleTeachSaveLog(folder, payload) {
       if (n) any = true;
     }
     // Lớp có HS khuyết tật: số tiết theo TỪNG MÔN (kt = { mã môn: số tiết }), disabled = tổng các môn
+    // Thừa giờ các môn khác: ot = { mã môn: số tiết }, overtime = tổng
+    if (w.ot && typeof w.ot === "object") {
+      var ot = {}, otSum = 0, otCount = 0;
+      for (var oc in w.ot) {
+        if (!/^[a-z0-9_]{1,16}$/.test(oc) || otCount >= 30) continue;
+        var y = Math.round(Number(w.ot[oc]) || 0);
+        if (y < 0) y = 0;
+        if (y > 80) y = 80;
+        if (y) { ot[oc] = y; otSum += y; otCount++; }
+      }
+      row.overtime = otSum;
+      if (otCount) { row.ot = ot; any = true; }
+    }
     if (w.kt && typeof w.kt === "object") {
       var kt = {}, ktSum = 0, ktCount = 0;
       for (var sc in w.kt) {
@@ -1064,7 +1084,7 @@ function teachMonthsOf(db, code) {
   for (var m in db.logs) {
     var l = db.logs[m] && db.logs[m][code];
     if (!l) continue;
-    var t = { outdoor: 0, pe: 0, disabled: 0, english: 0 };
+    var t = { outdoor: 0, pe: 0, disabled: 0, english: 0, overtime: 0 };
     for (var wk in (l.weeks || {})) for (var k = 0; k < TEACH_KEYS.length; k++) t[TEACH_KEYS[k]] += Number(l.weeks[wk][TEACH_KEYS[k]]) || 0;
     out.push({ month: m, updatedAt: l.updatedAt || "", totals: t, locked: isTeachLocked(db, m, code) });
   }
@@ -1081,20 +1101,24 @@ function handleTeachDeleteLog(folder, payload) {
   var codes = (payload.codes || []).map(normalizeStaffCode).filter(function (c) { return !!c; });
   if (!codes.length) return { success: false, message: "Chưa chọn giáo viên cần xóa kê khai." };
   var unlock = payload.unlock !== false;
+  var removeProfile = payload.removeProfile === true;
   var reason = String(payload.reason || "").slice(0, 200);
   var lock = LockService.getScriptLock();
   try { lock.waitLock(20000); } catch (_) {}
   try {
     var db = readTeachDb(folder);
     var at = new Date().toISOString();
-    var removed = [];
+    var removed = [], removedProfiles = [];
     if (!db.deletions) db.deletions = [];
     for (var i = 0; i < codes.length; i++) {
       var c = codes[i];
-      if (db.logs[month] && db.logs[month][c]) {
-        delete db.logs[month][c];
+      var hadLog = !!(db.logs[month] && db.logs[month][c]);
+      var hadProfile = removeProfile && !!db.profiles[c];
+      if (hadLog) delete db.logs[month][c];
+      if (hadProfile) { delete db.profiles[c]; removedProfiles.push(c); }
+      if (hadLog || hadProfile) {
         removed.push(c);
-        db.deletions.push({ month: month, code: c, at: at, by: actor.username, reason: reason });
+        db.deletions.push({ month: month, code: c, at: at, by: actor.username, reason: reason, log: hadLog, profile: hadProfile });
       }
     }
     if (db.logs[month] && Object.keys(db.logs[month]).length === 0) delete db.logs[month];
@@ -1117,7 +1141,7 @@ function handleTeachDeleteLog(folder, payload) {
     }
     db.updatedAt = at;
     writeFileOverwrite(folder, TEACH_FILE, JSON.stringify(db));
-    return { success: true, month: month, removed: removed, lock: (db.locks || {})[month] || null,
+    return { success: true, month: month, removed: removed, removedProfiles: removedProfiles, lock: (db.locks || {})[month] || null,
       message: removed.length ? "Đã xóa kê khai tháng " + month + " của " + removed.length + " giáo viên." : "Không có dữ liệu kê khai để xóa." };
   } finally { try { lock.releaseLock(); } catch (_) {} }
 }

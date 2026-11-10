@@ -9,15 +9,16 @@
  */
 import { staffAttendanceService, StaffMember, toDateKey, fromDateKey, addDays } from './staffAttendanceService';
 
-export type TeachKey = 'outdoor' | 'pe' | 'disabled' | 'english';
-export const TEACH_KEYS: TeachKey[] = ['outdoor', 'pe', 'disabled', 'english'];
+export type TeachKey = 'outdoor' | 'pe' | 'disabled' | 'english' | 'overtime';
+export const TEACH_KEYS: TeachKey[] = ['outdoor', 'pe', 'disabled', 'english', 'overtime'];
 /** Mục hiển thị / kê khai: tiết GDTC CHÍNH LÀ tiết dạy ngoài trời → chỉ 1 dòng 'pe' (outdoor tự lưu bằng pe để tương thích dữ liệu cũ) */
-export const SHOWN_KEYS: TeachKey[] = ['pe', 'disabled', 'english'];
+export const SHOWN_KEYS: TeachKey[] = ['pe', 'disabled', 'english', 'overtime'];
 export const TEACH_META: Record<TeachKey, { label: string; short: string; tiny: string; color: string; soft: string; text: string }> = {
   outdoor: { label: 'Tiết GDTC dạy ngoài trời', short: 'Ngoài trời', tiny: 'N.Trời', color: '#047857', soft: '#ecfdf5', text: '#065f46' },
   pe: { label: 'Tiết GDTC (dạy ngoài trời)', short: 'GDTC', tiny: 'GDTC', color: '#1d4ed8', soft: '#eff6ff', text: '#1e40af' },
   disabled: { label: 'Tiết dạy lớp có HS khuyết tật', short: 'Lớp có HSKT', tiny: 'HSKT', color: '#7c3aed', soft: '#f5f3ff', text: '#5b21b6' },
   english: { label: 'Tiết dạy thừa giờ Tiếng Anh', short: 'Thừa giờ T.Anh', tiny: 'T.Anh', color: '#c2410c', soft: '#fff7ed', text: '#9a3412' },
+  overtime: { label: 'Tiết dạy thừa giờ các môn khác', short: 'Thừa giờ môn khác', tiny: 'TG khác', color: '#0f766e', soft: '#f0fdfa', text: '#115e59' },
 };
 
 /** 14 môn theo bảng kê TH1 của nhà trường (thứ tự giữ nguyên để xuất đúng mẫu "TonghopKT") */
@@ -40,9 +41,10 @@ export const HSKT_SUBJECTS: Array<{ code: string; label: string; aliases: string
 
 export const SUBJECT_PRESETS = HSKT_SUBJECTS.map(s => s.label);
 
-export interface TeachProfile { subjects: string[]; classesDisabled: string[]; classesPE: string[]; classesEnglish: string[]; updatedAt?: string }
+/** overtimeSubjects (Apps Script 4.12): mã môn (HSKT_SUBJECTS, trừ Tiếng Anh) giáo viên dạy thừa giờ */
+export interface TeachProfile { subjects: string[]; classesDisabled: string[]; classesPE: string[]; classesEnglish: string[]; overtimeSubjects?: string[]; updatedAt?: string }
 /** Số tiết 1 tuần; `kt` = tiết dạy lớp có HSKT theo mã môn (HSKT_SUBJECTS), `disabled` = tổng các môn */
-export type WeekCounts = Partial<Record<TeachKey, number>> & { kt?: Record<string, number> };
+export type WeekCounts = Partial<Record<TeachKey, number>> & { kt?: Record<string, number>; ot?: Record<string, number> };
 export interface TeachLog { weeks: Record<string, WeekCounts>; note?: string; updatedAt?: string }
 /** 1 tháng giáo viên đã kê (teachGet → months, Apps Script 4.9) */
 export interface TeachMonthInfo { month: string; updatedAt: string; totals: Record<TeachKey, number>; locked: boolean }
@@ -52,7 +54,10 @@ export const isTeachLocked = (l: TeachLock | null | undefined, code: string) => 
 
 export interface MonthWeek { key: string; index: number; from: string; to: string; label: string }
 
-export const EMPTY_PROFILE: TeachProfile = { subjects: [], classesDisabled: [], classesPE: [], classesEnglish: [] };
+export const EMPTY_PROFILE: TeachProfile = { subjects: [], classesDisabled: [], classesPE: [], classesEnglish: [], overtimeSubjects: [] };
+/** Môn có thể kê thừa giờ ở mục "các môn khác" (Tiếng Anh đã có mục riêng theo mẫu TH3) */
+export const OVERTIME_SUBJECTS = HSKT_SUBJECTS.filter(s => s.code !== 'ta');
+export const subjectLabel = (code: string) => HSKT_SUBJECTS.find(s => s.code === code)?.label || code;
 
 const norm = (t: string) => t.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/đ/gi, 'd').toLowerCase();
 const dm = (k: string) => `${k.slice(8, 10)}/${k.slice(5, 7)}`;
@@ -91,7 +96,8 @@ export function enabledKeys(p?: TeachProfile | null): TeachKey[] {
   const subj = (p.subjects || []).map(norm);
   const pe = (p.classesPE || []).length > 0 || subj.some(s => s.includes('the chat') || s === 'gdtc');
   const en = (p.classesEnglish || []).length > 0 || subj.some(s => s.includes('tieng anh'));
-  return SHOWN_KEYS.filter(k => (k === 'pe' ? pe : k === 'english' ? en : (p.classesDisabled || []).length > 0));
+  const ot = (p.overtimeSubjects || []).length > 0;
+  return SHOWN_KEYS.filter(k => (k === 'pe' ? pe : k === 'english' ? en : k === 'overtime' ? ot : (p.classesDisabled || []).length > 0));
 }
 
 export const sumLog = (log: TeachLog | null | undefined, key: TeachKey) =>
@@ -109,6 +115,8 @@ export function subjectCodesOf(subjects: string[] | undefined): string[] {
 
 /** Tiết HSKT của 1 môn trong 1 tuần; dữ liệu cũ (chỉ có tổng) không chia được theo môn → 0 */
 export const ktOf = (w: WeekCounts | undefined, code: string) => Number(w?.kt?.[code]) || 0;
+/** Tiết thừa giờ 1 môn (không phải Tiếng Anh) trong 1 tuần */
+export const otOf = (w: WeekCounts | undefined, code: string) => Number(w?.ot?.[code]) || 0;
 
 /** Năm học của tháng YYYY-MM (từ tháng 8 sang năm học mới) */
 export function schoolYearOf(ym: string) {
@@ -118,8 +126,8 @@ export function schoolYearOf(ym: string) {
 
 const friendly = (e: any) => {
   const msg = String(e?.message || '');
-  if (/Hành động không hợp lệ|phiên bản 4\.2/.test(msg)) {
-    return 'Hệ thống của trường chưa có đủ chức năng Kê khai tiết dạy (cần Apps Script 4.10). Vui lòng báo Quản trị nhà trường cập nhật.';
+  if (/Hành động không hợp lệ|chưa được cập nhật lên phiên bản/.test(msg)) {
+    return 'Hệ thống của trường chưa có đủ chức năng Kê khai tiết dạy (cần Apps Script phiên bản mới nhất). Vui lòng báo Quản trị nhà trường cập nhật.';
   }
   return msg || 'Không kết nối được máy chủ.';
 };
@@ -157,7 +165,8 @@ export const teachingLogService = {
     return safeCall({ action: 'teachLock', auth: auth ?? staffAttendanceService.getViewerAuth(), month, lock, all: !!target.all, codes: target.codes || [] });
   },
   /** BGH / Quản trị (Apps Script 4.10): xóa bảng kê tháng `month` của các mã `codes` để giáo viên kê lại; unlock = mở khóa cho họ */
-  deleteLog(month: string, codes: string[], opts: { reason?: string; unlock?: boolean } = {}, auth?: { username: string; password: string } | null): Promise<{ success: boolean; message?: string; removed?: string[]; lock?: TeachLock | null }> {
-    return safeCall({ action: 'teachDeleteLog', auth: auth ?? staffAttendanceService.getViewerAuth(), month, codes, reason: opts.reason || '', unlock: opts.unlock !== false });
+  /** removeProfile (Apps Script 4.11): xóa cả khai báo phân công → bỏ hẳn giáo viên khai báo nhầm khỏi bảng tổng hợp */
+  deleteLog(month: string, codes: string[], opts: { reason?: string; unlock?: boolean; removeProfile?: boolean } = {}, auth?: { username: string; password: string } | null): Promise<{ success: boolean; message?: string; removed?: string[]; removedProfiles?: string[]; lock?: TeachLock | null }> {
+    return safeCall({ action: 'teachDeleteLog', auth: auth ?? staffAttendanceService.getViewerAuth(), month, codes, reason: opts.reason || '', unlock: opts.unlock !== false, removeProfile: !!opts.removeProfile });
   },
 };

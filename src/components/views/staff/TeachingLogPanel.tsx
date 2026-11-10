@@ -3,6 +3,7 @@ import { BookOpenCheck, ChevronLeft, ChevronRight, Loader2, Pencil, Plus, Save, 
 import {
   teachingLogService, TEACH_META, TeachKey, TeachProfile, WeekCounts, EMPTY_PROFILE, SUBJECT_PRESETS,
   monthWeeks, monthLabel, addMonths, enabledKeys, HSKT_SUBJECTS, subjectCodesOf, ktOf, MonthWeek, TeachMonthInfo, TEACH_KEYS, SHOWN_KEYS,
+  OVERTIME_SUBJECTS, otOf, subjectLabel,
 } from '../../../services/teachingLogService';
 
 type GridRow = { id: string; label: string; hint: string; get: (wk: string) => number; set: (wk: string, v: string) => void };
@@ -108,7 +109,7 @@ export const TeachingLogPanel: React.FC<{ cccd: string; pin: string; today: stri
 
   const startEdit = (p: TeachProfile | null) => {
     const base = p || EMPTY_PROFILE;
-    setDraft({ ...base });
+    setDraft({ ...base, overtimeSubjects: base.overtimeSubjects || [] });
     setListText({ classesPE: base.classesPE.join(', '), classesDisabled: base.classesDisabled.join(', '), classesEnglish: base.classesEnglish.join(', ') });
     setOtherSubject('');
     setEditing(true);
@@ -122,6 +123,7 @@ export const TeachingLogPanel: React.FC<{ cccd: string; pin: string; today: stri
       classesPE: splitList(listText.classesPE || ''),
       classesDisabled: splitList(listText.classesDisabled || ''),
       classesEnglish: splitList(listText.classesEnglish || ''),
+      overtimeSubjects: draft.overtimeSubjects || [],
     };
     if (!p.subjects.length) { setMsg({ ok: false, text: 'Hãy chọn ít nhất 1 môn dạy được phân công.' }); return; }
     setBusy(true); setMsg(null);
@@ -147,6 +149,20 @@ export const TeachingLogPanel: React.FC<{ cccd: string; pin: string; today: stri
     if (allSubjects || !mine.length) return HSKT_SUBJECTS.map(h => h.code);
     return HSKT_SUBJECTS.map(h => h.code).filter(c => mine.includes(c) || used.has(c));
   }, [profile, weeks, allSubjects]);
+  const otCodes = useMemo(() => {
+    const mine = profile?.overtimeSubjects || [];
+    const used = new Set(Object.values(weeks).flatMap(w => Object.keys(w?.ot || {})));
+    return OVERTIME_SUBJECTS.map(h => h.code).filter(c => mine.includes(c) || used.has(c));
+  }, [profile, weeks]);
+  const setOt = (wk: string, code: string, v: string) => {
+    const n = Math.max(0, Math.min(80, Math.round(Number(v.replace(/\D/g, '')) || 0)));
+    setWeeks(prev => {
+      const ot: Record<string, number> = { ...(prev[wk]?.ot || {}), [code]: n };
+      if (!n) delete ot[code];
+      const sum = Object.values(ot).reduce((a, x) => a + (Number(x) || 0), 0);
+      return { ...prev, [wk]: { ...(prev[wk] || {}), ot, overtime: sum } };
+    });
+  };
   const setKt = (wk: string, code: string, v: string) => {
     const n = Math.max(0, Math.min(80, Math.round(Number(v.replace(/\D/g, '')) || 0)));
     setWeeks(prev => {
@@ -171,7 +187,7 @@ export const TeachingLogPanel: React.FC<{ cccd: string; pin: string; today: stri
     setSavedAt(r.log?.updatedAt || new Date().toISOString());
     setMsg({ ok: true, text: `Đã lưu kê khai ${monthLabel(month)}.` });
     // Cập nhật danh sách tháng đã kê
-    const t = { outdoor: 0, pe: 0, disabled: 0, english: 0 } as TeachMonthInfo['totals'];
+    const t = { outdoor: 0, pe: 0, disabled: 0, english: 0, overtime: 0 } as TeachMonthInfo['totals'];
     Object.values(r.log?.weeks || payload).forEach((w: any) => TEACH_KEYS.forEach(k => { t[k] += Number(w?.[k]) || 0; }));
     setMonths(prev => [{ month, updatedAt: r.log?.updatedAt || new Date().toISOString(), totals: t, locked: false }, ...prev.filter(x => x.month !== month)]
       .sort((a, b) => (a.month < b.month ? 1 : -1)));
@@ -225,6 +241,22 @@ export const TeachingLogPanel: React.FC<{ cccd: string; pin: string; today: stri
                 <span className="block text-xs text-slate-600">Ghi tên lớp, cách nhau bằng dấu phẩy. Để trống nếu không dạy.</span>
               </label>
             ))}
+            <div className="space-y-2">
+              <p className="text-sm font-black text-slate-800">Dạy thừa giờ các môn khác (ngoài Tiếng Anh)</p>
+              <div className="flex flex-wrap gap-1.5">
+                {OVERTIME_SUBJECTS.map(h => {
+                  const on = (draft.overtimeSubjects || []).includes(h.code);
+                  return (
+                    <button key={h.code} type="button" aria-pressed={on}
+                      onClick={() => setDraft(d => ({ ...d, overtimeSubjects: on ? (d.overtimeSubjects || []).filter(x => x !== h.code) : [...(d.overtimeSubjects || []), h.code] }))}
+                      className={`no-hover-fx px-3 py-1.5 rounded-full text-sm font-bold border whitespace-nowrap ${on ? 'bg-teal-700 border-teal-700 text-white' : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-50'}`}>
+                      {on && <CheckCircle2 className="w-3.5 h-3.5 inline mr-1 -mt-0.5" />}{h.label}
+                    </button>
+                  );
+                })}
+              </div>
+              <span className="block text-xs text-slate-600">Chọn các môn có dạy thừa giờ. Không dạy thừa giờ thì để trống. Thừa giờ Tiếng Anh khai ở ô lớp Tiếng Anh phía trên.</span>
+            </div>
             <div className="flex gap-2">
               {profile && <button type="button" onClick={() => setEditing(false)} className="no-hover-fx flex-1 h-12 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-sm font-black inline-flex items-center justify-center gap-1.5"><X className="w-4 h-4" /> Hủy</button>}
               <button type="button" onClick={saveProfile} disabled={busy} className="no-hover-fx flex-[2] h-12 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white text-base font-black inline-flex items-center justify-center gap-2 disabled:opacity-50">
@@ -238,6 +270,7 @@ export const TeachingLogPanel: React.FC<{ cccd: string; pin: string; today: stri
             {LIST_FIELDS.map(f => (
               <div key={f.key}><dt className="font-black text-slate-700">{f.label}</dt><dd className="text-slate-900">{profile[f.key].join(', ') || '—'}</dd></div>
             ))}
+            <div><dt className="font-black text-slate-700">Dạy thừa giờ các môn khác</dt><dd className="text-slate-900">{(profile.overtimeSubjects || []).map(subjectLabel).join(', ') || '—'}</dd></div>
           </dl>
         ) : null}
       </section>
@@ -254,7 +287,7 @@ export const TeachingLogPanel: React.FC<{ cccd: string; pin: string; today: stri
             </div>
           </div>
           {keys.length === 0 ? (
-            <p className="p-5 text-sm text-slate-700">Khai báo hiện tại không có mục cần kê (GDTC, lớp có HS khuyết tật, Tiếng Anh). Bấm <strong>Sửa</strong> ở phần khai báo nếu cần.</p>
+            <p className="p-5 text-sm text-slate-700">Khai báo hiện tại không có mục cần kê (GDTC, lớp có HS khuyết tật, thừa giờ Tiếng Anh / các môn khác). Bấm <strong>Sửa</strong> ở phần khai báo nếu cần.</p>
           ) : (
             <div className="p-3 sm:p-5 space-y-3">
               {locked ? (
@@ -285,6 +318,10 @@ export const TeachingLogPanel: React.FC<{ cccd: string; pin: string; today: stri
                 <WeekGrid title="Tiếng Anh" color={TEACH_META.english.text} wks={wks} locked={locked}
                   rows={[{ id: 'english', label: 'Thừa giờ', hint: TEACH_META.english.label, get: (wk) => Number(weeks[wk]?.english) || 0, set: (wk, v) => setCell(wk, 'english', v) }]} />
               )}
+              {(keys.includes('overtime') || otCodes.length > 0) && (
+                <WeekGrid title="Thừa giờ các môn khác" color={TEACH_META.overtime.text} wks={wks} locked={locked} showTotalRow
+                  rows={otCodes.map(code => ({ id: 'ot-' + code, label: subjectLabel(code), hint: `Tiết dạy thừa giờ môn ${subjectLabel(code)}`, get: (wk: string) => otOf(weeks[wk], code), set: (wk: string, v: string) => setOt(wk, code, v) }))} />
+              )}
               <textarea value={note} onChange={(e) => setNote(e.target.value.slice(0, 300))} rows={2} placeholder="Ghi chú (nếu có)" aria-label="Ghi chú kê khai" disabled={locked}
                 className="w-full px-3 py-2 rounded-xl border border-slate-300 text-base disabled:bg-slate-100" />
               {!locked && <button type="button" onClick={saveLog} disabled={busy} className="no-hover-fx w-full h-12 rounded-2xl bg-emerald-700 hover:bg-emerald-800 text-white text-base font-black inline-flex items-center justify-center gap-2 disabled:opacity-50">
@@ -304,7 +341,7 @@ export const TeachingLogPanel: React.FC<{ cccd: string; pin: string; today: stri
           </div>
           <ul className="divide-y divide-slate-100">
             {months.map(m => {
-              const sum = keys.length ? keys : SHOWN_KEYS.filter(k => m.totals[k] > 0);
+              const sum = keys.length ? keys : SHOWN_KEYS.filter(k => (m.totals[k] || 0) > 0);
               const current = m.month === month;
               return (
                 <li key={m.month} className={`px-4 py-3 flex items-center gap-3 ${current ? 'bg-indigo-50/60' : ''}`}>
@@ -316,7 +353,7 @@ export const TeachingLogPanel: React.FC<{ cccd: string; pin: string; today: stri
                         : <span className="text-xs font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full whitespace-nowrap">Sửa được</span>}
                     </p>
                     <p className="text-xs text-slate-600 truncate">
-                      {sum.map(k => `${TEACH_META[k].short}: ${m.totals[k]}`).join(' • ') || '—'}
+                      {sum.map(k => `${TEACH_META[k].short}: ${m.totals[k] || 0}`).join(' • ') || '—'}
                     </p>
                   </div>
                   <button type="button" disabled={current}

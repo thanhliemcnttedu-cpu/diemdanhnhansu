@@ -3,7 +3,7 @@ import {
   X, Copy, CheckCheck, ExternalLink, FolderOpen, Code2, Rocket, Link2, Loader2, CheckCircle2, XCircle, AlertTriangle, ChevronRight, Wand2, MinusCircle,
 } from 'lucide-react';
 import { googleDriveService } from '../../services/googleDriveService';
-import { appsScriptSetupService, OPEN_APPS_SCRIPT_WIZARD_EVENT, SetupCheck } from '../../services/appsScriptSetupService';
+import { appsScriptSetupService, OPEN_APPS_SCRIPT_WIZARD_EVENT, SetupCheck, versionLabel } from '../../services/appsScriptSetupService';
 import { useClassroom } from '../../context/ClassroomContext';
 import { openReinitSchoolDb } from './ReinitSchoolDbModal';
 
@@ -101,7 +101,7 @@ export const AppsScriptSetupWizard: React.FC = () => {
         <div className="px-5 py-4 bg-white rounded-t-3xl border-b border-slate-200 flex items-start justify-between gap-3">
           <div className="min-w-0">
             <p className="text-lg font-black text-slate-900 inline-flex items-center gap-2"><Wand2 className="w-5 h-5 text-indigo-600" /> Trình cài đặt Apps Script</p>
-            <p className="text-sm text-slate-600">Mã trong phần mềm: <strong className="text-indigo-700">V{latest}</strong> • Làm lần lượt từng bước, bước cuối phần mềm tự kiểm tra giúp.</p>
+            <p className="text-sm text-slate-600">Mã trong phần mềm: <strong className="text-indigo-700">{versionLabel(latest)}</strong> • Làm lần lượt từng bước, bước cuối phần mềm tự kiểm tra giúp.</p>
           </div>
           <button type="button" onClick={() => setOpen(false)} className="no-hover-fx w-9 h-9 rounded-xl hover:bg-slate-100 flex items-center justify-center shrink-0" aria-label="Đóng"><X className="w-5 h-5" /></button>
         </div>
@@ -124,7 +124,7 @@ export const AppsScriptSetupWizard: React.FC = () => {
 
           {/* Bước 2: sao chép mã */}
           <StepCard n={2} title="Sao chép mã Apps Script" done={copied} icon={<Code2 className="w-5 h-5" />}>
-            <p>Mã đã điền sẵn mã thư mục của trường (phiên bản V{latest}).</p>
+            <p>Mã đã điền sẵn mã thư mục của trường ({versionLabel(latest).toLowerCase()}).</p>
             <button type="button" onClick={copyCode} disabled={!folderId}
               className="no-hover-fx h-10 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-black inline-flex items-center gap-2 disabled:opacity-50">
               {copied ? <CheckCheck className="w-4 h-4" /> : <Copy className="w-4 h-4" />} {copied ? 'Đã sao chép mã' : 'Sao chép mã'}

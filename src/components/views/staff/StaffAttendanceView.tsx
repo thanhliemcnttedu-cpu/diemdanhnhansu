@@ -10,7 +10,7 @@ import {
 } from '../../../services/staffAttendanceService';
 import { StaffCheckInQrCard } from './StaffCheckInQr';
 import { TeachingReportPanel } from './TeachingReportPanel';
-import { appsScriptSetupService } from '../../../services/appsScriptSetupService';
+import { appsScriptSetupService, compareVersions, versionLabel } from '../../../services/appsScriptSetupService';
 import { openReinitSchoolDb } from '../../modals/ReinitSchoolDbModal';
 
 type Tab = 'summary' | 'roster' | 'teach' | 'link';
@@ -239,7 +239,8 @@ export const StaffAttendanceView: React.FC = () => {
       const list = attemptsOf(r);
       list.forEach((at, i) => {
         s4.push([d.split('-').reverse().join('/'), c, byCode.get(c)?.name || '', i + 1, STAFF_STATUS_META[at.status]?.label || at.status, timeHMS(at.at), at.note || '',
-          i > 0 ? `Thực hiện điểm danh lại lần ${i + 1}` : '', i === list.length - 1 ? 'Có (được tính)' : 'Không (đã sửa)']);
+          [i > 0 ? `Thực hiện điểm danh lại lần ${i + 1}` : '', at.by ? `Điểm danh hộ bởi ${at.by}` : (list.slice(0, i).some(x => x.by) ? 'Nhân sự tự điểm danh' : '')].filter(Boolean).join(' • '),
+          i === list.length - 1 ? 'Có (được tính)' : 'Không (đã sửa)']);
       });
     }));
     const ws4 = XLSX.utils.aoa_to_sheet(s4);
@@ -466,8 +467,8 @@ const TodayDetail: React.FC<{
       setLockMsg({ type: 'ok', text: `${r.message || 'Đã điểm danh hộ.'}${r.errors?.length ? ` (${r.errors.length} lỗi: ${r.errors.slice(0, 3).join('; ')})` : ''}` });
       setProxyCodes(null); setPicked([]);
     } catch (e: any) {
-      setPErr(/Hành động không hợp lệ|phiên bản 4\.2/.test(String(e?.message || ''))
-        ? 'Apps Script của trường chưa có chức năng điểm danh hộ: cần cập nhật lên V4.7 (Hệ thống → Cài đặt Apps Script → Cập nhật bản mới).'
+      setPErr(/Hành động không hợp lệ|chưa được cập nhật lên phiên bản/.test(String(e?.message || ''))
+        ? 'Apps Script của trường chưa có chức năng điểm danh hộ: cần cập nhật lên phiên bản mới nhất (Hệ thống → Cài đặt Apps Script → Cập nhật).'
         : (e?.message || 'Lỗi kết nối.'));
     } finally { setPBusy(false); }
   };
@@ -906,7 +907,7 @@ const RosterPanel: React.FC<{ canManage: boolean; auth: { username: string; pass
           <p className="px-4 pt-3 text-sm text-slate-700 inline-flex items-start gap-1.5"><Info className="w-4 h-4 mt-0.5 text-sky-700 shrink-0" />
             <span>
               Chưa có số CCCD đầy đủ. Bấm <strong>Nhập Excel</strong> lại tệp danh sách để lưu số đầy đủ (mật khẩu đã cấp được giữ nguyên).
-              {scriptVersion && Number(scriptVersion) < 4.4 && <> Apps Script đang chạy là <strong>V{scriptVersion}</strong> — để mọi máy đều thấy đủ số, dán mã mới rồi chọn <strong>Triển khai → Quản lý triển khai → sửa (bút chì) → Phiên bản: Phiên bản mới → Triển khai</strong> (không tạo triển khai mới).</>}
+              {scriptVersion && compareVersions(scriptVersion, '4.4') < 0 && <> Apps Script đang chạy là <strong>{versionLabel(scriptVersion)}</strong> — để mọi máy đều thấy đủ số, dán mã mới rồi chọn <strong>Triển khai → Quản lý triển khai → sửa (bút chì) → Phiên bản: Phiên bản mới → Triển khai</strong> (không tạo triển khai mới).</>}
             </span>
           </p>
         )}
@@ -993,7 +994,7 @@ const RosterPanel: React.FC<{ canManage: boolean; auth: { username: string; pass
                             </button>
                           )}
                           {canManage && !s.currentCccd && s.cccdLast4 && (
-                            <span className="text-slate-400 cursor-help" title="Chưa lưu số CCCD đầy đủ: cập nhật Apps Script 4.3 rồi nhập lại tệp Excel (hoặc sửa CCCD) để xem được đủ số.">
+                            <span className="text-slate-400 cursor-help" title="Chưa lưu số CCCD đầy đủ: cập nhật Apps Script lên phiên bản mới nhất rồi nhập lại tệp Excel (hoặc sửa CCCD) để xem được đủ số.">
                               <Info className="w-3.5 h-3.5" />
                             </span>
                           )}

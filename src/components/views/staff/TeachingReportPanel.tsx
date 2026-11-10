@@ -4,9 +4,9 @@ import { BookOpenCheck, ChevronDown, ChevronLeft, ChevronRight, Download, FileSp
 import { StaffMember } from '../../../services/staffAttendanceService';
 import {
   teachingLogService, SHOWN_KEYS as TEACH_KEYS, TEACH_META, TeachKey, TeachLog, TeachProfile, monthWeeks, monthLabel, addMonths, enabledKeys, sumLog,
-  HSKT_SUBJECTS, ktOf, TeachLock, isTeachLocked,
+  HSKT_SUBJECTS, ktOf, TeachLock, isTeachLocked, subjectLabel,
 } from '../../../services/teachingLogService';
-import { exportTH1, exportTH2, exportTH3 } from '../../../services/teachingReportExcel';
+import { exportTH1, exportTH2, exportTH3, exportOvertime } from '../../../services/teachingReportExcel';
 
 const ORG_KEY = 'lhhp_teach_report_org';
 const readOrg = () => { try { return localStorage.getItem(ORG_KEY) || ''; } catch { return ''; } };
@@ -17,7 +17,12 @@ const readOrg = () => { try { return localStorage.getItem(ORG_KEY) || ''; } catc
  * (teachingReportExcel.ts) hoặc 1 tệp tổng hợp tất cả.
  */
 type View = 'all' | TeachKey;
-const CLASS_FIELD: Record<TeachKey, keyof TeachProfile> = { outdoor: 'classesPE', pe: 'classesPE', disabled: 'classesDisabled', english: 'classesEnglish' };
+/** Lớp (hoặc môn, với thừa giờ môn khác) giáo viên khai báo cho từng mục */
+const classesOf = (p: TeachProfile | null | undefined, k: TeachKey): string[] => {
+  if (!p) return [];
+  if (k === 'overtime') return (p.overtimeSubjects || []).map(subjectLabel);
+  return (k === 'disabled' ? p.classesDisabled : k === 'english' ? p.classesEnglish : p.classesPE) || [];
+};
 
 export const TeachingReportPanel: React.FC<{ auth: { username: string; password: string }; schoolName: string; today: string }> = ({ auth, schoolName, today }) => {
   const thisMonth = (today || new Date().toISOString()).slice(0, 7);
@@ -40,6 +45,8 @@ export const TeachingReportPanel: React.FC<{ auth: { username: string; password:
   const [delReason, setDelReason] = useState('');
   const [delUnlock, setDelUnlock] = useState(true);
   const [delBusy, setDelBusy] = useState(false);
+  // 'log' = chỉ xóa số tiết tháng này; 'all' = xóa cả khai báo phân công (bỏ khỏi bảng tổng hợp)
+  const [delMode, setDelMode] = useState<'log' | 'all'>('log');
   const [org, setOrg] = useState(readOrg);
   const saveOrg = (v: string) => { setOrg(v); try { localStorage.setItem(ORG_KEY, v); } catch { /* bỏ qua */ } };
 
@@ -76,12 +83,16 @@ export const TeachingReportPanel: React.FC<{ auth: { username: string; password:
     .filter(x => enabledKeys(x.p).includes(k) || sumLog(x.log, k) > 0)
     .map(x => ({ name: x.s.name, log: x.log }));
   const header = () => ({ org, school: schoolName || '', month, wks });
+  const otList = () => staff.filter(s => !s.disabled)
+    .map(s => ({ s, p: profiles[s.code] || null, log: logs[s.code] || null }))
+    .filter(x => enabledKeys(x.p).includes('overtime') || sumLog(x.log, 'overtime') > 0)
+    .map(x => ({ name: x.s.name, log: x.log, subjects: x.p?.overtimeSubjects || [] }));
   const ktTable = useMemo(() => HSKT_SUBJECTS.map(h => ({
     h, vals: wks.map(w => Object.values(logs).reduce((a, l) => a + ktOf(l?.weeks?.[w.key], h.code), 0)),
   })), [logs, wks]);
 
   const totals = useMemo(() => {
-    const t = { outdoor: 0, pe: 0, disabled: 0, english: 0 } as Record<TeachKey, number>; // outdoor không hiển thị
+    const t = { outdoor: 0, pe: 0, disabled: 0, english: 0, overtime: 0 } as Record<TeachKey, number>; // outdoor không hiển thị
     Object.values(logs).forEach(l => TEACH_KEYS.forEach(k => { t[k] += sumLog(l, k); }));
     return t;
   }, [logs]);
@@ -98,24 +109,34 @@ export const TeachingReportPanel: React.FC<{ auth: { username: string; password:
     setNotice(lock ? `Đã khóa chốt kê khai ${monthLabel(month).toLowerCase()} (${who}).` : `Đã mở khóa kê khai ${monthLabel(month).toLowerCase()} (${who}) — giáo viên tiếp tục kê / sửa được.`);
   };
   const askDelete = (codes: string[]) => {
-    const withLog = codes.filter(c => logs[c]);
-    if (!withLog.length) { setErr('Giáo viên đã chọn chưa có dữ liệu kê khai trong tháng này.'); return; }
+    const usable = codes.filter(c => logs[c] || profiles[c]);
+    if (!usable.length) { setErr('Giáo viên đã chọn chưa có khai báo hay số liệu kê khai.'); return; }
     setErr(''); setDelReason(''); setDelUnlock(true);
-    setDelTarget({ codes: withLog, names: withLog.map(c => staff.find(s => s.code === c)?.name || c) });
+    // Không có số tiết tháng này (chỉ khai báo nhầm) → mặc định xóa khỏi bảng tổng hợp
+    setDelMode(usable.some(c => logs[c]) ? 'log' : 'all');
+    setDelTarget({ codes: usable, names: usable.map(c => staff.find(s => s.code === c)?.name || c) });
   };
   const confirmDelete = async () => {
     if (!delTarget) return;
     setDelBusy(true); setErr(''); setNotice('');
-    const r = await teachingLogService.deleteLog(month, delTarget.codes, { reason: delReason.trim(), unlock: delUnlock }, auth);
+    const removeProfile = delMode === 'all';
+    const r = await teachingLogService.deleteLog(month, delTarget.codes, { reason: delReason.trim(), unlock: delUnlock, removeProfile }, auth);
     setDelBusy(false);
     if (!r?.success) { setErr(r?.message || 'Chưa xóa được dữ liệu kê khai.'); setDelTarget(null); return; }
     const removed = r.removed || delTarget.codes;
     setLogs(prev => { const n = { ...prev }; removed.forEach(c => { delete n[c]; }); return n; });
+    if (removeProfile) {
+      const gone = r.removedProfiles || [];
+      if (gone.length) setProfiles(prev => { const n = { ...prev }; gone.forEach(c => { delete n[c]; }); return n; });
+      else if (!r.removedProfiles) setErr('Apps Script của trường chưa xóa được khai báo (cần cập nhật Apps Script lên phiên bản mới nhất). Số tiết tháng này đã được xóa.');
+    }
     if (delUnlock) setLocks(prev => { const n = { ...prev }; if (r.lock) n[month] = r.lock; else delete n[month]; return n; });
     setPicked(new Set());
     setDelTarget(null);
     setNotice(removed.length
-      ? `Đã xóa kê khai ${monthLabel(month).toLowerCase()} của ${removed.length === 1 ? delTarget.names[0] : removed.length + ' giáo viên'}.${delUnlock ? ' Đã mở khóa để kê lại.' : ''}`
+      ? removeProfile
+        ? `Đã xóa ${removed.length === 1 ? delTarget.names[0] : removed.length + ' giáo viên'} khỏi bảng tổng hợp (xóa khai báo phân công và số tiết ${monthLabel(month).toLowerCase()}).`
+        : `Đã xóa kê khai ${monthLabel(month).toLowerCase()} của ${removed.length === 1 ? delTarget.names[0] : removed.length + ' giáo viên'}.${delUnlock ? ' Đã mở khóa để kê lại.' : ''}`
       : 'Không có dữ liệu kê khai để xóa.');
   };
   const declared = staff.filter(s => !s.disabled && enabledKeys(profiles[s.code]).length > 0);
@@ -138,7 +159,7 @@ export const TeachingReportPanel: React.FC<{ auth: { username: string; password:
       const list = all.filter(x => enabledKeys(x.p).includes(k) || sumLog(x.log, k) > 0);
       const sh: any[][] = [[`${TEACH_META[k].label.toUpperCase()} – ${monthLabel(month)}`], [],
         ['STT', 'Họ và tên', 'Lớp', ...wks.map(w => w.label), 'Tổng tháng']];
-      list.forEach((x, i) => sh.push([i + 1, x.s.name, ((x.p?.[CLASS_FIELD[k]] as string[]) || []).join(', '), ...wks.map(w => weekVal(x.log, w.key, k)), sumLog(x.log, k)]));
+      list.forEach((x, i) => sh.push([i + 1, x.s.name, classesOf(x.p, k).join(', '), ...wks.map(w => weekVal(x.log, w.key, k)), sumLog(x.log, k)]));
       sh.push(['', 'TỔNG CỘNG', '', ...wks.map(w => list.reduce((a, x) => a + weekVal(x.log, w.key, k), 0)), list.reduce((a, x) => a + sumLog(x.log, k), 0)]);
       const ws = XLSX.utils.aoa_to_sheet(sh);
       ws['!cols'] = [{ wch: 5 }, { wch: 26 }, { wch: 22 }, ...wks.map(() => ({ wch: 20 })), { wch: 12 }];
@@ -155,9 +176,9 @@ export const TeachingReportPanel: React.FC<{ auth: { username: string; password:
             <div className="px-5 py-4 border-b border-slate-100 flex items-start gap-3">
               <div className="w-10 h-10 rounded-xl bg-rose-50 text-rose-700 flex items-center justify-center shrink-0"><Trash2 className="w-5 h-5" /></div>
               <div className="min-w-0 flex-1">
-                <p id="del-teach-title" className="text-base font-black text-slate-900">Xóa kê khai {monthLabel(month).toLowerCase()}</p>
+                <p id="del-teach-title" className="text-base font-black text-slate-900">Xóa kê khai tiết dạy</p>
                 <p className="text-sm text-slate-700">
-                  {delTarget.names.length === 1 ? <>Giáo viên <strong>{delTarget.names[0]}</strong></> : <><strong>{delTarget.names.length} giáo viên</strong></>} sẽ phải kê lại số tiết của tháng này. Dữ liệu đã xóa không khôi phục được.
+                  {delTarget.names.length === 1 ? <>Giáo viên <strong>{delTarget.names[0]}</strong></> : <><strong>{delTarget.names.length} giáo viên</strong></>}. Dữ liệu đã xóa không khôi phục được.
                 </p>
               </div>
               <button type="button" onClick={() => setDelTarget(null)} aria-label="Đóng" className="no-hover-fx w-8 h-8 rounded-lg hover:bg-slate-100 inline-flex items-center justify-center"><X className="w-4 h-4" /></button>
@@ -166,12 +187,23 @@ export const TeachingReportPanel: React.FC<{ auth: { username: string; password:
               {delTarget.names.length > 1 && (
                 <p className="text-xs text-slate-600 max-h-20 overflow-y-auto">{delTarget.names.join(', ')}</p>
               )}
+              <fieldset className="space-y-2">
+                <legend className="sr-only">Mức xóa</legend>
+                <label className={`flex items-start gap-2.5 rounded-xl border p-3 cursor-pointer ${delMode === 'log' ? 'border-rose-300 bg-rose-50/60' : 'border-slate-200'}`}>
+                  <input type="radio" name="del-mode" checked={delMode === 'log'} onChange={() => setDelMode('log')} className="mt-0.5 w-4 h-4 accent-rose-700" />
+                  <span className="text-sm text-slate-800"><strong className="block text-slate-900">Chỉ xóa số tiết {monthLabel(month).toLowerCase()}</strong>Giữ khai báo phân công; giáo viên kê lại số tiết tháng này.</span>
+                </label>
+                <label className={`flex items-start gap-2.5 rounded-xl border p-3 cursor-pointer ${delMode === 'all' ? 'border-rose-300 bg-rose-50/60' : 'border-slate-200'}`}>
+                  <input type="radio" name="del-mode" checked={delMode === 'all'} onChange={() => setDelMode('all')} className="mt-0.5 w-4 h-4 accent-rose-700" />
+                  <span className="text-sm text-slate-800"><strong className="block text-slate-900">Xóa khỏi bảng tổng hợp</strong>Dùng khi giáo viên khai báo nhầm: xóa cả khai báo môn / lớp và số tiết tháng này. Giáo viên muốn kê lại phải khai báo từ đầu.</span>
+                </label>
+              </fieldset>
               <label className="block space-y-1">
                 <span className="text-sm font-bold text-slate-800">Lý do (không bắt buộc)</span>
                 <input value={delReason} onChange={(e) => setDelReason(e.target.value.slice(0, 200))} placeholder="Ví dụ: số tiết tuần 2 chưa đúng, kê lại"
                   className="w-full h-10 px-3 rounded-lg border border-slate-300 text-sm" />
               </label>
-              <label className="flex items-center gap-2 text-sm text-slate-800">
+              <label className={`flex items-center gap-2 text-sm text-slate-800 ${delMode === 'all' ? 'hidden' : ''}`}>
                 <input type="checkbox" checked={delUnlock} onChange={(e) => setDelUnlock(e.target.checked)} className="w-4 h-4 accent-indigo-600" />
                 Mở khóa để giáo viên kê lại ngay
               </label>
@@ -179,7 +211,7 @@ export const TeachingReportPanel: React.FC<{ auth: { username: string; password:
             <div className="px-5 py-3 bg-slate-50 border-t border-slate-100 flex justify-end gap-2">
               <button type="button" onClick={() => setDelTarget(null)} className="no-hover-fx h-10 px-4 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-sm font-bold text-slate-800">Hủy</button>
               <button type="button" onClick={confirmDelete} disabled={delBusy} className="no-hover-fx h-10 px-4 rounded-lg bg-rose-700 hover:bg-rose-800 text-white text-sm font-black inline-flex items-center gap-1.5 disabled:opacity-50">
-                {delBusy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />} Xóa kê khai
+                {delBusy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />} {delMode === 'all' ? 'Xóa khỏi bảng' : 'Xóa số tiết'}
               </button>
             </div>
           </div>
@@ -214,6 +246,7 @@ export const TeachingReportPanel: React.FC<{ auth: { username: string; password:
                     ['TH1', 'TH1. Bảng kê dạy lớp có HS khuyết tật', 'Đúng mẫu: trang TonghopKT + mỗi GV 1 trang', () => exportTH1(header(), listFor('disabled')), listFor('disabled').length],
                     ['TH2', 'TH2. Bảng kê dạy GDTC (ngoài trời)', 'Đúng mẫu: trang TonghopGDTC + mỗi GV 1 trang', () => exportTH2(header(), listFor('pe')), listFor('pe').length],
                     ['TH3', 'TH3. Bảng kê dạy thừa giờ Tiếng Anh', 'Đúng mẫu: trang TongTA + mỗi GV 1 trang', () => exportTH3(header(), listFor('english')), listFor('english').length],
+                    ['TG', 'Bảng kê dạy thừa giờ các môn khác', 'Khuôn TH3: mỗi môn của GV 1 dòng + mỗi GV 1 trang', () => exportOvertime(header(), otList()), otList().length],
                   ] as Array<[string, string, string, () => Promise<void>, number]>).map(([code, label, hint, run, n]) => (
                     <button key={code} type="button" role="menuitem" disabled={!n} onClick={() => { setMenu(false); run().catch(e => setErr('Không xuất được tệp Excel: ' + (e?.message || e))); }}
                       className="no-hover-fx w-full text-left rounded-xl border border-slate-200 hover:bg-emerald-50 hover:border-emerald-300 px-3 py-2 flex items-start gap-2.5 disabled:opacity-50 disabled:hover:bg-white">
@@ -336,7 +369,7 @@ export const TeachingReportPanel: React.FC<{ auth: { username: string; password:
                 {view === 'all'
                   ? TEACH_KEYS.map(k => <th key={k} className="py-3 px-2 text-center" title={TEACH_META[k].label} style={{ color: TEACH_META[k].text }}>{TEACH_META[k].short}</th>)
                   : <>
-                    <th className="py-3 pr-2">Lớp</th>
+                    <th className="py-3 pr-2">{view === 'overtime' ? 'Môn' : 'Lớp'}</th>
                     {wks.map(w => <th key={w.key} className="py-3 px-2 text-center" title={w.label}>Tuần {w.index}</th>)}
                     <th className="py-3 px-2 text-center" style={{ color: TEACH_META[view].text }}>Tổng</th>
                   </>}
@@ -359,7 +392,7 @@ export const TeachingReportPanel: React.FC<{ auth: { username: string; password:
                   {view === 'all'
                     ? TEACH_KEYS.map(k => <td key={k} className="py-2.5 px-2 text-center font-black tabular-nums" style={{ color: sumLog(x.log, k) ? TEACH_META[k].text : '#94a3b8' }}>{enabledKeys(x.p).includes(k) || sumLog(x.log, k) ? sumLog(x.log, k) : '—'}</td>)
                     : <>
-                      <td className="py-2.5 pr-2 text-slate-700 text-xs max-w-[160px] truncate" title={((x.p?.[CLASS_FIELD[view]] as string[]) || []).join(', ')}>{((x.p?.[CLASS_FIELD[view]] as string[]) || []).join(', ') || '—'}</td>
+                      <td className="py-2.5 pr-2 text-slate-700 text-xs max-w-[160px] truncate" title={classesOf(x.p, view).join(', ')}>{classesOf(x.p, view).join(', ') || '—'}</td>
                       {wks.map(w => <td key={w.key} className="py-2.5 px-2 text-center tabular-nums">{weekVal(x.log, w.key, view) || <span className="text-slate-400">0</span>}</td>)}
                       <td className="py-2.5 px-2 text-center font-black tabular-nums" style={{ color: TEACH_META[view].text }}>{sumLog(x.log, view)}</td>
                     </>}
@@ -379,8 +412,8 @@ export const TeachingReportPanel: React.FC<{ auth: { username: string; password:
                         </button>
                       );
                     })()}
-                    <button type="button" disabled={!x.log || delBusy} onClick={() => askDelete([x.s.code])}
-                      title={x.log ? 'Xóa kê khai tháng này để giáo viên kê lại' : 'Chưa có dữ liệu kê khai'} aria-label={`Xóa kê khai của ${x.s.name}`}
+                    <button type="button" disabled={(!x.log && !x.p) || delBusy} onClick={() => askDelete([x.s.code])}
+                      title={x.log ? 'Xóa số tiết tháng này / xóa khỏi bảng tổng hợp' : 'Xóa khỏi bảng tổng hợp (khai báo nhầm)'} aria-label={`Xóa kê khai của ${x.s.name}`}
                       className="no-hover-fx w-8 h-8 rounded-lg inline-flex items-center justify-center text-rose-600 hover:bg-rose-50 disabled:opacity-30 disabled:hover:bg-transparent">
                       <Trash2 className="w-4 h-4" />
                     </button>

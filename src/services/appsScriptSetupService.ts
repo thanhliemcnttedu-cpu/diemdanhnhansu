@@ -12,10 +12,29 @@ const UPDATE_CHECK_KEY = 'lhhp_gas_version_check';
 export type CheckState = 'ok' | 'fail' | 'warn' | 'skip';
 export interface SetupCheck { key: 'url' | 'access' | 'version' | 'folder'; label: string; state: CheckState; detail: string }
 
-/** So sánh "4.10" > "4.5" theo từng phần số */
+/**
+ * QUY TẮC PHIÊN BẢN APPS SCRIPT (từ 11/2026): "A.B.C" — mỗi lần sửa mã tăng C; C tối đa 20, sau đó tăng B và C về 1
+ * (1.1.19 → 1.1.20 → 1.2.1). Bản cũ dạng 2 phần "4.x" (4.1…4.12) luôn CŨ HƠN mọi bản mới 3 phần.
+ */
+export const VERSION_PATCH_MAX = 20;
+const isLegacyVersion = (v: string) => String(v || '').split('.').length < 3;
+const versionParts = (v: string) => {
+  const p = String(v || '0').split('.').map(n => parseInt(n, 10) || 0);
+  return isLegacyVersion(v) ? [0, ...p] : p; // "4.12" → 0.4.12 (< 1.x.x)
+};
+/** Phiên bản kế tiếp theo quy tắc: 1.1.2 → 1.1.3; 1.1.20 → 1.2.1 */
+export function nextVersion(v: string): string {
+  const [a, b, c] = versionParts(v);
+  if (isLegacyVersion(v)) return '1.1.1';
+  return c >= VERSION_PATCH_MAX ? `${a}.${b + 1}.1` : `${a}.${b}.${c + 1}`;
+}
+/** Nhãn hiển thị: "Phiên bản 1.1.2"; bản cũ "4.12" → "V4.12 (bản cũ)" */
+export const versionLabel = (v?: string | null) => (!v ? 'chưa rõ' : isLegacyVersion(v) ? `V${v} (bản cũ)` : `Phiên bản ${v}`);
+
+/** So sánh phiên bản theo từng phần số; bản cũ "4.x" nhỏ hơn mọi bản "1.x.x" */
 export function compareVersions(a: string, b: string): number {
-  const pa = String(a || '0').split('.').map(n => parseInt(n, 10) || 0);
-  const pb = String(b || '0').split('.').map(n => parseInt(n, 10) || 0);
+  const pa = versionParts(a);
+  const pb = versionParts(b);
   for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
     const d = (pa[i] || 0) - (pb[i] || 0);
     if (d !== 0) return d > 0 ? 1 : -1;
@@ -38,7 +57,7 @@ async function fetchJson(url: string, timeoutMs = 20000): Promise<{ ok: boolean;
 }
 
 export const appsScriptSetupService = {
-  /** Phiên bản mã Apps Script đóng gói trong phần mềm (ví dụ "4.5") */
+  /** Phiên bản mã Apps Script đóng gói trong phần mềm (ví dụ "1.1.2") */
   getBundledVersion(): string {
     const m = /var\s+SCRIPT_VERSION\s*=\s*"([\d.]+)"/.exec(googleDriveService.generateAppsScriptCode(''));
     return m ? m[1] : '';
@@ -89,8 +108,8 @@ export const appsScriptSetupService = {
     this.rememberVersion(url, version);
     const cmp = compareVersions(version, latest);
     checks.push(cmp >= 0
-      ? { key: 'version', label: 'Phiên bản mã', state: 'ok', detail: `Google đang chạy V${version} (mới nhất: V${latest}).` }
-      : { key: 'version', label: 'Phiên bản mã', state: 'fail', detail: `Google VẪN chạy V${version || '?'} (cần V${latest}). Dán mã mới, Lưu, rồi Triển khai → Quản lý các tùy chọn triển khai → bút chì → Phiên bản: Phiên bản mới → Triển khai.` });
+      ? { key: 'version', label: 'Phiên bản mã', state: 'ok', detail: `Google đang chạy ${versionLabel(version)} (mới nhất: ${versionLabel(latest)}).` }
+      : { key: 'version', label: 'Phiên bản mã', state: 'fail', detail: `Google VẪN chạy ${versionLabel(version)} (cần ${versionLabel(latest)}). Dán mã mới, Lưu, rồi Triển khai → Quản lý các tùy chọn triển khai → bút chì → Phiên bản: Phiên bản mới → Triển khai.` });
 
     if (!folderId) {
       checks.push({ key: 'folder', label: 'Mở được thư mục Drive', state: 'skip', detail: 'Chưa có link thư mục để kiểm tra.' });
