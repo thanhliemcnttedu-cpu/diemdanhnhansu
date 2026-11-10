@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useMemo } from 'react';
 import * as XLSX from 'xlsx';
 import { useClassroom } from '../../context/ClassroomContext';
 import { Student, Classroom, Subject, getStudentRoleInfo, CLASS_OFFICER_ROLES, getStudentRolesList, SchoolBranch, SchoolCampus } from '../../types';
@@ -749,8 +749,10 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
 
   // Excel Import & Template Modal (User Request 9)
   const excelFileInputRef = useRef<HTMLInputElement>(null);
-  const [excelParsedStudents, setExcelParsedStudents] = useState<Array<{ name: string; gender: 'Nam' | 'Nữ'; birthDate?: string; group?: string; role?: string }>>([]);
+  const [excelParsedStudents, setExcelParsedStudents] = useState<Array<{ name: string; gender: 'Nam' | 'Nữ'; birthDate?: string; group?: string; role?: string; roles?: string[] }>>([]);
   const [isExcelPreviewOpen, setIsExcelPreviewOpen] = useState(false);
+  // Học sinh trong tệp TRÙNG với học sinh đang có trong lớp (cùng họ tên + ngày sinh): bỏ qua hay ghi đè thông tin
+  const [excelDupMode, setExcelDupMode] = useState<'overwrite' | 'skip'>('overwrite');
   const [isExportStudentListOpen, setIsExportStudentListOpen] = useState(false);
 
   // Single Add student modal (Yêu cầu 1: Thêm đầy đủ thông tin kể cả chức vụ - Tối đa 3 chức vụ)
@@ -1336,13 +1338,31 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
     XLSX.writeFile(wb, `Mau_Danh_Sach_Hoc_Sinh_${activeClass?.name || 'Lop'}.xlsx`);
   };
 
+  // 4b. HỌC SINH TRÙNG khi nhập Excel: cùng họ tên (không phân biệt hoa thường / khoảng trắng / kiểu bỏ dấu) và
+  //     cùng ngày sinh (thiếu ngày sinh ở 1 bên thì chỉ xét họ tên). Mỗi học sinh đang có chỉ khớp với 1 dòng trong tệp.
+  const excelMatches = useMemo(() => {
+    const nameKey = (t?: string) => String(t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[đĐ]/g, 'd').toLowerCase().replace(/\s+/g, ' ').trim();
+    const dateKey = (t?: string) => {
+      const m = String(t || '').match(/(\d{1,4})\D+(\d{1,2})\D+(\d{1,4})/);
+      if (!m) return '';
+      const [a, b, c] = [m[1], m[2], m[3]];
+      return a.length === 4 ? `${c.padStart(2, '0')}/${b.padStart(2, '0')}/${a}` : `${a.padStart(2, '0')}/${b.padStart(2, '0')}/${c}`;
+    };
+    const used = new Set<string>();
+    return excelParsedStudents.map(row => {
+      const nk = nameKey(row.name), dk = dateKey(row.birthDate);
+      const cands = currentClassStudents.filter(s => !used.has(s.id) && nameKey(s.name) === nk);
+      const hit = cands.find(s => dk && dateKey(s.birthDate) === dk) || cands.find(s => !dk || !dateKey(s.birthDate)) || null;
+      if (hit) used.add(hit.id);
+      return hit;
+    });
+  }, [excelParsedStudents, currentClassStudents]);
+  const excelDupCount = excelMatches.filter(Boolean).length;
+  const excelNewCount = excelParsedStudents.length - excelDupCount;
+
   // 4. EXCEL UPLOAD
   const handleExcelUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (isStudentLimitReached) {
-      showTrialLimit('Bản dùng thử (chưa nhập CDKEY) chỉ được tối đa 10 học sinh mỗi lớp. Vui lòng nhập CDKEY bản quyền để mở khóa sĩ số không giới hạn.');
-      e.target.value = '';
-      return;
-    }
+    // Bản dùng thử đủ 10 em vẫn mở được tệp: học sinh TRÙNG vẫn cập nhật được, chỉ học sinh mới bị giới hạn (xử lý khi xác nhận)
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -1410,23 +1430,37 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
 
   const handleConfirmExcelImport = () => {
     if (excelParsedStudents.length > 0) {
-      let finalStudents = [...excelParsedStudents];
-      if (isDemoAccount) {
-        if (currentClassStudents.length >= 10) {
-          showTrialLimit('Bản dùng thử (chưa nhập CDKEY) chỉ được tối đa 10 học sinh mỗi lớp. Vui lòng nhập CDKEY bản quyền để mở khóa sĩ số không giới hạn.');
-          setIsExcelPreviewOpen(false);
-          setExcelParsedStudents([]);
-          return;
-        }
-        const allowedToAdd = 10 - currentClassStudents.length;
+      // Chỉ học sinh CHƯA có trong lớp mới được thêm → sĩ số sau khi nhập đúng bằng số học sinh trong tệp, không bị nhân đôi
+      let finalStudents = excelParsedStudents.filter((_, i) => !excelMatches[i]);
+      const dupPairs = excelParsedStudents.map((row, i) => ({ row, st: excelMatches[i] })).filter(x => x.st);
+      if (isDemoAccount && finalStudents.length > 0) {
+        const allowedToAdd = Math.max(0, 10 - currentClassStudents.length);
         if (finalStudents.length > allowedToAdd) {
-          showTrialLimit(`Bản dùng thử (chưa nhập CDKEY) chỉ được tối đa 10 học sinh mỗi lớp. Phần mềm chỉ thêm ${allowedToAdd} học sinh đầu danh sách. Nhập CDKEY bản quyền để mở khóa sĩ số không giới hạn.`);
+          showTrialLimit(allowedToAdd > 0
+            ? `Bản dùng thử (chưa nhập CDKEY) chỉ được tối đa 10 học sinh mỗi lớp. Phần mềm chỉ thêm ${allowedToAdd} học sinh mới đầu danh sách. Nhập CDKEY bản quyền để mở khóa sĩ số không giới hạn.`
+            : 'Bản dùng thử (chưa nhập CDKEY) chỉ được tối đa 10 học sinh mỗi lớp: không thêm được học sinh mới. Nhập CDKEY bản quyền để mở khóa sĩ số không giới hạn.');
           finalStudents = finalStudents.slice(0, allowedToAdd);
         }
       }
-      bulkAddStudents(finalStudents);
+      // Thêm học sinh mới TRƯỚC (bulkAddStudents dựa vào danh sách hiện tại), sau đó mới ghi đè học sinh trùng
+      if (finalStudents.length > 0) bulkAddStudents(finalStudents);
+      if (excelDupMode === 'overwrite') {
+        dupPairs.forEach(({ row, st }) => {
+          // Giữ nguyên họ tên đang có (họ tên là căn cứ khớp; tệp có thể khác hoa/thường, khoảng trắng)
+          const patch: Partial<Student> = { gender: row.gender };
+          if (row.birthDate) patch.birthDate = row.birthDate;
+          if (row.group) patch.group = row.group;
+          // Chức vụ: chỉ ghi đè khi tệp có ghi chức vụ (không xóa chức vụ đã gán)
+          const roles = (row.roles && row.roles.length ? row.roles : String(row.role || '').split(/[•,;\n]+/).map(s => s.trim()).filter(Boolean)).slice(0, 3);
+          if (roles.length) { patch.roles = roles; patch.role = roles.join(' • '); }
+          updateStudent(st!.id, patch);
+        });
+      }
       setIsExcelPreviewOpen(false);
       setExcelParsedStudents([]);
+      if (dupPairs.length > 0) {
+        alert(`Đã nhập danh sách: thêm ${finalStudents.length} học sinh mới; ${dupPairs.length} học sinh trùng ${excelDupMode === 'overwrite' ? 'đã được cập nhật thông tin theo tệp (giữ nguyên xu, ảnh)' : 'được giữ nguyên, không thêm lần nữa'}.`);
+      }
       confetti({ particleCount: 70, spread: 80 });
     }
   };
@@ -5908,6 +5942,29 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                 </button>
               </div>
 
+              {excelDupCount > 0 && (
+                <div className="mt-4 rounded-2xl border border-amber-300 bg-amber-50 p-3 space-y-2" role="alert">
+                  <p className="text-sm text-amber-950 flex items-start gap-2">
+                    <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0 text-amber-700" />
+                    <span>
+                      Trong tệp có <strong>{excelDupCount} học sinh trùng</strong> với danh sách lớp {activeClass?.name} hiện tại (cùng họ tên và ngày sinh).
+                      Hệ thống <strong>không thêm lại</strong> những học sinh này; chỉ thêm <strong>{excelNewCount} học sinh mới</strong>
+                      → sau khi nhập lớp có <strong>{currentClassStudents.length + excelNewCount} học sinh</strong>.
+                    </span>
+                  </p>
+                  <div className="flex flex-col sm:flex-row gap-2" role="radiogroup" aria-label="Xử lý học sinh trùng">
+                    <label className={`flex-1 flex items-start gap-2 rounded-xl border px-3 py-2 cursor-pointer text-sm ${excelDupMode === 'overwrite' ? 'border-emerald-500 bg-white' : 'border-amber-200 bg-amber-50/60'}`}>
+                      <input type="radio" name="excel-dup-mode" className="mt-0.5 accent-emerald-700" checked={excelDupMode === 'overwrite'} onChange={() => setExcelDupMode('overwrite')} />
+                      <span><strong className="text-slate-900">Ghi đè thông tin</strong><br /><span className="text-slate-600">Cập nhật ngày sinh, giới tính, tổ, chức vụ theo tệp; giữ nguyên xu, ảnh.</span></span>
+                    </label>
+                    <label className={`flex-1 flex items-start gap-2 rounded-xl border px-3 py-2 cursor-pointer text-sm ${excelDupMode === 'skip' ? 'border-emerald-500 bg-white' : 'border-amber-200 bg-amber-50/60'}`}>
+                      <input type="radio" name="excel-dup-mode" className="mt-0.5 accent-emerald-700" checked={excelDupMode === 'skip'} onChange={() => setExcelDupMode('skip')} />
+                      <span><strong className="text-slate-900">Bỏ qua học sinh trùng</strong><br /><span className="text-slate-600">Giữ nguyên thông tin đang có trong lớp.</span></span>
+                    </label>
+                  </div>
+                </div>
+              )}
+
               <div className="mt-4 border border-indigo-100 rounded-2xl overflow-hidden max-h-[45vh] overflow-y-auto">
                 <table className="w-full text-xs text-left">
                   <thead className="bg-indigo-50/80 text-indigo-950 font-black sticky top-0 border-b border-indigo-100">
@@ -5922,9 +5979,17 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                   </thead>
                   <tbody className="divide-y divide-indigo-50">
                     {excelParsedStudents.map((st, idx) => (
-                      <tr key={idx} className="hover:bg-indigo-50/40 font-medium">
+                      <tr key={idx} className={`font-medium ${excelMatches[idx] ? 'bg-amber-50/70' : 'hover:bg-indigo-50/40'}`}>
                         <td className="p-2.5 text-center font-mono text-indigo-600 font-bold">{idx + 1}</td>
-                        <td className="p-2.5 font-bold text-indigo-950">{st.name}</td>
+                        <td className="p-2.5 font-bold text-indigo-950">
+                          {st.name}
+                          {excelMatches[idx] && (
+                            <span className="ml-1.5 px-1.5 py-0.5 rounded-md bg-amber-100 border border-amber-300 text-amber-900 text-[12px] font-black whitespace-nowrap"
+                              title={`Trùng với STT ${excelMatches[idx]!.stt} trong lớp`}>
+                              {excelDupMode === 'overwrite' ? 'Trùng · ghi đè' : 'Trùng · bỏ qua'}
+                            </span>
+                          )}
+                        </td>
                         <td className="p-2.5 text-indigo-700 font-medium">{st.birthDate || '—'}</td>
                         <td className="p-2.5 text-center">
                           <span className={`px-2 py-0.5 rounded-full text-[12px] font-black ${
@@ -5964,7 +6029,9 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                 className="px-6 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-black rounded-xl shadow-md shadow-emerald-600/20 hover-zoom-btn flex items-center gap-1.5"
               >
                 <Check className="w-4 h-4" />
-                <span>Nạp {excelParsedStudents.length} Học Sinh Vào Lớp</span>
+                <span>{excelDupCount > 0
+                  ? `Thêm ${excelNewCount} học sinh mới${excelDupMode === 'overwrite' ? `, cập nhật ${excelDupCount}` : ''}`
+                  : `Nạp ${excelParsedStudents.length} Học Sinh Vào Lớp`}</span>
               </button>
             </div>
           </div>
