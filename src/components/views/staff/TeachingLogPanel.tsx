@@ -19,17 +19,23 @@ const WeekGrid: React.FC<{ title: React.ReactNode; color: string; wks: MonthWeek
         {!locked && extra}
       </div>
       <div className="overflow-x-auto">
-        <table className="w-full text-sm">
+        {/* Máy tính: bảng cố định độ rộng — các cột tuần chia đều phần còn lại */}
+        <table className="w-full text-sm lg:table-fixed">
+          <colgroup>
+            <col className="lg:w-36" />
+            {wks.map(w => <col key={w.key} />)}
+            <col className="lg:w-20" />
+          </colgroup>
           <thead>
             <tr className="text-xs font-bold text-slate-600 border-b border-slate-200">
-              <th className="py-1.5 pl-2 pr-1 lg:pl-4 text-left lg:w-40">Môn / mục</th>
+              <th className="py-1.5 pl-2 pr-1 lg:py-2.5 lg:pl-4 text-left">Môn / mục</th>
               {wks.map(w => (
-                <th key={w.key} className="py-1.5 px-0.5 text-center whitespace-nowrap" title={w.label}>
-                  <span className="lg:hidden">T{w.index}</span><span className="max-lg:hidden">Tuần {w.index}</span>
-                  <span className="block font-medium text-slate-500">{dm(w.from)}<span className="max-lg:hidden">–{dm(w.to)}</span></span>
+                <th key={w.key} className="py-1.5 px-0.5 lg:py-2.5 lg:px-2 text-center whitespace-nowrap lg:border-l lg:border-slate-100" title={`${w.label}: Thứ Hai – Thứ Sáu`}>
+                  <span className="lg:hidden">T{w.index}</span><span className="max-lg:hidden text-sm text-slate-800">Tuần {w.index}</span>
+                  <span className="block font-medium text-slate-500">{dm(w.from)}<span className="max-lg:hidden"> – {dm(w.to)}</span></span>
                 </th>
               ))}
-              <th className="py-1.5 px-1 text-center">Tổng</th>
+              <th className="py-1.5 px-1 lg:py-2.5 text-center lg:border-l lg:border-slate-100">Tổng</th>
             </tr>
           </thead>
           <tbody>
@@ -37,20 +43,20 @@ const WeekGrid: React.FC<{ title: React.ReactNode; color: string; wks: MonthWeek
               <tr key={r.id} className="border-b border-slate-100 last:border-0">
                 <td className="py-1 lg:py-1.5 pl-2 pr-1 lg:pl-4 font-bold text-slate-900 leading-tight" title={r.hint}>{r.label}</td>
                 {wks.map(w => (
-                  <td key={w.key} className="py-1 px-0.5 text-center">
+                  <td key={w.key} className="py-1 px-0.5 lg:py-2 lg:px-2 text-center lg:border-l lg:border-slate-100">
                     <input type="text" inputMode="numeric" value={r.get(w.key) ? String(r.get(w.key)) : ''} disabled={locked}
                       onChange={(e) => r.set(w.key, e.target.value)} placeholder="0" aria-label={`${r.hint} – Tuần ${w.index}`}
-                      className="w-9 sm:w-10 h-10 lg:w-20 lg:h-11 px-0.5 rounded-lg border border-slate-300 text-center text-base lg:text-lg font-bold tabular-nums disabled:bg-slate-100 focus:border-indigo-600 focus:ring-2 focus:ring-indigo-200 outline-none" />
+                      className="w-9 sm:w-10 h-10 lg:w-full lg:max-w-[7rem] lg:h-11 px-0.5 rounded-lg border border-slate-300 text-center text-base lg:text-lg font-bold tabular-nums disabled:bg-slate-100 focus:border-indigo-600 focus:ring-2 focus:ring-indigo-200 outline-none" />
                   </td>
                 ))}
-                <td className="py-1 px-1 text-center font-black tabular-nums" style={{ color }}>{rowTotal(r)}</td>
+                <td className="py-1 px-1 text-center font-black tabular-nums lg:text-lg lg:border-l lg:border-slate-100" style={{ color }}>{rowTotal(r)}</td>
               </tr>
             ))}
             {showTotalRow && rows.length > 1 && (
               <tr className="bg-slate-50 border-t border-slate-200">
                 <td className="py-2 pl-2 pr-1 font-black text-slate-900">Tổng</td>
-                {wks.map(w => <td key={w.key} className="py-2 px-0.5 text-center font-black tabular-nums text-slate-900">{rows.reduce((a, r) => a + r.get(w.key), 0)}</td>)}
-                <td className="py-2 px-1 text-center font-black tabular-nums text-lg" style={{ color }}>{rows.reduce((a, r) => a + rowTotal(r), 0)}</td>
+                {wks.map(w => <td key={w.key} className="py-2 px-0.5 text-center font-black tabular-nums text-slate-900 lg:border-l lg:border-slate-100">{rows.reduce((a, r) => a + r.get(w.key), 0)}</td>)}
+                <td className="py-2 px-1 text-center font-black tabular-nums text-lg lg:border-l lg:border-slate-100" style={{ color }}>{rows.reduce((a, r) => a + rowTotal(r), 0)}</td>
               </tr>
             )}
           </tbody>

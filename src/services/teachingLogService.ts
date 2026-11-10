@@ -62,7 +62,10 @@ export const subjectLabel = (code: string) => HSKT_SUBJECTS.find(s => s.code ===
 const norm = (t: string) => t.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/đ/gi, 'd').toLowerCase();
 const dm = (k: string) => `${k.slice(8, 10)}/${k.slice(5, 7)}`;
 
-/** Các tuần (Thứ Hai – Chủ nhật) giao với tháng YYYY-MM; ngày đầu / cuối cắt theo tháng */
+/**
+ * Các tuần làm việc của tháng YYYY-MM theo lịch dương: chỉ tính Thứ Hai – Thứ Sáu (Thứ Bảy, Chủ nhật là ngày nghỉ),
+ * cắt theo tháng. Khóa tuần (`key`) vẫn là ngày Thứ Hai để giữ đúng dữ liệu đã kê.
+ */
 export function monthWeeks(ym: string): MonthWeek[] {
   const [y, m] = ym.split('-').map(Number);
   const first = toDateKey(new Date(y, m - 1, 1));
@@ -71,13 +74,11 @@ export function monthWeeks(ym: string): MonthWeek[] {
   let monday = addDays(first, -dow);
   const out: MonthWeek[] = [];
   while (monday <= last) {
-    const sunday = addDays(monday, 6);
-    const from = monday < first ? first : monday;
-    const to = sunday > last ? last : sunday;
-    // Bỏ "tuần" chỉ gồm Thứ Bảy / Chủ nhật (vd. tháng bắt đầu vào Chủ nhật) — không có tiết dạy
     const friday = addDays(monday, 4);
-    const hasWeekday = (from <= friday) && (to >= monday) && (from <= (friday < to ? friday : to));
-    if (hasWeekday) out.push({ key: monday, index: out.length + 1, from, to, label: `Tuần ${out.length + 1} (${dm(from)}–${dm(to)})` });
+    const from = monday < first ? first : monday;
+    const to = friday > last ? last : friday; // không tính Thứ Bảy, Chủ nhật
+    // Bỏ "tuần" không có ngày làm việc nào trong tháng (vd. tháng bắt đầu vào Thứ Bảy / Chủ nhật)
+    if (from <= to) out.push({ key: monday, index: out.length + 1, from, to, label: `Tuần ${out.length + 1} (${dm(from)}–${dm(to)})` });
     monday = addDays(monday, 7);
   }
   return out;
