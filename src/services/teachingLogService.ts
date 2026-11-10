@@ -42,6 +42,12 @@ export interface TeachProfile { subjects: string[]; classesDisabled: string[]; c
 /** Số tiết 1 tuần; `kt` = tiết dạy lớp có HSKT theo mã môn (HSKT_SUBJECTS), `disabled` = tổng các môn */
 export type WeekCounts = Partial<Record<TeachKey, number>> & { kt?: Record<string, number> };
 export interface TeachLog { weeks: Record<string, WeekCounts>; note?: string; updatedAt?: string }
+/** 1 tháng giáo viên đã kê (teachGet → months, Apps Script 4.9) */
+export interface TeachMonthInfo { month: string; updatedAt: string; totals: Record<TeachKey, number>; locked: boolean }
+/** Khóa chốt kê khai của 1 tháng: cả trường (all) hoặc từng mã giáo viên */
+export interface TeachLock { all?: boolean; codes?: Record<string, boolean>; at?: string; by?: string }
+export const isTeachLocked = (l: TeachLock | null | undefined, code: string) => !!l && (!!l.all || !!l.codes?.[code]);
+
 export interface MonthWeek { key: string; index: number; from: string; to: string; label: string }
 
 export const EMPTY_PROFILE: TeachProfile = { subjects: [], classesDisabled: [], classesPE: [], classesEnglish: [] };
@@ -111,7 +117,7 @@ export function schoolYearOf(ym: string) {
 const friendly = (e: any) => {
   const msg = String(e?.message || '');
   if (/Hành động không hợp lệ|phiên bản 4\.2/.test(msg)) {
-    return 'Hệ thống của trường chưa có chức năng Kê khai tiết dạy (cần Apps Script 4.8). Vui lòng báo Quản trị nhà trường cập nhật.';
+    return 'Hệ thống của trường chưa có đủ chức năng Kê khai tiết dạy (cần Apps Script 4.9). Vui lòng báo Quản trị nhà trường cập nhật.';
   }
   return msg || 'Không kết nối được máy chủ.';
 };
@@ -140,7 +146,12 @@ export const teachingLogService = {
   report(from: string, to: string, auth?: { username: string; password: string } | null): Promise<{
     success: boolean; message?: string; code?: string; from?: string; to?: string; today?: string;
     profiles?: Record<string, TeachProfile>; logs?: Record<string, Record<string, TeachLog>>; staff?: StaffMember[];
+    locks?: Record<string, TeachLock>;
   }> {
     return safeCall({ action: 'teachReport', auth: auth ?? staffAttendanceService.getViewerAuth(), from, to }, 45000);
+  },
+  /** BGH / Quản trị: khóa (lock = true) hoặc mở khóa kê khai tháng `month` cho cả trường (all) hoặc các mã `codes` */
+  lock(month: string, lock: boolean, target: { all?: boolean; codes?: string[] }, auth?: { username: string; password: string } | null): Promise<{ success: boolean; message?: string; lock?: TeachLock | null }> {
+    return safeCall({ action: 'teachLock', auth: auth ?? staffAttendanceService.getViewerAuth(), month, lock, all: !!target.all, codes: target.codes || [] });
   },
 };

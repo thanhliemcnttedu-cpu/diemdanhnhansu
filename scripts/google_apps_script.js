@@ -13,6 +13,9 @@
  * - CHỈ tổng hợp tệp của GVCN (gvcn_*.json, teacherRole = homeroom). Tệp GV bộ môn (gvbm_*.json),
  *   BGH, Quản trị không được tính để không dôi số lớp / số học sinh.
  *
+ * - V4.9: KHÓA CHỐT KÊ KHAI TIẾT DẠY theo tháng (teachLock: BGH / Quản trị; cả trường hoặc từng giáo viên).
+ *   Giáo viên kê / sửa bất cứ lúc nào (mọi tuần của tháng hiện tại và các tháng trước) cho tới khi bị khóa;
+ *   mở khóa là kê tiếp được. teachGet trả danh sách các tháng đã kê (months) + trạng thái khóa.
  * - V4.8: KÊ KHAI TIẾT DẠY (kekhai_tietday.json, tệp khóa): giáo viên đăng nhập bằng CCCD + mật khẩu điểm danh,
  *   khai báo môn / lớp (HS khuyết tật, GDTC, Tiếng Anh) rồi kê số tiết theo từng tuần trong tháng
  *   (GDTC, trong đó dạy ngoài trời, lớp có HS khuyết tật theo từng môn, thừa giờ Tiếng Anh). BGH / Quản trị xem tổng hợp (teachReport).
@@ -47,7 +50,7 @@
 var FOLDER_ID = "__FOLDER_ID__";
 var TARGET_FILENAME = "du_lieu_lop_hoc_hanh_phuc.json";
 var REPORT_PREFIX = "bc_";
-var SCRIPT_VERSION = "4.8";
+var SCRIPT_VERSION = "4.9";
 
 // ---------------------------------------------------------------------------------------
 // HTTP POST: lưu dữ liệu lớp
@@ -62,7 +65,7 @@ function doPost(e) {
     var action = payload.action || "saveClassData";
 
     if (action === "staffAuth" || action === "staffCheckIn" || action === "getStaffRoster" || action === "saveStaffRoster" || action === "staffAttendanceRange" || action === "staffLock" || action === "staffProxyCheckIn"
-        || action === "teachGet" || action === "teachSaveProfile" || action === "teachSaveLog" || action === "teachReport") {
+        || action === "teachGet" || action === "teachSaveProfile" || action === "teachSaveLog" || action === "teachReport" || action === "teachLock") {
       var staffFolder = resolveFolder(folderId);
       if (!staffFolder) return createJsonResponse({ success: false, message: "Không tìm thấy thư mục Google Drive: " + folderId });
       if (action === "staffAuth") return createJsonResponse(handleStaffAuth(staffFolder, payload));
@@ -75,6 +78,7 @@ function doPost(e) {
       if (action === "teachSaveProfile") return createJsonResponse(handleTeachSaveProfile(staffFolder, payload));
       if (action === "teachSaveLog") return createJsonResponse(handleTeachSaveLog(staffFolder, payload));
       if (action === "teachReport") return createJsonResponse(handleTeachReport(staffFolder, payload));
+      if (action === "teachLock") return createJsonResponse(handleTeachLock(staffFolder, payload));
       return createJsonResponse(handleStaffAttendanceRange(staffFolder, payload));
     }
 
@@ -956,8 +960,10 @@ function handleTeachGet(folder, payload) {
   if (!v.ok) return { success: false, code: v.code, message: v.message };
   var month = cleanMonth(payload.month);
   var db = readTeachDb(folder);
+  var locked = isTeachLocked(db, month, v.staff.code);
   return { success: true, staff: publicStaff(v.staff), month: month, today: staffToday(),
-    profile: db.profiles[v.staff.code] || null, log: (db.logs[month] || {})[v.staff.code] || null };
+    profile: db.profiles[v.staff.code] || null, log: (db.logs[month] || {})[v.staff.code] || null,
+    locked: locked, lockMessage: locked ? TEACH_LOCK_MESSAGE : "", months: teachMonthsOf(db, v.staff.code) };
 }
 
 function handleTeachSaveProfile(folder, payload) {
@@ -984,6 +990,7 @@ function handleTeachSaveLog(folder, payload) {
   if (!v.ok) return { success: false, code: v.code, message: v.message };
   var month = cleanMonth(payload.month);
   if (month > staffToday().slice(0, 7)) return { success: false, message: "Chưa kê khai được cho tháng chưa tới." };
+  if (isTeachLocked(readTeachDb(folder), month, v.staff.code)) return { success: false, code: "LOCKED", locked: true, message: TEACH_LOCK_MESSAGE };
   var weeksIn = payload.weeks || {};
   var weeks = {};
   for (var wk in weeksIn) {
@@ -1016,6 +1023,7 @@ function handleTeachSaveLog(folder, payload) {
   try {
     var db = readTeachDb(folder);
     if (!db.logs[month]) db.logs[month] = {};
+    if (isTeachLocked(db, month, v.staff.code)) return { success: false, code: "LOCKED", locked: true, message: TEACH_LOCK_MESSAGE };
     db.logs[month][v.staff.code] = { weeks: weeks, note: String(payload.note || "").slice(0, 300), updatedAt: new Date().toISOString() };
     db.updatedAt = new Date().toISOString();
     writeFileOverwrite(folder, TEACH_FILE, JSON.stringify(db));
@@ -1033,7 +1041,72 @@ function handleTeachReport(folder, payload) {
   var logs = {}, n = 0;
   for (var m in db.logs) if (m >= from && m <= to && n++ < 12) logs[m] = db.logs[m];
   var sdb = readStaffDb(folder);
-  return { success: true, from: from, to: to, today: staffToday(), profiles: db.profiles, logs: logs, staff: sdb.staff.map(publicStaff) };
+  return { success: true, from: from, to: to, today: staffToday(), profiles: db.profiles, logs: logs, locks: db.locks || {}, staff: sdb.staff.map(publicStaff) };
+}
+
+// ---------------------------------------------------------------- V4.9: khóa chốt kê khai tiết dạy theo THÁNG
+// db.locks["YYYY-MM"] = { all: true|false, codes: { MÃ: true }, at, by }
+var TEACH_LOCK_MESSAGE = "Bảng kê tiết dạy tháng này đã được quản trị nhà trường khóa chốt số liệu. Liên hệ quản trị nhà trường nếu cần sửa.";
+
+function isTeachLocked(db, month, code) {
+  var L = db && db.locks && db.locks[month];
+  if (!L) return false;
+  if (L.all) return true;
+  return !!(L.codes && L.codes[code]);
+}
+
+// Các tháng giáo viên đã kê (mới nhất trước), kèm tổng từng mục và trạng thái khóa
+function teachMonthsOf(db, code) {
+  var out = [];
+  for (var m in db.logs) {
+    var l = db.logs[m] && db.logs[m][code];
+    if (!l) continue;
+    var t = { outdoor: 0, pe: 0, disabled: 0, english: 0 };
+    for (var wk in (l.weeks || {})) for (var k = 0; k < TEACH_KEYS.length; k++) t[TEACH_KEYS[k]] += Number(l.weeks[wk][TEACH_KEYS[k]]) || 0;
+    out.push({ month: m, updatedAt: l.updatedAt || "", totals: t, locked: isTeachLocked(db, m, code) });
+  }
+  out.sort(function (a, b) { return a.month < b.month ? 1 : -1; });
+  return out;
+}
+
+// BGH / Quản trị: khóa hoặc mở khóa kê khai 1 tháng cho cả trường (all) hoặc từng mã giáo viên (codes)
+function handleTeachLock(folder, payload) {
+  var actor = staffActor(folder, payload.auth, false);
+  if (!actor) return { success: false, code: "UNAUTHORIZED", message: "Chỉ BGH / Quản trị được khóa kê khai tiết dạy." };
+  var month = cleanMonth(payload.month);
+  var doLock = payload.lock !== false;
+  var lock = LockService.getScriptLock();
+  try { lock.waitLock(20000); } catch (_) {}
+  try {
+    var db = readTeachDb(folder);
+    if (!db.locks) db.locks = {};
+    var L = db.locks[month] || { all: false, codes: {} };
+    if (!L.codes) L.codes = {};
+    var codes = (payload.codes || []).map(normalizeStaffCode).filter(function (c) { return !!c; });
+    if (payload.all) {
+      L.all = doLock;
+      L.codes = {};
+    } else if (doLock) {
+      for (var i = 0; i < codes.length; i++) L.codes[codes[i]] = true;
+    } else if (L.all) {
+      // Đang khóa cả trường, mở cho vài người -> chuyển sang khóa từng người (trừ người được mở)
+      var keep = {};
+      var sdb = readStaffDb(folder);
+      for (var j = 0; j < sdb.staff.length; j++) keep[sdb.staff[j].code] = true;
+      for (var k = 0; k < codes.length; k++) delete keep[codes[k]];
+      L.all = false;
+      L.codes = keep;
+    } else {
+      for (var n = 0; n < codes.length; n++) delete L.codes[codes[n]];
+    }
+    L.at = new Date().toISOString();
+    L.by = actor.username;
+    if (!L.all && Object.keys(L.codes).length === 0) delete db.locks[month];
+    else db.locks[month] = L;
+    db.updatedAt = L.at;
+    writeFileOverwrite(folder, TEACH_FILE, JSON.stringify(db));
+    return { success: true, month: month, lock: db.locks[month] || null };
+  } finally { try { lock.releaseLock(); } catch (_) {} }
 }
 
 // --- V4.7: BGH / Quản trị điểm danh HỘ (nhân sự báo qua điện thoại…): 1 / nhiều người, hôm nay hoặc ngày đã qua

@@ -1,21 +1,21 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { BookOpenCheck, ChevronLeft, ChevronRight, Loader2, Pencil, Plus, Save, X, CheckCircle2 } from 'lucide-react';
+import { BookOpenCheck, ChevronLeft, ChevronRight, Loader2, Pencil, Plus, Save, X, CheckCircle2, Lock, History } from 'lucide-react';
 import {
   teachingLogService, TEACH_META, TeachKey, TeachProfile, WeekCounts, EMPTY_PROFILE, SUBJECT_PRESETS,
-  monthWeeks, monthLabel, addMonths, enabledKeys, HSKT_SUBJECTS, subjectCodesOf, ktOf, MonthWeek,
+  monthWeeks, monthLabel, addMonths, enabledKeys, HSKT_SUBJECTS, subjectCodesOf, ktOf, MonthWeek, TeachMonthInfo, TEACH_KEYS,
 } from '../../../services/teachingLogService';
 
 type GridRow = { id: string; label: string; hint: string; get: (wk: string) => number; set: (wk: string, v: string) => void };
 const dm = (k: string) => `${k.slice(8, 10)}/${k.slice(5, 7)}`;
 
 /** Bảng nhập số tiết: dòng = mục / môn, cột = Tuần 1…5 của tháng (giống mẫu bảng kê của nhà trường) */
-const WeekGrid: React.FC<{ title: string; color: string; wks: MonthWeek[]; today: string; rows: GridRow[]; extra?: React.ReactNode; warn?: string; showTotalRow?: boolean }> = ({ title, color, wks, today, rows, extra, warn, showTotalRow }) => {
+const WeekGrid: React.FC<{ title: string; color: string; wks: MonthWeek[]; locked: boolean; rows: GridRow[]; extra?: React.ReactNode; warn?: string; showTotalRow?: boolean }> = ({ title, color, wks, locked, rows, extra, warn, showTotalRow }) => {
   const rowTotal = (r: GridRow) => wks.reduce((a, w) => a + r.get(w.key), 0);
   return (
     <div className="rounded-2xl border border-slate-200 overflow-hidden">
       <div className="px-3 py-2 bg-slate-50 border-b border-slate-200 flex items-center justify-between gap-2">
         <p className="text-sm font-black" style={{ color }}>{title}</p>
-        {extra}
+        {!locked && extra}
       </div>
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
@@ -36,7 +36,7 @@ const WeekGrid: React.FC<{ title: string; color: string; wks: MonthWeek[]; today
                 <td className="py-1 pl-2 pr-1 font-bold text-slate-900 leading-tight" title={r.hint}>{r.label}</td>
                 {wks.map(w => (
                   <td key={w.key} className="py-1 px-0.5 text-center">
-                    <input type="text" inputMode="numeric" value={r.get(w.key) ? String(r.get(w.key)) : ''} disabled={w.from > today}
+                    <input type="text" inputMode="numeric" value={r.get(w.key) ? String(r.get(w.key)) : ''} disabled={locked}
                       onChange={(e) => r.set(w.key, e.target.value)} placeholder="0" aria-label={`${r.hint} – Tuần ${w.index}`}
                       className="w-10 h-10 px-0.5 rounded-lg border border-slate-300 text-center text-base font-bold tabular-nums disabled:bg-slate-100" />
                   </td>
@@ -84,6 +84,11 @@ export const TeachingLogPanel: React.FC<{ cccd: string; pin: string; today: stri
   const [weeks, setWeeks] = useState<Record<string, WeekCounts>>({});
   const [note, setNote] = useState('');
   const [savedAt, setSavedAt] = useState('');
+  // Khóa chốt của tháng đang xem (BGH / Quản trị bấm khóa) + danh sách các tháng đã kê (Apps Script 4.9)
+  const [locked, setLocked] = useState(false);
+  const [lockMessage, setLockMessage] = useState('');
+  const [months, setMonths] = useState<TeachMonthInfo[]>([]);
+  const logRef = React.useRef<HTMLElement | null>(null);
 
   const load = async (m: string) => {
     setLoading(true); setMsg(null);
@@ -94,6 +99,9 @@ export const TeachingLogPanel: React.FC<{ cccd: string; pin: string; today: stri
     setWeeks(r.log?.weeks || {});
     setNote(r.log?.note || '');
     setSavedAt(r.log?.updatedAt || '');
+    setLocked(!!r.locked);
+    setLockMessage(r.lockMessage || '');
+    if (Array.isArray(r.months)) setMonths(r.months);
     if (!r.profile) startEdit(null);
   };
   useEffect(() => { load(month); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [month]);
@@ -149,7 +157,7 @@ export const TeachingLogPanel: React.FC<{ cccd: string; pin: string; today: stri
   };
   const copyOutdoor = () => setWeeks(prev => {
     const next = { ...prev };
-    wks.forEach(w => { if (w.from <= today) next[w.key] = { ...(next[w.key] || {}), outdoor: Number(next[w.key]?.pe) || 0 }; });
+    wks.forEach(w => { next[w.key] = { ...(next[w.key] || {}), outdoor: Number(next[w.key]?.pe) || 0 }; });
     return next;
   });
 
@@ -159,9 +167,18 @@ export const TeachingLogPanel: React.FC<{ cccd: string; pin: string; today: stri
     wks.forEach(w => { if (weeks[w.key]) payload[w.key] = weeks[w.key]; });
     const r = await teachingLogService.saveLog(cccd, pin, month, payload, note);
     setBusy(false);
-    if (!r?.success) { setMsg({ ok: false, text: r?.message || 'Chưa lưu được kê khai.' }); return; }
+    if (!r?.success) {
+      if (r?.code === 'LOCKED') { setLocked(true); setLockMessage(r.message || ''); }
+      setMsg({ ok: false, text: r?.message || 'Chưa lưu được kê khai.' });
+      return;
+    }
     setSavedAt(r.log?.updatedAt || new Date().toISOString());
     setMsg({ ok: true, text: `Đã lưu kê khai ${monthLabel(month)}.` });
+    // Cập nhật danh sách tháng đã kê
+    const t = { outdoor: 0, pe: 0, disabled: 0, english: 0 } as TeachMonthInfo['totals'];
+    Object.values(r.log?.weeks || payload).forEach((w: any) => TEACH_KEYS.forEach(k => { t[k] += Number(w?.[k]) || 0; }));
+    setMonths(prev => [{ month, updatedAt: r.log?.updatedAt || new Date().toISOString(), totals: t, locked: false }, ...prev.filter(x => x.month !== month)]
+      .sort((a, b) => (a.month < b.month ? 1 : -1)));
   };
 
   if (loading && !profile && !editing) {
@@ -231,7 +248,7 @@ export const TeachingLogPanel: React.FC<{ cccd: string; pin: string; today: stri
 
       {/* Bước 2: kê khai theo tuần */}
       {profile && !editing && (
-        <section className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+        <section ref={logRef} className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden scroll-mt-4">
           <div className="px-5 py-3.5 border-b border-slate-100 flex items-center justify-between gap-2">
             <p className="text-base font-black text-slate-900">2. Kê khai số tiết</p>
             <div className="flex items-center gap-1">
@@ -244,9 +261,15 @@ export const TeachingLogPanel: React.FC<{ cccd: string; pin: string; today: stri
             <p className="p-5 text-sm text-slate-700">Khai báo hiện tại không có mục cần kê (GDTC, lớp có HS khuyết tật, Tiếng Anh). Bấm <strong>Sửa</strong> ở phần khai báo nếu cần.</p>
           ) : (
             <div className="p-3 sm:p-5 space-y-3">
-              <p className="text-xs text-slate-600">T1…T{wks.length}: các tuần trong tháng (ngày ghi dưới là ngày đầu tuần). Tuần chưa tới bị khóa.</p>
+              {locked ? (
+                <p className="rounded-2xl bg-rose-50 border border-rose-200 px-3 py-2.5 text-sm font-bold text-rose-800 inline-flex items-start gap-2" role="status">
+                  <Lock className="w-4 h-4 mt-0.5 shrink-0" /> {lockMessage || 'Bảng kê tháng này đã được khóa chốt số liệu.'}
+                </p>
+              ) : (
+                <p className="text-xs text-slate-600">T1…T{wks.length}: các tuần trong tháng (ngày ghi dưới là ngày đầu tuần). Kê hoặc sửa được bất cứ lúc nào cho tới khi nhà trường khóa chốt.</p>
+              )}
               {keys.includes('pe') && (
-                <WeekGrid title="Giáo dục thể chất" color={TEACH_META.pe.text} wks={wks} today={today}
+                <WeekGrid title="Giáo dục thể chất" color={TEACH_META.pe.text} wks={wks} locked={locked}
                   rows={[
                     { id: 'pe', label: 'Tiết GDTC', hint: TEACH_META.pe.label, get: (wk) => Number(weeks[wk]?.pe) || 0, set: (wk, v) => setCell(wk, 'pe', v) },
                     { id: 'outdoor', label: 'Ngoài trời', hint: 'Trong đó: số tiết GDTC dạy ngoài trời', get: (wk) => Number(weeks[wk]?.outdoor) || 0, set: (wk, v) => setCell(wk, 'outdoor', v) },
@@ -257,7 +280,7 @@ export const TeachingLogPanel: React.FC<{ cccd: string; pin: string; today: stri
                   warn={wks.some(w => (Number(weeks[w.key]?.outdoor) || 0) > (Number(weeks[w.key]?.pe) || 0) && (Number(weeks[w.key]?.pe) || 0) > 0) ? 'Có tuần số tiết ngoài trời lớn hơn số tiết GDTC — hãy kiểm tra lại.' : ''} />
               )}
               {keys.includes('disabled') && (
-                <WeekGrid title="Lớp có HS khuyết tật (theo môn)" color={TEACH_META.disabled.text} wks={wks} today={today} showTotalRow
+                <WeekGrid title="Lớp có HS khuyết tật (theo môn)" color={TEACH_META.disabled.text} wks={wks} locked={locked} showTotalRow
                   rows={ktCodes.map(code => {
                     const h = HSKT_SUBJECTS.find(x => x.code === code)!;
                     return { id: code, label: h.label, hint: `Tiết ${h.label} dạy ở lớp có HS khuyết tật`, get: (wk: string) => ktOf(weeks[wk], code), set: (wk: string, v: string) => setKt(wk, code, v) };
@@ -267,17 +290,52 @@ export const TeachingLogPanel: React.FC<{ cccd: string; pin: string; today: stri
                   )} />
               )}
               {keys.includes('english') && (
-                <WeekGrid title="Tiếng Anh" color={TEACH_META.english.text} wks={wks} today={today}
+                <WeekGrid title="Tiếng Anh" color={TEACH_META.english.text} wks={wks} locked={locked}
                   rows={[{ id: 'english', label: 'Thừa giờ', hint: TEACH_META.english.label, get: (wk) => Number(weeks[wk]?.english) || 0, set: (wk, v) => setCell(wk, 'english', v) }]} />
               )}
-              <textarea value={note} onChange={(e) => setNote(e.target.value.slice(0, 300))} rows={2} placeholder="Ghi chú (nếu có)" aria-label="Ghi chú kê khai"
-                className="w-full px-3 py-2 rounded-xl border border-slate-300 text-base" />
-              <button type="button" onClick={saveLog} disabled={busy} className="no-hover-fx w-full h-12 rounded-2xl bg-emerald-700 hover:bg-emerald-800 text-white text-base font-black inline-flex items-center justify-center gap-2 disabled:opacity-50">
+              <textarea value={note} onChange={(e) => setNote(e.target.value.slice(0, 300))} rows={2} placeholder="Ghi chú (nếu có)" aria-label="Ghi chú kê khai" disabled={locked}
+                className="w-full px-3 py-2 rounded-xl border border-slate-300 text-base disabled:bg-slate-100" />
+              {!locked && <button type="button" onClick={saveLog} disabled={busy} className="no-hover-fx w-full h-12 rounded-2xl bg-emerald-700 hover:bg-emerald-800 text-white text-base font-black inline-flex items-center justify-center gap-2 disabled:opacity-50">
                 {busy ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />} Lưu kê khai {monthLabel(month).toLowerCase()}
-              </button>
+              </button>}
               {savedAt && <p className="text-xs text-center text-slate-600">Lưu lần cuối: {new Date(savedAt).toLocaleString('vi-VN')}</p>}
             </div>
           )}
+        </section>
+      )}
+
+      {/* Bước 3: các tháng đã kê khai — xem lại, sửa khi chưa khóa */}
+      {profile && !editing && months.length > 0 && (
+        <section className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+          <div className="px-5 py-3.5 border-b border-slate-100">
+            <p className="text-base font-black text-slate-900 inline-flex items-center gap-2"><History className="w-5 h-5 text-indigo-600" /> 3. Các tháng đã kê khai</p>
+          </div>
+          <ul className="divide-y divide-slate-100">
+            {months.map(m => {
+              const sum = keys.length ? keys : TEACH_KEYS.filter(k => m.totals[k] > 0);
+              const current = m.month === month;
+              return (
+                <li key={m.month} className={`px-4 py-3 flex items-center gap-3 ${current ? 'bg-indigo-50/60' : ''}`}>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-black text-slate-900 flex items-center gap-2 flex-wrap">
+                      {monthLabel(m.month)}
+                      {m.locked
+                        ? <span className="inline-flex items-center gap-1 text-xs font-bold text-rose-800 bg-rose-50 border border-rose-200 px-2 py-0.5 rounded-full whitespace-nowrap"><Lock className="w-3 h-3" /> Đã khóa</span>
+                        : <span className="text-xs font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full whitespace-nowrap">Sửa được</span>}
+                    </p>
+                    <p className="text-xs text-slate-600 truncate">
+                      {sum.map(k => `${TEACH_META[k].short}: ${m.totals[k]}`).join(' • ') || '—'}
+                    </p>
+                  </div>
+                  <button type="button" disabled={current}
+                    onClick={() => { setMonth(m.month); setTimeout(() => logRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50); }}
+                    className="no-hover-fx h-9 px-3 rounded-xl border border-slate-300 text-sm font-bold text-slate-800 hover:bg-slate-50 inline-flex items-center gap-1.5 whitespace-nowrap disabled:opacity-60">
+                    {current ? 'Đang xem' : m.locked ? 'Xem' : <><Pencil className="w-4 h-4" /> Xem / sửa</>}
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
         </section>
       )}
     </div>

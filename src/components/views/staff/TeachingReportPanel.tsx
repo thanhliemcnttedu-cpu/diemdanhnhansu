@@ -1,10 +1,10 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import * as XLSX from 'xlsx';
-import { BookOpenCheck, ChevronDown, ChevronLeft, ChevronRight, Download, FileSpreadsheet, Loader2, RefreshCw, Search } from 'lucide-react';
+import { BookOpenCheck, ChevronDown, ChevronLeft, ChevronRight, Download, FileSpreadsheet, Loader2, Lock, LockOpen, RefreshCw, Search } from 'lucide-react';
 import { StaffMember } from '../../../services/staffAttendanceService';
 import {
   teachingLogService, TEACH_KEYS, TEACH_META, TeachKey, TeachLog, TeachProfile, monthWeeks, monthLabel, addMonths, enabledKeys, sumLog,
-  HSKT_SUBJECTS, ktOf,
+  HSKT_SUBJECTS, ktOf, TeachLock, isTeachLocked,
 } from '../../../services/teachingLogService';
 import { exportTH1, exportTH2, exportTH3, exportOutdoor } from '../../../services/teachingReportExcel';
 
@@ -30,6 +30,11 @@ export const TeachingReportPanel: React.FC<{ auth: { username: string; password:
   const [profiles, setProfiles] = useState<Record<string, TeachProfile>>({});
   const [logs, setLogs] = useState<Record<string, TeachLog>>({});
   const [menu, setMenu] = useState(false);
+  // Khóa chốt kê khai theo tháng (Apps Script 4.9)
+  const [locks, setLocks] = useState<Record<string, TeachLock>>({});
+  const [picked, setPicked] = useState<Set<string>>(new Set());
+  const [lockBusy, setLockBusy] = useState(false);
+  const [notice, setNotice] = useState('');
   const [org, setOrg] = useState(readOrg);
   const saveOrg = (v: string) => { setOrg(v); try { localStorage.setItem(ORG_KEY, v); } catch { /* bỏ qua */ } };
 
@@ -41,6 +46,8 @@ export const TeachingReportPanel: React.FC<{ auth: { username: string; password:
     setStaff(r.staff || []);
     setProfiles(r.profiles || {});
     setLogs((r.logs || {})[month] || {});
+    setLocks(r.locks || {});
+    setPicked(new Set());
   };
   useEffect(() => { load(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [month]);
 
@@ -73,6 +80,18 @@ export const TeachingReportPanel: React.FC<{ auth: { username: string; password:
     Object.values(logs).forEach(l => TEACH_KEYS.forEach(k => { t[k] += sumLog(l, k); }));
     return t;
   }, [logs]);
+  const monthLock = locks[month] || null;
+  const lockedCount = monthLock && !monthLock.all ? Object.keys(monthLock.codes || {}).length : 0;
+  const doLock = async (lock: boolean, target: { all?: boolean; codes?: string[] }) => {
+    setLockBusy(true); setErr(''); setNotice('');
+    const r = await teachingLogService.lock(month, lock, target, auth);
+    setLockBusy(false);
+    if (!r?.success) { setErr(r?.message || 'Chưa khóa / mở khóa được.'); return; }
+    setLocks(prev => { const n = { ...prev }; if (r.lock) n[month] = r.lock; else delete n[month]; return n; });
+    setPicked(new Set());
+    const who = target.all ? 'toàn trường' : `${target.codes?.length || 0} giáo viên`;
+    setNotice(lock ? `Đã khóa chốt kê khai ${monthLabel(month).toLowerCase()} (${who}).` : `Đã mở khóa kê khai ${monthLabel(month).toLowerCase()} (${who}) — giáo viên tiếp tục kê / sửa được.`);
+  };
   const declared = staff.filter(s => !s.disabled && enabledKeys(profiles[s.code]).length > 0);
   const submitted = declared.filter(s => logs[s.code]?.updatedAt).length;
 
@@ -170,6 +189,32 @@ export const TeachingReportPanel: React.FC<{ auth: { username: string; password:
           ))}
         </div>
 
+        <div className="mx-4 mb-3 rounded-xl border px-3 py-2.5 flex flex-wrap items-center gap-2"
+          style={monthLock?.all ? { background: '#fff1f2', borderColor: '#fecdd3' } : { background: '#f8fafc', borderColor: '#e2e8f0' }}>
+          <p className={`text-sm font-bold inline-flex items-center gap-1.5 mr-auto ${monthLock?.all ? 'text-rose-800' : 'text-slate-800'}`}>
+            {monthLock?.all ? <Lock className="w-4 h-4" /> : <LockOpen className="w-4 h-4" />}
+            {monthLock?.all
+              ? `${monthLabel(month)} đã khóa chốt cho toàn trường — giáo viên chỉ xem, không sửa được.`
+              : lockedCount
+                ? `${monthLabel(month)}: đang khóa ${lockedCount} giáo viên; những người khác vẫn kê / sửa được.`
+                : `${monthLabel(month)}: giáo viên đang kê / sửa được bất cứ lúc nào.`}
+          </p>
+          {picked.size > 0 && (
+            <>
+              <span className="text-sm font-bold text-slate-700 whitespace-nowrap">Đã chọn {picked.size}</span>
+              <button type="button" disabled={lockBusy} onClick={() => doLock(true, { codes: [...picked] })} className="no-hover-fx h-9 px-3 rounded-lg text-sm font-bold bg-rose-700 hover:bg-rose-800 text-white inline-flex items-center gap-1.5 whitespace-nowrap disabled:opacity-50"><Lock className="w-4 h-4" /> Khóa</button>
+              <button type="button" disabled={lockBusy} onClick={() => doLock(false, { codes: [...picked] })} className="no-hover-fx h-9 px-3 rounded-lg text-sm font-bold border border-slate-300 bg-white hover:bg-slate-50 text-slate-800 inline-flex items-center gap-1.5 whitespace-nowrap disabled:opacity-50"><LockOpen className="w-4 h-4" /> Mở khóa</button>
+            </>
+          )}
+          {monthLock?.all || lockedCount
+            ? <button type="button" disabled={lockBusy} onClick={() => doLock(false, { all: true })} className="no-hover-fx h-9 px-3 rounded-lg text-sm font-bold border border-slate-300 bg-white hover:bg-slate-50 text-slate-800 inline-flex items-center gap-1.5 whitespace-nowrap disabled:opacity-50">{lockBusy ? <Loader2 className="w-4 h-4 animate-spin" /> : <LockOpen className="w-4 h-4" />} Mở khóa tất cả</button>
+            : null}
+          {!monthLock?.all && (
+            <button type="button" disabled={lockBusy} onClick={() => doLock(true, { all: true })} className="no-hover-fx h-9 px-3 rounded-lg text-sm font-bold bg-rose-700 hover:bg-rose-800 text-white inline-flex items-center gap-1.5 whitespace-nowrap disabled:opacity-50">{lockBusy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Lock className="w-4 h-4" />} Khóa chốt {monthLabel(month).toLowerCase()}</button>
+          )}
+        </div>
+        {notice && <p className="mx-4 mb-3 rounded-xl bg-emerald-50 border border-emerald-200 px-3 py-2 text-sm font-bold text-emerald-900" role="status">{notice}</p>}
+
         <div className="px-4 pb-3 flex flex-wrap items-center gap-2">
           <div className="flex gap-1 bg-slate-100 p-1 rounded-xl overflow-x-auto no-scrollbar" role="tablist" aria-label="Mục xem">
             {(['all', ...TEACH_KEYS] as View[]).map(v => (
@@ -219,7 +264,12 @@ export const TeachingReportPanel: React.FC<{ auth: { username: string; password:
           <table className="w-full text-sm">
             <thead>
               <tr className="text-left text-xs font-bold uppercase tracking-wide text-slate-600 bg-slate-50 border-y border-slate-200 whitespace-nowrap">
-                <th className="py-3 pl-4 pr-2 w-10 text-center">STT</th>
+                <th className="py-3 pl-4 pr-1 w-8">
+                  <input type="checkbox" aria-label="Chọn tất cả giáo viên đang hiện" className="w-4 h-4 accent-indigo-600"
+                    checked={rows.length > 0 && rows.every(x => picked.has(x.s.code))}
+                    onChange={(e) => setPicked(e.target.checked ? new Set(rows.map(x => x.s.code)) : new Set())} />
+                </th>
+                <th className="py-3 pr-2 w-10 text-center">STT</th>
                 <th className="py-3 pr-2">Giáo viên</th>
                 {view === 'all'
                   ? TEACH_KEYS.map(k => <th key={k} className="py-3 px-2 text-center" title={TEACH_META[k].label} style={{ color: TEACH_META[k].text }}>{TEACH_META[k].short}</th>)
@@ -229,12 +279,17 @@ export const TeachingReportPanel: React.FC<{ auth: { username: string; password:
                     <th className="py-3 px-2 text-center" style={{ color: TEACH_META[view].text }}>Tổng</th>
                   </>}
                 <th className="py-3 px-3 text-center">Trạng thái</th>
+                <th className="py-3 pl-2 pr-4 text-center w-12">Khóa</th>
               </tr>
             </thead>
             <tbody>
               {rows.map((x, i) => (
                 <tr key={x.s.code} className="border-b border-slate-100 hover:bg-sky-50/50">
-                  <td className="py-2.5 pl-4 pr-2 text-center text-slate-500 tabular-nums">{i + 1}</td>
+                  <td className="py-2.5 pl-4 pr-1">
+                    <input type="checkbox" aria-label={`Chọn ${x.s.name}`} className="w-4 h-4 accent-indigo-600" checked={picked.has(x.s.code)}
+                      onChange={(e) => setPicked(prev => { const n = new Set(prev); if (e.target.checked) n.add(x.s.code); else n.delete(x.s.code); return n; })} />
+                  </td>
+                  <td className="py-2.5 pr-2 text-center text-slate-500 tabular-nums">{i + 1}</td>
                   <td className="py-2.5 pr-2">
                     <p className="font-bold text-slate-900 whitespace-nowrap">{x.s.name}</p>
                     <p className="text-xs text-slate-600 truncate max-w-[260px]" title={(x.p?.subjects || []).join(', ')}>{(x.p?.subjects || []).join(', ') || x.s.position || '—'}</p>
@@ -250,6 +305,18 @@ export const TeachingReportPanel: React.FC<{ auth: { username: string; password:
                     {x.log?.updatedAt
                       ? <span className="text-xs font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-full" title={`Lưu lúc ${new Date(x.log.updatedAt).toLocaleString('vi-VN')}`}>Đã kê khai</span>
                       : <span className="text-xs font-bold text-slate-700 bg-slate-100 px-2 py-0.5 rounded-full">Chưa kê khai</span>}
+                  </td>
+                  <td className="py-2.5 pl-2 pr-4 text-center">
+                    {(() => {
+                      const on = isTeachLocked(monthLock, x.s.code);
+                      return (
+                        <button type="button" disabled={lockBusy} onClick={() => doLock(!on, { codes: [x.s.code] })}
+                          title={on ? 'Đã khóa — bấm để mở khóa cho giáo viên này' : 'Đang mở — bấm để khóa giáo viên này'} aria-label={on ? `Mở khóa ${x.s.name}` : `Khóa ${x.s.name}`}
+                          className={`no-hover-fx w-8 h-8 rounded-lg inline-flex items-center justify-center disabled:opacity-50 ${on ? 'bg-rose-50 text-rose-700 hover:bg-rose-100' : 'text-slate-500 hover:bg-slate-100'}`}>
+                          {on ? <Lock className="w-4 h-4" /> : <LockOpen className="w-4 h-4" />}
+                        </button>
+                      );
+                    })()}
                   </td>
                 </tr>
               ))}
