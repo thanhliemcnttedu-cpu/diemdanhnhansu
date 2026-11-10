@@ -138,8 +138,6 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
 
   // Real data state
   const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
-  const [userSummaries, setUserSummaries] = useState<UserSummaryItem[]>([]);
-  const [loadingSummaries, setLoadingSummaries] = useState(false);
 
   // Audit logs state
 
@@ -191,7 +189,6 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
       loadSchools();
       loadStats();
       onRefreshUsers();
-      loadSummaries();
       loadRegistrations();
       setLocalUsage(databaseService.getLocalStorageUsage());
     }
@@ -200,8 +197,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
   // Mở thẻ / danh sách tài khoản thay đổi → tính lại số liệu thẻ đang xem (Drive có bộ nhớ đệm 60 giây)
   useEffect(() => {
     if (!isOpen) return;
-    if (activeTab === 'real_data') loadSummaries();
-    else if (activeTab === 'database') { loadStats(); setLocalUsage(databaseService.getLocalStorageUsage()); }
+    if (activeTab === 'database') { loadStats(); setLocalUsage(databaseService.getLocalStorageUsage()); }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab, allUsers]);
 
@@ -265,28 +261,6 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
     } catch (_) {}
   };
 
-  const loadSummaries = async (force = false) => {
-    setLoadingSummaries(true);
-    try {
-      if (driveOverviewService.isAvailable()) {
-        const ov = await driveOverviewService.load(force);
-        if (ov) {
-          const list = driveOverviewService.summaries(ov, allUsers) as unknown as UserSummaryItem[];
-          // Giáo viên có lớp lên trước, rồi theo tên
-          list.sort((a, b) => (b.classCount > 0 ? 1 : 0) - (a.classCount > 0 ? 1 : 0) || a.fullName.localeCompare(b.fullName, 'vi'));
-          setUserSummaries(list);
-          setDriveMode(true);
-          setDriveFileCount(ov.files.length);
-          return;
-        }
-      }
-      const data = await databaseService.getUserDataSummaries();
-      setUserSummaries(data);
-    } catch (_) {}
-    finally {
-      setLoadingSummaries(false);
-    }
-  };
 
   const loadRegistrations = async () => {
     setLoadingRegistrations(true);
@@ -618,7 +592,6 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
         await loadSchools();
         await onRefreshUsers();
         await loadStats();
-        await loadSummaries();
       } else {
         const errorDetail = res?.message || 'Không thể xóa CSDL trường học.';
         console.error('Lỗi quy trình xóa trường học:', errorDetail);
@@ -654,7 +627,6 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
         setSchoolResetConfirmCode('');
         onRefreshUsers();
         loadStats();
-        loadSummaries();
       } else {
         showNotify('error', res.message || 'Không thể dọn dẹp dữ liệu năm học.');
       }
@@ -693,7 +665,6 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
         setUserToTransfer(null);
         onRefreshUsers();
         loadStats();
-        loadSummaries();
       } else {
         showNotify('error', res.message || 'Không thể di chuyển tài khoản vào trường.');
       }
@@ -741,7 +712,6 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
           showNotify('success', res.message || 'Đã nạp file Data JSON thành công!');
           onRefreshUsers();
           loadStats();
-          loadSummaries();
         } else {
           showNotify('error', res.message || 'Lỗi nạp file JSON.');
         }
@@ -950,7 +920,6 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
     } finally {
       setLoading(false);
       loadStats().catch(() => {});
-      loadSummaries().catch(() => {});
     }
   };
 
@@ -965,7 +934,6 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
         setUserToDelete(null);
         await onRefreshUsers();
         await loadStats();
-        await loadSummaries();
       } else {
         showNotify('error', res?.message || 'Không thể xóa tài khoản.');
       }
@@ -1009,7 +977,6 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
       setSelectedUserIds([]);
       await onRefreshUsers();
       await loadStats();
-      await loadSummaries();
     } catch (err: any) {
       showNotify('error', err?.message || 'Lỗi khi xóa hàng loạt tài khoản.');
     } finally {
@@ -1601,13 +1568,6 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
   });
 
   // Dữ liệu lớp & học sinh thực tế theo phân quyền
-  const scopedSummaries = userSummaries.filter(u => {
-    if (isSuperAdmin) return true;
-    const acc = allUsers.find(au => au.username.toLowerCase() === u.username.toLowerCase());
-    if (isSchoolAdmin) return (u.schoolName === currentSchoolScope) || (acc?.schoolName === currentSchoolScope);
-    if (isGuestAdmin) return (acc?.tenantType === 'guest');
-    return true;
-  });
 
   // Thống kê dung lượng database theo phân quyền
   const scopedUserBreakdown = (stats?.userBreakdown || []).filter(item => {
@@ -1680,18 +1640,6 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
             </button>
 
             <button
-              onClick={() => setActiveTab('real_data')}
-              className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 uppercase whitespace-nowrap shrink-0 ${
-                activeTab === 'real_data'
-                  ? 'bg-blue-600 text-white shadow-xs shadow-blue-600/20'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-              }`}
-            >
-              <Activity className="w-3.5 h-3.5" />
-              <span>Mô Hình Lớp & HS</span>
-            </button>
-
-            <button
               onClick={() => setActiveTab('import')}
               className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 uppercase whitespace-nowrap shrink-0 ${
                 activeTab === 'import'
@@ -1751,7 +1699,6 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
               onRefreshUsers();
               driveOverviewService.invalidate();
               loadStats(true);
-              loadSummaries(true);
               showNotify('success', 'Đã làm mới dữ liệu người dùng!');
             }}
             title="Làm mới dữ liệu tài khoản" aria-label="Làm mới dữ liệu"
@@ -3405,183 +3352,6 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
         )}
 
         {/* Tab: Real Teacher Data Summary */}
-        {activeTab === 'real_data' && (
-          <div className="flex-1 overflow-y-auto p-5 md:p-7 flex flex-col space-y-5">
-            {/* Header info */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-blue-50/70 border border-blue-200/80 rounded-2xl p-4">
-              <div>
-                <h3 className="text-sm font-black text-blue-950 uppercase flex items-center gap-2">
-                  <Activity className="w-4 h-4 text-blue-600" />
-                  <span>Dữ Liệu Thực Tế Của Từng Giáo Viên Trên Hệ Thống</span>
-                </h3>
-                <p className="text-sm text-blue-900 mt-0.5">
-                  {driveMode
-                    ? 'Số liệu đọc từ tệp lớp của từng giáo viên trên Google Drive dùng chung (giáo viên lưu là cập nhật). Bấm Cập nhật để đọc lại ngay.'
-                    : 'Dữ liệu được lưu trữ độc lập và cập nhật trực tuyến tức thì khi giáo viên thêm/xóa/sửa lớp hay học sinh.'}
-                </p>
-              </div>
-
-              <button
-                onClick={() => loadSummaries(true)}
-                disabled={loadingSummaries}
-                className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-black uppercase flex items-center gap-1.5 shadow-xs shrink-0 self-start sm:self-auto cursor-pointer"
-              >
-                <RefreshCw className={`w-3.5 h-3.5 ${loadingSummaries ? 'animate-spin' : ''}`} />
-                <span>Cập Nhật Số Liệu Thực</span>
-              </button>
-            </div>
-
-            {/* Quick Metrics */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              <div className="bg-white border border-slate-200 rounded-2xl p-3.5 shadow-2xs">
-                <div className="text-[12px] font-black text-slate-400 uppercase tracking-wider">
-                  {isSchoolAdmin ? 'GV Thuộc Trường' : (isGuestAdmin ? 'GV Khối Cá Nhân' : 'Tổng Giáo Viên')}
-                </div>
-                <div className="text-lg font-black text-slate-800 mt-1">{scopedUsers.length} tài khoản</div>
-              </div>
-              <div className="bg-white border border-slate-200 rounded-2xl p-3.5 shadow-2xs">
-                <div className="text-[12px] font-black text-slate-400 uppercase tracking-wider">Tổng Lớp Đang Dạy</div>
-                <div className="text-lg font-black text-blue-600 mt-1">
-                  {scopedSummaries.reduce((sum, u) => sum + (u.classCount || 0), 0)} lớp
-                </div>
-              </div>
-              <div className="bg-white border border-slate-200 rounded-2xl p-3.5 shadow-2xs">
-                <div className="text-[12px] font-black text-slate-400 uppercase tracking-wider">Tổng Học Sinh Thực Tế</div>
-                <div className="text-lg font-black text-emerald-700 mt-1">
-                  {scopedSummaries.reduce((sum, u) => sum + (u.studentCount || 0), 0)} học sinh
-                </div>
-              </div>
-              <div className="bg-white border border-slate-200 rounded-2xl p-3.5 shadow-2xs">
-                <div className="text-[12px] font-black text-slate-400 uppercase tracking-wider">Phạm Vi Quản Lý</div>
-                <div className="text-xs font-black text-violet-600 mt-2 truncate">
-                  {isSchoolAdmin ? currentSchoolScope : (isGuestAdmin ? 'Khối Giáo Viên Cá Nhân' : 'Toàn Bộ Hệ Thống')}
-                </div>
-              </div>
-            </div>
-
-            {/* Table of Real Teacher Data */}
-            <div className="flex-1 border border-slate-200 rounded-2xl overflow-hidden shadow-2xs bg-white">
-              <div className="overflow-x-auto h-full">
-                <table className="w-full text-left border-collapse text-xs">
-                  <thead className="bg-slate-50 border-b border-slate-200 text-[12px] font-black text-slate-500 uppercase tracking-wider sticky top-0 z-10">
-                    <tr>
-                      <th className="py-2 px-2 text-center w-12">STT</th>
-                      <th className="py-2 px-2">Giáo Viên & Tài Khoản</th>
-                      <th className="py-2 px-2 text-center">Vai Trò</th>
-                      <th className="py-2 px-2">Lớp Học Thực Tế & Sĩ Số</th>
-                      <th className="py-2 px-2 text-center">Tổng HS</th>
-                      <th className="py-2 px-2">Cập Nhật Gần Nhất</th>
-                      <th className="py-2 px-2 text-right">Xem & Tải Dữ Liệu</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100 font-medium">
-                    {scopedSummaries.map((u, idx) => {
-                      const isCurrent = currentUser?.username.toLowerCase() === u.username.toLowerCase();
-                      return (
-                        <tr key={u.id || idx} className="hover:bg-slate-50/80 transition-colors">
-                          <td className="py-2 px-2 text-center font-bold text-slate-400">
-                            {idx + 1}
-                          </td>
-                          <td className="py-2 px-2">
-                            <div className="flex items-center gap-2.5">
-                              <img 
-                                src={`https://api.dicebear.com/7.x/bottts/svg?seed=${u.username}&backgroundColor=b6e3f4`}
-                                alt={u.fullName}
-                                className="w-8 h-8 rounded-full border border-slate-200 object-cover bg-slate-50 shrink-0"
-                              />
-                              <div>
-                                <div className="font-black text-slate-900 flex items-center gap-1.5">
-                                  <span>{u.fullName}</span>
-                                  {isCurrent && (
-                                    <span className="text-[12px] font-black text-emerald-700 bg-emerald-100 px-1.5 py-0.2 rounded border border-emerald-200 uppercase">
-                                      ĐANG XEM
-                                    </span>
-                                  )}
-                                </div>
-                                <div className="text-[12px] text-slate-500 font-mono">@{u.username}</div>
-                              </div>
-                            </div>
-                          </td>
-                          <td className="py-2 px-2 text-center">
-                            {u.role === 'admin' ? (
-                              <span className="inline-block px-2.5 py-0.5 rounded-full text-[12px] font-black uppercase bg-rose-100 text-rose-700 border border-rose-200 whitespace-nowrap">
-                                Quản trị tối cao
-                              </span>
-                            ) : u.role === 'school_admin' ? (
-                              <span className="inline-block px-2.5 py-0.5 rounded-full text-[12px] font-black uppercase bg-blue-100 text-blue-700 border border-blue-200 whitespace-nowrap">
-                                Quản trị trong nhà trường
-                              </span>
-                            ) : (u.role === 'bgh' || (u as any).isBgh) ? (
-                              <span className="inline-block px-2.5 py-0.5 rounded-full text-[12px] font-black uppercase bg-purple-100 text-purple-700 border border-purple-200 whitespace-nowrap">
-                                Ban Giám Hiệu
-                              </span>
-                            ) : u.role === 'homeroom' ? (
-                              <span className="inline-block px-2.5 py-0.5 rounded-full text-[12px] font-black uppercase bg-indigo-100 text-indigo-700 border border-indigo-200 whitespace-nowrap">
-                                Giáo viên chủ nhiệm
-                              </span>
-                            ) : u.role === 'subject' ? (
-                              <span className="inline-block px-2.5 py-0.5 rounded-full text-[12px] font-black uppercase bg-emerald-100 text-emerald-700 border border-emerald-200 whitespace-nowrap">
-                                Giáo viên bộ môn
-                              </span>
-                            ) : (
-                              <span className="inline-block px-2.5 py-0.5 rounded-full text-[12px] font-black uppercase bg-fuchsia-100 text-fuchsia-700 border border-fuchsia-200 whitespace-nowrap">
-                                Quản trị cá nhân
-                              </span>
-                            )}
-                          </td>
-                          <td className="py-2 px-2">
-                            <div className="flex flex-wrap gap-1 max-w-xs">
-                              {u.classes && u.classes.length > 0 ? (
-                                u.classes.map((c: any, cIdx) => (
-                                  <span
-                                    key={c.id || cIdx}
-                                    className={`px-2 py-0.5 rounded-md border text-xs font-bold whitespace-nowrap ${c.kind === 'subject' ? 'bg-emerald-50 border-emerald-200 text-emerald-900' : 'bg-sky-50 border-sky-200 text-sky-900'}`}
-                                    title={[`Lớp ${c.name}`, c.kind === 'subject' ? 'lớp dạy bộ môn' : `${c.studentCount} học sinh`, c.campus, c.branch].filter(Boolean).join(' • ')}
-                                  >
-                                    {c.name}{c.kind === 'subject' ? ' · BM' : ` · ${c.studentCount} HS`}
-                                    {(c.campus || c.branch) && <span className="font-medium text-slate-600"> · {c.campus || c.branch}</span>}
-                                  </span>
-                                ))
-                              ) : (
-                                <span className="text-slate-600 text-xs">{driveMode ? 'Chưa có tệp lớp trên Drive' : 'Chưa khởi tạo lớp'}</span>
-                              )}
-                            </div>
-                          </td>
-                          <td className="py-2 px-2 text-center font-black text-slate-800">
-                            {u.studentCount || 0}
-                          </td>
-                          <td className="py-2 px-2 text-slate-500 text-[12px]">
-                            {u.lastUpdated ? new Date(u.lastUpdated).toLocaleString('vi-VN') : 'Mặc định'}
-                          </td>
-                          <td className="py-2 px-2 text-right space-x-1.5 whitespace-nowrap">
-                            <button
-                              onClick={() => handleQuickSwitch(u.username)}
-                              disabled={loading || isCurrent || !(u.role === 'homeroom' || u.role === 'subject')}
-                              className="px-2.5 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 text-[12px] font-black uppercase transition-colors inline-flex items-center gap-1 disabled:opacity-40 cursor-pointer"
-                              title="Xem giao diện lớp của giáo viên này ở chế độ chỉ xem (không sửa được)"
-                            >
-                              <Eye className="w-3 h-3" />
-                              <span>Vào Xem</span>
-                            </button>
-                            <button
-                              onClick={() => handleDownloadTeacherData(u)}
-                              className="px-2.5 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 text-[12px] font-black uppercase transition-colors inline-flex items-center gap-1 cursor-pointer"
-                              title="Tải về file JSON sao lưu dữ liệu của riêng giáo viên này"
-                            >
-                              <Download className="w-3 h-3" />
-                              <span>Tải JSON</span>
-                            </button>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        )}
-
         {viewConfirm && (
           <div className="fixed inset-0 z-[70] flex items-center justify-center bg-sky-900/20 backdrop-blur-xs p-4" role="dialog" aria-modal="true" aria-labelledby="view-confirm-title">
             <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 max-w-md w-full p-6 space-y-4">
@@ -4658,23 +4428,11 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                     <span>• SĐT: <strong>{userToTransfer.phone || 'Chưa cập nhật'}</strong></span>
                   </div>
 
-                  {/* Thống kê dữ liệu hiện có từ userSummaries */}
-                  {(() => {
-                    const summary = userSummaries.find(s => s.username.toLowerCase() === userToTransfer.username.toLowerCase());
-                    return (
-                      <div className="mt-2 flex items-center gap-2">
-                        <span className="px-2 py-0.5 rounded-lg bg-purple-100 text-purple-800 font-black text-[12px] border border-purple-200">
-                          {userToTransfer.tenantType === 'guest' ? '📍 Đang là: Vãng Lai Tỉnh Lẻ' : `📍 Trường cũ: ${userToTransfer.schoolName || 'Chưa có'}`}
-                        </span>
-                        <span className="px-2 py-0.5 rounded-lg bg-emerald-50 text-emerald-800 font-bold text-[12px] border border-emerald-200">
-                          📚 {summary ? summary.classCount : 1} Lớp học
-                        </span>
-                        <span className="px-2 py-0.5 rounded-lg bg-blue-50 text-blue-800 font-bold text-[12px] border border-blue-200">
-                          🎒 {summary ? summary.studentCount : 0} Học sinh
-                        </span>
-                      </div>
-                    );
-                  })()}
+                  <div className="mt-2 flex items-center gap-2">
+                    <span className="px-2 py-0.5 rounded-lg bg-purple-100 text-purple-800 font-black text-[12px] border border-purple-200">
+                      {userToTransfer.tenantType === 'guest' ? '📍 Đang là: Vãng Lai Tỉnh Lẻ' : `📍 Trường cũ: ${userToTransfer.schoolName || 'Chưa có'}`}
+                    </span>
+                  </div>
                 </div>
               </div>
 
