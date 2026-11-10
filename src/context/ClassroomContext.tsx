@@ -516,12 +516,12 @@ export const ClassroomProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   }, [currentUser?.username, currentUser?.schoolName, classes.length]);
 
   // 🛡️ AUTO-SEED GUARD: Khi danh sách lớp học có dữ liệu mà schoolBranches đang rỗng, tự động trích xuất ngay lập tức
+  // Không lưu thẳng: đọc danh mục đã lưu (Drive / Supabase / máy) trước, chỉ tự trích khi thật sự chưa có —
+  // tránh ghi đè danh mục phân hiệu đầy đủ trên Drive bằng phần trích từ vài lớp.
   useEffect(() => {
     if (schoolBranches.length === 0 && classes.length > 0 && currentUser?.schoolName) {
-      const extracted = extractSchoolBranchesFromClasses(classes);
-      if (extracted.length > 0) {
-        setSchoolBranches(extracted);
-        databaseService.saveSchoolBranches(currentUser.schoolName, extracted).catch(() => {});
+      if (extractSchoolBranchesFromClasses(classes).length > 0) {
+        reloadSchoolBranches(currentUser.schoolName, classes).catch(() => {});
       }
     }
   }, [classes, schoolBranches.length, currentUser?.schoolName]);
@@ -1043,7 +1043,10 @@ export const ClassroomProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       teacherUsername: user.username,
       teacherRole: 'homeroom',
       avatar: `https://api.dicebear.com/7.x/shapes/svg?seed=Class${user.assignedClassName || '4A1'}&backgroundColor=3b82f6`,
-      slogan: 'Lớp học hạnh phúc • Chăm ngoan, sáng tạo, tự tin tỏa sáng'
+      slogan: 'Lớp học hạnh phúc • Chăm ngoan, sáng tạo, tự tin tỏa sáng',
+      // Phân hiệu / điểm trường gán sẵn từ danh sách phân công chủ nhiệm (nếu có)
+      ...(user.assignedBranch ? { branch: user.assignedBranch } : {}),
+      ...(user.assignedCampus ? { campus: user.assignedCampus } : {})
     };
 
     const initialStds = generateStudentsForClass(homeroomClass.id, homeroomClass.name, studentCount, homeroomClass.grade, 'GHI CHUNG / NỀ NẾP');

@@ -3232,7 +3232,9 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
             </div>
 
             {/* Nguồn 3: tạo tài khoản từ danh sách nhân sự chấm công (tài khoản dùng chung) */}
-            <StaffToAccountsPanel allUsers={allUsers} schoolName={currentSchoolScope} notify={showNotify}
+            <StaffToAccountsPanel allUsers={allUsers} notify={showNotify}
+              schoolName={isSuperAdmin ? (schoolsList[0]?.name || currentSchoolScope) : currentSchoolScope}
+              schoolOptions={isSuperAdmin ? schoolsList.map(s => s.name).filter(Boolean) : undefined}
               onCreated={async () => { await onRefreshUsers(); loadStats().catch(() => {}); }} />
 
             {/* Step 3: Preview Table & Confirm Bulk Action */}

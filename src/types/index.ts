@@ -452,6 +452,9 @@ export interface UserAccount {
   status?: 'active' | 'locked';
   /** Mã GV trong danh sách nhân sự chấm công (Apps Script 1.1.4): tài khoản dùng chung — đăng nhập bằng CCCD / mã GV + mật khẩu điểm danh */
   staffCode?: string;
+  /** Phân hiệu / điểm trường của lớp chủ nhiệm (gán từ danh sách phân công chủ nhiệm) — lớp tạo lần đầu nhận luôn */
+  assignedBranch?: string;
+  assignedCampus?: string;
 }
 
 export interface RegistrationRequest {

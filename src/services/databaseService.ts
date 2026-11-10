@@ -966,6 +966,9 @@ export const databaseService = {
     tenantType?: 'school' | 'guest';
     /** Gắn với nhân sự chấm công (tài khoản dùng chung) */
     staffCode?: string;
+    /** Phân hiệu / điểm trường của lớp chủ nhiệm */
+    assignedBranch?: string;
+    assignedCampus?: string;
   }>): Promise<{ success: boolean; count: number; created?: UserAccount[]; errors?: string[]; message?: string }> {
     if (!items || items.length === 0) {
       return { success: false, count: 0, message: 'Danh sách tạo rỗng.' };
@@ -996,7 +999,9 @@ export const databaseService = {
         tenantType: item.tenantType || 'school',
         createdAt: nowTs + idx,
         status: 'active',
-        ...(item.staffCode ? { staffCode: String(item.staffCode).trim().toUpperCase() } : {})
+        ...(item.staffCode ? { staffCode: String(item.staffCode).trim().toUpperCase() } : {}),
+        ...(item.assignedBranch?.trim() ? { assignedBranch: item.assignedBranch.trim() } : {}),
+        ...(item.assignedCampus?.trim() ? { assignedCampus: item.assignedCampus.trim() } : {})
       };
     });
 

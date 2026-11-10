@@ -1,6 +1,8 @@
-import React, { useMemo, useState } from 'react';
-import { Users, Loader2, RefreshCw, KeyRound, CheckCircle2, Link2, Search } from 'lucide-react';
-import type { UserAccount, UserRole } from '../../types';
+import React, { useMemo, useRef, useState } from 'react';
+import { Users, Loader2, RefreshCw, KeyRound, CheckCircle2, Link2, Search, FileSpreadsheet, Download, MapPin, X } from 'lucide-react';
+import type { UserAccount, UserRole, SchoolBranch } from '../../types';
+import { adminEditsService } from '../../services/adminEditsService';
+import { parseHomeroomSheet, downloadHomeroomTemplate, resolvePlacements, looseKey, strictKey, HomeroomRow } from '../../utils/homeroomAssignment';
 import { staffAttendanceService, StaffMember } from '../../services/staffAttendanceService';
 import { databaseService } from '../../services/databaseService';
 import { schoolDriveDbService } from '../../services/schoolDriveDbService';
@@ -15,6 +17,14 @@ import { schoolDriveDbService } from '../../services/schoolDriveDbService';
  */
 type RoleChoice = 'homeroom' | 'subject' | 'bgh' | 'skip';
 interface RowCfg { pick: boolean; role: RoleChoice; cls: string }
+/** Lớp chủ nhiệm gán từ danh sách phân công (theo mã GV) */
+interface Assign { className: string; grade: string; branch: string; campus: string }
+interface AssignReport {
+  file: string; total: number; matched: number;
+  unmatched: HomeroomRow[]; ambiguous: HomeroomRow[]; repeated: HomeroomRow[];
+  groups: Array<{ branch: string; campuses: Array<{ name: string; count: number }>; count: number }>;
+  newPlaces: number;
+}
 
 /** Số CCCD đầy đủ của nhân sự (chỉ chữ số, 9–12 số); '' nếu chưa có */
 const cccdOf = (s: StaffMember) => { const d = String(s.currentCccd || s.cccd || '').replace(/\D/g, ''); return d.length >= 9 && d.length <= 12 ? d : ''; };
@@ -42,9 +52,18 @@ const manualRole = (s: StaffMember): RoleChoice => {
 export const StaffToAccountsPanel: React.FC<{
   allUsers: UserAccount[];
   schoolName: string;
+  /** Quản trị tối cao: danh sách trường để chọn (tài khoản tạo ra thuộc trường này) */
+  schoolOptions?: string[];
   onCreated: () => void | Promise<void>;
   notify: (type: 'success' | 'error', message: string) => void;
-}> = ({ allUsers, schoolName, onCreated, notify }) => {
+}> = ({ allUsers, schoolName: defaultSchool, schoolOptions, onCreated, notify }) => {
+  const [schoolPick, setSchoolPick] = useState('');
+  const schoolName = (schoolOptions && schoolOptions.includes(schoolPick) ? schoolPick : '') || defaultSchool;
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [assign, setAssign] = useState<Record<string, Assign>>({});
+  const [report, setReport] = useState<AssignReport | null>(null);
+  const [pendingBranches, setPendingBranches] = useState<SchoolBranch[] | null>(null);
+  const [applyingOld, setApplyingOld] = useState(false);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -77,21 +96,119 @@ export const StaffToAccountsPanel: React.FC<{
     } finally { setMigrating(false); }
   };
 
-  const load = async () => {
+  const load = async (): Promise<StaffMember[] | null> => {
     setLoading(true);
     try {
       const r = await staffAttendanceService.getRoster();
-      if (!r?.success) { notify('error', r?.message || 'Không tải được danh sách nhân sự.'); return; }
+      if (!r?.success) { notify('error', r?.message || 'Không tải được danh sách nhân sự.'); return null; }
       const list: StaffMember[] = (r.staff || []).filter((s: StaffMember) => !s.disabled && s.code);
       setStaff(list);
       const next: Record<string, RowCfg> = {};
       // Chọn sẵn GIÁO VIÊN chưa có tài khoản; nhân viên / cán bộ quản lý để trống — muốn cấp thì tích tay
       list.forEach(s => { const g = guessRole(s); next[s.code] = { pick: g.role !== 'skip' && !linkedUser(s), role: g.role, cls: g.cls }; });
       setCfg(next);
+      setAssign({}); setReport(null); setPendingBranches(null);
       setOpen(true);
+      return list;
     } catch (e: any) {
       notify('error', e?.message || 'Không kết nối được Apps Script.');
+      return null;
     } finally { setLoading(false); }
+  };
+
+  /** 📋 Nạp danh sách phân công chủ nhiệm: khớp tên GVCN với nhân sự → GV chủ nhiệm + lớp + phân hiệu / điểm trường */
+  const importAssignments = async (file: File) => {
+    let list = staff;
+    if (!open || !list.length) { const l = await load(); if (!l) return; list = l; }
+    let parsed: { rows: HomeroomRow[]; errors: string[] };
+    try { parsed = parseHomeroomSheet(await file.arrayBuffer()); }
+    catch { notify('error', 'Không đọc được tệp Excel. Hãy lưu lại dạng .xlsx hoặc .xls rồi thử lại.'); return; }
+    if (!parsed.rows.length) { notify('error', parsed.errors[0] || 'Tệp không có dòng lớp nào.'); return; }
+    let catalog: SchoolBranch[] = [];
+    try { catalog = await databaseService.getSchoolBranches(schoolName); } catch { /* chưa có danh mục */ }
+    const { placements, branches } = resolvePlacements(parsed.rows, catalog);
+
+    // Khớp tên: không dấu trước; trùng nhiều người thì thử khớp có dấu
+    const byLoose = new Map<string, StaffMember[]>();
+    list.forEach(s => { const k = looseKey(s.name); byLoose.set(k, [...(byLoose.get(k) || []), s]); });
+    const nextAssign: Record<string, Assign> = {};
+    const unmatched: HomeroomRow[] = [], ambiguous: HomeroomRow[] = [], repeated: HomeroomRow[] = [];
+    parsed.rows.forEach((r, i) => {
+      let cands = byLoose.get(looseKey(r.teacherName)) || [];
+      if (cands.length > 1) { const exact = cands.filter(s => strictKey(s.name) === strictKey(r.teacherName)); if (exact.length) cands = exact; }
+      if (!cands.length) { unmatched.push(r); return; }
+      if (cands.length > 1) { ambiguous.push(r); return; }
+      const s = cands[0];
+      if (nextAssign[s.code]) { repeated.push(r); return; }
+      nextAssign[s.code] = { className: r.className, grade: r.grade, branch: placements[i].branch, campus: placements[i].campus };
+    });
+    setAssign(nextAssign);
+    setCfg(prev => {
+      const n = { ...prev };
+      Object.entries(nextAssign).forEach(([code, a]) => {
+        const s = list.find(x => x.code === code);
+        const isNew = s && !linkedUser(s) && !!cccdOf(s);
+        n[code] = { ...(n[code] || { pick: false, role: 'homeroom', cls: '' }), role: 'homeroom', cls: a.className, pick: isNew ? true : (n[code]?.pick ?? false) };
+      });
+      return n;
+    });
+    // Luôn lưu bản đã gộp (chỉ bổ sung) để danh mục trên Drive chắc chắn có đủ phân hiệu / điểm trường trong tệp
+    setPendingBranches(branches.length ? branches : null);
+    // Tóm tắt theo phân hiệu → điểm trường
+    const gmap = new Map<string, Map<string, number>>();
+    Object.values(nextAssign).forEach(a => {
+      const b = a.branch || '(chưa rõ phân hiệu)';
+      const m = gmap.get(b) || new Map<string, number>();
+      m.set(a.campus || '—', (m.get(a.campus || '—') || 0) + 1);
+      gmap.set(b, m);
+    });
+    const groups = [...gmap.entries()].map(([branch, m]) => ({ branch, campuses: [...m.entries()].map(([name, count]) => ({ name, count })), count: [...m.values()].reduce((x, y) => x + y, 0) }));
+    const before = new Set(catalog.flatMap(b => [looseKey(b.name), ...(b.campuses || []).map(c => looseKey(c.name))]));
+    const newPlaces = branches.flatMap(b => [b.name, ...b.campuses.map(c => c.name)]).filter(n => !before.has(looseKey(n))).length;
+    setReport({ file: file.name, total: parsed.rows.length, matched: Object.keys(nextAssign).length, unmatched, ambiguous, repeated, groups, newPlaces });
+    notify('success', `Đã khớp ${Object.keys(nextAssign).length}/${parsed.rows.length} lớp với giáo viên trong danh sách nhân sự.`);
+  };
+
+  /** Lưu danh mục phân hiệu (chỉ bổ sung) + ghi lớp chủ nhiệm kèm phân hiệu / điểm trường cho màn tổng hợp và máy GVCN */
+  const publishClasses = async (list: Array<{ username: string; teacherName: string; a: Assign }>) => {
+    if (pendingBranches) {
+      try { await databaseService.saveSchoolBranches(schoolName, pendingBranches); setPendingBranches(null); }
+      catch { notify('error', 'Chưa lưu được danh mục phân hiệu – điểm trường.'); }
+    }
+    for (const { username, teacherName, a } of list) {
+      const cls: Record<string, any> = {
+        id: `class-${a.className.toLowerCase().replace(/\s+/g, '')}`,
+        name: a.className,
+        teacherName, teacherUsername: username, teacherRole: 'homeroom',
+        branch: a.branch || null, campus: a.campus || null,
+      };
+      if (a.grade) cls.grade = `Khối ${a.grade}`;
+      try {
+        if (adminEditsService.isActive()) adminEditsService.record('class', cls);
+        else await databaseService.updateAdminClass(cls, username);
+      } catch { /* bỏ qua lớp lỗi, tài khoản vẫn có phân hiệu / điểm trường */ }
+    }
+  };
+
+  /** Tài khoản GVCN đã có: gán lại lớp + phân hiệu / điểm trường theo danh sách phân công */
+  const oldToAssign = staff
+    .map(s => ({ s, u: linkedUser(s), a: assign[s.code] }))
+    .filter(x => x.u && x.a && x.u.role === 'homeroom' && (
+      (x.u.assignedClassName || '').toUpperCase() !== x.a.className || (x.u.assignedBranch || '') !== x.a.branch || (x.u.assignedCampus || '') !== x.a.campus));
+  const applyToExisting = async () => {
+    if (!oldToAssign.length) return;
+    if (!confirm(`Gán lớp chủ nhiệm, phân hiệu, điểm trường cho ${oldToAssign.length} tài khoản GVCN đã có theo danh sách phân công?`)) return;
+    setApplyingOld(true);
+    try {
+      let ok = 0;
+      for (const x of oldToAssign) {
+        const r = await databaseService.updateUser(x.u!.username, { assignedClassName: x.a!.className, assignedBranch: x.a!.branch || undefined, assignedCampus: x.a!.campus || undefined });
+        if (r?.success) ok++;
+      }
+      await publishClasses(oldToAssign.map(x => ({ username: x.u!.username, teacherName: x.u!.fullName || x.s.name, a: x.a! })));
+      notify('success', `Đã gán lớp chủ nhiệm cho ${ok} tài khoản đã có.`);
+      await onCreated();
+    } finally { setApplyingOld(false); }
   };
 
   const rows = useMemo(() => staff.filter(s => !q || norm(`${s.name} ${s.code} ${s.position || ''} ${s.dept || ''}`).includes(norm(q))), [staff, q]);
@@ -113,6 +230,7 @@ export const StaffToAccountsPanel: React.FC<{
       const items = picked.map(s => {
         const c = cfg[s.code];
         const password = pwMode === 'pin' && s.currentPin ? s.currentPin : commonPw.trim();
+        const a = c.role === 'homeroom' && assign[s.code] && assign[s.code].className === c.cls.trim().toUpperCase() ? assign[s.code] : null;
         return {
           username: cccdOf(s),
           password,
@@ -124,10 +242,19 @@ export const StaffToAccountsPanel: React.FC<{
           schoolName,
           tenantType: 'school' as const,
           staffCode: s.code,
+          assignedBranch: a?.branch || undefined,
+          assignedCampus: a?.campus || undefined,
         };
       });
       const res = await databaseService.createUsersBulk(items);
       if (!res?.success) { notify('error', res?.message || 'Chưa tạo được tài khoản.'); return; }
+      const withClass = items.filter(it => it.role === 'homeroom' && it.assignedClassName && (it.assignedBranch || it.assignedCampus || assign[it.staffCode]));
+      if (withClass.length) {
+        await publishClasses(withClass.map(it => ({
+          username: it.username, teacherName: it.fullName,
+          a: { className: it.assignedClassName!, grade: assign[it.staffCode]?.className === it.assignedClassName ? assign[it.staffCode].grade : (it.assignedClassName!.match(/^\d+/)?.[0] || ''), branch: it.assignedBranch || '', campus: it.assignedCampus || '' },
+        })));
+      }
       notify('success', `Đã tạo ${res.count} tài khoản dùng chung với điểm danh. Tên đăng nhập là số CCCD, mật khẩu là mật khẩu điểm danh.`);
       await onCreated();
       setCfg(prev => { const n = { ...prev }; picked.forEach(s => { n[s.code] = { ...n[s.code], pick: false }; }); return n; });
@@ -147,12 +274,76 @@ export const StaffToAccountsPanel: React.FC<{
             </p>
           </div>
         </div>
-        <button type="button" onClick={load} disabled={loading}
+        <button type="button" onClick={() => { load(); }} disabled={loading}
           className="no-hover-fx shrink-0 h-10 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-black inline-flex items-center gap-2 disabled:opacity-60">
           {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : open ? <RefreshCw className="w-4 h-4" /> : <Users className="w-4 h-4" />}
           {open ? 'Tải lại danh sách' : 'Lấy danh sách nhân sự'}
         </button>
       </div>
+
+      {/* Danh sách phân công chủ nhiệm (Excel) → tự gán lớp, phân hiệu, điểm trường */}
+      <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 flex flex-wrap items-center gap-3">
+        <FileSpreadsheet className="w-5 h-5 text-emerald-700 shrink-0" />
+        <p className="text-sm text-slate-700 flex-1 min-w-[16rem]">
+          <strong className="text-slate-900">Danh sách phân công chủ nhiệm</strong> (Khối học, Tên lớp, Điểm trường, Giáo viên chủ nhiệm…): phần mềm tự khớp tên giáo viên, chọn vai trò GV chủ nhiệm, điền lớp và gán phân hiệu – điểm trường.
+        </p>
+        {schoolOptions && schoolOptions.length > 1 && (
+          <label className="inline-flex items-center gap-2 text-sm">
+            <span className="text-slate-600 whitespace-nowrap">Trường</span>
+            <select value={schoolName} onChange={(e) => setSchoolPick(e.target.value)} className="h-9 px-2 rounded-lg border border-slate-300 bg-white text-sm max-w-[14rem]">
+              {schoolOptions.map(n => <option key={n} value={n}>{n}</option>)}
+            </select>
+          </label>
+        )}
+        <button type="button" onClick={downloadHomeroomTemplate}
+          className="no-hover-fx h-9 px-3 rounded-lg bg-white border border-slate-300 hover:bg-slate-100 text-slate-800 text-sm font-bold inline-flex items-center gap-1.5 whitespace-nowrap">
+          <Download className="w-4 h-4" /> Tải mẫu phân công
+        </button>
+        <button type="button" onClick={() => fileRef.current?.click()} disabled={loading}
+          className="no-hover-fx h-9 px-3 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white text-sm font-bold inline-flex items-center gap-1.5 whitespace-nowrap disabled:opacity-60">
+          <FileSpreadsheet className="w-4 h-4" /> Nạp danh sách phân công
+        </button>
+        <input ref={fileRef} type="file" accept=".xlsx,.xls" className="hidden"
+          onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ''; if (f) importAssignments(f); }} />
+      </div>
+
+      {report && (
+        <div className="rounded-2xl border border-emerald-200 bg-emerald-50/60 px-4 py-3 space-y-2 text-sm">
+          <div className="flex items-start gap-2">
+            <p className="flex-1 text-slate-800">
+              <strong>{report.file}</strong>: khớp <strong className="text-emerald-800">{report.matched}/{report.total}</strong> lớp với giáo viên.
+              {report.newPlaces > 0 && <> Sẽ bổ sung <strong>{report.newPlaces}</strong> phân hiệu / điểm trường mới vào danh mục khi tạo tài khoản (sắp xếp lại được ở Mô hình lớp &amp; HS).</>}
+            </p>
+            <button type="button" onClick={() => setReport(null)} aria-label="Đóng tóm tắt" className="no-hover-fx w-7 h-7 rounded-lg hover:bg-emerald-100 inline-flex items-center justify-center"><X className="w-4 h-4" /></button>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {report.groups.map(g => (
+              <span key={g.branch} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-white border border-emerald-200 text-xs text-slate-800">
+                <MapPin className="w-3.5 h-3.5 text-emerald-700" /><strong>{g.branch}</strong> · {g.count} lớp
+                {g.campuses.filter(c => c.name !== '—').length > 0 && <span className="text-slate-600">({g.campuses.filter(c => c.name !== '—').map(c => `${c.name} ${c.count}`).join(', ')})</span>}
+              </span>
+            ))}
+          </div>
+          {report.unmatched.length > 0 && (
+            <p className="text-rose-800"><strong>Không tìm thấy trong danh sách nhân sự ({report.unmatched.length}):</strong> {report.unmatched.map(r => `${r.teacherName} (${r.className})`).join(', ')} — kiểm tra lại họ tên hoặc nhập lớp bằng tay.</p>
+          )}
+          {report.ambiguous.length > 0 && (
+            <p className="text-amber-900"><strong>Trùng họ tên, cần chọn tay ({report.ambiguous.length}):</strong> {report.ambiguous.map(r => `${r.teacherName} (${r.className})`).join(', ')}</p>
+          )}
+          {report.repeated.length > 0 && (
+            <p className="text-amber-900"><strong>Một giáo viên chủ nhiệm nhiều lớp – chỉ gán lớp đầu ({report.repeated.length}):</strong> {report.repeated.map(r => `${r.teacherName} (${r.className})`).join(', ')}</p>
+          )}
+          {oldToAssign.length > 0 && (
+            <div className="flex flex-wrap items-center gap-3 pt-1">
+              <p className="text-slate-800 flex-1 min-w-[14rem]"><strong>{oldToAssign.length}</strong> tài khoản GVCN đã có sẽ được gán lại lớp, phân hiệu, điểm trường theo danh sách.</p>
+              <button type="button" onClick={applyToExisting} disabled={applyingOld}
+                className="no-hover-fx h-9 px-3 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white text-sm font-bold inline-flex items-center gap-1.5 disabled:opacity-60 whitespace-nowrap">
+                {applyingOld ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />} Gán cho tài khoản đã có
+              </button>
+            </div>
+          )}
+        </div>
+      )}
 
       {open && toMigrate.length > 0 && (
         <div className="rounded-2xl border border-amber-300 bg-amber-50 px-4 py-3 flex flex-wrap items-center gap-3">
@@ -235,6 +426,11 @@ export const StaffToAccountsPanel: React.FC<{
                               placeholder={c.role === 'homeroom' ? 'VD: 3A1' : 'VD: Tin học'} aria-label={`Lớp / môn của ${s.name}`}
                               className="h-9 w-full px-2 rounded-lg border border-slate-300 text-sm disabled:bg-slate-100" />
                           : <span className="text-slate-400">—</span>}
+                        {c.role === 'homeroom' && assign[s.code] && assign[s.code].className === c.cls.trim().toUpperCase() && (assign[s.code].branch || assign[s.code].campus) && (
+                          <p className="mt-0.5 text-xs text-emerald-800 truncate" title={[assign[s.code].campus, assign[s.code].branch].filter(Boolean).join(' · ')}>
+                            <MapPin className="w-3 h-3 inline -mt-0.5" /> {[assign[s.code].campus, assign[s.code].branch].filter(Boolean).join(' · ')}
+                          </p>
+                        )}
                       </td>
                       <td className="py-2 pr-2 text-xs">
                         {pwMode === 'pin'
