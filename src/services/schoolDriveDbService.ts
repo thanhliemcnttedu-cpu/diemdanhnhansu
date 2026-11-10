@@ -415,6 +415,36 @@ export const schoolDriveDbService = {
     }
   },
 
+  /**
+   * Đổi tên đăng nhập (Apps Script 1.1.5), GIỮ NGUYÊN mật khẩu — dùng để chuyển tài khoản gắn nhân sự từ mã GV sang số CCCD.
+   * Trả về số tài khoản đã đổi; danh sách tài khoản trên máy được thay bằng bản mới từ Drive.
+   */
+  async renameUsers(pairs: Array<{ from: string; to: string }>): Promise<{ success: boolean; renamed: number; message: string }> {
+    const auth = this.getAdminAuth();
+    if (!auth) return { success: false, renamed: 0, message: 'Phiên Quản trị đã hết, hãy đăng nhập lại.' };
+    const list = pairs
+      .map(p => ({ from: String(p.from || '').trim().toLowerCase(), to: String(p.to || '').trim().toLowerCase() }))
+      .filter(p => p.from && p.to && p.from !== p.to);
+    if (!list.length) return { success: true, renamed: 0, message: 'Không có tài khoản cần đổi.' };
+    try {
+      const data = await this.callScript({
+        action: 'saveSchoolDb', auth,
+        db: { mode: 'merge', schools: [], users: [], renames: list, deletedUsernames: [], deletedSchoolIds: [] }
+      }, 45000);
+      if (!data?.success) return { success: false, renamed: 0, message: data?.message || 'Chưa đổi được tên đăng nhập.' };
+      const renamed = Number(data.renamed || 0);
+      if (renamed === 0 && list.length) {
+        return { success: false, renamed: 0, message: 'Apps Script của trường chưa hỗ trợ đổi tên đăng nhập (cần cập nhật lên phiên bản mới nhất), hoặc số CCCD đã được dùng cho tài khoản khác.' };
+      }
+      // Mật khẩu đã cấp (bản xem trên máy Quản trị) chuyển theo tên mới
+      list.forEach(p => { const pw = this.getIssuedPassword(p.from); if (pw) this.setIssuedPassword(p.to, pw); });
+      if (Array.isArray(data.users)) this.applyAuthoritative(data.users, data.schools || undefined);
+      return { success: true, renamed, message: data.message || `Đã đổi tên đăng nhập ${renamed} tài khoản.` };
+    } catch (err: any) {
+      return { success: false, renamed: 0, message: err?.message || 'Không kết nối được Google Drive.' };
+    }
+  },
+
   /** Quản trị tải CSDL (không mật khẩu) từ Drive về máy — dùng khi đăng nhập trên máy mới */
   async pullForAdmin(): Promise<{ success: boolean; message: string }> {
     const auth = this.getAdminAuth();

@@ -56,6 +56,8 @@
 var FOLDER_ID = "__FOLDER_ID__";
 var TARGET_FILENAME = "du_lieu_lop_hoc_hanh_phuc.json";
 var REPORT_PREFIX = "bc_";
+// 1.1.5: thống nhất TÊN ĐĂNG NHẬP = SỐ CCCD cho tài khoản gắn nhân sự — saveSchoolDb nhận `renames: [{from, to}]`
+//        để đổi tên đăng nhập mà GIỮ NGUYÊN mật khẩu (mã băm + bản xem của Quản trị), không đổi tài khoản đang thao tác.
 // 1.1.4: TÀI KHOẢN DÙNG CHUNG với điểm danh nhân sự — tài khoản CSDL có `staffCode` (gắn mã GV trong nhansu_truong.json)
 //        đăng nhập phần mềm được bằng số CCCD (hoặc mã GV, hoặc tên đăng nhập) + MẬT KHẨU ĐIỂM DANH; mật khẩu CSDL cũ vẫn dùng được.
 //        Áp dụng ở mọi nơi kiểm tra tài khoản (verifyUser): đăng nhập, quyền Quản trị / BGH, chấm công, kê khai.
@@ -64,7 +66,7 @@ var REPORT_PREFIX = "bc_";
 //        rồi mã hóa lại (healStaffCccdHashes) — khi đăng nhập, khi Quản trị / BGH mở hoặc lưu danh sách nhân sự.
 // QUY TẮC ĐẶT TÊN PHIÊN BẢN (từ 11/2026): "Phiên bản A.B.C" — mỗi lần sửa mã tăng C thêm 1;
 // C tối đa 20: sau 1.1.20 là 1.2.1, sau 1.2.20 là 1.3.1… Các bản cũ dạng "4.x" (4.1 → 4.12) được coi là cũ hơn 1.1.2.
-var SCRIPT_VERSION = "1.1.4";
+var SCRIPT_VERSION = "1.1.5";
 // Thư mục của yêu cầu đang xử lý (để verifyUser đọc được danh sách nhân sự khi đăng nhập bằng CCCD)
 var CTX_FOLDER = null;
 
@@ -372,10 +374,35 @@ function handleSaveSchoolDb(folder, payload) {
     }
 
     var oldUsers = (current && current.users) || [];
+    var actorKey = normalizeUsername(auth.username);
+    // 1.1.5: đổi tên đăng nhập (vd. mã GV → số CCCD), giữ nguyên mật khẩu
+    var renamed = 0;
+    var renameList = Array.isArray(incoming.renames) ? incoming.renames : [];
+    for (var rn = 0; rn < renameList.length; rn++) {
+      var fromKey = normalizeUsername((renameList[rn] || {}).from);
+      var toKey = normalizeUsername((renameList[rn] || {}).to);
+      if (!fromKey || !toKey || fromKey === toKey || fromKey === actorKey) continue;
+      var fromIdx = -1, toExists = false;
+      for (var ru = 0; ru < oldUsers.length; ru++) {
+        var un = normalizeUsername(oldUsers[ru].username);
+        if (un === fromKey) fromIdx = ru;
+        if (un === toKey) toExists = true;
+      }
+      if (fromIdx < 0 || toExists) continue;
+      var moved = {};
+      for (var fk in oldUsers[fromIdx]) moved[fk] = oldUsers[fromIdx][fk];
+      moved.username = toKey;
+      moved.id = "user-" + toKey;
+      moved.previousUsername = fromKey;
+      oldUsers[fromIdx] = moved;
+      var vis = getVisiblePassword(fromKey);
+      if (vis) setVisiblePassword(toKey, vis);
+      deleteVisiblePassword(fromKey);
+      renamed++;
+    }
     var oldByName = {};
     for (var i = 0; i < oldUsers.length; i++) oldByName[normalizeUsername(oldUsers[i].username)] = oldUsers[i];
 
-    var actorKey = normalizeUsername(auth.username);
     var nextUsers = [];
     var seen = {};
     var list = Array.isArray(incoming.users) ? incoming.users : [];
@@ -460,7 +487,8 @@ function handleSaveSchoolDb(folder, payload) {
     writeSchoolDb(folder, db);
     return {
       success: true,
-      message: "Đã lưu cơ sở dữ liệu nhà trường lên Google Drive (" + db.schools.length + " trường, " + nextUsers.length + " tài khoản).",
+      message: "Đã lưu cơ sở dữ liệu nhà trường lên Google Drive (" + db.schools.length + " trường, " + nextUsers.length + " tài khoản" + (renamed ? ", đổi tên đăng nhập " + renamed + " tài khoản" : "") + ").",
+      renamed: renamed,
       schools: db.schools,
       users: nextUsers.map(publicUser),
       updatedAt: db.updatedAt

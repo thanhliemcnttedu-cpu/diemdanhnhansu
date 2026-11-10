@@ -3,17 +3,21 @@ import { Users, Loader2, RefreshCw, KeyRound, CheckCircle2, Link2, Search } from
 import type { UserAccount, UserRole } from '../../types';
 import { staffAttendanceService, StaffMember } from '../../services/staffAttendanceService';
 import { databaseService } from '../../services/databaseService';
+import { schoolDriveDbService } from '../../services/schoolDriveDbService';
 
 /**
  * 🔗 TẠO TÀI KHOẢN PHẦN MỀM TỪ DANH SÁCH NHÂN SỰ CHẤM CÔNG (tài khoản dùng chung, Apps Script 1.1.4)
  * - Lấy họ tên, số điện thoại, mã GV từ danh sách nhân sự đã nhập (không phải nhập lại).
  * - Quản trị chỉ chọn vai trò (GVCN / GVBM / BGH) và lớp chủ nhiệm / môn dạy.
- * - Tên đăng nhập = mã GV; tài khoản gắn `staffCode` → giáo viên đăng nhập phần mềm bằng
- *   SỐ CCCD (hoặc mã GV) + MẬT KHẨU ĐIỂM DANH — chỉ 1 tài khoản, 1 mật khẩu cho cả điểm danh lẫn phần mềm.
+ * - TÊN ĐĂNG NHẬP = SỐ CCCD (thống nhất với trang điểm danh, không dùng mã GV); tài khoản gắn `staffCode` →
+ *   đăng nhập bằng số CCCD + MẬT KHẨU ĐIỂM DANH (hoặc mật khẩu đã cấp) — 1 tài khoản cho cả điểm danh lẫn phần mềm.
+ * - Tài khoản đã tạo trước bằng mã GV: nút "Chuyển sang số CCCD" (Apps Script 1.1.5 đổi tên, giữ nguyên mật khẩu).
  */
 type RoleChoice = 'homeroom' | 'subject' | 'bgh' | 'skip';
 interface RowCfg { pick: boolean; role: RoleChoice; cls: string }
 
+/** Số CCCD đầy đủ của nhân sự (chỉ chữ số, 9–12 số); '' nếu chưa có */
+const cccdOf = (s: StaffMember) => { const d = String(s.currentCccd || s.cccd || '').replace(/\D/g, ''); return d.length >= 9 && d.length <= 12 ? d : ''; };
 const norm = (t: string) => t.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/đ/gi, 'd').toLowerCase();
 const SUBJECT_HINTS = ['my thuat', 'am nhac', 'tin hoc', 'tieng anh', 'the duc', 'gdtc', 'giao duc the chat', 'cong nghe', 'ngoai ngu'];
 
@@ -50,9 +54,28 @@ export const StaffToAccountsPanel: React.FC<{
   const [pwMode, setPwMode] = useState<'pin' | 'common'>('pin');
   const [commonPw, setCommonPw] = useState('');
 
-  /** Nhân sự đã có tài khoản: gắn mã GV hoặc tên đăng nhập trùng mã GV */
-  const linkedUser = (s: StaffMember) => allUsers.find(u =>
-    (u.staffCode && u.staffCode.toUpperCase() === s.code.toUpperCase()) || u.username.toLowerCase() === s.code.toLowerCase());
+  /** Nhân sự đã có tài khoản: gắn mã GV, hoặc tên đăng nhập trùng số CCCD / mã GV */
+  const linkedUser = (s: StaffMember) => allUsers.find(u => {
+    const un = u.username.toLowerCase();
+    return (u.staffCode && u.staffCode.toUpperCase() === s.code.toUpperCase()) || un === s.code.toLowerCase() || (!!cccdOf(s) && un === cccdOf(s));
+  });
+  /** Tài khoản đã tạo nhưng tên đăng nhập chưa phải số CCCD (vd. mã GV) → cần chuyển */
+  const [migrating, setMigrating] = useState(false);
+  const toMigrate = staff
+    .map(s => ({ s, u: linkedUser(s), cccd: cccdOf(s) }))
+    .filter(x => x.u && x.cccd && x.u.username.toLowerCase() !== x.cccd && x.u.role !== 'admin' && x.u.username.toLowerCase() !== 'adminquantri')
+    .filter(x => !allUsers.some(o => o !== x.u && o.username.toLowerCase() === x.cccd));
+  const migrate = async () => {
+    if (!toMigrate.length) return;
+    if (!confirm(`Chuyển tên đăng nhập của ${toMigrate.length} tài khoản sang SỐ CCCD?\nMật khẩu giữ nguyên. Giáo viên đăng nhập bằng số CCCD từ nay.`)) return;
+    setMigrating(true);
+    try {
+      const r = await schoolDriveDbService.renameUsers(toMigrate.map(x => ({ from: x.u!.username, to: x.cccd })));
+      if (!r.success) { notify('error', r.message); return; }
+      notify('success', `Đã chuyển ${r.renamed} tài khoản sang đăng nhập bằng số CCCD (mật khẩu giữ nguyên).`);
+      await onCreated();
+    } finally { setMigrating(false); }
+  };
 
   const load = async () => {
     setLoading(true);
@@ -73,8 +96,8 @@ export const StaffToAccountsPanel: React.FC<{
 
   const rows = useMemo(() => staff.filter(s => !q || norm(`${s.name} ${s.code} ${s.position || ''} ${s.dept || ''}`).includes(norm(q))), [staff, q]);
   // Dòng được "chọn tất cả" tác động: giáo viên (vai trò khác "Không cấp") chưa có tài khoản
-  const selectable = rows.filter(s => !linkedUser(s) && cfg[s.code]?.role !== 'skip');
-  const picked = staff.filter(s => cfg[s.code]?.pick && cfg[s.code]?.role !== 'skip' && !linkedUser(s));
+  const selectable = rows.filter(s => !linkedUser(s) && !!cccdOf(s) && cfg[s.code]?.role !== 'skip');
+  const picked = staff.filter(s => cfg[s.code]?.pick && cfg[s.code]?.role !== 'skip' && !linkedUser(s) && !!cccdOf(s));
   const setRow = (code: string, patch: Partial<RowCfg>) => setCfg(prev => ({ ...prev, [code]: { ...prev[code], ...patch } }));
 
   const create = async () => {
@@ -91,7 +114,7 @@ export const StaffToAccountsPanel: React.FC<{
         const c = cfg[s.code];
         const password = pwMode === 'pin' && s.currentPin ? s.currentPin : commonPw.trim();
         return {
-          username: s.code.toLowerCase(),
+          username: cccdOf(s),
           password,
           fullName: s.name,
           role: c.role as UserRole,
@@ -105,7 +128,7 @@ export const StaffToAccountsPanel: React.FC<{
       });
       const res = await databaseService.createUsersBulk(items);
       if (!res?.success) { notify('error', res?.message || 'Chưa tạo được tài khoản.'); return; }
-      notify('success', `Đã tạo ${res.count} tài khoản dùng chung với điểm danh. Giáo viên đăng nhập bằng số CCCD (hoặc mã GV) + mật khẩu điểm danh.`);
+      notify('success', `Đã tạo ${res.count} tài khoản dùng chung với điểm danh. Tên đăng nhập là số CCCD, mật khẩu là mật khẩu điểm danh.`);
       await onCreated();
       setCfg(prev => { const n = { ...prev }; picked.forEach(s => { n[s.code] = { ...n[s.code], pick: false }; }); return n; });
     } finally { setBusy(false); }
@@ -120,7 +143,7 @@ export const StaffToAccountsPanel: React.FC<{
             <h4 className="text-sm font-black text-slate-900 uppercase">Tạo từ danh sách nhân sự (chấm công)</h4>
             <p className="text-xs text-slate-600 mt-0.5 max-w-3xl">
               Dùng lại 1 tài khoản cho cả điểm danh và phần mềm: họ tên, số điện thoại lấy từ danh sách nhân sự; chỉ cần chọn vai trò và lớp / môn.
-              Tên đăng nhập là mã GV. Giáo viên đăng nhập bằng <strong>số CCCD (hoặc mã GV) + mật khẩu điểm danh</strong>.
+              <strong>Tên đăng nhập là số CCCD</strong> (giống trang điểm danh), mật khẩu là mật khẩu điểm danh.
             </p>
           </div>
         </div>
@@ -130,6 +153,18 @@ export const StaffToAccountsPanel: React.FC<{
           {open ? 'Tải lại danh sách' : 'Lấy danh sách nhân sự'}
         </button>
       </div>
+
+      {open && toMigrate.length > 0 && (
+        <div className="rounded-2xl border border-amber-300 bg-amber-50 px-4 py-3 flex flex-wrap items-center gap-3">
+          <p className="text-sm text-amber-950 flex-1 min-w-[16rem]">
+            <strong>{toMigrate.length} tài khoản</strong> đang dùng mã GV hoặc tên khác làm tên đăng nhập. Thống nhất: chuyển sang <strong>số CCCD</strong> (mật khẩu giữ nguyên).
+          </p>
+          <button type="button" onClick={migrate} disabled={migrating}
+            className="no-hover-fx h-10 px-4 rounded-xl bg-amber-700 hover:bg-amber-800 text-white text-sm font-black inline-flex items-center gap-2 disabled:opacity-60 whitespace-nowrap">
+            {migrating ? <Loader2 className="w-4 h-4 animate-spin" /> : <KeyRound className="w-4 h-4" />} Chuyển sang số CCCD
+          </button>
+        </div>
+      )}
 
       {open && (
         <>
@@ -177,7 +212,7 @@ export const StaffToAccountsPanel: React.FC<{
                   return (
                     <tr key={s.code} className={`border-b border-slate-100 ${c.pick && !linked ? 'bg-indigo-50/40' : ''}`}>
                       <td className="py-2 pl-3 pr-1">
-                        <input type="checkbox" disabled={!!linked} checked={!linked && c.pick} aria-label={`Chọn ${s.name}`} className="w-4 h-4 accent-indigo-600"
+                        <input type="checkbox" disabled={!!linked || !cccdOf(s)} checked={!linked && !!cccdOf(s) && c.pick} aria-label={`Chọn ${s.name}`} className="w-4 h-4 accent-indigo-600"
                           onChange={(e) => setRow(s.code, { pick: e.target.checked, role: c.role === 'skip' && e.target.checked ? manualRole(s) : c.role })} />
                       </td>
                       <td className="py-2 pr-2 min-w-0">
@@ -208,8 +243,14 @@ export const StaffToAccountsPanel: React.FC<{
                       </td>
                       <td className="py-2 pr-3 text-xs">
                         {linked
-                          ? <span className="inline-flex items-center gap-1 font-bold text-emerald-800"><CheckCircle2 className="w-3.5 h-3.5" /> Đã có: {linked.username}{linked.staffCode ? <Link2 className="w-3.5 h-3.5" aria-label="Đã gắn nhân sự" /> : null}</span>
-                          : <span className="text-slate-600">Sẽ tạo: <strong className="text-slate-900">{s.code.toLowerCase()}</strong></span>}
+                          ? linked.username.toLowerCase() === cccdOf(s)
+                            ? <span className="inline-flex items-center gap-1 font-bold text-emerald-800"><CheckCircle2 className="w-3.5 h-3.5" /> Đã có: {linked.username}{linked.staffCode ? <Link2 className="w-3.5 h-3.5" aria-label="Đã gắn nhân sự" /> : null}</span>
+                            : !cccdOf(s)
+                            ? <span className="font-bold text-rose-700" title="Nhập đủ số CCCD cho nhân sự ở Danh sách nhân sự để chuyển tên đăng nhập sang CCCD">Đã có: {linked.username} · thiếu số CCCD</span>
+                            : <span className="font-bold text-amber-800" title="Tên đăng nhập chưa phải số CCCD — bấm Chuyển sang số CCCD">Đã có: {linked.username} → cần chuyển sang CCCD</span>
+                          : cccdOf(s)
+                            ? <span className="text-slate-600">Sẽ tạo: <strong className="text-slate-900">{cccdOf(s)}</strong></span>
+                            : <span className="font-bold text-rose-700" title="Nhập đủ số CCCD cho nhân sự ở Danh sách nhân sự trước">Thiếu số CCCD đầy đủ</span>}
                       </td>
                     </tr>
                   );
@@ -221,7 +262,7 @@ export const StaffToAccountsPanel: React.FC<{
 
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <p className="text-xs text-slate-600">
-              Người đã có tài khoản (cùng mã GV) được bỏ qua để không tạo trùng. Lớp chủ nhiệm tự viết hoa. Cần Apps Script phiên bản mới nhất để đăng nhập bằng CCCD.
+              Người đã có tài khoản được bỏ qua để không tạo trùng; người thiếu số CCCD đầy đủ không tạo được. Lớp chủ nhiệm tự viết hoa. Cần Apps Script phiên bản mới nhất.
             </p>
             <button type="button" onClick={create} disabled={busy || picked.length === 0}
               className="no-hover-fx shrink-0 h-11 px-5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-sm font-black inline-flex items-center gap-2 disabled:opacity-50">

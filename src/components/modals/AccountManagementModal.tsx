@@ -2650,7 +2650,9 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                                   <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-slate-100 border border-slate-200 text-slate-600" title="Tên đăng nhập">
                                     <KeyRound className="w-3 h-3 text-amber-700" /> Đăng nhập: <strong className="font-mono text-sm text-slate-900 select-all">{u.username}</strong>
                                   </span>
-                                  {u.staffCode && <span className="px-1.5 py-0.5 rounded-md bg-emerald-50 border border-emerald-200 text-emerald-800 font-bold" title="Tài khoản dùng chung với chấm công: đăng nhập được bằng số CCCD + mật khẩu điểm danh">hoặc CCCD</span>}
+                                  {u.staffCode && (/^\d{9,12}$/.test(u.username)
+                                    ? <span className="px-1.5 py-0.5 rounded-md bg-emerald-50 border border-emerald-200 text-emerald-800 font-bold" title="Tài khoản dùng chung với chấm công: tên đăng nhập là số CCCD, mật khẩu điểm danh dùng được">CCCD · chung chấm công</span>
+                                    : <span className="px-1.5 py-0.5 rounded-md bg-amber-50 border border-amber-200 text-amber-900 font-bold" title="Nên chuyển tên đăng nhập sang số CCCD: Import biểu mẫu → Tạo từ danh sách nhân sự → Chuyển sang số CCCD">nên chuyển sang CCCD</span>)}
                                   <span className={`font-semibold ${roleInfo.cls}`}>{roleInfo.label}</span>
                                 </p>
                                 <p className={`text-xs mt-0.5 flex items-center gap-1 whitespace-nowrap max-w-[280px] ${u.tenantType === 'guest' ? 'text-fuchsia-700' : 'text-emerald-700'}`}>
