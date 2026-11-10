@@ -11,9 +11,11 @@ import { staffAttendanceService, StaffMember, toDateKey, fromDateKey, addDays } 
 
 export type TeachKey = 'outdoor' | 'pe' | 'disabled' | 'english';
 export const TEACH_KEYS: TeachKey[] = ['outdoor', 'pe', 'disabled', 'english'];
+/** Mục hiển thị / kê khai: tiết GDTC CHÍNH LÀ tiết dạy ngoài trời → chỉ 1 dòng 'pe' (outdoor tự lưu bằng pe để tương thích dữ liệu cũ) */
+export const SHOWN_KEYS: TeachKey[] = ['pe', 'disabled', 'english'];
 export const TEACH_META: Record<TeachKey, { label: string; short: string; tiny: string; color: string; soft: string; text: string }> = {
   outdoor: { label: 'Tiết GDTC dạy ngoài trời', short: 'Ngoài trời', tiny: 'N.Trời', color: '#047857', soft: '#ecfdf5', text: '#065f46' },
-  pe: { label: 'Tiết Giáo dục thể chất (GDTC)', short: 'GDTC', tiny: 'GDTC', color: '#1d4ed8', soft: '#eff6ff', text: '#1e40af' },
+  pe: { label: 'Tiết GDTC (dạy ngoài trời)', short: 'GDTC', tiny: 'GDTC', color: '#1d4ed8', soft: '#eff6ff', text: '#1e40af' },
   disabled: { label: 'Tiết dạy lớp có HS khuyết tật', short: 'Lớp có HSKT', tiny: 'HSKT', color: '#7c3aed', soft: '#f5f3ff', text: '#5b21b6' },
   english: { label: 'Tiết dạy thừa giờ Tiếng Anh', short: 'Thừa giờ T.Anh', tiny: 'T.Anh', color: '#c2410c', soft: '#fff7ed', text: '#9a3412' },
 };
@@ -89,7 +91,7 @@ export function enabledKeys(p?: TeachProfile | null): TeachKey[] {
   const subj = (p.subjects || []).map(norm);
   const pe = (p.classesPE || []).length > 0 || subj.some(s => s.includes('the chat') || s === 'gdtc');
   const en = (p.classesEnglish || []).length > 0 || subj.some(s => s.includes('tieng anh'));
-  return TEACH_KEYS.filter(k => (k === 'outdoor' || k === 'pe' ? pe : k === 'english' ? en : (p.classesDisabled || []).length > 0));
+  return SHOWN_KEYS.filter(k => (k === 'pe' ? pe : k === 'english' ? en : (p.classesDisabled || []).length > 0));
 }
 
 export const sumLog = (log: TeachLog | null | undefined, key: TeachKey) =>

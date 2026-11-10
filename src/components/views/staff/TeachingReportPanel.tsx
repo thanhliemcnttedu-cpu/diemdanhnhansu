@@ -3,10 +3,10 @@ import * as XLSX from 'xlsx';
 import { BookOpenCheck, ChevronDown, ChevronLeft, ChevronRight, Download, FileSpreadsheet, Loader2, Lock, LockOpen, RefreshCw, Search } from 'lucide-react';
 import { StaffMember } from '../../../services/staffAttendanceService';
 import {
-  teachingLogService, TEACH_KEYS, TEACH_META, TeachKey, TeachLog, TeachProfile, monthWeeks, monthLabel, addMonths, enabledKeys, sumLog,
+  teachingLogService, SHOWN_KEYS as TEACH_KEYS, TEACH_META, TeachKey, TeachLog, TeachProfile, monthWeeks, monthLabel, addMonths, enabledKeys, sumLog,
   HSKT_SUBJECTS, ktOf, TeachLock, isTeachLocked,
 } from '../../../services/teachingLogService';
-import { exportTH1, exportTH2, exportTH3, exportOutdoor } from '../../../services/teachingReportExcel';
+import { exportTH1, exportTH2, exportTH3 } from '../../../services/teachingReportExcel';
 
 const ORG_KEY = 'lhhp_teach_report_org';
 const readOrg = () => { try { return localStorage.getItem(ORG_KEY) || ''; } catch { return ''; } };
@@ -76,7 +76,7 @@ export const TeachingReportPanel: React.FC<{ auth: { username: string; password:
   })), [logs, wks]);
 
   const totals = useMemo(() => {
-    const t = { outdoor: 0, pe: 0, disabled: 0, english: 0 } as Record<TeachKey, number>;
+    const t = { outdoor: 0, pe: 0, disabled: 0, english: 0 } as Record<TeachKey, number>; // outdoor không hiển thị
     Object.values(logs).forEach(l => TEACH_KEYS.forEach(k => { t[k] += sumLog(l, k); }));
     return t;
   }, [logs]);
@@ -150,9 +150,8 @@ export const TeachingReportPanel: React.FC<{ auth: { username: string; password:
                   </label>
                   {([
                     ['TH1', 'TH1. Bảng kê dạy lớp có HS khuyết tật', 'Đúng mẫu: trang TonghopKT + mỗi GV 1 trang', () => exportTH1(header(), listFor('disabled')), listFor('disabled').length],
-                    ['TH2', 'TH2. Bảng kê dạy Giáo dục thể chất', 'Đúng mẫu: trang TonghopGDTC + mỗi GV 1 trang', () => exportTH2(header(), listFor('pe')), listFor('pe').length],
+                    ['TH2', 'TH2. Bảng kê dạy GDTC (ngoài trời)', 'Đúng mẫu: trang TonghopGDTC + mỗi GV 1 trang', () => exportTH2(header(), listFor('pe')), listFor('pe').length],
                     ['TH3', 'TH3. Bảng kê dạy thừa giờ Tiếng Anh', 'Đúng mẫu: trang TongTA + mỗi GV 1 trang', () => exportTH3(header(), listFor('english')), listFor('english').length],
-                    ['NT', 'Bảng kê tiết GDTC dạy ngoài trời', 'Khuôn TH2, tiêu đề ngoài trời', () => exportOutdoor(header(), listFor('outdoor')), listFor('outdoor').length],
                   ] as Array<[string, string, string, () => Promise<void>, number]>).map(([code, label, hint, run, n]) => (
                     <button key={code} type="button" role="menuitem" disabled={!n} onClick={() => { setMenu(false); run().catch(e => setErr('Không xuất được tệp Excel: ' + (e?.message || e))); }}
                       className="no-hover-fx w-full text-left rounded-xl border border-slate-200 hover:bg-emerald-50 hover:border-emerald-300 px-3 py-2 flex items-start gap-2.5 disabled:opacity-50 disabled:hover:bg-white">

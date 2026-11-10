@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { BookOpenCheck, ChevronLeft, ChevronRight, Loader2, Pencil, Plus, Save, X, CheckCircle2, Lock, History } from 'lucide-react';
 import {
   teachingLogService, TEACH_META, TeachKey, TeachProfile, WeekCounts, EMPTY_PROFILE, SUBJECT_PRESETS,
-  monthWeeks, monthLabel, addMonths, enabledKeys, HSKT_SUBJECTS, subjectCodesOf, ktOf, MonthWeek, TeachMonthInfo, TEACH_KEYS,
+  monthWeeks, monthLabel, addMonths, enabledKeys, HSKT_SUBJECTS, subjectCodesOf, ktOf, MonthWeek, TeachMonthInfo, TEACH_KEYS, SHOWN_KEYS,
 } from '../../../services/teachingLogService';
 
 type GridRow = { id: string; label: string; hint: string; get: (wk: string) => number; set: (wk: string, v: string) => void };
@@ -136,7 +136,8 @@ export const TeachingLogPanel: React.FC<{ cccd: string; pin: string; today: stri
   const wks = useMemo(() => monthWeeks(month), [month]);
   const setCell = (wk: string, k: TeachKey, v: string) => {
     const n = Math.max(0, Math.min(80, Math.round(Number(v.replace(/\D/g, '')) || 0)));
-    setWeeks(prev => ({ ...prev, [wk]: { ...(prev[wk] || {}), [k]: n } }));
+    // Tiết GDTC = tiết dạy ngoài trời: lưu kèm outdoor bằng đúng số GDTC
+    setWeeks(prev => ({ ...prev, [wk]: { ...(prev[wk] || {}), [k]: n, ...(k === 'pe' ? { outdoor: n } : {}) } }));
   };
   const [allSubjects, setAllSubjects] = useState(false);
   const ktCodes = useMemo(() => {
@@ -155,11 +156,6 @@ export const TeachingLogPanel: React.FC<{ cccd: string; pin: string; today: stri
       return { ...prev, [wk]: { ...(prev[wk] || {}), kt, disabled: sum } };
     });
   };
-  const copyOutdoor = () => setWeeks(prev => {
-    const next = { ...prev };
-    wks.forEach(w => { next[w.key] = { ...(next[w.key] || {}), outdoor: Number(next[w.key]?.pe) || 0 }; });
-    return next;
-  });
 
   const saveLog = async () => {
     setBusy(true); setMsg(null);
@@ -269,15 +265,11 @@ export const TeachingLogPanel: React.FC<{ cccd: string; pin: string; today: stri
                 <p className="text-xs text-slate-600">T1…T{wks.length}: các tuần trong tháng (ngày ghi dưới là ngày đầu tuần). Kê hoặc sửa được bất cứ lúc nào cho tới khi nhà trường khóa chốt.</p>
               )}
               {keys.includes('pe') && (
-                <WeekGrid title="Giáo dục thể chất" color={TEACH_META.pe.text} wks={wks} locked={locked}
+                <WeekGrid title="Giáo dục thể chất (dạy ngoài trời)" color={TEACH_META.pe.text} wks={wks} locked={locked}
                   rows={[
-                    { id: 'pe', label: 'Tiết GDTC', hint: TEACH_META.pe.label, get: (wk) => Number(weeks[wk]?.pe) || 0, set: (wk, v) => setCell(wk, 'pe', v) },
-                    { id: 'outdoor', label: 'Ngoài trời', hint: 'Trong đó: số tiết GDTC dạy ngoài trời', get: (wk) => Number(weeks[wk]?.outdoor) || 0, set: (wk, v) => setCell(wk, 'outdoor', v) },
+                    { id: 'pe', label: 'Tiết GDTC', hint: 'Số tiết GDTC (dạy ngoài trời)', get: (wk) => Number(weeks[wk]?.pe) || 0, set: (wk, v) => setCell(wk, 'pe', v) },
                   ]}
-                  extra={(
-                    <button type="button" onClick={copyOutdoor} className="no-hover-fx h-8 px-2.5 rounded-lg border border-slate-300 bg-white text-xs font-bold text-slate-800 hover:bg-slate-50 whitespace-nowrap">Ngoài trời = GDTC</button>
-                  )}
-                  warn={wks.some(w => (Number(weeks[w.key]?.outdoor) || 0) > (Number(weeks[w.key]?.pe) || 0) && (Number(weeks[w.key]?.pe) || 0) > 0) ? 'Có tuần số tiết ngoài trời lớn hơn số tiết GDTC — hãy kiểm tra lại.' : ''} />
+                  />
               )}
               {keys.includes('disabled') && (
                 <WeekGrid title="Lớp có HS khuyết tật (theo môn)" color={TEACH_META.disabled.text} wks={wks} locked={locked} showTotalRow
@@ -312,7 +304,7 @@ export const TeachingLogPanel: React.FC<{ cccd: string; pin: string; today: stri
           </div>
           <ul className="divide-y divide-slate-100">
             {months.map(m => {
-              const sum = keys.length ? keys : TEACH_KEYS.filter(k => m.totals[k] > 0);
+              const sum = keys.length ? keys : SHOWN_KEYS.filter(k => m.totals[k] > 0);
               const current = m.month === month;
               return (
                 <li key={m.month} className={`px-4 py-3 flex items-center gap-3 ${current ? 'bg-indigo-50/60' : ''}`}>
