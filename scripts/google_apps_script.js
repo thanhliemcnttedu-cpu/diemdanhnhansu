@@ -56,9 +56,12 @@
 var FOLDER_ID = "__FOLDER_ID__";
 var TARGET_FILENAME = "du_lieu_lop_hoc_hanh_phuc.json";
 var REPORT_PREFIX = "bc_";
+// 1.1.3: sửa lỗi giáo viên KHÔNG đăng nhập điểm danh được sau khi trường tạo DỰ ÁN Apps Script MỚI (khóa "staff_pepper"
+//        trong Script Properties bị sinh lại → mã hóa CCCD không khớp). Nay tự đối chiếu bằng số CCCD đầy đủ trong hồ sơ
+//        rồi mã hóa lại (healStaffCccdHashes) — khi đăng nhập, khi Quản trị / BGH mở hoặc lưu danh sách nhân sự.
 // QUY TẮC ĐẶT TÊN PHIÊN BẢN (từ 11/2026): "Phiên bản A.B.C" — mỗi lần sửa mã tăng C thêm 1;
 // C tối đa 20: sau 1.1.20 là 1.2.1, sau 1.2.20 là 1.3.1… Các bản cũ dạng "4.x" (4.1 → 4.12) được coi là cũ hơn 1.1.2.
-var SCRIPT_VERSION = "1.1.2";
+var SCRIPT_VERSION = "1.1.3";
 
 // ---------------------------------------------------------------------------------------
 // HTTP POST: lưu dữ liệu lớp
@@ -883,7 +886,34 @@ function findStaffByCccd(db, cccd) {
   if (digits.length < 9) return null;
   var h = cccdHash(digits);
   for (var i = 0; i < db.staff.length; i++) if (db.staff[i].cccdHash === h) return db.staff[i];
+  // Mã hóa không khớp (dự án Apps Script mới → khóa staff_pepper khác): đối chiếu số CCCD đầy đủ đã lưu trong hồ sơ
+  for (var j = 0; j < db.staff.length; j++) {
+    if (db.staff[j].cccdFull && normalizeCccd(db.staff[j].cccdFull) === digits) {
+      db.staff[j].cccdHash = h;
+      db.__healed = true;
+      return db.staff[j];
+    }
+  }
   return null;
+}
+
+/** Mã hóa lại CCCD theo khóa staff_pepper hiện tại cho mọi hồ sơ có số đầy đủ (cccdFull hoặc Script Properties scccd:). Trả về số hồ sơ đã sửa */
+function healStaffCccdHashes(db, props) {
+  var fixed = 0;
+  for (var i = 0; i < db.staff.length; i++) {
+    var s = db.staff[i];
+    var digits = normalizeCccd(s.cccdFull || (props ? props.getProperty("scccd:" + s.code) : "") || "");
+    if (digits.length < 9) continue;
+    var h = cccdHash(digits);
+    if (s.cccdHash !== h) { s.cccdHash = h; fixed++; }
+  }
+  return fixed;
+}
+
+function saveHealedStaffDb(folder, db) {
+  delete db.__healed;
+  db.updatedAt = new Date().toISOString();
+  writeFileOverwrite(folder, STAFF_FILE, JSON.stringify(db));
 }
 
 function verifyStaff(folder, cccd, pin) {
@@ -891,6 +921,7 @@ function verifyStaff(folder, cccd, pin) {
   var s = findStaffByCccd(db, cccd);
   if (!s || !s.pinHash) return { ok: false, code: "INVALID", message: "Số CCCD hoặc mật khẩu điểm danh không đúng." };
   if (hashPassword(String(pin || ""), s.salt) !== s.pinHash) return { ok: false, code: "INVALID", message: "Số CCCD hoặc mật khẩu điểm danh không đúng." };
+  if (db.__healed) { try { saveHealedStaffDb(folder, db); } catch (_) {} }
   if (s.disabled) return { ok: false, code: "DISABLED", message: "Tài khoản điểm danh đã bị khóa. Liên hệ Quản trị nhà trường." };
   return { ok: true, staff: s, db: db };
 }
@@ -1328,6 +1359,7 @@ function handleGetStaffRoster(folder, payload) {
   var db = readStaffDb(folder);
   var withPins = isAdminUser(actor);
   var props = PropertiesService.getScriptProperties();
+  if (healStaffCccdHashes(db, props) > 0) { try { saveHealedStaffDb(folder, db); } catch (_) {} }
   var list = db.staff.map(function (s) {
     var p = publicStaff(s);
     if (withPins) {
@@ -1348,6 +1380,7 @@ function handleSaveStaffRoster(folder, payload) {
   try {
     var db = readStaffDb(folder);
     var props = PropertiesService.getScriptProperties();
+    healStaffCccdHashes(db, props);
     var byCode = {};
     for (var i = 0; i < db.staff.length; i++) byCode[db.staff[i].code] = db.staff[i];
     var errors = [];

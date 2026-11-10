@@ -175,3 +175,20 @@
 - **Prevention**: Mọi màn quản lý phải dùng cùng một nguồn kết nối với phần kiểm tra phiên bản. Hướng dẫn trường: không đặt dự án Apps Script trong thư mục dữ liệu, không xóa `csdl_truong.json`.
 - **Status**: Fixed
 
+---
+
+## [2026-11-10 12:45] - Giáo viên không đăng nhập điểm danh được ("Số CCCD hoặc mật khẩu điểm danh không đúng") dù đã cấp mật khẩu, Apps Script đúng phiên bản
+
+- **Type**: Integration
+- **Severity**: Critical
+- **File**: `scripts/google_apps_script.js` (`findStaffByCccd`, `cccdHash`, `staffPepper`)
+- **Agent**: Claude Code
+- **Root Cause**: Số CCCD trong `nhansu_truong.json` được lưu dạng băm với "muối" `staff_pepper` nằm trong **Script Properties của dự án Apps Script**. Khi trường cập nhật bằng cách tạo **dự án Apps Script mới** (thay vì dán mã vào dự án cũ), Script Properties trống → `staff_pepper` sinh lại → mọi `cccdHash` cũ không khớp. Bảng nhân sự vẫn hiện đủ số CCCD (đọc `cccdFull` trong tệp) và mật khẩu mới cấp (`spin:`), nhưng đăng nhập luôn báo sai. Cấp lại mật khẩu không sửa được vì chỉ đổi `pinHash`.
+- **Error Message**:
+  ```
+  staffAuth → { success: false, code: "INVALID", message: "Số CCCD hoặc mật khẩu điểm danh không đúng." }
+  ```
+- **Fix Applied**: Apps Script 1.1.3: `findStaffByCccd` không khớp mã băm thì đối chiếu `cccdFull` rồi băm lại theo khóa hiện tại (ghi lại tệp khi đăng nhập đúng mật khẩu); `healStaffCccdHashes` băm lại toàn bộ khi Quản trị / BGH mở hoặc lưu danh sách nhân sự.
+- **Prevention**: Không để dữ liệu trong thư mục Drive phụ thuộc duy nhất vào bí mật nằm trong Script Properties; luôn có đường tự phục hồi. Hồ sơ nhập trước 4.4 (không có `cccdFull`) vẫn cần nhập lại Excel sau khi đổi dự án. Hướng dẫn cập nhật: dán mã vào **dự án cũ** → Quản lý triển khai → Phiên bản mới.
+- **Status**: Fixed
+
