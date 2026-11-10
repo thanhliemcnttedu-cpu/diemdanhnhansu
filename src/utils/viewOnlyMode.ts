@@ -11,6 +11,8 @@ export interface ViewAsInfo {
   targetFullName: string;
   targetRole: string;
   className?: string;
+  /** Ghi chú hiện trên dải chỉ xem (vd. giáo viên chưa có dữ liệu lớp) */
+  note?: string;
 }
 
 let current: ViewAsInfo | null = null;

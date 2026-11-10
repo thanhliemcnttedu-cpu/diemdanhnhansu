@@ -222,3 +222,16 @@
 - **Fix Applied**: `DashboardView` chỉ chọn thành phần theo vai trò; thân trang chủ GVCN tách thành `HomeroomDashboard`.
 - **Prevention**: Không `return` sớm trước hook trong thành phần; rẽ nhánh theo vai trò bằng cách trả về thành phần con khác nhau.
 - **Status**: Fixed
+
+---
+
+## [2026-11-10 22:20] - Xem lớp GV bộ môn chưa từng đăng nhập vẫn thấy lớp 3A1 với 20 học sinh
+
+- **Type**: Data
+- **Severity**: High
+- **File**: `src/context/ClassroomContext.tsx` (`buildDefaultDataForUser`, `switchUserAccount`, `initSubjectClasses`, `viewAsTeacher`)
+- **Agent**: Claude Code
+- **Root Cause**: Dữ liệu mặc định của GVBM tự sinh lớp mẫu `class-sub-3a1` + 20 học sinh mẫu (có xu). Nút "Vào xem" bản cũ đăng nhập hẳn thành giáo viên rồi `saveUserData(defaultData)` → lớp mẫu được đẩy lên Drive thành `gvbm_<tên>.json`. Chế độ chỉ xem mới đọc lại đúng tệp đó nên hiện 20 học sinh giả dù giáo viên chưa đăng nhập.
+- **Fix Applied**: `utils/sampleData.ts` (`stripSampleData`) lọc học sinh / lớp mẫu khi nạp dữ liệu (bản Drive) và ở chế độ chỉ xem; `initSubjectClasses` và `switchUserAccount` không sinh/lưu học sinh mẫu khi đã kết nối Drive; dải chỉ xem ghi chú khi giáo viên chưa có dữ liệu.
+- **Prevention**: Bản web dùng chung Drive không bao giờ sinh dữ liệu mẫu; mọi luồng "xem thay" phải chỉ đọc (xem `utils/viewOnlyMode.ts`).
+- **Status**: Fixed

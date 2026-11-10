@@ -1,3 +1,4 @@
+import { stripSampleData } from '../utils/sampleData';
 import { isViewOnly, getViewAs, setViewAs, subscribeViewAs, ViewAsInfo } from '../utils/viewOnlyMode';
 import { saveTeacherAuth, clearTeacherAuth } from '../utils/teacherAuth';
 import React, { createContext, useContext, useState, useEffect, useRef, useMemo } from 'react';
@@ -706,6 +707,11 @@ export const ClassroomProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   // Helper to apply dataset snapshot into state hooks
   const applyUserClassroomData = (data: Partial<UserClassroomData>) => {
+    // 🧹 Bản web (Drive chung): không hiện / không lưu học sinh & lớp MẪU sinh tự động (xem utils/sampleData.ts)
+    if (schoolDriveDbService.isConfigured()) {
+      const cleaned = stripSampleData(data);
+      if (cleaned.changed) data = cleaned.data;
+    }
     // 🌟 SINGLE SOURCE OF TRUTH: tên tài khoản luôn lấy từ currentUser.fullName (CSDL users), KHÔNG bao giờ từ teacherProfile snapshot cũ
     if (currentUserRef.current && currentUserRef.current.fullName) {
       const authorName = currentUserRef.current.fullName;
@@ -2001,14 +2007,26 @@ export const ClassroomProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     // Dữ liệu: bản trên máy (nếu có) → gộp lớp đang có trên Drive dùng chung; không sinh học sinh mẫu, không lưu
     let data: UserClassroomData | null = null;
     try { data = await databaseService.loadUserData(target.username); } catch (_) { data = null; }
+    // Chưa có dữ liệu: GVBM không dựng lớp mẫu (3A1), GVCN chỉ có khung lớp được phân công — không có học sinh
     let start: UserClassroomData = data && Array.isArray(data.classes) && data.classes.length > 0
       ? data
-      : { ...buildDefaultDataForUser(viewUser), students: [], transactions: [] };
+      : (() => {
+          const built = buildDefaultDataForUser(viewUser);
+          return { ...built, classes: target.role === 'subject' ? [] : built.classes, activeClassId: target.role === 'subject' ? '' : built.activeClassId, students: [], transactions: [] };
+        })();
     try {
       const fileName = googleDriveService.getFileNameForUser(viewUser, viewUser.assignedClassName, start.teacherRole);
       const pulled = await googleDriveService.pullClassData(start, fileName, viewUser);
       if (pulled.success && pulled.mergedData) start = pulled.mergedData;
     } catch (_) { /* chỉ xem: dùng dữ liệu đang có */ }
+    const cleaned = stripSampleData(start);
+    if (cleaned.changed) start = cleaned.data;
+    if (!(start.students || []).length) {
+      const info = getViewAs();
+      if (info) setViewAs({ ...info, note: cleaned.removedStudents
+        ? 'Giáo viên này chưa khởi tạo dữ liệu lớp thật (dữ liệu mẫu do phiên bản cũ tạo ra đã được ẩn).'
+        : 'Giáo viên này chưa đăng nhập hoặc chưa có danh sách học sinh trên Google Drive.' });
+    }
     applyUserClassroomData(start);
     return true;
   };
@@ -2126,7 +2144,8 @@ export const ClassroomProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       if (targetData) {
         applyUserClassroomData(targetData);
       } else {
-        const defaultData = buildDefaultDataForUser(targetUser);
+        const built = buildDefaultDataForUser(targetUser);
+        const defaultData = schoolDriveDbService.isConfigured() ? { ...built, students: [], transactions: [] } : built;
         applyUserClassroomData(defaultData);
         await databaseService.saveUserData(targetUser.username, defaultData);
       }
@@ -4036,7 +4055,8 @@ export const ClassroomProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       }
 
       const hasStudents = newStudentsList.some(s => s.classId === classId);
-      if (!hasStudents) {
+      // Bản web (Drive chung): lớp mới để trống, giáo viên nhập danh sách thật (không sinh 20 học sinh mẫu)
+      if (!hasStudents && !schoolDriveDbService.isConfigured()) {
         const SAMPLE_NAMES = [
           'Nguyễn Văn An', 'Trần Thị Ngọc Ánh', 'Lê Gia Bảo', 'Phạm Minh Châu', 'Hoàng Quốc Cường',
           'Vũ Mai Dung', 'Đặng Tuấn Đạt', 'Bùi Thùy Dương', 'Đỗ Tiến Đức', 'Hồ Mỹ Hạnh',

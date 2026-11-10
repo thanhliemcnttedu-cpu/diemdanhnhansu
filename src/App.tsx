@@ -299,6 +299,7 @@ function ClassroomApp() {
               <strong>{viewAs.targetFullName}</strong>
               {viewAs.className ? <> ({viewAs.targetRole === 'subject' ? 'môn' : 'lớp'} <strong>{viewAs.className}</strong>)</> : null}
               {' '}bằng tài khoản quản trị <strong>{viewAs.adminFullName}</strong>. Mọi nút lệnh và chỉnh sửa đều bị khóa.
+              {viewAs.note && <span className="block mt-0.5 font-bold text-amber-900">⚠ {viewAs.note}</span>}
             </p>
             <button type="button" onClick={exitViewAs}
               className="no-hover-fx shrink-0 h-9 px-4 rounded-xl bg-amber-700 hover:bg-amber-800 text-white text-sm font-black inline-flex items-center gap-2 whitespace-nowrap">
