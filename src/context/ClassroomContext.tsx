@@ -2891,9 +2891,11 @@ export const ClassroomProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   const deleteStudent = (id: string) => {
     if (!checkBghPermission()) return;
-    const st = students.find(s => s.id === id);
+    // Đọc danh sách MỚI NHẤT (ref) để gọi liên tiếp nhiều lần không bị ghi đè bởi state cũ
+    const currentList = studentsRef.current.length > 0 ? studentsRef.current : students;
+    const st = currentList.find(s => s.id === id);
     const currentClass = classes.find(c => c.id === st?.classId);
-    const remainingStudents = students.filter(s => s.id !== id);
+    const remainingStudents = currentList.filter(s => s.id !== id);
     setStudents(remainingStudents);
     studentsRef.current = remainingStudents;
     // also clean up seating assignment
@@ -2949,7 +2951,8 @@ export const ClassroomProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     if (studentIds.length === 0) return;
     const idSet = new Set(studentIds);
     const currentClass = classes.find(c => c.id === activeClassId);
-    const remainingStudents = students.filter(s => !idSet.has(s.id));
+    const currentList = studentsRef.current.length > 0 ? studentsRef.current : students;
+    const remainingStudents = currentList.filter(s => !idSet.has(s.id));
     setStudents(remainingStudents);
     studentsRef.current = remainingStudents;
     setSeatingAssignments(prev => {

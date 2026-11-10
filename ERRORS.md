@@ -192,3 +192,16 @@
 - **Prevention**: Không để dữ liệu trong thư mục Drive phụ thuộc duy nhất vào bí mật nằm trong Script Properties; luôn có đường tự phục hồi. Hồ sơ nhập trước 4.4 (không có `cccdFull`) vẫn cần nhập lại Excel sau khi đổi dự án. Hướng dẫn cập nhật: dán mã vào **dự án cũ** → Quản lý triển khai → Phiên bản mới.
 - **Status**: Fixed
 
+
+---
+
+## [2026-11-10 17:20] - "Xóa đã chọn" học sinh chỉ xóa được 1 em (chọn 25 em, lớp vẫn còn 25)
+
+- **Type**: Logic
+- **Severity**: High
+- **File**: `src/components/views/ClassesStudentsView.tsx` (`handleBulkDeleteSelected`), `src/context/ClassroomContext.tsx` (`deleteStudent`, `bulkDeleteStudents`)
+- **Agent**: Claude Code
+- **Root Cause**: Nút gọi `selectedStudentIds.forEach(id => deleteStudent(id))`. `deleteStudent` lọc trên state `students` của lần render hiện tại (chưa cập nhật giữa các lần gọi trong cùng vòng lặp) → mỗi lần gọi đều tính từ danh sách ban đầu, lần cuối thắng → chỉ em cuối bị xóa. Context đã có sẵn `bulkDeleteStudents` nhưng màn không dùng.
+- **Fix Applied**: Nút gọi `bulkDeleteStudents([...selectedStudentIds])` (xóa một lần, lưu một lần). `deleteStudent` / `bulkDeleteStudents` đọc danh sách mới nhất từ `studentsRef` (như `updateStudent`).
+- **Prevention**: Thao tác hàng loạt dùng hàm bulk của context; hàm sửa state có thể bị gọi liên tiếp phải đọc `studentsRef.current`, không đọc state trong closure. Lưu ý tương tự: `bulkAddStudents` vẫn đọc state `students` → gọi nó TRƯỚC các `updateStudent` trong cùng thao tác.
+- **Status**: Fixed

@@ -168,7 +168,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
     classes, activeClassId, setActiveClassId, addClass, bulkAddClasses, updateClass, deleteClass,
     bulkDeleteClasses, bulkUpdateClasses, deleteAllClasses,
     students, currentClassStudents, addStudent, updateStudent, deleteStudent, 
-    bulkAddStudents, autoAssignRealAvatarsToClass, autoAssignAvatarsToClass, batchUpdateStudentAvatars, clearClassStudents, resetStudentsCoins,
+    bulkAddStudents, bulkDeleteStudents, autoAssignRealAvatarsToClass, autoAssignAvatarsToClass, batchUpdateStudentAvatars, clearClassStudents, resetStudentsCoins,
     awardPoints, deductPoints, subjects, addSubject, updateSubject, deleteSubject,
     toggleSubjectApplied, setAppliedSubjects, resetDefaultSubjects,
     criteria, teacherProfile, updateTeacherProfile, 
@@ -1625,7 +1625,8 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
       );
       if (!confirmed) return;
     }
-    selectedStudentIds.forEach(id => deleteStudent(id));
+    // Xóa MỘT LẦN cho cả danh sách đã chọn (gọi deleteStudent từng em trong vòng lặp chỉ xóa được em cuối do đọc state cũ)
+    bulkDeleteStudents([...selectedStudentIds]);
     setSelectedStudentIds([]);
     setIsBulkDeleteConfirmOpen(false);
   };
