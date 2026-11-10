@@ -172,7 +172,11 @@ export const schoolDriveDbService = {
       if (code === 'NOT_FOUND') {
         return { status: 'invalid', message: `Tài khoản "${username}" chưa có trong cơ sở dữ liệu nhà trường trên Google Drive. Quản trị kiểm tra lại tài khoản đã được lưu lên Drive chưa.` };
       }
-      if (code === 'INVALID') return { status: 'invalid', message: 'Sai mật khẩu. Hãy nhập đúng mật khẩu Quản trị đã cấp (hoặc mật khẩu bạn đã tự đổi).' };
+      if (code === 'INVALID') {
+        // Đăng nhập bằng số CCCD / mã GV (tài khoản dùng chung với điểm danh nhân sự) → dùng câu báo của Apps Script
+        const byStaff = /^\d{9,12}$/.test(String(username || '').replace(/\s/g, ''));
+        return { status: 'invalid', message: byStaff && data?.message ? data.message : 'Sai mật khẩu. Hãy nhập đúng mật khẩu Quản trị đã cấp, mật khẩu bạn đã tự đổi, hoặc mật khẩu điểm danh (nếu tài khoản dùng chung với chấm công).' };
+      }
       // Apps Script cũ (chưa có V4) trả "Hành động không hợp lệ"
       return { status: 'unreachable', message: data?.message || 'Apps Script chưa hỗ trợ đăng nhập (cần mã V4).' };
     } catch (err: any) {

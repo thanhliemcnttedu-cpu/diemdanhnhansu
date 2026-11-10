@@ -450,6 +450,8 @@ export interface UserAccount {
   createdAt: number;
   lastLoginAt?: number;
   status?: 'active' | 'locked';
+  /** Mã GV trong danh sách nhân sự chấm công (Apps Script 1.1.4): tài khoản dùng chung — đăng nhập bằng CCCD / mã GV + mật khẩu điểm danh */
+  staffCode?: string;
 }
 
 export interface RegistrationRequest {

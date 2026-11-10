@@ -56,12 +56,17 @@
 var FOLDER_ID = "__FOLDER_ID__";
 var TARGET_FILENAME = "du_lieu_lop_hoc_hanh_phuc.json";
 var REPORT_PREFIX = "bc_";
+// 1.1.4: TÀI KHOẢN DÙNG CHUNG với điểm danh nhân sự — tài khoản CSDL có `staffCode` (gắn mã GV trong nhansu_truong.json)
+//        đăng nhập phần mềm được bằng số CCCD (hoặc mã GV, hoặc tên đăng nhập) + MẬT KHẨU ĐIỂM DANH; mật khẩu CSDL cũ vẫn dùng được.
+//        Áp dụng ở mọi nơi kiểm tra tài khoản (verifyUser): đăng nhập, quyền Quản trị / BGH, chấm công, kê khai.
 // 1.1.3: sửa lỗi giáo viên KHÔNG đăng nhập điểm danh được sau khi trường tạo DỰ ÁN Apps Script MỚI (khóa "staff_pepper"
 //        trong Script Properties bị sinh lại → mã hóa CCCD không khớp). Nay tự đối chiếu bằng số CCCD đầy đủ trong hồ sơ
 //        rồi mã hóa lại (healStaffCccdHashes) — khi đăng nhập, khi Quản trị / BGH mở hoặc lưu danh sách nhân sự.
 // QUY TẮC ĐẶT TÊN PHIÊN BẢN (từ 11/2026): "Phiên bản A.B.C" — mỗi lần sửa mã tăng C thêm 1;
 // C tối đa 20: sau 1.1.20 là 1.2.1, sau 1.2.20 là 1.3.1… Các bản cũ dạng "4.x" (4.1 → 4.12) được coi là cũ hơn 1.1.2.
-var SCRIPT_VERSION = "1.1.3";
+var SCRIPT_VERSION = "1.1.4";
+// Thư mục của yêu cầu đang xử lý (để verifyUser đọc được danh sách nhân sự khi đăng nhập bằng CCCD)
+var CTX_FOLDER = null;
 
 // ---------------------------------------------------------------------------------------
 // HTTP POST: lưu dữ liệu lớp
@@ -79,6 +84,7 @@ function doPost(e) {
         || action === "teachGet" || action === "teachSaveProfile" || action === "teachSaveLog" || action === "teachReport" || action === "teachLock" || action === "teachDeleteLog") {
       var staffFolder = resolveFolder(folderId);
       if (!staffFolder) return createJsonResponse({ success: false, message: "Không tìm thấy thư mục Google Drive: " + folderId });
+      CTX_FOLDER = staffFolder;
       if (action === "staffAuth") return createJsonResponse(handleStaffAuth(staffFolder, payload));
       if (action === "staffCheckIn") return createJsonResponse(handleStaffCheckIn(staffFolder, payload));
       if (action === "getStaffRoster") return createJsonResponse(handleGetStaffRoster(staffFolder, payload));
@@ -97,6 +103,7 @@ function doPost(e) {
     if (action === "saveSchoolDb" || action === "getSchoolDb" || action === "login" || action === "changePassword") {
       var dbFolder = resolveFolder(folderId);
       if (!dbFolder) return createJsonResponse({ success: false, message: "Không tìm thấy thư mục Google Drive: " + folderId });
+      CTX_FOLDER = dbFolder;
       if (action === "saveSchoolDb") return createJsonResponse(handleSaveSchoolDb(dbFolder, payload));
       if (action === "getSchoolDb") return createJsonResponse(handleGetSchoolDb(dbFolder, payload));
       if (action === "login") return createJsonResponse(handleLogin(dbFolder, payload));
@@ -309,8 +316,37 @@ function findUser(db, username) {
 
 function verifyUser(db, username, password) {
   var u = findUser(db, username);
-  if (!u || !u.passwordHash || !u.salt) return null;
-  return hashPassword(password, u.salt) === u.passwordHash ? u : null;
+  if (u && u.passwordHash && u.salt && hashPassword(password, u.salt) === u.passwordHash) return u;
+  // 1.1.4: tài khoản dùng chung với điểm danh nhân sự (CCCD / mã GV / tên đăng nhập + mật khẩu điểm danh)
+  return verifyStaffLinkedUser(db, username, password, u);
+}
+
+/**
+ * Tài khoản CSDL gắn với nhân sự (`staffCode`): chấp nhận mật khẩu ĐIỂM DANH của nhân sự đó.
+ * Định danh: tên đăng nhập của tài khoản đã gắn, số CCCD, hoặc mã GV.
+ */
+function verifyStaffLinkedUser(db, username, password, byName) {
+  if (!CTX_FOLDER || !password) return null;
+  var users = (db && db.users) || [];
+  var sdb;
+  try { sdb = readStaffDb(CTX_FOLDER); } catch (_) { return null; }
+  if (!sdb || !sdb.staff || !sdb.staff.length) return null;
+  var staff = null;
+  if (byName && byName.staffCode) {
+    for (var i = 0; i < sdb.staff.length; i++) if (sdb.staff[i].code === normalizeStaffCode(byName.staffCode)) { staff = sdb.staff[i]; break; }
+  }
+  if (!staff) staff = findStaffByCccd(sdb, username);
+  if (!staff) {
+    var code = normalizeStaffCode(username);
+    for (var j = 0; j < sdb.staff.length; j++) if (sdb.staff[j].code === code) { staff = sdb.staff[j]; break; }
+  }
+  if (!staff || staff.disabled || !staff.pinHash) return null;
+  if (hashPassword(String(password), staff.salt) !== staff.pinHash) return null;
+  if (byName && byName.staffCode && normalizeStaffCode(byName.staffCode) === staff.code) return byName;
+  for (var k = 0; k < users.length; k++) {
+    if (users[k].staffCode && normalizeStaffCode(users[k].staffCode) === staff.code && !users[k].disabled) return users[k];
+  }
+  return null;
 }
 
 function isAdminUser(u) {
@@ -457,11 +493,14 @@ function handleLogin(folder, payload) {
   if (!db || !db.users || db.users.length === 0) {
     return { success: false, code: "NOT_INITIALIZED", message: "Thư mục dùng chung chưa có cơ sở dữ liệu nhà trường. Quản trị cần khởi tạo trường trước." };
   }
-  if (!findUser(db, payload.username)) {
+  var u = verifyUser(db, payload.username, payload.password);
+  if (!u) {
+    if (findUser(db, payload.username)) return { success: false, code: "INVALID", message: "Sai mật khẩu." };
+    if (/^\d{9,12}$/.test(String(payload.username || "").replace(/\s/g, ""))) {
+      return { success: false, code: "INVALID", message: "Số CCCD / mã GV hoặc mật khẩu điểm danh không đúng, hoặc nhân sự này chưa được Quản trị cấp tài khoản phần mềm." };
+    }
     return { success: false, code: "NOT_FOUND", message: "Tài khoản chưa có trong cơ sở dữ liệu nhà trường trên Google Drive." };
   }
-  var u = verifyUser(db, payload.username, payload.password);
-  if (!u) return { success: false, code: "INVALID", message: "Sai mật khẩu." };
   if (u.disabled) return { success: false, code: "DISABLED", message: "Tài khoản đã bị khóa. Liên hệ Quản trị nhà trường." };
   return { success: true, user: publicUser(u), schools: db.schools || [] };
 }
