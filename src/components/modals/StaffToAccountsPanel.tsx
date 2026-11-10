@@ -17,15 +17,23 @@ interface RowCfg { pick: boolean; role: RoleChoice; cls: string }
 const norm = (t: string) => t.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/đ/gi, 'd').toLowerCase();
 const SUBJECT_HINTS = ['my thuat', 'am nhac', 'tin hoc', 'tieng anh', 'the duc', 'gdtc', 'giao duc the chat', 'cong nghe', 'ngoai ngu'];
 
-/** Đoán vai trò từ chức vụ / tổ: hiệu trưởng → BGH; giáo viên tổ bộ môn → GVBM; giáo viên khác → GVCN; nhân viên → bỏ qua */
+/**
+ * Đoán vai trò từ chức vụ / tổ: CHỈ giáo viên được chọn sẵn (tổ bộ môn → GVBM, còn lại → GVCN).
+ * Nhân viên (bảo vệ, văn thư, thư viện, thủ quỹ, kế toán…) và cán bộ quản lý → "Không cấp"; muốn cấp thì tích tay.
+ */
 function guessRole(s: StaffMember): { role: RoleChoice; cls: string } {
   const pos = norm(s.position || '');
   const dept = norm(s.dept || '');
-  if (pos.includes('hieu truong')) return { role: 'bgh', cls: '' };
   if (!pos.includes('giao vien')) return { role: 'skip', cls: '' };
   if (SUBJECT_HINTS.some(h => dept.includes(h))) return { role: 'subject', cls: s.dept || '' };
   return { role: 'homeroom', cls: '' };
 }
+
+/** Tích tay người đang "Không cấp": cán bộ quản lý / hiệu trưởng → BGH, còn lại → GV bộ môn (sửa được) */
+const manualRole = (s: StaffMember): RoleChoice => {
+  const pos = norm(`${s.position || ''} ${s.dept || ''}`);
+  return pos.includes('can bo quan ly') || pos.includes('hieu truong') ? 'bgh' : 'subject';
+};
 
 export const StaffToAccountsPanel: React.FC<{
   allUsers: UserAccount[];
@@ -54,8 +62,8 @@ export const StaffToAccountsPanel: React.FC<{
       const list: StaffMember[] = (r.staff || []).filter((s: StaffMember) => !s.disabled && s.code);
       setStaff(list);
       const next: Record<string, RowCfg> = {};
-      // Không chọn sẵn ai: Quản trị tự tích người cần cấp (tránh tạo nhầm hàng loạt); vai trò được đoán sẵn để đỡ thao tác
-      list.forEach(s => { const g = guessRole(s); next[s.code] = { pick: false, role: g.role, cls: g.cls }; });
+      // Chọn sẵn GIÁO VIÊN chưa có tài khoản; nhân viên / cán bộ quản lý để trống — muốn cấp thì tích tay
+      list.forEach(s => { const g = guessRole(s); next[s.code] = { pick: g.role !== 'skip' && !linkedUser(s), role: g.role, cls: g.cls }; });
       setCfg(next);
       setOpen(true);
     } catch (e: any) {
@@ -64,6 +72,8 @@ export const StaffToAccountsPanel: React.FC<{
   };
 
   const rows = useMemo(() => staff.filter(s => !q || norm(`${s.name} ${s.code} ${s.position || ''} ${s.dept || ''}`).includes(norm(q))), [staff, q]);
+  // Dòng được "chọn tất cả" tác động: giáo viên (vai trò khác "Không cấp") chưa có tài khoản
+  const selectable = rows.filter(s => !linkedUser(s) && cfg[s.code]?.role !== 'skip');
   const picked = staff.filter(s => cfg[s.code]?.pick && cfg[s.code]?.role !== 'skip' && !linkedUser(s));
   const setRow = (code: string, patch: Partial<RowCfg>) => setCfg(prev => ({ ...prev, [code]: { ...prev[code], ...patch } }));
 
@@ -149,9 +159,9 @@ export const StaffToAccountsPanel: React.FC<{
               <thead className="sticky top-0 bg-slate-50 z-10">
                 <tr className="text-left text-xs text-slate-600 border-b border-slate-200">
                   <th className="py-2 pl-3 pr-1 w-8">
-                    <input type="checkbox" aria-label="Chọn tất cả nhân sự đang hiện" className="w-4 h-4 accent-indigo-600"
-                      checked={rows.length > 0 && rows.filter(s => !linkedUser(s)).every(s => cfg[s.code]?.pick)}
-                      onChange={(e) => setCfg(prev => { const n = { ...prev }; rows.forEach(s => { if (!linkedUser(s)) n[s.code] = { ...n[s.code], pick: e.target.checked, role: n[s.code].role === 'skip' && e.target.checked ? 'homeroom' : n[s.code].role }; }); return n; })} />
+                    <input type="checkbox" aria-label="Chọn tất cả giáo viên đang hiện" title="Chọn / bỏ chọn tất cả giáo viên (không gồm nhân viên, cán bộ quản lý)" className="w-4 h-4 accent-indigo-600"
+                      checked={selectable.length > 0 && selectable.every(s => cfg[s.code]?.pick)}
+                      onChange={(e) => setCfg(prev => { const n = { ...prev }; selectable.forEach(s => { n[s.code] = { ...n[s.code], pick: e.target.checked }; }); return n; })} />
                   </th>
                   <th className="py-2 pr-2">Nhân sự</th>
                   <th className="py-2 pr-2 w-40">Vai trò</th>
@@ -168,7 +178,7 @@ export const StaffToAccountsPanel: React.FC<{
                     <tr key={s.code} className={`border-b border-slate-100 ${c.pick && !linked ? 'bg-indigo-50/40' : ''}`}>
                       <td className="py-2 pl-3 pr-1">
                         <input type="checkbox" disabled={!!linked} checked={!linked && c.pick} aria-label={`Chọn ${s.name}`} className="w-4 h-4 accent-indigo-600"
-                          onChange={(e) => setRow(s.code, { pick: e.target.checked, role: c.role === 'skip' && e.target.checked ? 'homeroom' : c.role })} />
+                          onChange={(e) => setRow(s.code, { pick: e.target.checked, role: c.role === 'skip' && e.target.checked ? manualRole(s) : c.role })} />
                       </td>
                       <td className="py-2 pr-2 min-w-0">
                         <p className="font-bold text-slate-900 truncate">{s.name}</p>
