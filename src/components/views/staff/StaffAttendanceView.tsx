@@ -281,9 +281,10 @@ export const StaffAttendanceView: React.FC = () => {
   return (
     <div className="p-4 sm:p-6 space-y-4 max-w-7xl mx-auto">
       {/* Header */}
-      <div className="bg-white rounded-3xl border border-slate-200 shadow-xs p-4 sm:p-5 flex flex-col xl:flex-row xl:items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <div className="w-11 h-11 rounded-2xl bg-emerald-700 text-white flex items-center justify-center"><UserCheck className="w-6 h-6" /></div>
+      <div className="bg-white rounded-3xl border border-slate-200 shadow-xs p-4 sm:p-5 flex flex-col 2xl:flex-row 2xl:items-center justify-between gap-3">
+        {/* Thanh thẻ xuống dòng riêng tới 2xl: cùng hàng tiêu đề chỉ khi đủ rộng (tránh tràn khi có 4 thẻ) */}
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="w-11 h-11 shrink-0 rounded-2xl bg-emerald-700 text-white flex items-center justify-center"><UserCheck className="w-6 h-6" /></div>
           <div className="min-w-0">
             <h1 className="text-lg sm:text-xl font-black text-slate-900 whitespace-nowrap truncate">
               <span className="sm:hidden">Chấm công nhân sự</span><span className="hidden sm:inline">Chấm công giáo viên – nhân viên</span>
@@ -291,11 +292,11 @@ export const StaffAttendanceView: React.FC = () => {
             <p className="text-sm text-slate-600 truncate" title={`${longDateLabel(today)}${schoolName ? ` • ${schoolName}` : ''}`}>{longDateLabel(today)}{schoolName ? ` • ${schoolName}` : ''}</p>
           </div>
         </div>
-        <div className="flex gap-1 sm:gap-1.5 bg-slate-100 p-1 rounded-2xl overflow-x-auto no-scrollbar max-w-full self-stretch sm:self-start xl:self-auto" role="tablist">
+        <div className="grid grid-cols-4 sm:flex gap-1 sm:gap-1.5 bg-slate-100 p-1 rounded-2xl overflow-x-auto no-scrollbar max-w-full self-stretch sm:self-start 2xl:self-auto 2xl:shrink-0" role="tablist">
           {([['summary', 'Tổng hợp', 'Tổng hợp', <TrendingUp key="i" className="w-4 h-4" />], ['roster', 'Danh sách nhân sự', 'Nhân sự', <Users key="i" className="w-4 h-4" />], ['teach', 'Kê khai tiết dạy', 'Tiết dạy', <BookOpenCheck key="i" className="w-4 h-4" />], ['link', 'Link điểm danh', 'Link', <Link2 key="i" className="w-4 h-4" />]] as const).map(([id, label, shortLabel, icon]) => (
             <button key={id} type="button" role="tab" aria-selected={tab === id} onClick={() => setTab(id)}
-              className={`flex-1 sm:flex-none justify-center px-3 sm:px-3.5 py-2 rounded-xl text-sm font-black inline-flex items-center gap-1.5 whitespace-nowrap shrink-0 ${tab === id ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600 hover:text-slate-900'}`}>
-              {icon}<span className="sm:hidden">{shortLabel}</span><span className="hidden sm:inline">{label}</span>
+              className={`min-w-0 sm:flex-none justify-center px-1 sm:px-3.5 py-2 rounded-xl text-sm font-black inline-flex items-center gap-1.5 whitespace-nowrap sm:shrink-0 ${tab === id ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600 hover:text-slate-900'}`}>
+              <span className="hidden sm:inline-flex">{icon}</span><span className="sm:hidden">{shortLabel}</span><span className="hidden sm:inline">{label}</span>
             </button>
           ))}
         </div>
