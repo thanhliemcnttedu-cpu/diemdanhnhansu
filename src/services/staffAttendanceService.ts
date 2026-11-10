@@ -139,6 +139,9 @@ const readSavedConn = (): Conn | null => {
   } catch (_) { return null; }
 };
 
+/** Lệnh nhân sự tự làm (điểm danh, kê khai) — nhận `account` (Apps Script 1.1.6) */
+const SELF_ACTIONS = new Set(['staffAuth', 'staffCheckIn', 'teachGet', 'teachSaveProfile', 'teachSaveLog']);
+
 export const staffAttendanceService = {
   /**
    * Kết nối Apps Script cho chấm công. Thứ tự: link đang mở (#mã.mã hoặc #c=...) → cấu hình Drive của máy (Quản trị vừa cài / cập nhật)
@@ -226,8 +229,13 @@ export const staffAttendanceService = {
     try { localStorage.setItem('lhhp_school_web_url', url.trim().replace(/\/+$/, '')); } catch (_) { /* ignore */ }
   },
 
+  /** 1.1.6: tài khoản phần mềm của giáo viên đang mở "Chấm công của tôi" — gửi kèm thay cho mật khẩu điểm danh */
+  selfAccount: null as { username: string; password: string } | null,
+  setSelfAccount(acc: { username: string; password: string } | null) { this.selfAccount = acc; },
+
   async call(body: Record<string, unknown>, conn?: Conn | null, timeoutMs = 25000): Promise<any> {
     const c = conn || this.resolveConnection();
+    if (this.selfAccount && SELF_ACTIONS.has(String(body.action || ''))) body = { ...body, account: this.selfAccount };
     if (!c) throw new Error('Chưa có kết nối Google Drive của nhà trường. Hãy mở đúng link điểm danh do nhà trường gửi.');
     const controller = new AbortController();
     const t = setTimeout(() => controller.abort(), timeoutMs);

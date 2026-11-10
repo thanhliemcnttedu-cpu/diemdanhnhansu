@@ -56,6 +56,9 @@
 var FOLDER_ID = "__FOLDER_ID__";
 var TARGET_FILENAME = "du_lieu_lop_hoc_hanh_phuc.json";
 var REPORT_PREFIX = "bc_";
+// 1.1.6: giáo viên đã đăng nhập phần mềm → chấm công / kê khai KHÔNG hỏi lại mật khẩu: staffAuth, staffCheckIn, teachGet,
+//        teachSaveProfile, teachSaveLog nhận `account: {username, password}` (tài khoản CSDL có staffCode).
+//        Công tắc kê khai tiết dạy cho GVCN (`teachSettings`, Quản trị / BGH): tắt → tài khoản vai trò GVCN chỉ điểm danh.
 // 1.1.5: thống nhất TÊN ĐĂNG NHẬP = SỐ CCCD cho tài khoản gắn nhân sự — saveSchoolDb nhận `renames: [{from, to}]`
 //        để đổi tên đăng nhập mà GIỮ NGUYÊN mật khẩu (mã băm + bản xem của Quản trị), không đổi tài khoản đang thao tác.
 // 1.1.4: TÀI KHOẢN DÙNG CHUNG với điểm danh nhân sự — tài khoản CSDL có `staffCode` (gắn mã GV trong nhansu_truong.json)
@@ -66,7 +69,7 @@ var REPORT_PREFIX = "bc_";
 //        rồi mã hóa lại (healStaffCccdHashes) — khi đăng nhập, khi Quản trị / BGH mở hoặc lưu danh sách nhân sự.
 // QUY TẮC ĐẶT TÊN PHIÊN BẢN (từ 11/2026): "Phiên bản A.B.C" — mỗi lần sửa mã tăng C thêm 1;
 // C tối đa 20: sau 1.1.20 là 1.2.1, sau 1.2.20 là 1.3.1… Các bản cũ dạng "4.x" (4.1 → 4.12) được coi là cũ hơn 1.1.2.
-var SCRIPT_VERSION = "1.1.5";
+var SCRIPT_VERSION = "1.1.6";
 // Thư mục của yêu cầu đang xử lý (để verifyUser đọc được danh sách nhân sự khi đăng nhập bằng CCCD)
 var CTX_FOLDER = null;
 
@@ -83,7 +86,8 @@ function doPost(e) {
     var action = payload.action || "saveClassData";
 
     if (action === "staffAuth" || action === "staffCheckIn" || action === "getStaffRoster" || action === "saveStaffRoster" || action === "staffAttendanceRange" || action === "staffLock" || action === "staffProxyCheckIn"
-        || action === "teachGet" || action === "teachSaveProfile" || action === "teachSaveLog" || action === "teachReport" || action === "teachLock" || action === "teachDeleteLog") {
+        || action === "teachGet" || action === "teachSaveProfile" || action === "teachSaveLog" || action === "teachReport" || action === "teachLock" || action === "teachDeleteLog"
+        || action === "teachSettings") {
       var staffFolder = resolveFolder(folderId);
       if (!staffFolder) return createJsonResponse({ success: false, message: "Không tìm thấy thư mục Google Drive: " + folderId });
       CTX_FOLDER = staffFolder;
@@ -99,6 +103,7 @@ function doPost(e) {
       if (action === "teachReport") return createJsonResponse(handleTeachReport(staffFolder, payload));
       if (action === "teachLock") return createJsonResponse(handleTeachLock(staffFolder, payload));
       if (action === "teachDeleteLog") return createJsonResponse(handleTeachDeleteLog(staffFolder, payload));
+      if (action === "teachSettings") return createJsonResponse(handleTeachSettings(staffFolder, payload));
       return createJsonResponse(handleStaffAttendanceRange(staffFolder, payload));
     }
 
@@ -993,6 +998,43 @@ function verifyStaff(folder, cccd, pin) {
   return { ok: true, staff: s, db: db };
 }
 
+/**
+ * 1.1.6: xác thực nhân sự theo yêu cầu — ưu tiên `account` (tài khoản phần mềm đã đăng nhập, gắn staffCode),
+ * không có / sai thì dùng số CCCD + mật khẩu điểm danh như cũ. Kèm `user` = tài khoản CSDL gắn với nhân sự (nếu có).
+ */
+function verifyStaffReq(folder, payload) {
+  var acc = payload && payload.account;
+  if (acc && acc.username && acc.password) {
+    var sdb = null;
+    try { sdb = readSchoolDb(folder); } catch (_) {}
+    var u = sdb ? verifyUser(sdb, acc.username, acc.password) : null;
+    if (u && !u.disabled && u.staffCode) {
+      var db = readStaffDb(folder);
+      var code = normalizeStaffCode(u.staffCode);
+      for (var i = 0; i < db.staff.length; i++) {
+        if (db.staff[i].code !== code) continue;
+        if (db.staff[i].disabled) return { ok: false, code: "DISABLED", message: "Tài khoản điểm danh đã bị khóa. Liên hệ Quản trị nhà trường." };
+        return { ok: true, staff: db.staff[i], db: db, user: u };
+      }
+      return { ok: false, code: "NOT_LINKED", message: "Tài khoản chưa gắn với hồ sơ nhân sự của nhà trường. Liên hệ Quản trị." };
+    }
+    if (!payload.pin) return { ok: false, code: "INVALID", message: "Phiên đăng nhập không còn hợp lệ (mật khẩu đã đổi?). Hãy nhập mật khẩu điểm danh." };
+  }
+  var v = verifyStaff(folder, payload.cccd, payload.pin);
+  if (v.ok) v.user = linkedUserOf(folder, v.staff.code);
+  return v;
+}
+
+/** Tài khoản CSDL gắn với mã nhân sự (để biết vai trò GVCN / GVBM…) */
+function linkedUserOf(folder, code) {
+  try {
+    var sdb = readSchoolDb(folder);
+    var users = (sdb && sdb.users) || [];
+    for (var i = 0; i < users.length; i++) if (users[i].staffCode && normalizeStaffCode(users[i].staffCode) === code && !users[i].disabled) return users[i];
+  } catch (_) {}
+  return null;
+}
+
 function monthFileName(dateStr) {
   return STAFF_ATT_PREFIX + String(dateStr).slice(0, 7) + ".json";
 }
@@ -1015,13 +1057,15 @@ function staffActor(folder, auth, needAdmin) {
 
 // --- Giáo viên/nhân viên: xác thực + xem trạng thái hôm nay
 function handleStaffAuth(folder, payload) {
-  var v = verifyStaff(folder, payload.cccd, payload.pin);
+  var v = verifyStaffReq(folder, payload);
   if (!v.ok) return { success: false, code: v.code, message: v.message };
   var today = staffToday();
   var month = readMonth(folder, today);
   var rec = (month.days[today] || {})[v.staff.code] || null;
   var locked = isStaffLocked(month, today, v.staff.code);
-  return { success: true, staff: publicStaff(v.staff), today: today, record: rec, locked: locked, lockMessage: locked ? STAFF_LOCK_MESSAGE : "", serverTime: new Date().toISOString() };
+  var teachOff = teachBlocked(readTeachDb(folder), v.user);
+  return { success: true, staff: publicStaff(v.staff), today: today, record: rec, locked: locked, lockMessage: locked ? STAFF_LOCK_MESSAGE : "",
+    teachAllowed: !teachOff, teachMessage: teachOff ? TEACH_HOMEROOM_OFF_MESSAGE : "", role: v.user ? v.user.role : "", serverTime: new Date().toISOString() };
 }
 
 // ---------------------------------------------------------------- V4.5: khóa chốt số liệu điểm danh theo ngày
@@ -1038,6 +1082,36 @@ function isStaffLocked(month, dateStr, code) {
 // kekhai_tietday.json = { profiles: { MÃ: { subjects, classesDisabled, classesPE, classesEnglish, updatedAt } },
 //                         logs: { "YYYY-MM": { MÃ: { weeks: { "YYYY-MM-DD"(Thứ Hai): { outdoor, pe, disabled, english } }, note, updatedAt } } } }
 var TEACH_KEYS = ["outdoor", "pe", "disabled", "english", "overtime"];
+
+// 1.1.6: công tắc kê khai cho GVCN — db.settings.homeroomTeach (mặc định BẬT để trường đang dùng không bị ảnh hưởng)
+var TEACH_HOMEROOM_OFF_MESSAGE = "Nhà trường không áp dụng kê khai tiết dạy cho giáo viên chủ nhiệm. Bạn chỉ cần điểm danh hằng ngày.";
+function teachSettingsOf(db) {
+  var s = (db && db.settings) || {};
+  return { homeroomTeach: s.homeroomTeach !== false, updatedAt: s.updatedAt || "", by: s.by || "" };
+}
+function teachBlocked(db, user) {
+  return !!user && user.role === "homeroom" && !teachSettingsOf(db).homeroomTeach;
+}
+
+// Quản trị / BGH: đọc (không gửi settings) hoặc lưu cài đặt kê khai
+function handleTeachSettings(folder, payload) {
+  var actor = staffActor(folder, payload.auth, false);
+  if (!actor) return { success: false, code: "UNAUTHORIZED", message: "Chỉ BGH / Quản trị được đổi cài đặt kê khai tiết dạy." };
+  if (!payload.settings || typeof payload.settings !== "object") return { success: true, settings: teachSettingsOf(readTeachDb(folder)) };
+  var lock = LockService.getScriptLock();
+  try { lock.waitLock(20000); } catch (_) {}
+  try {
+    var db = readTeachDb(folder);
+    var cur = teachSettingsOf(db);
+    if (typeof payload.settings.homeroomTeach === "boolean") cur.homeroomTeach = payload.settings.homeroomTeach;
+    cur.updatedAt = new Date().toISOString();
+    cur.by = actor.username;
+    db.settings = cur;
+    db.updatedAt = cur.updatedAt;
+    writeFileOverwrite(folder, TEACH_FILE, JSON.stringify(db));
+    return { success: true, settings: cur, message: cur.homeroomTeach ? "Đã BẬT kê khai tiết dạy cho giáo viên chủ nhiệm." : "Đã TẮT kê khai tiết dạy cho giáo viên chủ nhiệm." };
+  } finally { try { lock.releaseLock(); } catch (_) {} }
+}
 
 function readTeachDb(folder) {
   var db = readJsonFile(folder, TEACH_FILE, null);
@@ -1063,10 +1137,11 @@ function cleanMonth(m) {
 }
 
 function handleTeachGet(folder, payload) {
-  var v = verifyStaff(folder, payload.cccd, payload.pin);
+  var v = verifyStaffReq(folder, payload);
   if (!v.ok) return { success: false, code: v.code, message: v.message };
   var month = cleanMonth(payload.month);
   var db = readTeachDb(folder);
+  if (teachBlocked(db, v.user)) return { success: false, code: "TEACH_DISABLED", message: TEACH_HOMEROOM_OFF_MESSAGE };
   var locked = isTeachLocked(db, month, v.staff.code);
   return { success: true, staff: publicStaff(v.staff), month: month, today: staffToday(),
     profile: db.profiles[v.staff.code] || null, log: (db.logs[month] || {})[v.staff.code] || null,
@@ -1074,9 +1149,10 @@ function handleTeachGet(folder, payload) {
 }
 
 function handleTeachSaveProfile(folder, payload) {
-  var v = verifyStaff(folder, payload.cccd, payload.pin);
+  var v = verifyStaffReq(folder, payload);
   if (!v.ok) return { success: false, code: v.code, message: v.message };
   var p = payload.profile || {};
+  if (teachBlocked(readTeachDb(folder), v.user)) return { success: false, code: "TEACH_DISABLED", message: TEACH_HOMEROOM_OFF_MESSAGE };
   var lock = LockService.getScriptLock();
   try { lock.waitLock(20000); } catch (_) {}
   try {
@@ -1094,10 +1170,11 @@ function handleTeachSaveProfile(folder, payload) {
 }
 
 function handleTeachSaveLog(folder, payload) {
-  var v = verifyStaff(folder, payload.cccd, payload.pin);
+  var v = verifyStaffReq(folder, payload);
   if (!v.ok) return { success: false, code: v.code, message: v.message };
   var month = cleanMonth(payload.month);
   if (month > staffToday().slice(0, 7)) return { success: false, message: "Chưa kê khai được cho tháng chưa tới." };
+  if (teachBlocked(readTeachDb(folder), v.user)) return { success: false, code: "TEACH_DISABLED", message: TEACH_HOMEROOM_OFF_MESSAGE };
   if (isTeachLocked(readTeachDb(folder), month, v.staff.code)) return { success: false, code: "LOCKED", locked: true, message: TEACH_LOCK_MESSAGE };
   var weeksIn = payload.weeks || {};
   var weeks = {};
@@ -1162,7 +1239,7 @@ function handleTeachReport(folder, payload) {
   var logs = {}, n = 0;
   for (var m in db.logs) if (m >= from && m <= to && n++ < 12) logs[m] = db.logs[m];
   var sdb = readStaffDb(folder);
-  return { success: true, from: from, to: to, today: staffToday(), profiles: db.profiles, logs: logs, locks: db.locks || {}, staff: sdb.staff.map(publicStaff) };
+  return { success: true, from: from, to: to, today: staffToday(), profiles: db.profiles, logs: logs, locks: db.locks || {}, staff: sdb.staff.map(publicStaff), settings: teachSettingsOf(db) };
 }
 
 // ---------------------------------------------------------------- V4.9: khóa chốt kê khai tiết dạy theo THÁNG
@@ -1388,7 +1465,7 @@ function handleStaffCheckIn(folder, payload) {
   var lock = LockService.getScriptLock();
   try { lock.waitLock(20000); } catch (_) {}
   try {
-    var v = verifyStaff(folder, payload.cccd, payload.pin);
+    var v = verifyStaffReq(folder, payload);
     if (!v.ok) return { success: false, code: v.code, message: v.message };
     var month = readMonth(folder, today);
     if (isStaffLocked(month, today, v.staff.code)) {

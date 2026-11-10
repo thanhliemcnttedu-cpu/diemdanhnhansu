@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { CheckCircle2, Eye, EyeOff, LogOut, ShieldCheck, Stethoscope, Briefcase, CalendarDays, Loader2, AlertTriangle, PencilLine, Lock, Plane, UserCheck, BookOpenCheck } from 'lucide-react';
 import { TeachingLogPanel } from './TeachingLogPanel';
+import { readTeacherAuth, saveTeacherAuth } from '../../../utils/teacherAuth';
 import { staffAttendanceService, composeTripNote, parseTripNote, STAFF_STATUS_META, longDateLabel, StaffStatus, StaffMember, StaffRecord, attemptOf, attemptsOf, timeSpoken, timeHMS, isProxyRecord } from '../../../services/staffAttendanceService';
 
 /**
@@ -21,22 +22,12 @@ const OPTIONS: Array<{ id: StaffStatus; icon: React.ReactNode; hint: string }> =
 ];
 
 
-/** Mật khẩu vừa dùng đăng nhập phần mềm (tài khoản dùng chung, tên đăng nhập = số CCCD) — chỉ trong phiên tab */
-export const STAFF_PIN_HINT_KEY = 'lhhp_staff_pin_hint';
-export function readStaffPinHint(): { u: string; p: string } | null {
-  try {
-    const raw = sessionStorage.getItem(STAFF_PIN_HINT_KEY);
-    if (!raw) return null;
-    const v = JSON.parse(decodeURIComponent(atob(raw)));
-    return v && v.u && v.p ? v : null;
-  } catch (_) { return null; }
-}
-
 /**
- * `embedded`: mở ngay trong phần mềm (mục "Chấm công của tôi" của giáo viên) — bỏ nền toàn trang,
- * điền sẵn số CCCD (= tên đăng nhập) và tự kiểm tra bằng mật khẩu vừa đăng nhập phần mềm (thường chính là mật khẩu điểm danh).
+ * `embedded`: mở ngay trong phần mềm (mục "Chấm công của tôi" của giáo viên) — bỏ nền toàn trang và
+ * VÀO THẲNG bằng tài khoản phần mềm đã đăng nhập (`utils/teacherAuth`, Apps Script 1.1.6), không hỏi mật khẩu.
+ * Apps Script cũ / phiên hết hạn → hiện ô nhập số CCCD + mật khẩu điểm danh như trang /diemdanh.
  */
-export const StaffCheckInPage: React.FC<{ embedded?: boolean; presetCccd?: string; onExit?: () => void }> = ({ embedded = false, presetCccd = '', onExit }) => {
+export const StaffCheckInPage: React.FC<{ embedded?: boolean; presetCccd?: string; onExit?: () => void; accountUsername?: string }> = ({ embedded = false, presetCccd = '', onExit, accountUsername = '' }) => {
   const conn = useMemo(() => staffAttendanceService.resolveConnection(), []);
   const [cccd, setCccd] = useState(() => { if (presetCccd) return presetCccd; try { return localStorage.getItem(REMEMBER_KEY) || ''; } catch (_) { return ''; } });
   const [remember, setRemember] = useState(() => { try { return Boolean(localStorage.getItem(REMEMBER_KEY)); } catch (_) { return false; } });
@@ -59,6 +50,9 @@ export const StaffCheckInPage: React.FC<{ embedded?: boolean; presetCccd?: strin
   const [editing, setEditing] = useState(false);
   // BGH / Quản trị đã khóa chốt số liệu điểm danh hôm nay (Apps Script 4.5)
   const [lockedMsg, setLockedMsg] = useState('');
+  // Kê khai tiết dạy: Quản trị có thể tắt cho giáo viên chủ nhiệm (Apps Script 1.1.6)
+  const [teachMsg, setTeachMsg] = useState('');
+  const [autoTrying, setAutoTrying] = useState(false);
 
   const [schoolName, setSchoolName] = useState(conn?.schoolName || '');
   useEffect(() => { if (!embedded) document.title = 'Điểm danh giáo viên – nhân viên'; }, [embedded]);
@@ -82,16 +76,23 @@ export const StaffCheckInPage: React.FC<{ embedded?: boolean; presetCccd?: strin
     await doAuth(cccd, pin);
   };
 
-  const doAuth = async (cccdValue: string, pinValue: string, silent = false) => {
+  const doAuth = async (cccdValue: string, pinValue: string, silent = false, viaAccount = false): Promise<boolean> => {
     setError('');
     const digits = cccdValue.replace(/\D/g, '');
-    if (digits.length < 9) { if (!silent) setError('Vui lòng nhập đúng số căn cước công dân (12 chữ số).'); return; }
-    if (!pinValue) { if (!silent) setError('Vui lòng nhập mật khẩu điểm danh.'); return; }
+    if (!viaAccount && digits.length < 9) { if (!silent) setError('Vui lòng nhập đúng số căn cước công dân (12 chữ số).'); return false; }
+    if (!viaAccount && !pinValue) { if (!silent) setError('Vui lòng nhập mật khẩu điểm danh.'); return false; }
+    if (!viaAccount) staffAttendanceService.setSelfAccount(null);
     setBusy(true);
     try {
       const r = await staffAttendanceService.staffAuth(digits, pinValue);
-      if (!r?.success) { if (!silent) setError(r?.message || 'Không kiểm tra được thông tin.'); return; }
+      if (!r?.success) { if (!silent) setError(r?.message || 'Không kiểm tra được thông tin.'); return false; }
       setPin(pinValue);
+      // Nhập tay đúng mật khẩu điểm danh trong phần mềm → nhớ cho tài khoản đang đăng nhập (Apps Script nhận mật khẩu điểm danh
+      // của tài khoản gắn nhân sự), lần sau vào thẳng
+      if (embedded && !viaAccount && accountUsername) { saveTeacherAuth(accountUsername, pinValue); staffAttendanceService.setSelfAccount(readTeacherAuth()); }
+      if (viaAccount && r.staff?.cccd) setCccd(String(r.staff.cccd));
+      setTeachMsg(r.teachAllowed === false ? (r.teachMessage || 'Nhà trường không áp dụng kê khai tiết dạy cho giáo viên chủ nhiệm.') : '');
+      if (r.teachAllowed === false) setMainTab('checkin');
       if (!embedded) { try { if (remember) localStorage.setItem(REMEMBER_KEY, digits); else localStorage.removeItem(REMEMBER_KEY); } catch (_) { /* ignore */ } }
       setStaff(r.staff); setToday(r.today); setExisting(r.record || null);
       setStatus(r.record?.status || '');
@@ -99,20 +100,28 @@ export const StaffCheckInPage: React.FC<{ embedded?: boolean; presetCccd?: strin
       else { setNote(r.record?.note || ''); setTripPlace(''); setTripContent(''); }
       setLockedMsg(r.locked ? (r.lockMessage || LOCK_MESSAGE) : '');
       setEditing(!r.record && !r.locked);
+      return true;
     } catch (err: any) {
       if (!silent) setError(err?.message || 'Không kết nối được máy chủ.');
+      return false;
     } finally {
       setBusy(false);
     }
   };
 
-  // Trong phần mềm: tự kiểm tra một lần bằng mật khẩu vừa đăng nhập (đúng tài khoản = số CCCD); sai thì để giáo viên tự nhập
+  // Trong phần mềm: VÀO THẲNG bằng tài khoản đã đăng nhập; không được (Apps Script cũ, đổi mật khẩu…) → ô nhập như cũ
   useEffect(() => {
-    if (!embedded || !conn || !presetCccd) return;
-    const hint = readStaffPinHint();
-    if (hint && hint.u === presetCccd) doAuth(presetCccd, hint.p, true);
+    if (!embedded || !conn) return;
+    const acc = readTeacherAuth();
+    if (!acc) return;
+    staffAttendanceService.setSelfAccount(acc);
+    setAutoTrying(true);
+    doAuth(presetCccd || acc.username, '', true, true).then(ok => {
+      if (!ok) staffAttendanceService.setSelfAccount(null);
+    }).finally(() => setAutoTrying(false));
+    return () => { staffAttendanceService.setSelfAccount(null); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [embedded, conn, presetCccd]);
+  }, [embedded, conn]);
 
   const handleConfirm = async () => {
     if (!status) { setError('Hãy chọn một trạng thái điểm danh.'); return; }
@@ -158,7 +167,12 @@ export const StaffCheckInPage: React.FC<{ embedded?: boolean; presetCccd?: strin
         )}
 
         {/* ===== Bước 1: xác thực ===== */}
-        {conn && !staff && (
+        {conn && !staff && autoTrying && (
+          <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-8 text-center text-slate-700 text-sm font-bold">
+            <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-emerald-700" /> Đang mở chấm công bằng tài khoản đã đăng nhập…
+          </div>
+        )}
+        {conn && !staff && !autoTrying && (
           <form onSubmit={handleAuth} className="bg-white rounded-3xl border border-slate-200 shadow-sm p-5 space-y-4">
             <label className="block space-y-1.5">
               <span className="text-sm font-black text-slate-800">Số căn cước công dân</span>
@@ -209,13 +223,17 @@ export const StaffCheckInPage: React.FC<{ embedded?: boolean; presetCccd?: strin
             <div className="flex gap-1 bg-slate-200/70 p-1 rounded-2xl lg:w-[28rem] lg:shrink-0" role="tablist" aria-label="Chức năng">
               <button type="button" role="tab" aria-selected={mainTab === 'checkin'} onClick={() => setMainTab('checkin')}
                 className={`no-hover-fx flex-1 h-11 rounded-xl text-sm font-black inline-flex items-center justify-center gap-1.5 ${mainTab === 'checkin' ? 'bg-white text-emerald-800 shadow-xs' : 'text-slate-700'}`}><UserCheck className="w-4 h-4" /> Điểm danh</button>
-              <button type="button" role="tab" aria-selected={mainTab === 'teach'} onClick={() => setMainTab('teach')}
-                className={`no-hover-fx flex-1 h-11 rounded-xl text-sm font-black inline-flex items-center justify-center gap-1.5 ${mainTab === 'teach' ? 'bg-white text-indigo-800 shadow-xs' : 'text-slate-700'}`}><BookOpenCheck className="w-4 h-4" /> Kê khai tiết dạy</button>
+              {!teachMsg && <button type="button" role="tab" aria-selected={mainTab === 'teach'} onClick={() => setMainTab('teach')}
+                className={`no-hover-fx flex-1 h-11 rounded-xl text-sm font-black inline-flex items-center justify-center gap-1.5 ${mainTab === 'teach' ? 'bg-white text-indigo-800 shadow-xs' : 'text-slate-700'}`}><BookOpenCheck className="w-4 h-4" /> Kê khai tiết dạy</button>}
             </div>
           </div>
         )}
 
-        {conn && staff && mainTab === 'teach' && (
+        {conn && staff && teachMsg && (
+          <p className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-700" role="note">{teachMsg}</p>
+        )}
+
+        {conn && staff && mainTab === 'teach' && !teachMsg && (
           <TeachingLogPanel cccd={cccd.replace(/\D/g, '')} pin={pin} today={today} />
         )}
 

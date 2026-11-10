@@ -53,11 +53,26 @@ export const TeachingReportPanel: React.FC<{ auth: { username: string; password:
   const [org, setOrg] = useState(readOrg);
   const saveOrg = (v: string) => { setOrg(v); try { localStorage.setItem(ORG_KEY, v); } catch { /* bỏ qua */ } };
 
+  // Cài đặt kê khai của trường: bật / tắt kê khai cho giáo viên chủ nhiệm (Apps Script 1.1.6; undefined = Apps Script cũ)
+  const [homeroomTeach, setHomeroomTeach] = useState<boolean | undefined>(undefined);
+  const [settingBusy, setSettingBusy] = useState(false);
+  const toggleHomeroomTeach = async () => {
+    const next = !(homeroomTeach ?? true);
+    if (!next && !confirm('TẮT kê khai tiết dạy cho giáo viên chủ nhiệm?\nTài khoản vai trò GV chủ nhiệm chỉ còn điểm danh hằng ngày; số liệu đã kê vẫn giữ nguyên.')) return;
+    setSettingBusy(true);
+    const r = await teachingLogService.settings({ homeroomTeach: next }, auth);
+    setSettingBusy(false);
+    if (!r?.success || !r.settings) { setErr(r?.message || 'Chưa lưu được cài đặt (cần Apps Script phiên bản mới nhất).'); return; }
+    setHomeroomTeach(r.settings.homeroomTeach);
+    setNotice(r.message || '');
+  };
+
   const load = async () => {
     setLoading(true); setErr('');
     const r = await teachingLogService.report(month, month, auth);
     setLoading(false);
     if (!r?.success) { setErr(r?.message || 'Không tải được số liệu kê khai.'); return; }
+    setHomeroomTeach(r.settings ? r.settings.homeroomTeach !== false : undefined);
     setStaff(r.staff || []);
     setProfiles(r.profiles || {});
     setLogs((r.logs || {})[month] || {});
@@ -363,6 +378,23 @@ export const TeachingReportPanel: React.FC<{ auth: { username: string; password:
             <button type="button" disabled={lockBusy} onClick={() => doLock(true, { all: true })} className="no-hover-fx h-9 px-3 rounded-lg text-sm font-bold bg-rose-700 hover:bg-rose-800 text-white inline-flex items-center gap-1.5 whitespace-nowrap disabled:opacity-50">{lockBusy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Lock className="w-4 h-4" />} Khóa chốt {monthLabel(month).toLowerCase()}</button>
           )}
         </div>
+        {homeroomTeach !== undefined && (
+          <div className="mx-4 mb-3 rounded-xl border border-slate-200 bg-white px-3 py-2.5 flex flex-wrap items-center gap-3">
+            <p className="text-sm text-slate-800 mr-auto">
+              <strong>Kê khai tiết dạy của giáo viên chủ nhiệm:</strong>{' '}
+              {homeroomTeach
+                ? <span className="text-emerald-800 font-bold">Đang BẬT</span>
+                : <span className="text-rose-700 font-bold">Đang TẮT</span>}
+              <span className="text-slate-600"> — {homeroomTeach ? 'GVCN kê khai như giáo viên khác.' : 'tài khoản vai trò GV chủ nhiệm chỉ điểm danh hằng ngày.'}</span>
+            </p>
+            <button type="button" role="switch" aria-checked={homeroomTeach} disabled={settingBusy} onClick={toggleHomeroomTeach}
+              title={homeroomTeach ? 'Bấm để tắt kê khai cho giáo viên chủ nhiệm' : 'Bấm để bật kê khai cho giáo viên chủ nhiệm'}
+              className={`no-hover-fx relative inline-flex h-7 w-12 shrink-0 items-center rounded-full transition-colors disabled:opacity-50 ${homeroomTeach ? 'bg-emerald-600' : 'bg-slate-300'}`}>
+              <span className="sr-only">Kê khai tiết dạy cho giáo viên chủ nhiệm</span>
+              <span className={`inline-block h-5 w-5 rounded-full bg-white shadow transition-transform ${homeroomTeach ? 'translate-x-6' : 'translate-x-1'}`} />
+            </button>
+          </div>
+        )}
         {notice && <p className="mx-4 mb-3 rounded-xl bg-emerald-50 border border-emerald-200 px-3 py-2 text-sm font-bold text-emerald-900" role="status">{notice}</p>}
 
         <div className="px-4 pb-3 flex flex-wrap items-center gap-2">

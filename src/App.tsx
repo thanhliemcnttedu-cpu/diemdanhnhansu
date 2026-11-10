@@ -201,7 +201,7 @@ function ClassroomApp() {
       case 'staff_attendance':
         return <StaffAttendanceView />;
       case 'my_checkin':
-        return <StaffCheckInPage embedded onExit={() => handleNavigate('dashboard')} presetCccd={/^\d{9,12}$/.test(String(currentUser?.username || '')) ? String(currentUser?.username) : ''} />;
+        return <StaffCheckInPage embedded onExit={() => handleNavigate('dashboard')} accountUsername={currentUser?.staffCode ? String(currentUser.username || '') : ''} presetCccd={/^\d{9,12}$/.test(String(currentUser?.username || '')) ? String(currentUser?.username) : ''} />;
       case 'ai':
         return <AiAssistantView />;
       default:

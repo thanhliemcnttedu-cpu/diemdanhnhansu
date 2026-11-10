@@ -143,7 +143,14 @@ async function safeCall(body: Record<string, unknown>, timeout?: number) {
   }
 }
 
+/** Cài đặt kê khai của trường (Apps Script 1.1.6) */
+export interface TeachSettings { homeroomTeach: boolean; updatedAt?: string; by?: string }
+
 export const teachingLogService = {
+  /** BGH / Quản trị: đọc (không truyền settings) hoặc lưu cài đặt kê khai — bật/tắt kê khai cho GVCN */
+  settings(settings?: Partial<TeachSettings> | null, auth?: { username: string; password: string } | null): Promise<{ success: boolean; message?: string; code?: string; settings?: TeachSettings }> {
+    return safeCall({ action: 'teachSettings', auth: auth ?? staffAttendanceService.getViewerAuth(), ...(settings ? { settings } : {}) });
+  },
   get(cccd: string, pin: string, month: string) {
     return safeCall({ action: 'teachGet', cccd, pin, month });
   },
@@ -157,7 +164,7 @@ export const teachingLogService = {
   report(from: string, to: string, auth?: { username: string; password: string } | null): Promise<{
     success: boolean; message?: string; code?: string; from?: string; to?: string; today?: string;
     profiles?: Record<string, TeachProfile>; logs?: Record<string, Record<string, TeachLog>>; staff?: StaffMember[];
-    locks?: Record<string, TeachLock>;
+    locks?: Record<string, TeachLock>; settings?: TeachSettings;
   }> {
     return safeCall({ action: 'teachReport', auth: auth ?? staffAttendanceService.getViewerAuth(), from, to }, 45000);
   },
