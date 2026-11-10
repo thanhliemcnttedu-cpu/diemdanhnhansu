@@ -22,7 +22,7 @@ const WeekGrid: React.FC<{ title: React.ReactNode; color: string; wks: MonthWeek
         {/* Máy tính: bảng cố định độ rộng — các cột tuần chia đều phần còn lại */}
         <table className="w-full text-sm lg:table-fixed">
           <colgroup>
-            <col className="lg:w-36" />
+            <col className="lg:w-28 xl:w-36" />
             {wks.map(w => <col key={w.key} />)}
             <col className="lg:w-20" />
           </colgroup>
@@ -30,9 +30,13 @@ const WeekGrid: React.FC<{ title: React.ReactNode; color: string; wks: MonthWeek
             <tr className="text-xs font-bold text-slate-600 border-b border-slate-200">
               <th className="py-1.5 pl-2 pr-1 lg:py-2.5 lg:pl-4 text-left">Môn / mục</th>
               {wks.map(w => (
-                <th key={w.key} className="py-1.5 px-0.5 lg:py-2.5 lg:px-2 text-center whitespace-nowrap lg:border-l lg:border-slate-100" title={`${w.label}: Thứ Hai – Thứ Sáu`}>
-                  <span className="lg:hidden">T{w.index}</span><span className="max-lg:hidden text-sm text-slate-800">Tuần {w.index}</span>
-                  <span className="block font-medium text-slate-500">{dm(w.from)}<span className="max-lg:hidden"> – {dm(w.to)}</span></span>
+                <th key={w.key} data-no-autofit className="py-1.5 px-0.5 lg:py-2.5 lg:px-1.5 text-center align-top lg:border-l lg:border-slate-100" title={`${w.label}: Thứ Hai – Thứ Sáu`}>
+                  <span className="lg:hidden whitespace-nowrap">T{w.index}</span><span className="max-lg:hidden whitespace-nowrap text-sm text-slate-800">Tuần {w.index}</span>
+                  {/* Ngày đầu – ngày cuối: cột hẹp thì tự xuống 2 dòng tại dấu gạch, không đè sang cột bên cạnh */}
+                  <span className="block font-medium text-slate-500 leading-tight">
+                    <span className="whitespace-nowrap">{dm(w.from)}</span>
+                    <span className="max-lg:hidden"> <span className="whitespace-nowrap">– {dm(w.to)}</span></span>
+                  </span>
                 </th>
               ))}
               <th className="py-1.5 px-1 lg:py-2.5 text-center lg:border-l lg:border-slate-100">Tổng</th>
