@@ -4,9 +4,9 @@ import { BookOpenCheck, ChevronDown, ChevronLeft, ChevronRight, Download, FileSp
 import { StaffMember } from '../../../services/staffAttendanceService';
 import {
   teachingLogService, SHOWN_KEYS as TEACH_KEYS, TEACH_META, TeachKey, TeachLog, TeachProfile, monthWeeks, monthLabel, addMonths, enabledKeys, sumLog,
-  HSKT_SUBJECTS, ktOf, TeachLock, isTeachLocked, subjectLabel,
+  HSKT_SUBJECTS, ktOf, TeachLock, isTeachLocked, subjectLabel, schoolYearOf,
 } from '../../../services/teachingLogService';
-import { exportTH1, exportTH2, exportTH3, exportOvertime } from '../../../services/teachingReportExcel';
+import { exportTH1, exportTH2, exportTH3, exportOvertime, MonthPack, createdLabel, infoLines } from '../../../services/teachingReportExcel';
 
 const ORG_KEY = 'lhhp_teach_report_org';
 const readOrg = () => { try { return localStorage.getItem(ORG_KEY) || ''; } catch { return ''; } };
@@ -35,6 +35,9 @@ export const TeachingReportPanel: React.FC<{ auth: { username: string; password:
   const [profiles, setProfiles] = useState<Record<string, TeachProfile>>({});
   const [logs, setLogs] = useState<Record<string, TeachLog>>({});
   const [menu, setMenu] = useState(false);
+  // Phạm vi xuất: tháng đang xem hoặc tất cả các tháng (từ tháng 8 của năm học tới tháng hiện tại) đã có số liệu
+  const [scope, setScope] = useState<'month' | 'all'>('month');
+  const [exporting, setExporting] = useState(false);
   // Khóa chốt kê khai theo tháng (Apps Script 4.9)
   const [locks, setLocks] = useState<Record<string, TeachLock>>({});
   const [picked, setPicked] = useState<Set<string>>(new Set());
@@ -78,15 +81,45 @@ export const TeachingReportPanel: React.FC<{ auth: { username: string; password:
     .filter(x => !q || norm(`${x.s.name} ${x.s.position || ''} ${x.s.dept || ''} ${(x.p?.subjects || []).join(' ')}`).includes(norm(q))), [staff, profiles, logs, view, q]);
 
   // Danh sách theo từng mẫu (thứ tự danh sách nhân sự)
-  const listFor = (k: TeachKey) => staff.filter(s => !s.disabled)
-    .map(s => ({ s, p: profiles[s.code] || null, log: logs[s.code] || null }))
+  const listFor = (k: TeachKey, src: Record<string, TeachLog> = logs) => staff.filter(s => !s.disabled)
+    .map(s => ({ s, p: profiles[s.code] || null, log: src[s.code] || null }))
     .filter(x => enabledKeys(x.p).includes(k) || sumLog(x.log, k) > 0)
     .map(x => ({ name: x.s.name, log: x.log }));
-  const header = () => ({ org, school: schoolName || '', month, wks });
-  const otList = () => staff.filter(s => !s.disabled)
-    .map(s => ({ s, p: profiles[s.code] || null, log: logs[s.code] || null }))
+  const otList = (src: Record<string, TeachLog> = logs) => staff.filter(s => !s.disabled)
+    .map(s => ({ s, p: profiles[s.code] || null, log: src[s.code] || null }))
     .filter(x => enabledKeys(x.p).includes('overtime') || sumLog(x.log, 'overtime') > 0)
     .map(x => ({ name: x.s.name, log: x.log, subjects: x.p?.overtimeSubjects || [] }));
+  const declaredFor = (k: TeachKey) => staff.filter(s => !s.disabled && enabledKeys(profiles[s.code]).includes(k)).length;
+
+  /** Số liệu cần xuất theo phạm vi: [{ tháng, tuần, số liệu }] — "tất cả" thì tải lại từ Apps Script */
+  const loadMonths = async (): Promise<Array<{ month: string; wks: ReturnType<typeof monthWeeks>; logs: Record<string, TeachLog> }>> => {
+    if (scope === 'month') return [{ month, wks, logs }];
+    const from = `${schoolYearOf(thisMonth).slice(0, 4)}-08`;
+    const r = await teachingLogService.report(from, thisMonth, auth);
+    if (!r?.success) throw new Error(r?.message || 'Không tải được số liệu các tháng.');
+    return Object.keys(r.logs || {})
+      .filter(m => Object.keys(r.logs![m] || {}).length > 0)
+      .sort()
+      .map(m => ({ month: m, wks: monthWeeks(m), logs: r.logs![m] }));
+  };
+  const runExport = async (make: (months: Awaited<ReturnType<typeof loadMonths>>, created: string) => Promise<void>) => {
+    setMenu(false); setErr(''); setExporting(true);
+    try {
+      const months = await loadMonths();
+      if (!months.length) throw new Error('Chưa có tháng nào có số liệu kê khai.');
+      await make(months, createdLabel());
+    } catch (e: any) {
+      setErr('Không xuất được tệp Excel: ' + (e?.message || e));
+    } finally { setExporting(false); }
+  };
+  /** Gói số liệu từng tháng cho 1 mẫu; bỏ tháng không có giáo viên nào của mẫu đó (khi xuất nhiều tháng) */
+  const packsOf = <E extends { name: string; log: TeachLog | null }>(months: Awaited<ReturnType<typeof loadMonths>>, pick: (src: Record<string, TeachLog>) => E[]): MonthPack<E>[] => {
+    const packs = months.map(m => ({ h: { org, school: schoolName || '', month: m.month, wks: m.wks }, list: pick(m.logs) }));
+    const useful = packs.filter(p => p.list.some(x => x.log));
+    if (months.length === 1) return packs.filter(p => p.list.length);
+    if (!useful.length) throw new Error('Các tháng chưa có số liệu cho mẫu này.');
+    return useful;
+  };
   const ktTable = useMemo(() => HSKT_SUBJECTS.map(h => ({
     h, vals: wks.map(w => Object.values(logs).reduce((a, l) => a + ktOf(l?.weeks?.[w.key], h.code), 0)),
   })), [logs, wks]);
@@ -144,20 +177,27 @@ export const TeachingReportPanel: React.FC<{ auth: { username: string; password:
 
   const weekVal = (l: TeachLog | null, wk: string, k: TeachKey) => Number(l?.weeks?.[wk]?.[k]) || 0;
 
-  const exportExcel = () => {
+  const exportExcel = async (months: Awaited<ReturnType<typeof loadMonths>>, created: string) => {
     const wb = XLSX.utils.book_new();
-    const title = `TỔNG HỢP KÊ KHAI TIẾT DẠY – ${monthLabel(month).toUpperCase()}${schoolName ? ' • ' + schoolName.toUpperCase() : ''}`;
-    const all = staff.filter(s => !s.disabled).map(s => ({ s, p: profiles[s.code] || null, log: logs[s.code] || null }))
-      .filter(x => enabledKeys(x.p).length || TEACH_KEYS.some(k => sumLog(x.log, k) > 0));
-    const s0: any[][] = [[title], [], ['STT', 'Họ và tên', 'Chức vụ', 'Môn dạy', ...TEACH_KEYS.map(k => TEACH_META[k].label), 'Đã kê khai', 'Ghi chú']];
-    all.forEach((x, i) => s0.push([i + 1, x.s.name, x.s.position || '', (x.p?.subjects || []).join(', '), ...TEACH_KEYS.map(k => sumLog(x.log, k)), x.log?.updatedAt ? 'Có' : 'Chưa', x.log?.note || '']));
-    s0.push(['', 'TỔNG CỘNG', '', '', ...TEACH_KEYS.map(k => totals[k]), '', '']);
-    const ws0 = XLSX.utils.aoa_to_sheet(s0);
-    ws0['!cols'] = [{ wch: 5 }, { wch: 26 }, { wch: 16 }, { wch: 28 }, ...TEACH_KEYS.map(() => ({ wch: 16 })), { wch: 11 }, { wch: 30 }];
-    XLSX.utils.book_append_sheet(wb, ws0, 'Tong hop');
+    const multi = months.length > 1;
+    months.forEach(m => {
+      const title = `TỔNG HỢP KÊ KHAI TIẾT DẠY – ${monthLabel(m.month).toUpperCase()}${schoolName ? ' • ' + schoolName.toUpperCase() : ''}`;
+      const all = staff.filter(s => !s.disabled).map(s => ({ s, p: profiles[s.code] || null, log: m.logs[s.code] || null }))
+        .filter(x => enabledKeys(x.p).length || TEACH_KEYS.some(k => sumLog(x.log, k) > 0));
+      const tot = (k: TeachKey) => all.reduce((a, x) => a + sumLog(x.log, k), 0);
+      const s0: any[][] = [[title], ...infoLines(m.month, created).map(l => [l]), [], ['STT', 'Họ và tên', 'Chức vụ', 'Môn dạy', ...TEACH_KEYS.map(k => TEACH_META[k].label), 'Đã kê khai', 'Ghi chú']];
+      all.forEach((x, i) => s0.push([i + 1, x.s.name, x.s.position || '', (x.p?.subjects || []).join(', '), ...TEACH_KEYS.map(k => sumLog(x.log, k)), x.log?.updatedAt ? 'Có' : 'Chưa', x.log?.note || '']));
+      s0.push(['', 'TỔNG CỘNG', '', '', ...TEACH_KEYS.map(k => tot(k)), '', '']);
+      const ws0 = XLSX.utils.aoa_to_sheet(s0);
+      ws0['!cols'] = [{ wch: 5 }, { wch: 26 }, { wch: 16 }, { wch: 28 }, ...TEACH_KEYS.map(() => ({ wch: 16 })), { wch: 11 }, { wch: 30 }];
+      XLSX.utils.book_append_sheet(wb, ws0, multi ? `Tong hop T${Number(m.month.slice(5, 7))}-${m.month.slice(0, 4)}` : 'Tong hop');
+    });
+    if (multi) { XLSX.writeFile(wb, `KeKhai_TietDay_${months[0].month}_den_${months[months.length - 1].month}.xlsx`); return; }
+    const info = infoLines(month, created);
     TEACH_KEYS.forEach(k => {
-      const list = all.filter(x => enabledKeys(x.p).includes(k) || sumLog(x.log, k) > 0);
-      const sh: any[][] = [[`${TEACH_META[k].label.toUpperCase()} – ${monthLabel(month)}`], [],
+      const list = staff.filter(s => !s.disabled).map(s => ({ s, p: profiles[s.code] || null, log: logs[s.code] || null }))
+        .filter(x => enabledKeys(x.p).includes(k) || sumLog(x.log, k) > 0);
+      const sh: any[][] = [[`${TEACH_META[k].label.toUpperCase()} – ${monthLabel(month)}`], ...info.map(l => [l]), [],
         ['STT', 'Họ và tên', 'Lớp', ...wks.map(w => w.label), 'Tổng tháng']];
       list.forEach((x, i) => sh.push([i + 1, x.s.name, classesOf(x.p, k).join(', '), ...wks.map(w => weekVal(x.log, w.key, k)), sumLog(x.log, k)]));
       sh.push(['', 'TỔNG CỘNG', '', ...wks.map(w => list.reduce((a, x) => a + weekVal(x.log, w.key, k), 0)), list.reduce((a, x) => a + sumLog(x.log, k), 0)]);
@@ -231,7 +271,7 @@ export const TeachingReportPanel: React.FC<{ auth: { username: string; password:
           <div className="relative">
             <button type="button" onClick={() => setMenu(v => !v)} disabled={loading || !staff.length} aria-expanded={menu} aria-haspopup="menu"
               className="no-hover-fx h-9 px-3.5 rounded-lg text-sm font-bold bg-emerald-700 hover:bg-emerald-800 text-white inline-flex items-center gap-1.5 whitespace-nowrap disabled:opacity-50">
-              <Download className="w-4 h-4" /> Xuất Excel <ChevronDown className="w-4 h-4" />
+              {exporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />} {exporting ? 'Đang tạo tệp…' : 'Xuất Excel'} <ChevronDown className="w-4 h-4" />
             </button>
             {menu && (
               <>
@@ -242,13 +282,28 @@ export const TeachingReportPanel: React.FC<{ auth: { username: string; password:
                     <input value={org} onChange={(e) => saveOrg(e.target.value.slice(0, 80))} placeholder="Ví dụ: UBND XÃ …"
                       className="w-full h-9 px-3 rounded-lg border border-slate-300 text-sm" />
                   </label>
+                  <fieldset className="rounded-xl bg-slate-50 border border-slate-200 p-2 space-y-1">
+                    <legend className="px-1 text-xs font-bold text-slate-700">Phạm vi tải về</legend>
+                    {([
+                      ['month', `Biểu tổng hợp ${monthLabel(month).toLowerCase()}`, 'Trang tổng hợp + mỗi giáo viên 1 trang'],
+                      ['all', 'Biểu tổng hợp tất cả các tháng', `Năm học ${schoolYearOf(thisMonth)}: mỗi tháng có số liệu 1 trang tổng hợp`],
+                    ] as const).map(([v, label, hint]) => (
+                      <label key={v} className={`flex items-start gap-2 rounded-lg px-2 py-1.5 cursor-pointer ${scope === v ? 'bg-white shadow-xs' : ''}`}>
+                        <input type="radio" name="teach-export-scope" checked={scope === v} onChange={() => setScope(v)} className="mt-0.5 w-4 h-4 accent-emerald-700" />
+                        <span className="min-w-0">
+                          <span className="block text-sm font-bold text-slate-900">{label}</span>
+                          <span className="block text-xs text-slate-600">{hint}</span>
+                        </span>
+                      </label>
+                    ))}
+                  </fieldset>
                   {([
-                    ['TH1', 'TH1. Bảng kê dạy lớp có HS khuyết tật', 'Đúng mẫu: trang TonghopKT + mỗi GV 1 trang', () => exportTH1(header(), listFor('disabled')), listFor('disabled').length],
-                    ['TH2', 'TH2. Bảng kê dạy GDTC (ngoài trời)', 'Đúng mẫu: trang TonghopGDTC + mỗi GV 1 trang', () => exportTH2(header(), listFor('pe')), listFor('pe').length],
-                    ['TH3', 'TH3. Bảng kê dạy thừa giờ Tiếng Anh', 'Đúng mẫu: trang TongTA + mỗi GV 1 trang', () => exportTH3(header(), listFor('english')), listFor('english').length],
-                    ['TG', 'Bảng kê dạy thừa giờ các môn khác', 'Khuôn TH3: mỗi môn của GV 1 dòng + mỗi GV 1 trang', () => exportOvertime(header(), otList()), otList().length],
+                    ['TH1', 'TH1. Bảng kê dạy lớp có HS khuyết tật', 'Đúng mẫu TonghopKT', () => runExport((ms, c) => exportTH1(packsOf(ms, src => listFor('disabled', src)), c)), listFor('disabled').length || declaredFor('disabled')],
+                    ['TH2', 'TH2. Bảng kê dạy GDTC (ngoài trời)', 'Đúng mẫu TonghopGDTC', () => runExport((ms, c) => exportTH2(packsOf(ms, src => listFor('pe', src)), c)), listFor('pe').length || declaredFor('pe')],
+                    ['TH3', 'TH3. Bảng kê dạy thừa giờ Tiếng Anh', 'Đúng mẫu TongTA', () => runExport((ms, c) => exportTH3(packsOf(ms, src => listFor('english', src)), c)), listFor('english').length || declaredFor('english')],
+                    ['TG', 'Bảng kê dạy thừa giờ các môn khác', 'Khuôn TH3: mỗi môn của GV 1 dòng', () => runExport((ms, c) => exportOvertime(packsOf(ms, src => otList(src)), c)), otList().length || declaredFor('overtime')],
                   ] as Array<[string, string, string, () => Promise<void>, number]>).map(([code, label, hint, run, n]) => (
-                    <button key={code} type="button" role="menuitem" disabled={!n} onClick={() => { setMenu(false); run().catch(e => setErr('Không xuất được tệp Excel: ' + (e?.message || e))); }}
+                    <button key={code} type="button" role="menuitem" disabled={!n || exporting} onClick={() => { run(); }}
                       className="no-hover-fx w-full text-left rounded-xl border border-slate-200 hover:bg-emerald-50 hover:border-emerald-300 px-3 py-2 flex items-start gap-2.5 disabled:opacity-50 disabled:hover:bg-white">
                       <FileSpreadsheet className="w-5 h-5 text-emerald-700 shrink-0 mt-0.5" />
                       <span className="min-w-0">
@@ -257,7 +312,7 @@ export const TeachingReportPanel: React.FC<{ auth: { username: string; password:
                       </span>
                     </button>
                   ))}
-                  <button type="button" role="menuitem" onClick={() => { exportExcel(); setMenu(false); }}
+                  <button type="button" role="menuitem" disabled={exporting} onClick={() => { runExport(exportExcel); }}
                     className="no-hover-fx w-full text-left rounded-xl border border-slate-200 hover:bg-slate-50 px-3 py-2 text-sm font-bold text-slate-800">Tổng hợp tất cả mục (1 tệp)</button>
                 </div>
               </>
