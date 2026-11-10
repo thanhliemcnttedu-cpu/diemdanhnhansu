@@ -1,3 +1,4 @@
+import { CoinIcon } from '../common/CoinIcon';
 import React, { useState, useEffect, useRef } from 'react';
 import { useClassroom } from '../../context/ClassroomContext';
 import { Student, QuestionItem } from '../../types';
@@ -691,7 +692,7 @@ export const FilmReelView: React.FC = () => {
                           {student.name}
                         </div>
                         <div className="text-[12px] text-white truncate mt-0.5">
-                          {student.group || 'Tổ 1'} • 🪙 {student.points}x
+                          {student.group || 'Tổ 1'} • <CoinIcon /> {student.points}x
                         </div>
                       </div>
                     </div>
@@ -1086,7 +1087,7 @@ export const FilmReelView: React.FC = () => {
                         🎬 ĐANG TRẢ LỜI CÂU HỎI
                       </span>
                       <span className="text-xs text-slate-300">
-                        {currentWinner.group || 'Tổ 1'} • 🪙 <strong className="text-amber-300 font-black">{currentWinner.points} xu</strong>
+                        {currentWinner.group || 'Tổ 1'} • <CoinIcon /> <strong className="text-amber-300 font-black">{currentWinner.points} xu</strong>
                       </span>
                     </div>
                     <h3 className="text-lg sm:text-2xl font-black text-white uppercase tracking-wide mt-0.5">
@@ -1749,7 +1750,7 @@ export const FilmReelView: React.FC = () => {
                         </div>
                       </div>
                       <span className="px-4 py-2 bg-emerald-500 text-slate-950 rounded-xl text-xs sm:text-sm font-black shrink-0 shadow-md uppercase">
-                        +{customOralPoints || currentQuestion.pointsReward || 2} Xu 🪙
+                        +{customOralPoints || currentQuestion.pointsReward || 2} Xu <CoinIcon />
                       </span>
                     </div>
                   ) : (
@@ -1793,7 +1794,7 @@ export const FilmReelView: React.FC = () => {
                           }`}
                           title="Tặng 1 xu động viên học sinh đã nỗ lực"
                         >
-                          {hasAwarded ? 'Đã tặng +1 xu động viên' : 'Động viên (+1 xu) 🪙'}
+                          {hasAwarded ? 'Đã tặng +1 xu động viên' : 'Động viên (+1 xu) 💰'}
                         </button>
                       </div>
                     </div>
@@ -1902,7 +1903,7 @@ export const FilmReelView: React.FC = () => {
                         </div>
                       </div>
                       <span className="px-3 py-1.5 bg-emerald-500 text-slate-950 rounded-xl text-xs font-black shrink-0 uppercase">
-                        +{customOralPoints} Xu 🪙
+                        +{customOralPoints} Xu <CoinIcon />
                       </span>
                     </div>
                   )}

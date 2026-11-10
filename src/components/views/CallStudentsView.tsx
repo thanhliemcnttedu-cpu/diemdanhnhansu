@@ -1,3 +1,4 @@
+import { CoinIcon } from '../common/CoinIcon';
 import React, { useState, useEffect, useRef } from 'react';
 import { useClassroom } from '../../context/ClassroomContext';
 import { Student } from '../../types';
@@ -643,7 +644,7 @@ const PhotoCardsGame: React.FC<{ students: Student[]; onAward: (ids: string[], p
                     <div className="text-[12px] text-indigo-600 font-bold">#{st.stt} • {st.group || 'Tổ 1'}</div>
                   </div>
                   <span className="px-2 py-0.5 bg-amber-100 text-amber-900 text-[12px] font-black rounded-lg">
-                    🪙 {st.points} xu
+                    <CoinIcon /> {st.points} xu
                   </span>
                 </div>
               ) : (

@@ -304,7 +304,7 @@ export const EnergizerGameArena: React.FC<EnergizerGameArenaProps> = ({
       ...prev,
     ]);
 
-    setRecentlyAwardedText(`🪙 Đã thưởng +${selectedCoinAmount} xu cho em #${target.stt} - ${target.name}!`);
+    setRecentlyAwardedText(`💰 Đã thưởng +${selectedCoinAmount} xu cho em #${target.stt} - ${target.name}!`);
     playPointClink();
     setTimeout(() => setRecentlyAwardedText(null), 3500);
   };

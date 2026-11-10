@@ -1,3 +1,4 @@
+import { CoinIcon } from '../../common/CoinIcon';
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { useClassroom } from '../../../context/ClassroomContext';
 import { databaseService } from '../../../services/databaseService';
@@ -1502,7 +1503,7 @@ export const AdminRealtimeDashboardView: React.FC = () => {
           </div>
           <div className="mt-2">
             <div className="text-2xl sm:text-3xl font-black text-purple-950 font-mono">
-              {totalCoins} <span className="text-sm font-bold text-amber-700">🪙</span>
+              {totalCoins} <span className="text-sm font-bold text-amber-700"><CoinIcon /></span>
             </div>
             <div className="flex items-center gap-1 mt-1 text-[12px] font-bold text-purple-700">
               <span>Trung bình:</span>
@@ -1959,7 +1960,7 @@ export const AdminRealtimeDashboardView: React.FC = () => {
 
                     {/* Tổng xu */}
                     <td className="py-2.5 px-3 text-right font-mono font-black text-indigo-950">
-                      {cls.coins} <span className="text-amber-700 text-[12px]">🪙</span>
+                      {cls.coins} <span className="text-amber-700 text-[12px]"><CoinIcon /></span>
                     </td>
 
                     {/* Điểm TB */}

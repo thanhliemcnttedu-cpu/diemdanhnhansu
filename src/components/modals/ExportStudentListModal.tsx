@@ -1,3 +1,4 @@
+import { CoinIcon } from '../common/CoinIcon';
 import React, { useState, useRef } from 'react';
 import * as XLSX from 'xlsx';
 import { Student, Classroom, TeacherProfile } from '../../types';
@@ -386,7 +387,7 @@ export const ExportStudentListModal: React.FC<ExportStudentListModalProps> = ({
                       {exportType === 'full' && (
                         <>
                           <td className="py-2 px-3 text-center font-black text-amber-700 font-mono">
-                            🪙 {st.points || 0}
+                            <CoinIcon /> {st.points || 0}
                           </td>
                           <td className="py-2 px-3 text-center font-black text-indigo-600 font-mono">
                             ⭐ {Math.floor((st.points || 0) / 10)}

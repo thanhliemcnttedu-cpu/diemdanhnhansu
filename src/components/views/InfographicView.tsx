@@ -2815,7 +2815,7 @@ export const InfographicView: React.FC = () => {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {[
-                    { id: 'wood_3d', label: '3D Bàn Gỗ Tự Nhiên', desc: 'Ấm cúng, đồng bộ mẫu Sơ Đồ Lớp', icon: '🪵' },
+                    { id: 'wood_3d', label: '3D Bàn Gỗ Tự Nhiên', desc: 'Ấm cúng, đồng bộ mẫu Sơ Đồ Lớp', icon: '🪑' },
                     { id: 'mint_3d', label: '3D Xanh Ngọc Hiện Đại', desc: 'Trẻ trung, tươi sáng', icon: '🌿' },
                     { id: 'navy_3d', label: '3D Hoàng Gia Xanh Navy', desc: 'Sang trọng, tương phản nổi bật', icon: '👑' },
                     { id: 'standard_2d', label: '2D Sư Phạm Tiêu Chuẩn', desc: 'Tối ưu độ nét khi in trắng đen', icon: '📄' },
@@ -2855,7 +2855,7 @@ export const InfographicView: React.FC = () => {
                   {[
                     { id: 'pedagogical', label: 'Sư Phạm Chuẩn', icon: '📚' },
                     { id: 'rainbow', label: 'Cầu Vồng', icon: '🌈' },
-                    { id: 'wood', label: 'Gỗ Ấm Cúng', icon: '🪵' },
+                    { id: 'wood', label: 'Gỗ Ấm Cúng', icon: '🪑' },
                     { id: 'sky', label: 'Bầu Trời', icon: '🌤️' },
                     { id: 'minimal', label: 'Tối Giản Mực In', icon: '📋' },
                   ].map(style => (

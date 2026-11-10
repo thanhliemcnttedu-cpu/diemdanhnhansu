@@ -1,3 +1,4 @@
+import { CoinIcon } from '../common/CoinIcon';
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { useClassroom } from '../../context/ClassroomContext';
 import { 
@@ -1365,7 +1366,7 @@ QUY TẮC BẮT BUỘC:
                 <div>
                   <div className="text-sm font-black text-slate-900">{selectedStudent.name}</div>
                   <div className="text-xs text-blue-700 font-semibold mt-0.5">
-                    🪙 {selectedStudent.points} xu thi đua · {selectedStudent.gender}
+                    <CoinIcon /> {selectedStudent.points} xu thi đua · {selectedStudent.gender}
                   </div>
                 </div>
               </div>
@@ -1589,7 +1590,7 @@ QUY TẮC BẮT BUỘC:
                         </div>
 
                         <div className="text-amber-300 font-black text-xs md:text-sm flex items-center gap-1.5 bg-amber-400/10 px-3 py-1 rounded-xl border border-amber-400/20">
-                          <span>🪙 Thưởng: +{currentQ.rewardCoins || quizConfig.rewardCoins || 5} xu</span>
+                          <span><CoinIcon /> Thưởng: +{currentQ.rewardCoins || quizConfig.rewardCoins || 5} xu</span>
                         </div>
                       </div>
 
@@ -1625,7 +1626,7 @@ QUY TẮC BẮT BUỘC:
                                   {isAnswerCorrect ? (
                                     rewardAwarded ? (
                                       <span className="font-bold text-amber-300">
-                                        🪙 Đã cộng +{currentQ.rewardCoins || quizConfig.rewardCoins || 5} xu thi đua vào sổ học sinh thành công!
+                                        <CoinIcon /> Đã cộng +{currentQ.rewardCoins || quizConfig.rewardCoins || 5} xu thi đua vào sổ học sinh thành công!
                                       </span>
                                     ) : (
                                       <span>Bấm nút "Tặng xu thưởng" để cộng điểm thi đua cho học sinh.</span>
@@ -2246,7 +2247,7 @@ QUY TẮC BẮT BUỘC:
                           </span>
 
                           <span className="text-amber-700 font-bold text-xs">
-                            🪙 +{currentQ.rewardCoins || quizConfig.rewardCoins || 5} xu
+                            <CoinIcon /> +{currentQ.rewardCoins || quizConfig.rewardCoins || 5} xu
                           </span>
                         </div>
 
@@ -2386,7 +2387,7 @@ QUY TẮC BẮT BUỘC:
                                     {isAnswerCorrect ? (
                                       rewardAwarded ? (
                                         <span className="font-bold text-emerald-700">
-                                          🪙 Đã cộng +{currentQ.rewardCoins || quizConfig.rewardCoins || 5} xu thi đua vào sổ học sinh thành công!
+                                          <CoinIcon /> Đã cộng +{currentQ.rewardCoins || quizConfig.rewardCoins || 5} xu thi đua vào sổ học sinh thành công!
                                         </span>
                                       ) : (
                                         <span>Bấm nút "Tặng xu thưởng" để cộng điểm cho học sinh.</span>

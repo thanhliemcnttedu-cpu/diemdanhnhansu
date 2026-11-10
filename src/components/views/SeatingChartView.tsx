@@ -46,7 +46,7 @@ export const SEATING_THEMES: Record<SeatingPerspectiveTheme, ThemeConfig> = {
     id: 'wood_3d',
     name: '3D Gỗ Tự Nhiên (Ấm cúng - Mẫu ảnh)',
     type: '3d',
-    icon: '🪵',
+    icon: '🪑',
     badge: 'Mẫu ảnh gốc',
     containerBg: 'bg-[#f4ece1]',
     containerBorder: 'border-4 border-[#c5a880]',

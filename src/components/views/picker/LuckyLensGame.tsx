@@ -1,3 +1,4 @@
+import { CoinIcon } from '../../common/CoinIcon';
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useClassroom } from '../../../context/ClassroomContext';
 import { Student } from '../../../types';
@@ -521,7 +522,7 @@ export const LuckyLensGame: React.FC<LuckyLensGameProps> = ({
                 callMode === 'coins' ? 'bg-amber-700 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              🪙 Kèm Thưởng Xu
+              <CoinIcon /> Kèm Thưởng Xu
             </button>
           </div>
 

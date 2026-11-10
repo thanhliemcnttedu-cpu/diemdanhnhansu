@@ -1,3 +1,4 @@
+import { CoinIcon } from '../common/CoinIcon';
 import React, { useState } from 'react';
 import { useClassroom } from '../../context/ClassroomContext';
 import { 
@@ -492,8 +493,8 @@ const HomeroomDashboard: React.FC<DashboardViewProps> = ({
                     </div>
 
                     <div className="text-right">
-                      <div className="text-lg font-black text-amber-700">
-                        🪙 {cls.totalCoins} xu
+                      <div className="text-lg font-black text-amber-700 inline-flex items-center gap-1 whitespace-nowrap">
+                        <CoinIcon /> {cls.totalCoins} xu
                       </div>
                       <div className="text-[12px] text-slate-500 font-semibold">
                         TB: {cls.avgCoins} xu/em
@@ -690,8 +691,8 @@ const HomeroomDashboard: React.FC<DashboardViewProps> = ({
                       </div>
 
                       <div className="flex items-center gap-2">
-                        <span className="px-3 py-1 bg-amber-50 border border-amber-200 text-amber-800 font-black text-xs rounded-xl shadow-2xs">
-                          🪙 {st.points} xu
+                        <span className="px-3 py-1 bg-amber-50 border border-amber-200 text-amber-800 font-black text-xs rounded-xl shadow-2xs inline-flex items-center gap-1 whitespace-nowrap">
+                          <CoinIcon /> {st.points} xu
                         </span>
 
                         {/* Quick +1, +5 buttons */}
