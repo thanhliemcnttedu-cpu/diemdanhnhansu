@@ -110,7 +110,8 @@ export const StaffCheckInPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-sky-50 via-white to-emerald-50 flex flex-col items-center px-4 py-6 sm:py-10">
-      <div className="w-full max-w-md space-y-4">
+      {/* Điện thoại: khổ hẹp max-w-md. Máy tính (lg): sau khi đăng nhập mở rộng — điểm danh 4xl, kê khai tiết dạy 6xl */}
+      <div className={`w-full space-y-4 ${!staff ? 'max-w-md' : mainTab === 'teach' ? 'max-w-md lg:max-w-6xl' : 'max-w-md lg:max-w-4xl'}`}>
         <header className="text-center space-y-1">
           <img src="/logo.svg" alt="Lớp Học Hạnh Phúc" className="mx-auto w-16 h-16 rounded-[22%] shadow-md" />
           <h1 className="font-black text-slate-900 whitespace-nowrap text-[clamp(0.95rem,4.3vw,1.5rem)]">Điểm danh giáo viên – nhân viên</h1>
@@ -168,12 +169,12 @@ export const StaffCheckInPage: React.FC = () => {
 
         {/* ===== Sau khi đăng nhập: chọn Điểm danh / Kê khai tiết dạy ===== */}
         {conn && staff && (
-          <div className="space-y-2">
-            <div className="flex items-center justify-between gap-2 px-1">
-              <p className="text-sm text-slate-700 truncate">Xin chào <strong className="text-slate-900">{staff.name}</strong></p>
+          <div className="space-y-2 lg:space-y-0 lg:flex lg:items-center lg:gap-4">
+            <div className="flex items-center justify-between gap-2 px-1 lg:flex-1 lg:min-w-0 lg:justify-start lg:gap-4">
+              <p className="text-sm lg:text-base text-slate-700 truncate">Xin chào <strong className="text-slate-900">{staff.name}</strong><span className="max-lg:hidden text-slate-500"> • {[staff.position, staff.dept].filter(Boolean).join(' • ')}</span></p>
               <button type="button" onClick={reset} className="shrink-0 text-sm font-bold text-slate-600 hover:text-slate-900 inline-flex items-center gap-1"><LogOut className="w-4 h-4" /> Thoát</button>
             </div>
-            <div className="flex gap-1 bg-slate-200/70 p-1 rounded-2xl" role="tablist" aria-label="Chức năng">
+            <div className="flex gap-1 bg-slate-200/70 p-1 rounded-2xl lg:w-[28rem] lg:shrink-0" role="tablist" aria-label="Chức năng">
               <button type="button" role="tab" aria-selected={mainTab === 'checkin'} onClick={() => setMainTab('checkin')}
                 className={`no-hover-fx flex-1 h-11 rounded-xl text-sm font-black inline-flex items-center justify-center gap-1.5 ${mainTab === 'checkin' ? 'bg-white text-emerald-800 shadow-xs' : 'text-slate-700'}`}><UserCheck className="w-4 h-4" /> Điểm danh</button>
               <button type="button" role="tab" aria-selected={mainTab === 'teach'} onClick={() => setMainTab('teach')}
@@ -189,11 +190,14 @@ export const StaffCheckInPage: React.FC = () => {
         {/* ===== Bước 2: điểm danh hôm nay ===== */}
         {conn && staff && mainTab === 'checkin' && !done && (
           <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
-            <div className="bg-emerald-700 text-white px-5 py-4">
-              <p className="text-xs font-bold uppercase tracking-wide text-emerald-50">Điểm danh cho ngày hôm nay</p>
-              <p className="text-xl font-black leading-tight">{longDateLabel(today)}</p>
+            <div className="bg-emerald-700 text-white px-5 py-4 lg:px-7 lg:flex lg:items-end lg:justify-between lg:gap-4">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-wide text-emerald-50">Điểm danh cho ngày hôm nay</p>
+                <p className="text-xl lg:text-2xl font-black leading-tight">{longDateLabel(today)}</p>
+              </div>
+              <p className="max-lg:hidden text-sm text-emerald-50">Ngày lấy theo giờ máy chủ nhà trường</p>
             </div>
-            <div className="p-5 space-y-4">
+            <div className="p-5 lg:p-7 space-y-4">
               <div className="flex items-center justify-between gap-3">
                 <div className="min-w-0">
                   <p className="text-lg font-black text-slate-900 truncate">{staff.name}</p>
@@ -252,7 +256,7 @@ export const StaffCheckInPage: React.FC = () => {
                       {!isProxyRecord(existing) && <p className="font-bold">Bạn muốn sửa điểm danh?</p>}
                     </div>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 lg:max-w-xl">
                     <button type="button" onClick={reset} className="flex-1 py-3 rounded-2xl bg-white border border-amber-300 hover:bg-amber-100 text-amber-950 font-black text-sm">{isProxyRecord(existing) ? 'Đúng rồi, thoát' : 'Không, thoát'}</button>
                     <button type="button" onClick={() => { setEditing(true); setError(''); }} className="flex-[2] py-3 rounded-2xl bg-amber-700 hover:bg-amber-800 text-white font-black text-sm inline-flex items-center justify-center gap-1.5">
                       <PencilLine className="w-4 h-4" /> {isProxyRecord(existing) ? 'Tự điểm danh lại' : 'Sửa điểm danh'} (lần {attemptOf(existing) + 1})
@@ -263,7 +267,7 @@ export const StaffCheckInPage: React.FC = () => {
               )}
 
               {!lockedMsg && (!existing || editing) && (<>
-              <div className="space-y-2" role="radiogroup" aria-label="Trạng thái điểm danh">
+              <div className="space-y-2 lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-3" role="radiogroup" aria-label="Trạng thái điểm danh">
                 {OPTIONS.map(o => {
                   const meta = STAFF_STATUS_META[o.id];
                   const on = status === o.id;
@@ -291,7 +295,7 @@ export const StaffCheckInPage: React.FC = () => {
               </div>
 
               {status === 'business_trip' && (
-                <div className="rounded-2xl border-2 border-blue-200 bg-blue-50/60 p-3.5 space-y-3">
+                <div className="rounded-2xl border-2 border-blue-200 bg-blue-50/60 p-3.5 space-y-3 lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-3">
                   <label className="block space-y-1.5">
                     <span className="text-sm font-black text-blue-950">Nơi công tác <span className="text-rose-700">*</span></span>
                     <input value={tripPlace} onChange={(e) => setTripPlace(e.target.value.slice(0, 120))} placeholder="Ví dụ: Phòng GD&ĐT huyện, Trường TH số 2…"
@@ -319,7 +323,7 @@ export const StaffCheckInPage: React.FC = () => {
               {error && <p className="text-sm font-bold text-rose-700 bg-rose-50 border border-rose-200 rounded-xl px-3 py-2">{error}</p>}
 
               <button type="button" onClick={handleConfirm} disabled={busy || !status}
-                className="w-full py-4 rounded-2xl bg-emerald-700 hover:bg-emerald-800 text-white text-lg font-black flex items-center justify-center gap-2 disabled:opacity-50">
+                className="w-full lg:w-auto lg:min-w-[22rem] lg:px-8 lg:ml-auto lg:flex py-4 rounded-2xl bg-emerald-700 hover:bg-emerald-800 text-white text-lg font-black flex items-center justify-center gap-2 disabled:opacity-50">
                 {busy ? <Loader2 className="w-5 h-5 animate-spin" /> : <CheckCircle2 className="w-6 h-6" />}
                 {existing ? `Xác nhận điểm danh lại (lần ${attemptOf(existing) + 1})` : 'Xác nhận điểm danh'}
               </button>
@@ -331,7 +335,7 @@ export const StaffCheckInPage: React.FC = () => {
 
         {/* ===== Hoàn tất ===== */}
         {conn && staff && mainTab === 'checkin' && done && (
-          <div className="bg-white rounded-3xl border-2 border-emerald-300 shadow-sm p-6 space-y-3">
+          <div className="bg-white rounded-3xl border-2 border-emerald-300 shadow-sm p-6 space-y-3 lg:max-w-2xl lg:mx-auto lg:p-8">
             <CheckCircle2 className="w-16 h-16 mx-auto text-emerald-700" />
             <h2 className="text-xl font-black text-slate-900 text-center">Điểm danh thành công</h2>
             <p className="text-base text-slate-800 leading-relaxed">

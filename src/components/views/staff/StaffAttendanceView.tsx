@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import * as XLSX from 'xlsx';
 import {
-  UserCheck, RefreshCw, Download, Upload, Users, Link2, Copy, Check, Plus, KeyRound, Lock, Unlock, Trash2, Search, Loader2, ShieldAlert, TrendingUp, TrendingDown, Minus, Pencil, MapPin, CheckCircle2, Info, Eye, EyeOff, BookOpenCheck,
+  UserCheck, RefreshCw, Download, Upload, Users, Link2, Copy, Check, Plus, KeyRound, Lock, Unlock, Trash2, Search, Loader2, ShieldAlert, TrendingUp, TrendingDown, Minus, Pencil, MapPin, CheckCircle2, Info, Eye, EyeOff, BookOpenCheck, ChevronLeft, ChevronRight,
 } from 'lucide-react';
 import { useClassroom } from '../../../context/ClassroomContext';
 import {
@@ -112,6 +112,9 @@ export const StaffAttendanceView: React.FC = () => {
   const [errorKind, setErrorKind] = useState<'dead' | 'no_db' | ''>('');
   const [lastLoaded, setLastLoaded] = useState<Date | null>(null);
   const [loadedRange, setLoadedRange] = useState<{ from: string; to: string } | null>(null);
+  // Bảng chi tiết: ngày đang xem ('' = hôm nay). Quản trị / BGH chọn ngày đã qua để điểm danh bù cho nhân sự
+  const [detailDate, setDetailDate] = useState('');
+  const [detailLoading, setDetailLoading] = useState(false);
 
   const range = useMemo(() => {
     const d = fromDateKey(today);
@@ -164,6 +167,22 @@ export const StaffAttendanceView: React.FC = () => {
     const t = setInterval(() => { if (!document.hidden) load(true); }, 60000);
     return () => clearInterval(t);
   }, [tab, range.to, today, load]);
+
+  const dd = detailDate && detailDate < today ? detailDate : today;
+  useEffect(() => {
+    if (!auth || tab !== 'summary' || !loadedRange || (dd >= loadedRange.from && dd <= loadedRange.to)) return;
+    let alive = true;
+    setDetailLoading(true);
+    staffAttendanceService.range(dd, dd, auth)
+      .then(r => {
+        if (!alive || !r?.success) return;
+        setDays(prev => ({ ...prev, [dd]: (r.days || {})[dd] || {} }));
+        setLocks(prev => { const next = { ...prev }; const L = (r.locks || {})[dd]; if (L) next[dd] = L; else delete next[dd]; return next; });
+      })
+      .catch(() => { /* lỗi mạng: giữ nguyên, người dùng bấm Tải lại */ })
+      .finally(() => { if (alive) setDetailLoading(false); });
+    return () => { alive = false; };
+  }, [dd, auth, tab, loadedRange]);
 
   const stats = useMemo(() => aggregate(staff, days, range.from, range.to, today), [staff, days, range, today]);
   const todayStats = useMemo(() => aggregate(staff, days, today, today, today).daily[0], [staff, days, today]);
@@ -425,9 +444,10 @@ export const StaffAttendanceView: React.FC = () => {
               </div>
 
               {/* Hôm nay: chi tiết từng người */}
-              <TodayDetail staff={staff} records={days[today] || {}} today={today} dayLock={locks[today] || null} auth={auth}
+              <TodayDetail staff={staff} records={days[dd] || {}} today={today} date={dd} dayLock={locks[dd] || null} auth={auth}
+                loadingDate={detailLoading} onDateChange={(d) => setDetailDate(d >= today ? '' : d)}
                 onRecordsChanged={(date, recs) => setDays(prev => ({ ...prev, [date]: { ...(prev[date] || {}), ...recs } }))}
-                onLockChanged={(L) => setLocks(prev => { const next = { ...prev }; if (L) next[today] = L; else delete next[today]; return next; })} />
+                onLockChanged={(L) => setLocks(prev => { const next = { ...prev }; if (L) next[dd] = L; else delete next[dd]; return next; })} />
             </>
           )}
         </>
@@ -443,9 +463,14 @@ export const StaffAttendanceView: React.FC = () => {
 // ---------------------------------------------------------------- hôm nay: ai đã / chưa điểm danh
 const TodayDetail: React.FC<{
   staff: StaffMember[]; records: Record<string, StaffRecord>; today: string; dayLock: StaffDayLock | null;
+  /** Ngày đang xem (hôm nay hoặc ngày đã qua — Quản trị / BGH điểm danh bù) */
+  date: string; loadingDate?: boolean; onDateChange: (d: string) => void;
   auth: { username: string; password: string } | null; onLockChanged: (L: StaffDayLock | null) => void;
   onRecordsChanged: (date: string, recs: Record<string, StaffRecord>) => void;
-}> = ({ staff, records, today, dayLock, auth, onLockChanged, onRecordsChanged }) => {
+}> = ({ staff, records, today, date, loadingDate, onDateChange, dayLock, auth, onLockChanged, onRecordsChanged }) => {
+  const isPast = date < today;
+  /** "hôm nay" hoặc "ngày 05/11" — dùng trong mọi câu thông báo của bảng */
+  const dayText = isPast ? `ngày ${shortDateLabel(date)}/${date.slice(0, 4)}` : 'hôm nay';
   // 📞 Điểm danh hộ (nhân sự báo qua điện thoại…) — BGH, Quản trị nhà trường, Quản trị tối cao (Apps Script 4.7)
   const [proxyCodes, setProxyCodes] = useState<string[] | null>(null);
   const [pStatus, setPStatus] = useState<StaffStatus>('present');
@@ -461,10 +486,10 @@ const TodayDetail: React.FC<{
     const note = pStatus === 'business_trip' ? composeTripNote(pPlace, pContent, pNote) : pNote.trim();
     setPBusy(true); setPErr('');
     try {
-      const r = await staffAttendanceService.proxyCheckIn({ codes: proxyCodes, status: pStatus, note, date: today }, auth);
+      const r = await staffAttendanceService.proxyCheckIn({ codes: proxyCodes, status: pStatus, note, date }, auth);
       if (!r?.success) { setPErr(r?.message || 'Chưa điểm danh hộ được.'); return; }
-      onRecordsChanged(r.date || today, r.records || {});
-      setLockMsg({ type: 'ok', text: `${r.message || 'Đã điểm danh hộ.'}${r.errors?.length ? ` (${r.errors.length} lỗi: ${r.errors.slice(0, 3).join('; ')})` : ''}` });
+      onRecordsChanged(r.date || date, r.records || {});
+      setLockMsg({ type: 'ok', text: `${isPast ? `Đã điểm danh bù ${dayText} cho ${r.count || proxyCodes.length} người.` : (r.message || 'Đã điểm danh hộ.')}${r.errors?.length ? ` (${r.errors.length} lỗi: ${r.errors.slice(0, 3).join('; ')})` : ''}` });
       setProxyCodes(null); setPicked([]);
     } catch (e: any) {
       setPErr(/Hành động không hợp lệ|chưa được cập nhật lên phiên bản/.test(String(e?.message || ''))
@@ -479,19 +504,19 @@ const TodayDetail: React.FC<{
   const applyLock = async (lock: boolean, all: boolean, codes: string[] = []) => {
     const who = all ? 'TẤT CẢ nhân sự' : `${codes.length} nhân sự đã chọn`;
     if (!confirm(lock
-      ? `Khóa điểm danh hôm nay của ${who}?
+      ? `Khóa điểm danh ${dayText} của ${who}?
 Người bị khóa sẽ không điểm danh / sửa điểm danh được và nhận thông báo đã khóa chốt số liệu.`
-      : `Mở lại điểm danh hôm nay cho ${who}?`)) return;
+      : `Mở lại điểm danh ${dayText} cho ${who}?`)) return;
     setLockBusy(true); setLockMsg(null);
     try {
-      const r = await staffAttendanceService.lockStaff({ date: today, lock, all, codes }, auth);
+      const r = await staffAttendanceService.lockStaff({ date, lock, all, codes }, auth);
       if (!r?.success) {
         setLockMsg({ type: 'err', text: /Hành động không hợp lệ|4\.2/.test(String(r?.message || '')) ? 'Apps Script chưa có chức năng khóa điểm danh: cần cập nhật lên V4.5 (dán mã mới → Triển khai → Phiên bản mới).' : (r?.message || 'Chưa khóa được.') });
         return;
       }
       onLockChanged(r.lock || null);
       setPicked([]);
-      setLockMsg({ type: 'ok', text: lock ? `Đã khóa điểm danh hôm nay của ${who}.` : `Đã mở lại điểm danh hôm nay cho ${who}.` });
+      setLockMsg({ type: 'ok', text: lock ? `Đã khóa điểm danh ${dayText} của ${who}.` : `Đã mở lại điểm danh ${dayText} cho ${who}.` });
     } catch (e: any) {
       setLockMsg({ type: 'err', text: /Hành động không hợp lệ|4\.2/.test(String(e?.message || '')) ? 'Apps Script chưa có chức năng khóa điểm danh: cần cập nhật lên V4.5 (dán mã mới → Triển khai → Phiên bản mới).' : (e?.message || 'Lỗi kết nối.') });
     } finally { setLockBusy(false); }
@@ -510,7 +535,17 @@ Người bị khóa sẽ không điểm danh / sửa điểm danh được và n
   return (
     <div className="rounded-3xl bg-white border border-slate-200 overflow-hidden">
       <div className="px-4 pt-4 flex flex-wrap items-center gap-2">
-        <h3 className="text-sm font-black uppercase text-slate-800 mr-auto">Chi tiết hôm nay</h3>
+        <h3 className="text-sm font-black uppercase text-slate-800">{isPast ? 'Chi tiết ngày' : 'Chi tiết hôm nay'}</h3>
+        <div className="flex items-center gap-1 mr-auto" role="group" aria-label="Chọn ngày điểm danh">
+          <button type="button" onClick={() => onDateChange(addDays(date, -1))} aria-label="Ngày trước"
+            className="no-hover-fx w-8 h-8 rounded-lg hover:bg-slate-100 inline-flex items-center justify-center"><ChevronLeft className="w-4 h-4" /></button>
+          <input type="date" value={date} max={today} onChange={(e) => e.target.value && onDateChange(e.target.value)} aria-label="Ngày đang xem"
+            className={`h-8 px-2 rounded-lg border text-sm font-bold ${isPast ? 'border-amber-400 bg-amber-50 text-amber-950' : 'border-slate-300 text-slate-800'}`} />
+          <button type="button" onClick={() => onDateChange(addDays(date, 1))} disabled={!isPast} aria-label="Ngày sau"
+            className="no-hover-fx w-8 h-8 rounded-lg hover:bg-slate-100 inline-flex items-center justify-center disabled:opacity-30"><ChevronRight className="w-4 h-4" /></button>
+          {isPast && <button type="button" onClick={() => onDateChange(today)} className="no-hover-fx h-8 px-2.5 rounded-lg text-xs font-black border border-slate-300 hover:bg-slate-50 text-slate-800 whitespace-nowrap">Về hôm nay</button>}
+          {loadingDate && <Loader2 className="w-4 h-4 animate-spin text-slate-500" />}
+        </div>
         <div className="relative">
           <Search className="w-4 h-4 text-slate-500 absolute left-2.5 top-1/2 -translate-y-1/2" />
           <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Tìm tên, mã, tổ, CCCD…" aria-label="Tìm nhân sự" className="pl-8 pr-3 py-1.5 rounded-xl border border-slate-300 text-sm" />
@@ -522,16 +557,21 @@ Người bị khóa sẽ không điểm danh / sửa điểm danh được và n
           </button>
         ))}
       </div>
+      {isPast && (
+        <p className="mx-4 mt-3 rounded-2xl border border-amber-300 bg-amber-50 px-3 py-2.5 text-sm text-amber-950" role="status">
+          <strong>Đang xem {weekdayLabel(date)}, {dayText}.</strong> Nhân sự chỉ tự điểm danh được cho ngày hôm nay; với ngày đã qua, Quản trị / BGH chọn nhân sự rồi bấm <strong>Điểm danh hộ</strong> để điểm danh bù — số liệu được tính vào biểu tổng hợp của tháng.
+        </p>
+      )}
       {/* 🔒 Khóa chốt số liệu điểm danh hôm nay */}
       <div className={`mx-4 mt-3 rounded-2xl border px-3 py-2.5 flex flex-wrap items-center gap-2 ${dayLock?.all ? 'bg-rose-50 border-rose-200' : lockedCount ? 'bg-amber-50 border-amber-200' : 'bg-slate-50 border-slate-200'}`}>
         <Lock className={`w-4 h-4 shrink-0 ${dayLock?.all ? 'text-rose-700' : lockedCount ? 'text-amber-700' : 'text-slate-500'}`} />
         <span className="text-sm font-bold text-slate-800 mr-auto">
-          {dayLock?.all ? 'Đã khóa điểm danh hôm nay của tất cả nhân sự' : lockedCount ? `Đã khóa điểm danh hôm nay của ${lockedCount} người` : 'Điểm danh hôm nay đang mở'}
+          {dayLock?.all ? `Đã khóa điểm danh ${dayText} của tất cả nhân sự` : lockedCount ? `Đã khóa điểm danh ${dayText} của ${lockedCount} người` : isPast ? `${dayText[0].toUpperCase()}${dayText.slice(1)}: nhân sự không tự điểm danh được — chỉ điểm danh bù` : 'Điểm danh hôm nay đang mở'}
           {dayLock?.at && (dayLock.all || lockedCount) ? <span className="font-normal text-slate-600"> • lúc {timeHMS(dayLock.at)}{dayLock.by ? ` bởi ${dayLock.by}` : ''}</span> : null}
         </span>
         {picked.length > 0 && <>
           <span className="text-sm font-bold text-slate-700">Đã chọn {picked.length}:</span>
-          <button type="button" onClick={() => openProxy(picked)} className="no-hover-fx h-8 px-3 rounded-lg text-sm font-bold bg-indigo-600 hover:bg-indigo-700 text-white inline-flex items-center gap-1.5 whitespace-nowrap"><UserCheck className="w-4 h-4" /> Điểm danh hộ ({picked.length})</button>
+          <button type="button" onClick={() => openProxy(picked)} className="no-hover-fx h-8 px-3 rounded-lg text-sm font-bold bg-indigo-600 hover:bg-indigo-700 text-white inline-flex items-center gap-1.5 whitespace-nowrap"><UserCheck className="w-4 h-4" /> {isPast ? 'Điểm danh bù' : 'Điểm danh hộ'} ({picked.length})</button>
           <button type="button" disabled={lockBusy} onClick={() => applyLock(true, false, picked)} className="no-hover-fx h-8 px-3 rounded-lg text-sm font-bold bg-rose-600 hover:bg-rose-700 text-white inline-flex items-center gap-1.5 whitespace-nowrap disabled:opacity-50"><Lock className="w-4 h-4" /> Khóa ({picked.length})</button>
           <button type="button" disabled={lockBusy} onClick={() => applyLock(false, false, picked)} className="no-hover-fx h-8 px-3 rounded-lg text-sm font-bold bg-emerald-700 hover:bg-emerald-800 text-white inline-flex items-center gap-1.5 whitespace-nowrap disabled:opacity-50"><Unlock className="w-4 h-4" /> Mở khóa ({picked.length})</button>
           <button type="button" onClick={() => setPicked([])} className="no-hover-fx h-8 px-2.5 rounded-lg text-sm font-bold text-slate-700 hover:bg-white whitespace-nowrap">Bỏ chọn</button>
@@ -612,7 +652,7 @@ Người bị khóa sẽ không điểm danh / sửa điểm danh được và n
                     <span className="inline-flex flex-wrap items-center gap-1">
                       <span className="px-2 py-0.5 rounded-full text-xs font-black whitespace-nowrap" style={{ background: meta.soft, color: meta.text }} title={meta.label}>{r ? meta.short : meta.label}</span>
                       {locked
-                        ? <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-xs font-black bg-rose-50 text-rose-800 whitespace-nowrap" title="Đã khóa điểm danh hôm nay"><Lock className="w-3 h-3" /> Khóa</span>
+                        ? <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-xs font-black bg-rose-50 text-rose-800 whitespace-nowrap" title={`Đã khóa điểm danh ${dayText}`}><Lock className="w-3 h-3" /> Khóa</span>
                         : null}
                     </span>
                   </td>
@@ -630,7 +670,7 @@ Người bị khóa sẽ không điểm danh / sửa điểm danh được và n
                     </p>
                   </td>
                   <td className="py-1.5 text-center">
-                    <button type="button" onClick={() => openProxy([s.code])} title={`Điểm danh hộ ${s.name}`} aria-label={`Điểm danh hộ ${s.name}`}
+                    <button type="button" onClick={() => openProxy([s.code])} title={`${isPast ? 'Điểm danh bù' : 'Điểm danh hộ'} ${s.name}`} aria-label={`${isPast ? 'Điểm danh bù' : 'Điểm danh hộ'} ${s.name}`}
                       className="no-hover-fx w-8 h-8 inline-flex items-center justify-center rounded-lg text-indigo-700 hover:bg-indigo-50"><UserCheck className="w-4 h-4" /></button>
                   </td>
                 </tr>
@@ -646,7 +686,7 @@ Người bị khóa sẽ không điểm danh / sửa điểm danh được và n
           <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-lg my-auto">
             <div className="px-5 py-3.5 border-b border-slate-200 flex items-center justify-between gap-3">
               <div className="min-w-0">
-                <p className="text-base font-black text-slate-900 inline-flex items-center gap-2"><UserCheck className="w-5 h-5 text-indigo-600" /> Điểm danh hộ — {longDateLabel(today)}</p>
+                <p className="text-base font-black text-slate-900 inline-flex items-center gap-2"><UserCheck className="w-5 h-5 text-indigo-600" /> {isPast ? 'Điểm danh bù' : 'Điểm danh hộ'} — <span className={isPast ? 'text-amber-800' : ''}>{longDateLabel(date)}</span></p>
                 <p className="text-sm text-slate-600 truncate" title={proxyCodes.map(c => staff.find(s => s.code === c)?.name || c).join(', ')}>
                   {proxyCodes.length === 1 ? (staff.find(s => s.code === proxyCodes[0])?.name || proxyCodes[0]) : `${proxyCodes.length} nhân sự: ${proxyCodes.slice(0, 4).map(c => staff.find(s => s.code === c)?.name || c).join(', ')}${proxyCodes.length > 4 ? '…' : ''}`}
                 </p>
@@ -675,12 +715,12 @@ Người bị khóa sẽ không điểm danh / sửa điểm danh được và n
               )}
               <textarea value={pNote} onChange={(e) => setPNote(e.target.value.slice(0, 300))} rows={2} aria-label="Ghi chú"
                 placeholder="Ghi chú (ví dụ: báo qua điện thoại lúc 7h15)" className="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm" />
-              <p className="text-xs text-slate-600">Bản ghi được đánh dấu "Điểm danh hộ bởi {auth?.username}". Điểm danh hộ vẫn thực hiện được khi điểm danh hôm nay đã khóa.</p>
+              <p className="text-xs text-slate-600">Bản ghi được đánh dấu "Điểm danh hộ bởi {auth?.username}" và ghi vào <strong>{longDateLabel(date)}</strong>. Điểm danh hộ vẫn thực hiện được khi ngày đó đã khóa.</p>
               {pErr && <p className="text-sm font-bold text-rose-700">{pErr}</p>}
               <div className="flex gap-2">
                 <button type="button" onClick={() => setProxyCodes(null)} className="no-hover-fx flex-1 h-11 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-sm font-black">Hủy</button>
                 <button type="button" onClick={submitProxy} disabled={pBusy} className="no-hover-fx flex-[2] h-11 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-black inline-flex items-center justify-center gap-2 disabled:opacity-50">
-                  {pBusy ? <Loader2 className="w-4 h-4 animate-spin" /> : <UserCheck className="w-4 h-4" />} {pBusy ? 'Đang lưu…' : `Điểm danh hộ${proxyCodes.length > 1 ? ` ${proxyCodes.length} người` : ''}`}
+                  {pBusy ? <Loader2 className="w-4 h-4 animate-spin" /> : <UserCheck className="w-4 h-4" />} {pBusy ? 'Đang lưu…' : `${isPast ? 'Điểm danh bù' : 'Điểm danh hộ'}${proxyCodes.length > 1 ? ` ${proxyCodes.length} người` : ''}`}
                 </button>
               </div>
             </div>

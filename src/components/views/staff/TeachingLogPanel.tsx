@@ -22,10 +22,11 @@ const WeekGrid: React.FC<{ title: string; color: string; wks: MonthWeek[]; locke
         <table className="w-full text-sm">
           <thead>
             <tr className="text-xs font-bold text-slate-600 border-b border-slate-200">
-              <th className="py-1.5 pl-2 pr-1 text-left">Môn / mục</th>
+              <th className="py-1.5 pl-2 pr-1 lg:pl-4 text-left lg:w-40">Môn / mục</th>
               {wks.map(w => (
                 <th key={w.key} className="py-1.5 px-0.5 text-center whitespace-nowrap" title={w.label}>
-                  T{w.index}<span className="block font-medium text-slate-500">{dm(w.from)}</span>
+                  <span className="lg:hidden">T{w.index}</span><span className="max-lg:hidden">Tuần {w.index}</span>
+                  <span className="block font-medium text-slate-500">{dm(w.from)}<span className="max-lg:hidden">–{dm(w.to)}</span></span>
                 </th>
               ))}
               <th className="py-1.5 px-1 text-center">Tổng</th>
@@ -34,12 +35,12 @@ const WeekGrid: React.FC<{ title: string; color: string; wks: MonthWeek[]; locke
           <tbody>
             {rows.map(r => (
               <tr key={r.id} className="border-b border-slate-100 last:border-0">
-                <td className="py-1 pl-2 pr-1 font-bold text-slate-900 leading-tight" title={r.hint}>{r.label}</td>
+                <td className="py-1 lg:py-1.5 pl-2 pr-1 lg:pl-4 font-bold text-slate-900 leading-tight" title={r.hint}>{r.label}</td>
                 {wks.map(w => (
                   <td key={w.key} className="py-1 px-0.5 text-center">
                     <input type="text" inputMode="numeric" value={r.get(w.key) ? String(r.get(w.key)) : ''} disabled={locked}
                       onChange={(e) => r.set(w.key, e.target.value)} placeholder="0" aria-label={`${r.hint} – Tuần ${w.index}`}
-                      className="w-10 h-10 px-0.5 rounded-lg border border-slate-300 text-center text-base font-bold tabular-nums disabled:bg-slate-100" />
+                      className="w-9 sm:w-10 h-10 lg:w-20 lg:h-11 px-0.5 rounded-lg border border-slate-300 text-center text-base lg:text-lg font-bold tabular-nums disabled:bg-slate-100 focus:border-indigo-600 focus:ring-2 focus:ring-indigo-200 outline-none" />
                   </td>
                 ))}
                 <td className="py-1 px-1 text-center font-black tabular-nums" style={{ color }}>{rowTotal(r)}</td>
@@ -198,86 +199,123 @@ export const TeachingLogPanel: React.FC<{ cccd: string; pin: string; today: stri
   }
 
   return (
-    <div className="space-y-4">
+    <div className="flex flex-col gap-4 lg:grid lg:grid-cols-[minmax(0,21rem)_minmax(0,1fr)] lg:gap-5 lg:items-start">
       {msg && (
-        <p className={`rounded-2xl px-4 py-3 text-sm font-bold border ${msg.ok ? 'bg-emerald-50 border-emerald-200 text-emerald-900' : 'bg-rose-50 border-rose-200 text-rose-800'}`} role="status">{msg.text}</p>
+        <p className={`lg:col-span-2 rounded-2xl px-4 py-3 text-sm font-bold border ${msg.ok ? 'bg-emerald-50 border-emerald-200 text-emerald-900' : 'bg-rose-50 border-rose-200 text-rose-800'}`} role="status">{msg.text}</p>
       )}
 
-      {/* Bước 1: khai báo */}
-      <section className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
-        <div className="px-5 py-3.5 border-b border-slate-100 flex items-center justify-between gap-2">
-          <p className="text-base font-black text-slate-900 inline-flex items-center gap-2"><BookOpenCheck className="w-5 h-5 text-indigo-600" /> 1. Khai báo phân công</p>
-          {!editing && profile && (
-            <button type="button" onClick={() => startEdit(profile)} className="no-hover-fx h-9 px-3 rounded-xl border border-slate-300 text-sm font-bold text-slate-800 hover:bg-slate-50 inline-flex items-center gap-1.5 whitespace-nowrap"><Pencil className="w-4 h-4" /> Sửa</button>
-          )}
-        </div>
-        {editing ? (
-          <div className="p-5 space-y-4">
-            <div className="space-y-2">
-              <p className="text-sm font-black text-slate-800">Môn dạy được phân công</p>
-              <div className="flex flex-wrap gap-1.5">
-                {[...SUBJECT_PRESETS, ...draft.subjects.filter(s => !SUBJECT_PRESETS.includes(s))].map(s => {
-                  const on = draft.subjects.includes(s);
-                  return (
-                    <button key={s} type="button" onClick={() => toggleSubject(s)} aria-pressed={on}
-                      className={`no-hover-fx px-3 py-1.5 rounded-full text-sm font-bold border whitespace-nowrap ${on ? 'bg-indigo-600 border-indigo-600 text-white' : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-50'}`}>
-                      {on && <CheckCircle2 className="w-3.5 h-3.5 inline mr-1 -mt-0.5" />}{s}
-                    </button>
-                  );
-                })}
+      {/* Máy tính: cột trái = khai báo + các tháng đã kê; cột phải = bảng kê số tiết */}
+      <div className={`max-lg:contents lg:space-y-4 ${editing || !profile ? 'lg:col-span-2' : 'lg:col-start-1'}`}>
+        {/* Bước 1: khai báo */}
+        <section className={`max-lg:order-1 bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden`}>
+          <div className="px-5 py-3.5 border-b border-slate-100 flex items-center justify-between gap-2">
+            <p className="text-base font-black text-slate-900 inline-flex items-center gap-2"><BookOpenCheck className="w-5 h-5 text-indigo-600" /> 1. Khai báo phân công</p>
+            {!editing && profile && (
+              <button type="button" onClick={() => startEdit(profile)} className="no-hover-fx h-9 px-3 rounded-xl border border-slate-300 text-sm font-bold text-slate-800 hover:bg-slate-50 inline-flex items-center gap-1.5 whitespace-nowrap"><Pencil className="w-4 h-4" /> Sửa</button>
+            )}
+          </div>
+          {editing ? (
+            <div className="p-5 space-y-4">
+              <div className="space-y-2">
+                <p className="text-sm font-black text-slate-800">Môn dạy được phân công</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {[...SUBJECT_PRESETS, ...draft.subjects.filter(s => !SUBJECT_PRESETS.includes(s))].map(s => {
+                    const on = draft.subjects.includes(s);
+                    return (
+                      <button key={s} type="button" onClick={() => toggleSubject(s)} aria-pressed={on}
+                        className={`no-hover-fx px-3 py-1.5 rounded-full text-sm font-bold border whitespace-nowrap ${on ? 'bg-indigo-600 border-indigo-600 text-white' : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-50'}`}>
+                        {on && <CheckCircle2 className="w-3.5 h-3.5 inline mr-1 -mt-0.5" />}{s}
+                      </button>
+                    );
+                  })}
+                </div>
+                <div className="flex gap-2">
+                  <input value={otherSubject} onChange={(e) => setOtherSubject(e.target.value.slice(0, 40))} placeholder="Môn khác…" aria-label="Thêm môn khác"
+                    className="flex-1 h-10 px-3 rounded-xl border border-slate-300 text-sm" />
+                  <button type="button" disabled={!otherSubject.trim()} onClick={() => { const s = otherSubject.trim(); if (s && !draft.subjects.includes(s)) setDraft(d => ({ ...d, subjects: [...d.subjects, s] })); setOtherSubject(''); }}
+                    className="no-hover-fx h-10 px-3 rounded-xl border border-slate-300 text-sm font-bold text-slate-800 hover:bg-slate-50 inline-flex items-center gap-1 disabled:opacity-50 whitespace-nowrap"><Plus className="w-4 h-4" /> Thêm</button>
+                </div>
+              </div>
+              {LIST_FIELDS.map(f => (
+                <label key={f.key} className="block space-y-1.5">
+                  <span className="text-sm font-black text-slate-800">{f.label}</span>
+                  <input value={listText[f.key] || ''} onChange={(e) => setListText(t => ({ ...t, [f.key]: e.target.value }))} placeholder={f.hint}
+                    className="w-full h-11 px-3 rounded-xl border border-slate-300 text-base" />
+                  <span className="block text-xs text-slate-600">Ghi tên lớp, cách nhau bằng dấu phẩy. Để trống nếu không dạy.</span>
+                </label>
+              ))}
+              <div className="space-y-2">
+                <p className="text-sm font-black text-slate-800">Dạy thừa giờ các môn khác (ngoài Tiếng Anh)</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {OVERTIME_SUBJECTS.map(h => {
+                    const on = (draft.overtimeSubjects || []).includes(h.code);
+                    return (
+                      <button key={h.code} type="button" aria-pressed={on}
+                        onClick={() => setDraft(d => ({ ...d, overtimeSubjects: on ? (d.overtimeSubjects || []).filter(x => x !== h.code) : [...(d.overtimeSubjects || []), h.code] }))}
+                        className={`no-hover-fx px-3 py-1.5 rounded-full text-sm font-bold border whitespace-nowrap ${on ? 'bg-teal-700 border-teal-700 text-white' : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-50'}`}>
+                        {on && <CheckCircle2 className="w-3.5 h-3.5 inline mr-1 -mt-0.5" />}{h.label}
+                      </button>
+                    );
+                  })}
+                </div>
+                <span className="block text-xs text-slate-600">Chọn các môn có dạy thừa giờ. Không dạy thừa giờ thì để trống. Thừa giờ Tiếng Anh khai ở ô lớp Tiếng Anh phía trên.</span>
               </div>
               <div className="flex gap-2">
-                <input value={otherSubject} onChange={(e) => setOtherSubject(e.target.value.slice(0, 40))} placeholder="Môn khác…" aria-label="Thêm môn khác"
-                  className="flex-1 h-10 px-3 rounded-xl border border-slate-300 text-sm" />
-                <button type="button" disabled={!otherSubject.trim()} onClick={() => { const s = otherSubject.trim(); if (s && !draft.subjects.includes(s)) setDraft(d => ({ ...d, subjects: [...d.subjects, s] })); setOtherSubject(''); }}
-                  className="no-hover-fx h-10 px-3 rounded-xl border border-slate-300 text-sm font-bold text-slate-800 hover:bg-slate-50 inline-flex items-center gap-1 disabled:opacity-50 whitespace-nowrap"><Plus className="w-4 h-4" /> Thêm</button>
+                {profile && <button type="button" onClick={() => setEditing(false)} className="no-hover-fx flex-1 h-12 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-sm font-black inline-flex items-center justify-center gap-1.5"><X className="w-4 h-4" /> Hủy</button>}
+                <button type="button" onClick={saveProfile} disabled={busy} className="no-hover-fx flex-[2] h-12 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white text-base font-black inline-flex items-center justify-center gap-2 disabled:opacity-50">
+                  {busy ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />} Lưu khai báo
+                </button>
               </div>
             </div>
-            {LIST_FIELDS.map(f => (
-              <label key={f.key} className="block space-y-1.5">
-                <span className="text-sm font-black text-slate-800">{f.label}</span>
-                <input value={listText[f.key] || ''} onChange={(e) => setListText(t => ({ ...t, [f.key]: e.target.value }))} placeholder={f.hint}
-                  className="w-full h-11 px-3 rounded-xl border border-slate-300 text-base" />
-                <span className="block text-xs text-slate-600">Ghi tên lớp, cách nhau bằng dấu phẩy. Để trống nếu không dạy.</span>
-              </label>
-            ))}
-            <div className="space-y-2">
-              <p className="text-sm font-black text-slate-800">Dạy thừa giờ các môn khác (ngoài Tiếng Anh)</p>
-              <div className="flex flex-wrap gap-1.5">
-                {OVERTIME_SUBJECTS.map(h => {
-                  const on = (draft.overtimeSubjects || []).includes(h.code);
-                  return (
-                    <button key={h.code} type="button" aria-pressed={on}
-                      onClick={() => setDraft(d => ({ ...d, overtimeSubjects: on ? (d.overtimeSubjects || []).filter(x => x !== h.code) : [...(d.overtimeSubjects || []), h.code] }))}
-                      className={`no-hover-fx px-3 py-1.5 rounded-full text-sm font-bold border whitespace-nowrap ${on ? 'bg-teal-700 border-teal-700 text-white' : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-50'}`}>
-                      {on && <CheckCircle2 className="w-3.5 h-3.5 inline mr-1 -mt-0.5" />}{h.label}
+          ) : profile ? (
+            <dl className="p-5 grid grid-cols-1 gap-2 text-sm">
+              <div><dt className="font-black text-slate-700">Môn dạy</dt><dd className="text-slate-900">{profile.subjects.join(', ') || '—'}</dd></div>
+              {LIST_FIELDS.map(f => (
+                <div key={f.key}><dt className="font-black text-slate-700">{f.label}</dt><dd className="text-slate-900">{profile[f.key].join(', ') || '—'}</dd></div>
+              ))}
+              <div><dt className="font-black text-slate-700">Dạy thừa giờ các môn khác</dt><dd className="text-slate-900">{(profile.overtimeSubjects || []).map(subjectLabel).join(', ') || '—'}</dd></div>
+            </dl>
+          ) : null}
+        </section>
+        {/* Bước 3: các tháng đã kê khai — xem lại, sửa khi chưa khóa */}
+        {profile && !editing && months.length > 0 && (
+          <section className="max-lg:order-3 bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+            <div className="px-5 py-3.5 border-b border-slate-100">
+              <p className="text-base font-black text-slate-900 inline-flex items-center gap-2"><History className="w-5 h-5 text-indigo-600" /> 3. Các tháng đã kê khai</p>
+            </div>
+            <ul className="divide-y divide-slate-100">
+              {months.map(m => {
+                const sum = keys.length ? keys : SHOWN_KEYS.filter(k => (m.totals[k] || 0) > 0);
+                const current = m.month === month;
+                return (
+                  <li key={m.month} className={`px-4 py-3 flex items-center gap-3 ${current ? 'bg-indigo-50/60' : ''}`}>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-black text-slate-900 flex items-center gap-2 flex-wrap">
+                        {monthLabel(m.month)}
+                        {m.locked
+                          ? <span className="inline-flex items-center gap-1 text-xs font-bold text-rose-800 bg-rose-50 border border-rose-200 px-2 py-0.5 rounded-full whitespace-nowrap"><Lock className="w-3 h-3" /> Đã khóa</span>
+                          : <span className="text-xs font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full whitespace-nowrap">Sửa được</span>}
+                      </p>
+                      <p className="text-xs text-slate-600 truncate">
+                        {sum.map(k => `${TEACH_META[k].short}: ${m.totals[k] || 0}`).join(' • ') || '—'}
+                      </p>
+                    </div>
+                    <button type="button" disabled={current}
+                      onClick={() => { setMonth(m.month); setTimeout(() => logRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50); }}
+                      className="no-hover-fx h-9 px-3 rounded-xl border border-slate-300 text-sm font-bold text-slate-800 hover:bg-slate-50 inline-flex items-center gap-1.5 whitespace-nowrap disabled:opacity-60">
+                      {current ? 'Đang xem' : m.locked ? 'Xem' : <><Pencil className="w-4 h-4" /> Xem / sửa</>}
                     </button>
-                  );
-                })}
-              </div>
-              <span className="block text-xs text-slate-600">Chọn các môn có dạy thừa giờ. Không dạy thừa giờ thì để trống. Thừa giờ Tiếng Anh khai ở ô lớp Tiếng Anh phía trên.</span>
-            </div>
-            <div className="flex gap-2">
-              {profile && <button type="button" onClick={() => setEditing(false)} className="no-hover-fx flex-1 h-12 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-sm font-black inline-flex items-center justify-center gap-1.5"><X className="w-4 h-4" /> Hủy</button>}
-              <button type="button" onClick={saveProfile} disabled={busy} className="no-hover-fx flex-[2] h-12 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white text-base font-black inline-flex items-center justify-center gap-2 disabled:opacity-50">
-                {busy ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />} Lưu khai báo
-              </button>
-            </div>
-          </div>
-        ) : profile ? (
-          <dl className="p-5 grid grid-cols-1 gap-2 text-sm">
-            <div><dt className="font-black text-slate-700">Môn dạy</dt><dd className="text-slate-900">{profile.subjects.join(', ') || '—'}</dd></div>
-            {LIST_FIELDS.map(f => (
-              <div key={f.key}><dt className="font-black text-slate-700">{f.label}</dt><dd className="text-slate-900">{profile[f.key].join(', ') || '—'}</dd></div>
-            ))}
-            <div><dt className="font-black text-slate-700">Dạy thừa giờ các môn khác</dt><dd className="text-slate-900">{(profile.overtimeSubjects || []).map(subjectLabel).join(', ') || '—'}</dd></div>
-          </dl>
-        ) : null}
-      </section>
+                  </li>
+                );
+              })}
+            </ul>
+          </section>
+        )}
+      </div>
 
       {/* Bước 2: kê khai theo tuần */}
       {profile && !editing && (
-        <section ref={logRef} className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden scroll-mt-4">
+        <section ref={logRef} className="max-lg:order-2 bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden scroll-mt-4 lg:col-start-2">
           <div className="px-5 py-3.5 border-b border-slate-100 flex items-center justify-between gap-2">
             <p className="text-base font-black text-slate-900">2. Kê khai số tiết</p>
             <div className="flex items-center gap-1">
@@ -295,7 +333,7 @@ export const TeachingLogPanel: React.FC<{ cccd: string; pin: string; today: stri
                   <Lock className="w-4 h-4 mt-0.5 shrink-0" /> {lockMessage || 'Bảng kê tháng này đã được khóa chốt số liệu.'}
                 </p>
               ) : (
-                <p className="text-xs text-slate-600">T1…T{wks.length}: các tuần trong tháng (ngày ghi dưới là ngày đầu tuần). Kê hoặc sửa được bất cứ lúc nào cho tới khi nhà trường khóa chốt.</p>
+                <p className="text-xs lg:text-sm text-slate-600"><span className="lg:hidden">T1…T{wks.length}: các tuần trong tháng (ngày ghi dưới là ngày đầu tuần). </span>Kê hoặc sửa được bất cứ lúc nào cho tới khi nhà trường khóa chốt.</p>
               )}
               {keys.includes('pe') && (
                 <WeekGrid title="Giáo dục thể chất (dạy ngoài trời)" color={TEACH_META.pe.text} wks={wks} locked={locked}
@@ -333,40 +371,6 @@ export const TeachingLogPanel: React.FC<{ cccd: string; pin: string; today: stri
         </section>
       )}
 
-      {/* Bước 3: các tháng đã kê khai — xem lại, sửa khi chưa khóa */}
-      {profile && !editing && months.length > 0 && (
-        <section className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
-          <div className="px-5 py-3.5 border-b border-slate-100">
-            <p className="text-base font-black text-slate-900 inline-flex items-center gap-2"><History className="w-5 h-5 text-indigo-600" /> 3. Các tháng đã kê khai</p>
-          </div>
-          <ul className="divide-y divide-slate-100">
-            {months.map(m => {
-              const sum = keys.length ? keys : SHOWN_KEYS.filter(k => (m.totals[k] || 0) > 0);
-              const current = m.month === month;
-              return (
-                <li key={m.month} className={`px-4 py-3 flex items-center gap-3 ${current ? 'bg-indigo-50/60' : ''}`}>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-black text-slate-900 flex items-center gap-2 flex-wrap">
-                      {monthLabel(m.month)}
-                      {m.locked
-                        ? <span className="inline-flex items-center gap-1 text-xs font-bold text-rose-800 bg-rose-50 border border-rose-200 px-2 py-0.5 rounded-full whitespace-nowrap"><Lock className="w-3 h-3" /> Đã khóa</span>
-                        : <span className="text-xs font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full whitespace-nowrap">Sửa được</span>}
-                    </p>
-                    <p className="text-xs text-slate-600 truncate">
-                      {sum.map(k => `${TEACH_META[k].short}: ${m.totals[k] || 0}`).join(' • ') || '—'}
-                    </p>
-                  </div>
-                  <button type="button" disabled={current}
-                    onClick={() => { setMonth(m.month); setTimeout(() => logRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50); }}
-                    className="no-hover-fx h-9 px-3 rounded-xl border border-slate-300 text-sm font-bold text-slate-800 hover:bg-slate-50 inline-flex items-center gap-1.5 whitespace-nowrap disabled:opacity-60">
-                    {current ? 'Đang xem' : m.locked ? 'Xem' : <><Pencil className="w-4 h-4" /> Xem / sửa</>}
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
-        </section>
-      )}
     </div>
   );
 };
