@@ -192,7 +192,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   };
 
   return (
-    <div className="p-2.5 sm:p-3.5 md:p-4 max-w-7xl mx-auto space-y-2.5 sm:space-y-3">
+    <div className="p-2.5 sm:p-3.5 md:p-4 max-w-7xl mx-auto space-y-3 sm:space-y-4">
       {/* 1. Lời chào + việc cần làm hôm nay + lối tắt (bảng điều khiển) */}
       {(() => {
         const isManagementAccount = Boolean(isBgh || isSchoolAdmin || currentUser?.role === 'admin' || currentUser?.role === 'guest_admin');
@@ -210,8 +210,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
         type Task = { key: string; title: string; detail: string; done: boolean; onClick: () => void; action: string };
         const tasks: Task[] = isManagementAccount ? [
-          { key: 'rep', title: 'Chuyên cần học sinh hôm nay', detail: hasAttendanceToday ? `${displayPresentCount}/${displayTotalStudents} học sinh có mặt (${displayAttendanceRate}%)` : 'Chưa có lớp nào báo cáo', done: hasAttendanceToday, onClick: () => onNavigate('reports'), action: 'Xem báo cáo' },
-          { key: 'staff', title: 'Chấm công giáo viên – nhân viên', detail: 'Xem ai đã điểm danh đi làm hôm nay', done: false, onClick: () => onNavigate('staff_attendance'), action: 'Mở chấm công' },
+          { key: 'rep', title: 'Chuyên cần hôm nay', detail: hasAttendanceToday ? `${displayPresentCount}/${displayTotalStudents} học sinh có mặt (${displayAttendanceRate}%)` : 'Chưa có lớp nào báo cáo', done: hasAttendanceToday, onClick: () => onNavigate('reports'), action: 'Xem báo cáo' },
+          { key: 'staff', title: 'Chấm công nhân sự', detail: 'Ai đã điểm danh đi làm hôm nay', done: false, onClick: () => onNavigate('staff_attendance'), action: 'Mở chấm công' },
           { key: 'cls', title: 'Lớp học toàn trường', detail: `${homeroomClasses.length} lớp chủ nhiệm • ${homeroomStudents.length} học sinh`, done: homeroomClasses.length > 0, onClick: () => onNavigate('classes'), action: 'Xem lớp' },
         ] : [
           { key: 'att', title: 'Điểm danh lớp', detail: displayTotalStudents === 0 ? 'Lớp chưa có học sinh' : hasAttendanceToday ? `Đã điểm danh • ${displayPresentCount}/${displayTotalStudents} có mặt` : 'Chưa điểm danh hôm nay', done: hasAttendanceToday, onClick: () => onNavigate('attendance'), action: hasAttendanceToday ? 'Xem lại' : 'Điểm danh ngay' },
@@ -243,15 +243,17 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                   <img src={displayAvatar} alt={greetingUserName} className="w-14 h-14 rounded-2xl object-cover ring-4 ring-white shadow-sm bg-white shrink-0" />
                   <div className="min-w-0">
                     <p className="text-sm font-semibold text-indigo-800">{dateLine} • {roleText}</p>
-                    <h1 className="text-lg sm:text-2xl font-black text-slate-900 tracking-tight leading-tight truncate">
+                    <h1 className="normal-case text-lg sm:text-xl font-black text-slate-900 tracking-tight leading-snug truncate mt-0.5" title={greetingUserName}>
                       {(() => { const g = String(getGreeting()).toLocaleLowerCase('vi-VN'); return g.charAt(0).toLocaleUpperCase('vi-VN') + g.slice(1); })()}, {greetingUserName}!
                     </h1>
-                    <p className="text-sm text-slate-700 truncate">
+                    {/* Dòng phụ dạng nhãn tách rời — dễ đọc hơn 1 dòng dài nhiều dấu "•" */}
+                    <div className="mt-1.5 flex flex-wrap items-center gap-1.5 text-xs">
                       {isManagementAccount
-                        ? <>Toàn trường: <strong>{homeroomClasses.length} lớp</strong> • <strong>{homeroomStudents.length} học sinh</strong></>
-                        : <>Lớp <strong>{activeClass?.name || 'chưa có'}</strong></>}
-                      {' • '}{displaySchoolName} • NH {teacherProfile.academicYear || activeClass?.academicYear || '2026–2027'}
-                    </p>
+                        ? <span className="px-2 py-0.5 rounded-full bg-white/80 border border-slate-200 text-slate-700"><strong className="text-slate-900">{homeroomClasses.length}</strong> lớp · <strong className="text-slate-900">{homeroomStudents.length}</strong> học sinh</span>
+                        : <span className="px-2 py-0.5 rounded-full bg-white/80 border border-slate-200 text-slate-700">Lớp <strong className="text-slate-900">{activeClass?.name || 'chưa có'}</strong></span>}
+                      <span className="px-2 py-0.5 rounded-full bg-white/80 border border-slate-200 text-slate-700">Năm học <strong className="text-slate-900">{teacherProfile.academicYear || activeClass?.academicYear || '2026–2027'}</strong></span>
+                      <span className="max-sm:hidden px-2 py-0.5 rounded-full bg-white/80 border border-slate-200 text-slate-700 truncate max-w-[18rem]" title={displaySchoolName}>{displaySchoolName}</span>
+                    </div>
                   </div>
                 </div>
                 {/* Lối tắt */}
@@ -268,24 +270,24 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             </div>
 
             {/* Việc cần làm hôm nay */}
-            <div className="px-4 sm:px-6 py-4 grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div className="px-4 sm:px-6 py-4 grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
               {tasks.map(t => (
                 <button key={t.key} type="button" onClick={t.onClick}
-                  className={`no-hover-fx text-left rounded-2xl border p-3.5 flex items-start gap-3 transition-colors ${t.done ? 'border-emerald-200 bg-emerald-50/50 hover:bg-emerald-50' : 'border-amber-200 bg-amber-50/60 hover:bg-amber-50'}`}>
+                  className={`no-hover-fx text-left rounded-2xl border p-4 flex items-start gap-3 transition-colors ${t.done ? 'border-emerald-200 bg-emerald-50/50 hover:bg-emerald-50' : 'border-amber-200 bg-amber-50/60 hover:bg-amber-50'}`}>
                   <span className={`mt-0.5 w-7 h-7 rounded-full flex items-center justify-center shrink-0 text-white text-sm font-black ${t.done ? 'bg-emerald-700' : 'bg-amber-700'}`} aria-hidden="true">{t.done ? '✓' : '!'}</span>
                   <span className="min-w-0 flex-1">
-                    <span className="block text-sm font-black text-slate-900">{t.title}</span>
-                    <span className="block text-sm text-slate-700 truncate">{t.detail}</span>
-                    <span className={`inline-flex items-center gap-1 mt-1.5 text-xs font-bold ${t.done ? 'text-emerald-800' : 'text-amber-900'}`}>{t.action} <ChevronRight className="w-3.5 h-3.5" /></span>
+                    <span className="block text-sm font-black text-slate-900 leading-snug whitespace-nowrap truncate" title={t.title}>{t.title}</span>
+                    <span className="block text-sm text-slate-600 truncate mt-0.5" title={t.detail}>{t.detail}</span>
+                    <span className={`inline-flex items-center gap-1 mt-2 text-xs font-bold ${t.done ? 'text-emerald-800' : 'text-amber-900'}`}>{t.action} <ChevronRight className="w-3.5 h-3.5" /></span>
                   </span>
                 </button>
               ))}
             </div>
 
             {/* Câu cảm hứng */}
-            <div className="px-4 sm:px-6 pb-4 -mt-1 flex items-center gap-2 text-sm text-slate-700">
-              <Brain className="w-4 h-4 text-indigo-600 shrink-0" />
-              <span className="italic truncate flex-1">{dailyQuote}</span>
+            <div className="mx-4 sm:mx-6 mb-4 pt-3 border-t border-slate-100 flex items-center gap-2 text-sm text-slate-500">
+              <Brain className="w-4 h-4 text-indigo-500 shrink-0" />
+              <span className="italic truncate flex-1" title={dailyQuote}>{dailyQuote}</span>
               <button onClick={fetchAiQuote} disabled={loadingQuote} className="no-hover-fx text-xs font-bold text-indigo-700 hover:text-indigo-900 shrink-0">
                 {loadingQuote ? 'Đang tải…' : 'Cảm hứng AI'}
               </button>
@@ -342,7 +344,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       )}
 
       {/* 3. 4 thẻ số liệu dạng thẻ màu hiện đại (số to, chữ trắng rõ, có thanh tiến độ) */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {[
           {
             key: 'students',
@@ -428,10 +430,10 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 <Trophy className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="text-sm md:text-base font-black text-amber-950 uppercase">
+                <h3 className="text-sm md:text-base font-black text-amber-950">
                   BẢNG XẾP HẠNG THI ĐUA NHẬN XU THEO LỚP HỌC
                 </h3>
-                <p className="text-xs text-amber-800 font-semibold uppercase">
+                <p className="text-xs text-amber-800 font-semibold">
                   THỐNG KÊ TỔNG ĐIỂM XU THI ĐUA, ĐIỂM TRUNG BÌNH VÀ HỌC SINH TIÊU BIỂU CỦA TỪNG LỚP
                 </p>
               </div>
@@ -439,9 +441,9 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
             <button
               onClick={() => onNavigate('reports')}
-              className="text-xs font-black text-amber-800 hover:text-amber-950 flex items-center gap-1 self-start sm:self-auto hover-zoom-interactive uppercase"
+              className="text-xs font-black text-amber-800 hover:text-amber-950 flex items-center gap-1 self-start sm:self-auto hover-zoom-interactive"
             >
-              <span>XEM BÁO CÁO CHI TIẾT</span>
+              <span>Xem báo cáo chi tiết</span>
               <ChevronRight className="w-4 h-4" />
             </button>
           </div>
@@ -513,10 +515,11 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         </div>
       )}
 
-      {/* 5. Bottom Grid: Timetable today & Top Students ranking */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* 5. Bottom Grid: Timetable today & Top Students ranking (quản lý chưa có lớp nào thì ẩn — toàn ô trống) */}
+      {!(isManagementAccount && classes.length === 0) && (
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4">
         {/* Left: Thời Khóa Biểu Cố Định Theo Từng Lớp (Yêu cầu 1) */}
-        <div className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-xs space-y-4 hover-zoom-card flex flex-col justify-between">
+        <div className="bg-white rounded-3xl p-4 sm:p-5 border border-slate-200/80 shadow-xs space-y-4 hover-zoom-card flex flex-col justify-between">
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2.5">
@@ -524,20 +527,20 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                   <Calendar className="w-4 h-4" />
                 </div>
                 <div>
-                  <h2 className="text-sm md:text-base font-black text-indigo-950 uppercase">
-                    THỜI KHÓA BIỂU HÔM NAY
+                  <h2 className="text-sm md:text-base font-black text-indigo-950">
+                    Thời khóa biểu hôm nay
                   </h2>
-                  <span className="text-[12px] text-indigo-600 font-bold block uppercase">
-                    CỐ ĐỊNH THEO: <strong>LỚP {selectedTimetableClass?.name}</strong>
+                  <span className="text-[12px] text-indigo-600 font-bold block">
+                    Theo lớp <strong>{selectedTimetableClass?.name}</strong>
                   </span>
                 </div>
               </div>
 
               <button
                 onClick={() => onNavigate('schedule')}
-                className="text-xs font-black text-indigo-600 hover:text-indigo-800 flex items-center gap-1 hover-zoom-interactive uppercase"
+                className="text-xs font-black text-indigo-600 hover:text-indigo-800 flex items-center gap-1 hover-zoom-interactive"
               >
-                <span>XEM CẢ TUẦN</span>
+                <span>Xem cả tuần</span>
                 <ChevronRight className="w-4 h-4" />
               </button>
             </div>
@@ -545,12 +548,12 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             {/* Class switcher buttons for Timetable if multiple classes (Yêu cầu 1) */}
             {classes.length > 1 && (
               <div className="flex items-center gap-1.5 overflow-x-auto pb-1 pt-1 border-b border-slate-100">
-                <span className="text-[12px] font-bold text-slate-400 shrink-0 uppercase">LỚP:</span>
+                <span className="text-[12px] font-bold text-slate-400 shrink-0">Lớp:</span>
                 {classes.map(cls => (
                   <button
                     key={cls.id}
                     onClick={() => setSelectedTimetableClassId(cls.id)}
-                    className={`px-2.5 py-1 rounded-xl text-xs font-bold transition-all shrink-0 hover-zoom-btn uppercase ${
+                    className={`px-2.5 py-1 rounded-xl text-xs font-bold transition-all shrink-0 hover-zoom-btn ${
                       selectedTimetableClassId === cls.id
                         ? 'bg-blue-600 text-white font-black shadow-xs'
                         : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
@@ -574,13 +577,13 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                         T{slot.period}
                       </span>
                       <div>
-                        <div className="text-xs md:text-sm font-black text-indigo-950 uppercase">{slot.subject}</div>
-                        <div className="text-[12px] text-slate-500 font-medium uppercase">
+                        <div className="text-xs md:text-sm font-black text-indigo-950">{slot.subject}</div>
+                        <div className="text-[12px] text-slate-500 font-medium">
                           {slot.session === 'morning' ? 'BUỔI SÁNG' : 'BUỔI CHIỀU'} · {slot.teacher || teacherProfile.name}
                         </div>
                       </div>
                     </div>
-                    <span className="px-2.5 py-1 rounded-lg bg-blue-100 text-blue-800 text-xs font-black uppercase">
+                    <span className="px-2.5 py-1 rounded-lg bg-blue-100 text-blue-800 text-xs font-black">
                       TIẾT {slot.period}
                     </span>
                   </div>
@@ -589,14 +592,14 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             ) : (
               <div className="py-10 text-center text-slate-400 space-y-2">
                 <Calendar className="w-10 h-10 mx-auto text-slate-300" />
-                <p className="text-xs md:text-sm font-medium text-slate-600 uppercase">
-                  HÔM NAY KHÔNG CÓ TIẾT HỌC NÀO TRONG THỜI KHÓA BIỂU LỚP {selectedTimetableClass?.name}.
+                <p className="text-xs md:text-sm font-medium text-slate-600">
+                  Hôm nay lớp {selectedTimetableClass?.name} chưa có tiết nào trong thời khóa biểu.
                 </p>
                 <button
                   onClick={() => onNavigate('schedule')}
-                  className="text-xs font-bold text-indigo-600 hover:underline inline-block mt-1 hover-zoom-interactive uppercase"
+                  className="text-xs font-bold text-indigo-600 hover:underline inline-block mt-1 hover-zoom-interactive"
                 >
-                  + CÀI ĐẶT THỜI KHÓA BIỂU CỐ ĐỊNH LỚP {selectedTimetableClass?.name}
+                  + Cài đặt thời khóa biểu lớp {selectedTimetableClass?.name}
                 </button>
               </div>
             )}
@@ -604,7 +607,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         </div>
 
         {/* Right: Top Thi Đua Nhận Xu Theo Lớp (Yêu cầu 1) */}
-        <div className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-xs space-y-4 hover-zoom-card flex flex-col justify-between">
+        <div className="bg-white rounded-3xl p-4 sm:p-5 border border-slate-200/80 shadow-xs space-y-4 hover-zoom-card flex flex-col justify-between">
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2.5">
@@ -612,20 +615,20 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                   <Award className="w-4 h-4" />
                 </div>
                 <div>
-                  <h2 className="text-sm md:text-base font-black text-indigo-950 uppercase">
-                    TOP THI ĐUA NHẬN XU
+                  <h2 className="text-sm md:text-base font-black text-indigo-950">
+                    Top thi đua nhận xu
                   </h2>
-                  <span className="text-[12px] text-amber-700 font-bold block uppercase">
-                    ĐANG XEM: <strong>LỚP {classes.find(c => c.id === selectedRankingClassId)?.name || activeClass?.name}</strong>
+                  <span className="text-[12px] text-amber-700 font-bold block">
+                    Đang xem lớp <strong>{classes.find(c => c.id === selectedRankingClassId)?.name || activeClass?.name}</strong>
                   </span>
                 </div>
               </div>
 
               <button
                 onClick={() => onNavigate('reports')}
-                className="text-xs font-black text-indigo-600 hover:text-indigo-800 flex items-center gap-1 hover-zoom-interactive uppercase"
+                className="text-xs font-black text-indigo-600 hover:text-indigo-800 flex items-center gap-1 hover-zoom-interactive"
               >
-                <span>XEM TẤT CẢ</span>
+                <span>Xem tất cả</span>
                 <ChevronRight className="w-4 h-4" />
               </button>
             </div>
@@ -727,6 +730,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           </div>
         </div>
       </div>
+      )}
 
       {/* 6. BANNER THÔNG TIN GIÁO VIÊN & TÁC GIẢ BẢN QUYỀN CỐ ĐỊNH (Yêu cầu 5 & 6) */}
       {(() => {
@@ -735,65 +739,31 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         const greetingUserName = isManagementAccount
           ? officialName
           : (officialName || activeClass?.teacherName || teacherProfile.name);
-        const displaySchoolName = currentUser?.schoolName || teacherProfile.schoolName || 'TRƯỜNG HỌC HẠNH PHÚC';
+        const displaySchoolName = currentUser?.schoolName || teacherProfile.schoolName || 'Trường học hạnh phúc';
         const displayAvatar = currentUser?.avatar || teacherProfile.avatar;
 
         return (
-          <div className="bg-white rounded-3xl p-5 border border-indigo-100 shadow-xs flex flex-col md:flex-row items-center justify-between gap-4 hover-zoom-card">
-            {/* Info Giáo viên: TÊN GIÁO VIÊN, ĐƠN VỊ CÔNG TÁC, NĂM HỌC */}
-            <div className="flex items-center gap-3 w-full md:w-auto">
-              <img
-                src={displayAvatar}
-                alt={greetingUserName}
-                className="w-12 h-12 rounded-2xl object-cover ring-2 ring-indigo-200 shrink-0 bg-indigo-50"
-              />
-              <div className="space-y-0.5">
-                <div className="text-xs font-black text-indigo-950 uppercase flex flex-wrap items-center gap-2">
-                  <span>{isManagementAccount ? 'TÀI KHOẢN:' : 'TÊN GIÁO VIÊN:'} <strong className="text-indigo-600">{greetingUserName}</strong></span>
-                  <span className="text-slate-500 hidden sm:inline">•</span>
-                  <span>ĐƠN VỊ CÔNG TÁC: <strong className="text-emerald-700">{displaySchoolName}</strong></span>
-                </div>
-                <div className="text-[12px] text-slate-500 font-bold uppercase">
-                  NĂM HỌC: <strong className="text-amber-700">{teacherProfile.academicYear || '2026–2027'}</strong>
-                  {isManagementAccount ? (
-                    <span className="ml-2 text-indigo-600 font-semibold">• QUẢN LÝ: {classes.length} LỚP • {students.length} HỌC SINH</span>
-                  ) : activeClass ? (
-                    <span className="ml-2 text-indigo-600 font-semibold">• LỚP: {activeClass.name} ({activeClass.grade})</span>
-                  ) : null}
-                </div>
+          <div className="rounded-2xl bg-white/70 border border-slate-200/80 px-4 py-3 flex flex-col md:flex-row md:items-center justify-between gap-3 text-sm">
+            {/* Tài khoản đang dùng */}
+            <div className="flex items-center gap-3 min-w-0">
+              <img src={displayAvatar} alt={greetingUserName} className="w-9 h-9 rounded-xl object-cover ring-2 ring-white shrink-0 bg-indigo-50" />
+              <div className="min-w-0">
+                <p className="font-bold text-slate-900 truncate" title={greetingUserName}>{greetingUserName}</p>
+                <p className="text-xs text-slate-600 truncate" title={displaySchoolName}>
+                  {displaySchoolName} · Năm học {teacherProfile.academicYear || '2026–2027'}
+                  {isManagementAccount ? ` · ${classes.length} lớp, ${students.length} học sinh` : activeClass ? ` · Lớp ${activeClass.name}` : ''}
+                </p>
               </div>
             </div>
-
-        {/* Tác giả ứng dụng cố định (Yêu cầu 6) */}
-        <div className="w-full md:w-auto flex flex-wrap items-center gap-2.5 pt-3 md:pt-0 border-t md:border-t-0 border-slate-100 text-xs justify-start md:justify-end">
-          <div className="text-left md:text-right">
-            <div className="flex items-center gap-1.5 md:justify-end">
-              <span className="text-[12px] font-black text-indigo-600 block uppercase">TÁC GIẢ ỨNG DỤNG:</span>
-              <span className="px-1.5 py-0.2 rounded-md bg-indigo-100 text-indigo-800 text-[12px] font-black uppercase">CỐ ĐỊNH</span>
+            {/* Tác giả ứng dụng cố định (Yêu cầu 6) */}
+            <div className="flex flex-wrap items-center gap-2 md:justify-end text-xs">
+              <span className="text-slate-600">Tác giả <strong className="text-slate-900">{APP_AUTHOR_INFO.name}</strong> · {APP_AUTHOR_INFO.schoolName}</span>
+              <a href={APP_AUTHOR_INFO.zaloUrl} target="_blank" rel="noreferrer"
+                className="px-2.5 py-1 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 font-bold border border-blue-200 whitespace-nowrap">Zalo {APP_AUTHOR_INFO.zalo}</a>
+              <a href={APP_AUTHOR_INFO.facebook} target="_blank" rel="noreferrer"
+                className="px-2.5 py-1 rounded-lg bg-indigo-50 text-indigo-700 hover:bg-indigo-100 font-bold border border-indigo-200">Facebook</a>
             </div>
-            <span className="text-xs font-black text-slate-900 uppercase">{APP_AUTHOR_INFO.name}</span>
-            <span className="text-[12px] text-slate-600 block font-bold uppercase">{APP_AUTHOR_INFO.schoolName}</span>
           </div>
-          <div className="flex items-center gap-1.5 shrink-0">
-            <a
-              href={APP_AUTHOR_INFO.zaloUrl}
-              target="_blank"
-              rel="noreferrer"
-              className="px-2.5 py-1.5 rounded-xl bg-blue-50 text-blue-700 hover:bg-blue-100 font-bold text-xs flex items-center gap-1 border border-blue-200 transition-colors uppercase font-mono"
-            >
-              <span>ZALO HỖ TRỢ: {APP_AUTHOR_INFO.zalo}</span>
-            </a>
-            <a
-              href={APP_AUTHOR_INFO.facebook}
-              target="_blank"
-              rel="noreferrer"
-              className="px-2.5 py-1.5 rounded-xl bg-indigo-50 text-indigo-700 hover:bg-indigo-100 font-bold text-xs flex items-center gap-1 border border-indigo-200 transition-colors uppercase"
-            >
-              <span>FACEBOOK</span>
-            </a>
-          </div>
-        </div>
-      </div>
         );
       })()}
     </div>

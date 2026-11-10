@@ -177,6 +177,8 @@ export const DriveAttendanceStatsPanel: React.FC = () => {
   }, [data, todayKey]);
 
   const reportedToday = classRows.filter(r => r.att).length;
+  // Chưa lớp nào gửi số liệu trong cả 4 kỳ → 1 dòng thông báo gọn thay vì 8 ô "chưa có số liệu"
+  const hasAnyData = periods.some(p => p.students > 0 || p.boardingRegistered > 0);
 
   if (!isConfigured) {
     return (
@@ -210,11 +212,11 @@ export const DriveAttendanceStatsPanel: React.FC = () => {
             <Cloud className="w-4 h-4" />
           </div>
           <div>
-            <p className="text-[12px] font-black text-sky-900 uppercase">Chuyên cần & bán trú toàn trường (Google Drive)</p>
-            <p className="text-[12px] font-bold text-slate-500">
+            <p className="text-sm font-black text-sky-900">Chuyên cần & bán trú toàn trường</p>
+            <p className="text-xs text-slate-600">
               {data
-                ? `Đã báo cáo hôm nay: ${reportedToday}/${data.totalClasses} lớp • Cập nhật ${lastLoadedAt} • tự làm mới 15 giây`
-                : 'Đang tải số liệu từ các lớp...'}
+                ? <>Hôm nay <strong className="text-slate-800">{reportedToday}/{data.totalClasses}</strong> lớp đã báo cáo · cập nhật {lastLoadedAt}</>
+                : 'Đang tải số liệu từ các lớp…'}
             </p>
           </div>
         </div>
@@ -235,6 +237,11 @@ export const DriveAttendanceStatsPanel: React.FC = () => {
         </div>
       )}
 
+      {data && !hasAnyData && !error ? (
+        <p className="rounded-xl bg-slate-50 border border-dashed border-slate-200 px-3 py-3 text-sm text-slate-600">
+          Chưa có lớp nào gửi số liệu chuyên cần, bán trú trong tháng này. Số liệu tự hiện khi giáo viên chủ nhiệm điểm danh và bấm <strong>Xác nhận</strong>.
+        </p>
+      ) : (
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5">
         {periods.map(p => (
           <div key={p.key} className="rounded-xl border border-slate-100 bg-slate-50/60 p-3">
@@ -271,6 +278,7 @@ export const DriveAttendanceStatsPanel: React.FC = () => {
           </div>
         ))}
       </div>
+      )}
 
       {classRows.length > 0 && (
         <div className="overflow-x-auto rounded-xl border border-slate-100">
