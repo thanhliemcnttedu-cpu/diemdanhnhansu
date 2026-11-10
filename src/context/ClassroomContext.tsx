@@ -1953,6 +1953,8 @@ export const ClassroomProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   const logoutUser = async () => {
     setDemoWarningMessage(null);
+    // Đẩy ngay phần thay đổi đang chờ trong hàng đợi 15 giây trước khi rời tài khoản
+    try { await googleDriveService.flushPendingPush(); } catch (_) { /* ignore */ }
     clearTeacherAuth();
     // Bắt buộc lưu dữ liệu đầy đủ lên hệ thống máy chủ trước khi đăng xuất
     if (currentUser) {

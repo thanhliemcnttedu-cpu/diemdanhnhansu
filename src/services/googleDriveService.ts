@@ -6,6 +6,7 @@ import {
 } from '../types/driveSync';
 import { dataAdapter } from './dataAdapter';
 import { isViewOnly } from '../utils/viewOnlyMode';
+import { compactClassroomDataForDrive } from '../utils/driveCompact';
 import { getAppliedAdminEdits, mergeAppliedAdminEdits } from './adminEditsStore';
 import { getRoleScopedDataFileName } from './dataStorageService';
 import appsScriptSource from '../../scripts/google_apps_script.js?raw';
@@ -75,6 +76,20 @@ let isSyncingActive = false;
 let autoSyncCycleCount = 0;
 let urgentPushRequested = false;
 let latestSnapshot: { data: UserClassroomData; user: UserAccount; classId?: string } | null = null;
+
+// ⏱️ Bước 3 tối ưu (11/2026): GOM thay đổi 15 giây mới đẩy 1 lần (trước: 0,8 giây) → ít lần ghi đè tệp lớp,
+// ít "phiên bản cũ" Drive giữ lại (tính vào dung lượng). Xác nhận điểm danh / bán trú vẫn đẩy NGAY.
+// Phần đang chờ được đẩy ngay khi chuyển tab / ẩn / đóng trang / đăng xuất; đóng đột ngột → lần mở sau tự đẩy bù.
+export const DRIVE_PUSH_BATCH_MS = 15000;
+const PENDING_PUSH_KEY = 'lhhp_drive_push_pending';
+const markPendingPush = (username?: string) => { try { if (username) localStorage.setItem(PENDING_PUSH_KEY, username.toLowerCase()); } catch (_) { /* ignore */ } };
+const clearPendingPush = (username?: string) => {
+  try {
+    const cur = localStorage.getItem(PENDING_PUSH_KEY);
+    if (cur && (!username || cur === username.toLowerCase())) localStorage.removeItem(PENDING_PUSH_KEY);
+  } catch (_) { /* ignore */ }
+};
+const hasPendingPushFor = (username?: string) => { try { return !!username && localStorage.getItem(PENDING_PUSH_KEY) === username.toLowerCase(); } catch (_) { return false; } };
 
 export const googleDriveService = {
   /**
@@ -465,6 +480,23 @@ export const googleDriveService = {
         }
       }
 
+      // 📦 Bước 1 tối ưu: thu gọn BẢN GỬI (ảnh gốc ở lại máy, ảnh quá lớn nén lại; danh sách chuẩn không kèm ảnh vì
+      // ảnh đã nằm trong fullClassroomData). Dữ liệu trên máy giữ nguyên.
+      if (!isManagementPush) {
+        try {
+          if (Array.isArray((standardJson as any).students)) {
+            (standardJson as any).students = (standardJson as any).students.map((s: any) => {
+              if (!s || typeof s !== 'object') return s;
+              const { avatar: _a, ...rest } = s;
+              return rest;
+            });
+          }
+          if ((standardJson as any).fullClassroomData) {
+            (standardJson as any).fullClassroomData = await compactClassroomDataForDrive((standardJson as any).fullClassroomData);
+          }
+        } catch (_) { /* gửi bản đầy đủ nếu thu gọn lỗi */ }
+      }
+
       // Lưu 1 bản rolling daily backup cục bộ
       dataAdapter.createDailyRollingBackup(currentUser.username, userData).catch(() => {});
 
@@ -545,6 +577,7 @@ export const googleDriveService = {
       }
 
       if (resultData && resultData.success) {
+        clearPendingPush(currentUser.username);
         const nowStr = new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
         this.saveConfig({
           syncStatus: 'success',
@@ -901,15 +934,17 @@ export const googleDriveService = {
     }
 
     this.notifyStatusListeners({ status: 'pending' });
+    try { const g = getData(); if (g?.data && g?.user) { latestSnapshot = { data: g.data, user: g.user, classId: g.targetClassId }; markPendingPush(g.user.username); } } catch (_) { /* ignore */ }
 
     debounceTimer = setTimeout(async () => {
+      debounceTimer = null;
       try {
         const { data, user, targetClassId } = getData();
         if (data && user) {
           await this.pushClassData(data, user, targetClassId, false);
         }
       } catch (_) {}
-    }, config.debounceMs || DEFAULT_DEBOUNCE_MS);
+    }, Math.max(config.debounceMs || DEFAULT_DEBOUNCE_MS, DRIVE_PUSH_BATCH_MS));
   },
 
   /**
@@ -965,11 +1000,13 @@ export const googleDriveService = {
 
       this.notifyStatusListeners({ status: 'pending' });
 
-      // GVCN vừa bấm "Xác nhận điểm danh / bán trú": đẩy ngay, không chờ debounce
-      const delay = urgentPushRequested ? 0 : (config.debounceMs || DEFAULT_DEBOUNCE_MS);
+      // GVCN vừa bấm "Xác nhận điểm danh / bán trú": đẩy ngay; còn lại gom 15 giây
+      const delay = urgentPushRequested ? 0 : Math.max(config.debounceMs || DEFAULT_DEBOUNCE_MS, DRIVE_PUSH_BATCH_MS);
       urgentPushRequested = false;
+      markPendingPush(currentUser.username);
 
       debounceTimer = setTimeout(async () => {
+        debounceTimer = null;
         try {
           await this.pushClassData(userData, currentUser, effectiveClassId, false);
         } catch (_) {}
@@ -982,6 +1019,15 @@ export const googleDriveService = {
    * Lần tự lưu kế tiếp (~200ms sau khi state cập nhật) sẽ đẩy không chờ debounce; nếu không có thay đổi
    * state nào (số liệu đã đúng sẵn), tự đẩy bản dữ liệu mới nhất sau 700ms.
    */
+  /** Đẩy NGAY phần thay đổi đang chờ trong hàng đợi 15 giây (chuyển tab / đóng trang / đăng xuất). */
+  async flushPendingPush(): Promise<void> {
+    if (!debounceTimer || !latestSnapshot) return;
+    clearTimeout(debounceTimer);
+    debounceTimer = null;
+    const snap = latestSnapshot;
+    try { await this.pushClassData(snap.data, snap.user, snap.classId, false); } catch (_) { /* vòng thử lại xử lý */ }
+  },
+
   requestImmediatePush() {
     urgentPushRequested = true;
     setTimeout(() => {
@@ -1248,7 +1294,10 @@ export const googleDriveService = {
           // Changes are pushed on save by autoSyncCurrentData (debounced). The loop only
           // retries a failed push (every 15s) instead of re-uploading every 5s, which
           // exhausted Apps Script quotas with many classes.
-          if (config.syncStatus === 'error' && autoSyncCycleCount % 3 === 0) {
+          if (!debounceTimer && autoSyncCycleCount % 3 === 0 && config.syncStatus !== 'error' && hasPendingPushFor(curUser.username)) {
+            // Lần trước trang bị đóng khi còn thay đổi chưa đẩy → đẩy bù bản trên máy
+            await this.pushClassData(curData, curUser, actClassId, false);
+          } else if (config.syncStatus === 'error' && autoSyncCycleCount % 3 === 0) {
             const snap = latestSnapshot && latestSnapshot.user.username === curUser.username ? latestSnapshot : null;
             await this.pushClassData(snap ? snap.data : curData, curUser, snap ? snap.classId : actClassId, false);
           }
@@ -1403,3 +1452,11 @@ export const googleDriveService = {
     }
   }
 };
+
+// Trang bị ẩn (chuyển tab, thu nhỏ, khóa máy) hoặc đóng → đẩy ngay phần thay đổi đang chờ trong hàng đợi 15 giây
+if (typeof window !== 'undefined' && !(window as any).__lhhpDriveFlushInstalled) {
+  (window as any).__lhhpDriveFlushInstalled = true;
+  const flush = () => { googleDriveService.flushPendingPush().catch(() => {}); };
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') flush(); });
+  window.addEventListener('pagehide', flush);
+}
