@@ -6,7 +6,7 @@ import {
   Database, Download, Upload, CheckCircle2, AlertCircle, RefreshCw, 
   School, Laptop, Check, Search, ShieldCheck, FileSpreadsheet,
   FileUp, ArrowDownToLine, AlertTriangle, Sparkles, History, Eye, EyeOff, Copy,
-  Activity, Calendar, Clock, Filter, RotateCcw, GitBranch,
+  Activity, Calendar, Clock, Filter, RotateCcw, GitBranch, ChevronDown,
   FolderTree, Building2, Plus, Crown, ArrowRightLeft, FileText,
   ArrowUpDown, Layers, ArrowDownAZ, ArrowUpAZ, GraduationCap, SlidersHorizontal, LogIn, MapPin, Lock
 } from 'lucide-react';
@@ -93,6 +93,9 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
 
   // 🔀 Tùy chọn sắp xếp tài khoản (Theo khối, theo lớp, họ tên, ngày tạo)
   const [sortBy, setSortBy] = useState<'grade_class_asc' | 'grade_class_desc' | 'name_asc' | 'name_desc' | 'created_desc'>('grade_class_asc');
+  // Thanh công cụ gọn: bộ lọc và xuất / nhập nằm trong nút sổ xuống
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [ioOpen, setIoOpen] = useState(false);
 
   // Academic Year Reset states
   const [schoolResetModalOpen, setSchoolResetModalOpen] = useState(false);
@@ -1551,56 +1554,42 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-sky-900/20 backdrop-blur-xs animate-in fade-in duration-200">
       <div 
-        className="bg-white shadow-2xl w-full h-full max-w-none max-h-none overflow-hidden flex flex-col"
+        className="relative bg-white shadow-2xl w-full h-full max-w-none max-h-none overflow-hidden flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
-        <div className="bg-gradient-to-r from-sky-700 via-indigo-600 to-indigo-600 p-5 md:px-7 md:py-5 text-white flex items-center justify-between shrink-0">
-          <div className="flex items-center gap-3">
-            <div className={`w-11 h-11 rounded-2xl flex items-center justify-center shadow-lg font-black shrink-0 ${
+        {/* Header: 1 dòng mỏng (mô tả chi tiết nằm trong title) */}
+        <div className="bg-gradient-to-r from-sky-700 via-indigo-600 to-indigo-600 px-4 md:px-6 py-2 text-white flex items-center justify-between gap-3 shrink-0"
+          title={isSuperAdmin
+            ? 'Quản trị cây thư mục CSDL Trường học & Tài khoản toàn diện'
+            : (isSchoolAdmin ? 'Quản lý mô hình lớp, giáo viên, học sinh nhà trường • Tải/Nạp Data JSON • Dọn dẹp năm học' : 'Quản lý giáo viên tự do các tỉnh thành lẻ • Tải/Nạp Data JSON • Dọn dẹp năm học')}>
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className={`w-8 h-8 rounded-xl flex items-center justify-center font-black shrink-0 ${
               isSuperAdmin ? 'bg-amber-400 text-slate-950' : (isSchoolAdmin ? 'bg-blue-600 text-white' : 'bg-purple-600 text-white')
             }`}>
-              {isSuperAdmin ? <Crown className="w-6 h-6" /> : (isSchoolAdmin ? <School className="w-6 h-6" /> : <Users className="w-6 h-6" />)}
+              {isSuperAdmin ? <Crown className="w-4 h-4" /> : (isSchoolAdmin ? <School className="w-4 h-4" /> : <Users className="w-4 h-4" />)}
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h2 className="text-base md:text-lg font-black uppercase tracking-tight">
-                  {isSuperAdmin 
-                    ? 'Quản Trị Hệ Thống Cấp Cao (Admin Super)' 
-                    : (isSchoolAdmin ? `Quản Trị Nhà Trường: ${currentSchoolScope}` : 'Quản Trị Tài Khoản Cá Nhân')}
-                </h2>
-                <span className={`text-[12px] font-black uppercase px-2 py-0.5 rounded-full tracking-wider ${
-                  isSuperAdmin ? 'bg-rose-600 text-white' : (isSchoolAdmin ? 'bg-blue-600 text-white' : 'bg-purple-600 text-white')
-                }`}>
-                  {isSuperAdmin ? 'Admin Super' : (isSchoolAdmin ? 'Quản Trị Trường' : 'Quản Trị Cá Nhân')}
-                </span>
-              </div>
-              <p className="text-xs text-slate-300 font-medium">
-                {isSuperAdmin 
-                  ? 'Quản trị cây thư mục CSDL Trường học & Tài khoản toàn diện' 
-                  : (isSchoolAdmin 
-                      ? 'Quản lý mô hình lớp, giáo viên, học sinh nhà trường • Tải/Nạp Data JSON • Dọn dẹp năm học' 
-                      : 'Quản lý giáo viên tự do các tỉnh thành lẻ • Tải/Nạp Data JSON • Dọn dẹp năm học')}
-              </p>
-            </div>
+            <h2 className="text-sm md:text-base font-black tracking-tight truncate">
+              {isSuperAdmin ? 'Quản trị hệ thống' : (isSchoolAdmin ? `Quản trị nhà trường: ${currentSchoolScope}` : 'Quản trị tài khoản cá nhân')}
+            </h2>
+            <span className={`max-sm:hidden text-[12px] font-black uppercase px-2 py-0.5 rounded-full tracking-wider shrink-0 ${
+              isSuperAdmin ? 'bg-rose-600 text-white' : 'bg-white/20 text-white'
+            }`}>
+              {isSuperAdmin ? 'Quản trị tối cao' : (isSchoolAdmin ? 'Quản trị trường' : 'Quản trị cá nhân')}
+            </span>
           </div>
-
-          <button
-            onClick={onClose}
-            className="p-2 rounded-2xl bg-white/10 hover:bg-white/20 text-white transition-colors"
-          >
+          <button onClick={onClose} aria-label="Đóng" className="no-hover-fx p-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-colors shrink-0">
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Tab navigation & quick action */}
-        <div className="bg-slate-100/80 border-b border-slate-200 px-4 md:px-6 py-2.5 flex flex-wrap items-center justify-between gap-3 shrink-0">
-          <div className="flex flex-wrap items-center gap-1.5 p-1 bg-white rounded-2xl border border-slate-200 shadow-2xs">
+        <div className="bg-slate-100/80 border-b border-slate-200 px-4 md:px-6 py-1.5 flex items-center gap-2 shrink-0">
+          <div className="flex flex-nowrap items-center gap-1 p-1 bg-white rounded-2xl border border-slate-200 shadow-2xs overflow-x-auto no-scrollbar min-w-0 flex-1" role="tablist" aria-label="Chức năng quản trị">
             {/* Tab CSDL Trường học dành cho Super Admin (Yêu cầu e) */}
             {isSuperAdmin && (
               <button
                 onClick={() => setActiveTab('schools')}
-                className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 uppercase ${
+                className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 uppercase whitespace-nowrap shrink-0 ${
                   activeTab === 'schools'
                     ? 'bg-rose-600 text-white shadow-xs shadow-rose-600/20'
                     : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
@@ -1613,7 +1602,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
 
             <button
               onClick={() => setActiveTab('accounts')}
-              className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 uppercase ${
+              className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 uppercase whitespace-nowrap shrink-0 ${
                 activeTab === 'accounts'
                   ? 'bg-indigo-600 text-white shadow-xs shadow-indigo-600/20'
                   : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
@@ -1625,7 +1614,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
 
             <button
               onClick={() => setActiveTab('real_data')}
-              className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 uppercase ${
+              className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 uppercase whitespace-nowrap shrink-0 ${
                 activeTab === 'real_data'
                   ? 'bg-blue-600 text-white shadow-xs shadow-blue-600/20'
                   : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
@@ -1638,7 +1627,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
             {isSuperAdmin && (
               <button
                 onClick={() => setActiveTab('logs')}
-                className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 uppercase ${
+                className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 uppercase whitespace-nowrap shrink-0 ${
                   activeTab === 'logs'
                     ? 'bg-violet-600 text-white shadow-xs shadow-violet-600/20'
                     : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
@@ -1651,7 +1640,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
 
             <button
               onClick={() => setActiveTab('import')}
-              className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 uppercase ${
+              className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 uppercase whitespace-nowrap shrink-0 ${
                 activeTab === 'import'
                   ? 'bg-emerald-700 text-white shadow-xs shadow-emerald-600/20'
                   : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
@@ -1663,7 +1652,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
 
             <button
               onClick={handleStartCreate}
-              className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 uppercase ${
+              className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 uppercase whitespace-nowrap shrink-0 ${
                 activeTab === 'add' && !editingUser
                   ? 'bg-indigo-600 text-white shadow-xs shadow-indigo-600/20'
                   : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
@@ -1675,7 +1664,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
 
             <button
               onClick={() => setActiveTab('database')}
-              className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 uppercase ${
+              className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 uppercase whitespace-nowrap shrink-0 ${
                 activeTab === 'database'
                   ? 'bg-slate-100 text-slate-800 shadow-xs'
                   : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
@@ -1691,7 +1680,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                   setActiveTab('registrations');
                   loadRegistrations();
                 }}
-                className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 uppercase ${
+                className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 uppercase whitespace-nowrap shrink-0 ${
                   activeTab === 'registrations'
                     ? 'bg-amber-700 text-white shadow-xs shadow-amber-600/20'
                     : 'text-amber-800 bg-amber-50 hover:bg-amber-100 border border-amber-200'
@@ -1712,10 +1701,10 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
               loadAuditLogs();
               showNotify('success', 'Đã làm mới dữ liệu người dùng & nhật ký!');
             }}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-slate-50 rounded-xl border border-slate-200 text-slate-700 text-xs font-black uppercase transition-colors shadow-2xs"
+            title="Làm mới dữ liệu tài khoản & nhật ký" aria-label="Làm mới dữ liệu"
+            className="no-hover-fx shrink-0 w-9 h-9 flex items-center justify-center bg-white hover:bg-slate-50 rounded-xl border border-slate-200 text-slate-700 transition-colors shadow-2xs"
           >
-            <RefreshCw className="w-3.5 h-3.5 text-indigo-600" />
-            <span>Làm Mới</span>
+            <RefreshCw className="w-4 h-4 text-indigo-600" />
           </button>
         </div>
 
@@ -1742,7 +1731,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
 
         {/* Notification Toast */}
         {notification && (
-          <div className={`mx-6 mt-3 p-3 rounded-2xl border text-xs font-black flex items-center justify-between animate-in slide-in-from-top-2 duration-150 ${
+          <div role="status" className={`absolute right-4 top-24 z-40 w-[min(32rem,calc(100%-2rem))] p-3 rounded-2xl border text-xs font-black flex items-center justify-between gap-3 shadow-lg animate-in slide-in-from-top-2 duration-150 ${
             notification.type === 'success' 
               ? 'bg-emerald-50 border-emerald-200 text-emerald-800' 
               : 'bg-rose-50 border-rose-200 text-rose-800'
@@ -2216,98 +2205,65 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
         {/* Tab 1: Account List */}
         {activeTab === 'accounts' && (
           <div className="flex-1 overflow-y-auto p-5 md:p-7 flex flex-col">
-            {/* Search Bar, Action Buttons & Summary Stats */}
-            <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3 mb-4">
-              <div className="flex flex-wrap items-center gap-2 flex-1">
+            {/* Thanh công cụ 1 hàng: tìm kiếm • Bộ lọc ▾ • Mật khẩu chung • (Xóa) … Hiển thị • Xuất / Nhập ▾ */}
+            <div className="relative flex flex-wrap items-center gap-2 mb-3 shrink-0">
                 <div className="relative flex-1 min-w-[220px] max-w-sm">
-                  <Search className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                  <input
-                    type="text"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    placeholder="Tìm tài khoản, họ tên, trường, lớp, môn..."
-                    className="w-full h-9 pl-10 pr-9 bg-white border border-slate-300 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  />
-                  {searchTerm && (
-                    <button
-                      type="button"
-                      onClick={() => setSearchTerm('')}
-                      className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 p-0.5 rounded-full hover:bg-slate-200 transition-colors"
-                      title="Xóa từ khóa tìm kiếm"
-                    >
-                      <X className="w-3.5 h-3.5" />
-                    </button>
-                  )}
-                </div>
-                <button
-                  type="button"
-                  onClick={openBulkPassword}
-                  disabled={loading}
-                  className="flex items-center gap-1.5 px-3 py-2 bg-white border border-amber-300 hover:bg-amber-50 text-amber-900 rounded-2xl text-xs font-black uppercase shadow-xs transition-colors shrink-0"
-                  title={selectedUserIds.length > 0 ? `Gán 1 mật khẩu chung cho ${selectedUserIds.length} tài khoản đang chọn` : 'Gán 1 mật khẩu chung cho tất cả tài khoản trong danh sách'}
-                >
-                  <KeyRound className="w-3.5 h-3.5" />
-                  <span className="hidden sm:inline">{selectedUserIds.length > 0 ? `MẬT KHẨU CHUNG (${selectedUserIds.length})` : 'MẬT KHẨU CHUNG'}</span>
-                </button>
-                {selectedUserIds.length > 0 && (
+                <Search className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder="Tìm tài khoản, họ tên, trường, lớp, môn..."
+                  className="w-full h-9 pl-10 pr-9 bg-white border border-slate-300 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+                {searchTerm && (
                   <button
-                    onClick={handleBulkDeleteUsers}
-                    disabled={loading}
-                    className="flex items-center gap-1.5 px-3 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-2xl text-xs font-black uppercase shadow-xs transition-all hover-zoom-btn shrink-0"
-                    title={`Xóa ${selectedUserIds.length} tài khoản đang chọn`}
+                    type="button"
+                    onClick={() => setSearchTerm('')}
+                    className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 p-0.5 rounded-full hover:bg-slate-200 transition-colors"
+                    title="Xóa từ khóa tìm kiếm"
                   >
-                    <Trash2 className="w-3.5 h-3.5" />
-                    <span className="hidden sm:inline">XÓA {selectedUserIds.length} TÀI KHOẢN</span>
+                    <X className="w-3.5 h-3.5" />
                   </button>
                 )}
               </div>
-
-              {/* Action Buttons: Export to Excel & Import Template (User requirements) */}
-              <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={openBulkPassword}
+                disabled={loading}
+                className="flex items-center gap-1.5 px-3 py-2 bg-white border border-amber-300 hover:bg-amber-50 text-amber-900 rounded-2xl text-xs font-black uppercase shadow-xs transition-colors shrink-0"
+                title={selectedUserIds.length > 0 ? `Gán 1 mật khẩu chung cho ${selectedUserIds.length} tài khoản đang chọn` : 'Gán 1 mật khẩu chung cho tất cả tài khoản trong danh sách'}
+              >
+                <KeyRound className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">{selectedUserIds.length > 0 ? `MẬT KHẨU CHUNG (${selectedUserIds.length})` : 'MẬT KHẨU CHUNG'}</span>
+              </button>
+              {selectedUserIds.length > 0 && (
                 <button
-                  onClick={() => handleExportUsersToExcel(filteredUsers, 'TaiKhoan_TabHienTai')}
-                  className="flex items-center gap-1.5 px-3 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-2xl text-xs font-black uppercase shadow-xs transition-all hover-zoom-btn"
-                  title="Xuất danh sách tài khoản theo Tab hiện tại thành file Excel"
+                  onClick={handleBulkDeleteUsers}
+                  disabled={loading}
+                  className="flex items-center gap-1.5 px-3 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-2xl text-xs font-black uppercase shadow-xs transition-all hover-zoom-btn shrink-0"
+                  title={`Xóa ${selectedUserIds.length} tài khoản đang chọn`}
                 >
-                  <FileSpreadsheet className="w-3.5 h-3.5" />
-                  <span>XUẤT EXCEL TAB NÀY</span>
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">XÓA {selectedUserIds.length} TÀI KHOẢN</span>
                 </button>
+              )}
 
-                <button
-                  onClick={() => handleExportUsersToExcel(allUsers, 'TaiKhoan_TatCa')}
-                  className="flex items-center gap-1.5 px-3 py-2 bg-teal-700 hover:bg-teal-800 text-white rounded-2xl text-xs font-black uppercase shadow-xs transition-all hover-zoom-btn"
-                  title="Xuất danh sách toàn bộ tài khoản thành file Excel"
-                >
-                  <FileSpreadsheet className="w-3.5 h-3.5" />
-                  <span>XUẤT TẤT CẢ</span>
+              {/* Bộ lọc (sổ xuống) — bảng neo theo mép trái thanh công cụ để không tràn ra ngoài */}
+              <div>
+                <button type="button" onClick={() => { setFilterOpen(v => !v); setIoOpen(false); }} aria-expanded={filterOpen}
+                  className={`no-hover-fx h-9 px-3 rounded-lg border text-sm font-bold inline-flex items-center gap-1.5 whitespace-nowrap ${((gradeFilter !== 'all' ? 1 : 0) + (roleFilter !== 'all' ? 1 : 0) + (tenantFilter !== 'all' ? 1 : 0) + (sortBy !== 'grade_class_asc' ? 1 : 0)) > 0 ? 'bg-indigo-50 border-indigo-300 text-indigo-800' : 'bg-white border-slate-300 text-slate-800 hover:bg-slate-50'}`}>
+                  <Filter className="w-4 h-4" /> Bộ lọc
+                  {((gradeFilter !== 'all' ? 1 : 0) + (roleFilter !== 'all' ? 1 : 0) + (tenantFilter !== 'all' ? 1 : 0) + (sortBy !== 'grade_class_asc' ? 1 : 0)) > 0 && <span className="px-1.5 rounded-full bg-indigo-600 text-white text-xs font-black">{((gradeFilter !== 'all' ? 1 : 0) + (roleFilter !== 'all' ? 1 : 0) + (tenantFilter !== 'all' ? 1 : 0) + (sortBy !== 'grade_class_asc' ? 1 : 0))}</span>}
+                  <ChevronDown className="w-4 h-4" />
                 </button>
-
-                <button
-                  onClick={() => setActiveTab('import')}
-                  className="flex items-center gap-1.5 px-3 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-2xl text-xs font-black uppercase shadow-2xs transition-all hover-zoom-btn"
-                  title="Nhập biểu mẫu Excel để tạo tài khoản đồng loạt"
-                >
-                  <Upload className="w-3.5 h-3.5" />
-                  <span>IMPORT BIỂU MẪU</span>
-                </button>
-
-                <div className="flex items-center gap-1 text-xs font-bold text-slate-500 ml-1">
-                  <span className="px-2.5 py-1.5 rounded-xl bg-slate-100 border border-slate-200">
-                    Tổng: <strong className="text-slate-900">{allUsers.length}</strong> TK
-                  </span>
-                  <span className="px-2.5 py-1.5 rounded-xl bg-indigo-50 border border-indigo-200 text-indigo-700 hidden sm:inline">
-                    GVCN: <strong>{allUsers.filter(u => u.role === 'homeroom').length}</strong>
-                  </span>
-                  <span className="px-2.5 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 hidden sm:inline">
-                    GVBM: <strong>{allUsers.filter(u => u.role === 'subject').length}</strong>
-                  </span>
-                </div>
-              </div>
-            </div>
-
+                {filterOpen && (
+                  <>
+                    <div className="fixed inset-0 z-30" onClick={() => setFilterOpen(false)} aria-hidden="true" />
+                    <div className="absolute left-0 top-full mt-1.5 z-40 w-full max-w-[56rem] bg-white rounded-2xl border border-slate-200 shadow-xl p-3 space-y-3">
             {/* Filter Tabs by Partition / Role (Yêu cầu 2 & 3) - Chỉ hiển thị cho Quản trị tối cao */}
             {isSuperAdmin && (
-              <div className="flex flex-wrap items-center gap-2 mb-3 bg-slate-100/70 p-1.5 rounded-2xl border border-slate-200/80">
+              <div className="flex flex-wrap items-center gap-2 bg-slate-100/70 p-1.5 rounded-2xl border border-slate-200/80">
                 <button
                   type="button"
                   onClick={() => { setTenantFilter('all'); setSearchTerm(''); }}
@@ -2383,22 +2339,8 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
               </div>
             )}
 
-            {isSchoolAdmin && (
-              <div className="flex items-center justify-between gap-2 mb-3 p-3 bg-blue-50 border border-blue-200 rounded-2xl text-xs font-bold text-blue-900 shrink-0">
-                <div className="flex items-center gap-2">
-                  <School className="w-4 h-4 text-blue-600 shrink-0" />
-                  <span>
-                    Phạm vi quản trị: <strong>{currentSchoolScope}</strong> ({scopedUsers.length} tài khoản) • Bạn có toàn quyền quản lý, sắp xếp và lọc tài khoản giáo viên thuộc trường của mình.
-                  </span>
-                </div>
-                <span className="text-[12px] uppercase font-black px-2 py-0.5 rounded-full bg-blue-200 text-blue-800 shrink-0">
-                  Nội Bộ Trường
-                </span>
-              </div>
-            )}
-
             {/* 🎯 BỘ LỌC TÀI KHOẢN THEO KHỐI, THEO VAI TRÒ & SẮP XẾP THEO LỚP HỌC (Yêu cầu Quản trị tối cao & Quản trị trường) */}
-            <div className="mb-3.5 p-3 bg-white border border-slate-200 rounded-2xl shadow-xs flex flex-col gap-2.5 shrink-0">
+            <div className="flex flex-col gap-2.5">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 {/* 1. LỌC THEO KHỐI (1 ĐẾN 5) */}
                 <div className="flex flex-wrap items-center gap-1.5">
@@ -2561,6 +2503,46 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
               </div>
             </div>
 
+                    </div>
+                  </>
+                )}
+              </div>
+
+              <div className="ml-auto flex items-center gap-2">
+                <span className="max-md:hidden text-sm text-slate-600 whitespace-nowrap" title={isSchoolAdmin ? `Phạm vi: ${currentSchoolScope}` : undefined}>
+                  Hiển thị <strong className="text-indigo-700">{filteredUsers.length}</strong> / {scopedUsers.length}
+                  <span className="text-slate-400"> · </span>GVCN <strong className="text-slate-800">{scopedUsers.filter(u => u.role === 'homeroom').length}</strong>
+                  <span className="text-slate-400"> · </span>GVBM <strong className="text-slate-800">{scopedUsers.filter(u => u.role === 'subject').length}</strong>
+                </span>
+                {/* Xuất / Nhập (sổ xuống) */}
+                <div className="relative">
+                  <button type="button" onClick={() => { setIoOpen(v => !v); setFilterOpen(false); }} aria-expanded={ioOpen}
+                    className="no-hover-fx h-9 px-3 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white text-sm font-bold inline-flex items-center gap-1.5 whitespace-nowrap">
+                    <FileSpreadsheet className="w-4 h-4" /> Xuất / Nhập <ChevronDown className="w-4 h-4" />
+                  </button>
+                  {ioOpen && (
+                    <>
+                      <div className="fixed inset-0 z-30" onClick={() => setIoOpen(false)} aria-hidden="true" />
+                      <div className="absolute right-0 top-11 z-40 w-80 bg-white rounded-2xl border border-slate-200 shadow-xl p-2 space-y-1" role="menu">
+                        {([
+                          ['Xuất Excel danh sách đang lọc', `${filteredUsers.length} tài khoản`, () => handleExportUsersToExcel(filteredUsers, 'TaiKhoan_TabHienTai')],
+                          ['Xuất Excel tất cả tài khoản', `${allUsers.length} tài khoản`, () => handleExportUsersToExcel(allUsers, 'TaiKhoan_TatCa')],
+                          ['Nhập biểu mẫu Excel', 'Tạo tài khoản đồng loạt', () => setActiveTab('import')],
+                          ['Tạo từ danh sách nhân sự', 'Dùng chung tài khoản chấm công', () => setActiveTab('import')],
+                        ] as Array<[string, string, () => void]>).map(([label, hint, run]) => (
+                          <button key={label} type="button" role="menuitem" onClick={() => { setIoOpen(false); run(); }}
+                            className="no-hover-fx w-full text-left px-3 py-2 rounded-xl hover:bg-slate-50">
+                            <span className="block text-sm font-bold text-slate-900">{label}</span>
+                            <span className="block text-xs text-slate-600">{hint}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
+
             {/* Table of Users */}
             <div className="flex-1 border border-slate-200 rounded-2xl overflow-hidden shadow-2xs bg-white">
               <div className="overflow-x-auto h-full">
@@ -2664,8 +2646,12 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                                   {isSelf && <span className="text-xs font-bold text-indigo-700 bg-indigo-50 px-1.5 rounded border border-indigo-200">Bạn</span>}
                                   {u.isDemo && <span className="text-xs font-bold text-amber-900 bg-amber-100 px-1.5 rounded">Demo</span>}
                                 </p>
-                                <p className="text-xs text-slate-600 mt-0.5 whitespace-nowrap">
-                                  <span className="font-mono">{u.username}</span> <span className="text-slate-400">|</span> <span className={`font-semibold ${roleInfo.cls}`}>{roleInfo.label}</span>
+                                <p className="text-xs mt-1 flex items-center gap-1.5 whitespace-nowrap">
+                                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-slate-100 border border-slate-200 text-slate-600" title="Tên đăng nhập">
+                                    <KeyRound className="w-3 h-3 text-amber-700" /> Đăng nhập: <strong className="font-mono text-sm text-slate-900 select-all">{u.username}</strong>
+                                  </span>
+                                  {u.staffCode && <span className="px-1.5 py-0.5 rounded-md bg-emerald-50 border border-emerald-200 text-emerald-800 font-bold" title="Tài khoản dùng chung với chấm công: đăng nhập được bằng số CCCD + mật khẩu điểm danh">hoặc CCCD</span>}
+                                  <span className={`font-semibold ${roleInfo.cls}`}>{roleInfo.label}</span>
                                 </p>
                                 <p className={`text-xs mt-0.5 flex items-center gap-1 whitespace-nowrap max-w-[280px] ${u.tenantType === 'guest' ? 'text-fuchsia-700' : 'text-emerald-700'}`}>
                                   <MapPin className="w-3 h-3 shrink-0" /><span className="truncate">{u.tenantType === 'guest' ? 'Giáo viên cá nhân (vãng lai)' : (u.schoolName || 'Nhà trường')}</span>
