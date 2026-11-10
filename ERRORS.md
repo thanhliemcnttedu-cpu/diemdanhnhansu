@@ -205,3 +205,20 @@
 - **Fix Applied**: Nút gọi `bulkDeleteStudents([...selectedStudentIds])` (xóa một lần, lưu một lần). `deleteStudent` / `bulkDeleteStudents` đọc danh sách mới nhất từ `studentsRef` (như `updateStudent`).
 - **Prevention**: Thao tác hàng loạt dùng hàm bulk của context; hàm sửa state có thể bị gọi liên tiếp phải đọc `studentsRef.current`, không đọc state trong closure. Lưu ý tương tự: `bulkAddStudents` vẫn đọc state `students` → gọi nó TRƯỚC các `updateStudent` trong cùng thao tác.
 - **Status**: Fixed
+
+---
+
+## [2026-11-10 18:05] - Trang chủ: React báo "change in the order of Hooks" khi đổi vai trò GVCN ↔ GV bộ môn
+
+- **Type**: Logic
+- **Severity**: Medium
+- **File**: `src/components/views/DashboardView.tsx`
+- **Agent**: Claude Code
+- **Root Cause**: `DashboardView` gọi `useClassroom()` rồi `return <SubjectTeacherDashboard/>` sớm khi `teacherRole === 'subject'`, trước các `useState`/`useEffect` của trang chủ GVCN → số hook thay đổi giữa 2 lần render khi vai trò đổi (đăng nhập, bấm GVCN / GV BỘ MÔN).
+- **Error Message**:
+  ```
+  React has detected a change in the order of Hooks called by DashboardView … 2. undefined → useState
+  ```
+- **Fix Applied**: `DashboardView` chỉ chọn thành phần theo vai trò; thân trang chủ GVCN tách thành `HomeroomDashboard`.
+- **Prevention**: Không `return` sớm trước hook trong thành phần; rẽ nhánh theo vai trò bằng cách trả về thành phần con khác nhau.
+- **Status**: Fixed

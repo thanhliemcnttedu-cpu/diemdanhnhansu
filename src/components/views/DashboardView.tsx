@@ -18,7 +18,17 @@ interface DashboardViewProps {
   onOpenAddStudent?: () => void;
 }
 
-export const DashboardView: React.FC<DashboardViewProps> = ({ 
+// Chọn trang chủ theo vai trò. Tách thành 2 thành phần để thứ tự hook luôn cố định khi vai trò đổi
+// (trước đây `return` sớm trước các useState → React báo "change in the order of Hooks").
+export const DashboardView: React.FC<DashboardViewProps> = (props) => {
+  const { teacherRole } = useClassroom();
+  if (teacherRole === 'subject') {
+    return <SubjectTeacherDashboard onNavigate={props.onNavigate} onOpenAddStudent={props.onOpenAddStudent} />;
+  }
+  return <HomeroomDashboard {...props} />;
+};
+
+const HomeroomDashboard: React.FC<DashboardViewProps> = ({ 
   onNavigate,
   onOpenAddStudent 
 }) => {
@@ -28,15 +38,6 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
     teacherProfile, teacherRole,
     currentUser, isBgh, isSchoolAdmin, isAdmin, allUsers
   } = useClassroom();
-
-  if (teacherRole === 'subject') {
-    return (
-      <SubjectTeacherDashboard 
-        onNavigate={onNavigate} 
-        onOpenAddStudent={onOpenAddStudent} 
-      />
-    );
-  }
 
   const activeClass = classes.find(c => c.id === activeClassId) || classes[0];
 
