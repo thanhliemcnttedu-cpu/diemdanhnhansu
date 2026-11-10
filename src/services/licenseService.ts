@@ -141,6 +141,38 @@ class LicenseService {
     };
   }
 
+  /** Bản ghi kích hoạt ĐÃ KÝ trên máy (mã băm + chữ ký, không có mã CDKEY) — để chia sẻ cho cả trường */
+  public getSignedRecord(): { h: string; sig: string; activatedAt: string; licensedTo?: string; schoolName?: string } | null {
+    if (!this.isActivated()) return null;
+    try {
+      const p = JSON.parse(localStorage.getItem(LOCAL_LICENSE_STORAGE_KEY) || 'null');
+      if (p && p.h && p.sig && p.activatedAt && VALID_KEY_HASHES.has(p.h) && signLicense(p.h, p.activatedAt) === p.sig) {
+        return { h: p.h, sig: p.sig, activatedAt: p.activatedAt, licensedTo: p.licensedTo, schoolName: p.schoolName };
+      }
+    } catch (_) { /* ignore */ }
+    return null;
+  }
+
+  /**
+   * Áp bản quyền DÙNG CHUNG của trường (Quản trị kích hoạt, Apps Script 1.1.7 lưu) — chỉ nhận bản ghi có mã băm hợp lệ
+   * và chữ ký đúng. Trả về true khi máy này vừa được kích hoạt.
+   */
+  public applySharedRecord(rec: any): boolean {
+    if (this.isActivated() || !rec || typeof rec !== 'object') return false;
+    const h = String(rec.h || ''), sig = String(rec.sig || ''), activatedAt = String(rec.activatedAt || '');
+    if (!h || !sig || !activatedAt || !VALID_KEY_HASHES.has(h) || signLicense(h, activatedAt) !== sig) return false;
+    const record = {
+      isActivated: true, h, sig, activatedAt,
+      licensedTo: String(rec.licensedTo || 'Bản quyền dùng chung của trường'),
+      schoolName: String(rec.schoolName || ''),
+      source: 'school',
+    };
+    try { localStorage.setItem(LOCAL_LICENSE_STORAGE_KEY, JSON.stringify(record)); } catch (_) { /* ignore */ }
+    this.currentDetails = { isActivated: true, key: MASKED_CDKEY, activatedAt, licensedTo: record.licensedTo, schoolName: record.schoolName };
+    this.notifyListeners();
+    return true;
+  }
+
   /** Hủy kích hoạt (dùng khi thử nghiệm hoặc reset) */
   public deactivate(): void {
     try { localStorage.removeItem(LOCAL_LICENSE_STORAGE_KEY); } catch (_) { /* ignore */ }

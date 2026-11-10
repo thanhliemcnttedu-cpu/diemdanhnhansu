@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import { licenseSyncService } from './services/licenseSyncService';
 import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { ClassroomProvider, useClassroom } from './context/ClassroomContext';
 import { TopBar } from './components/layout/TopBar';
@@ -204,6 +205,9 @@ function ClassroomApp() {
       if (toastTimer) clearTimeout(toastTimer);
     };
   }, [viewAs]);
+
+  // 🔑 Bản quyền dùng chung cả trường: máy kết nối đúng thư mục + Apps Script tự kích hoạt; Quản trị đã kích hoạt thì chia sẻ
+  useEffect(() => { licenseSyncService.sync().catch(() => {}); }, [currentUser?.username]);
 
   const renderCurrentView = () => {
     switch (currentView) {

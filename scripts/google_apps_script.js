@@ -56,6 +56,9 @@
 var FOLDER_ID = "__FOLDER_ID__";
 var TARGET_FILENAME = "du_lieu_lop_hoc_hanh_phuc.json";
 var REPORT_PREFIX = "bc_";
+// 1.1.7: BẢN QUYỀN DÙNG CHUNG CẢ TRƯỜNG — Quản trị (tối cao / trường) kích hoạt CDKEY trên máy mình → `setLicense` lưu
+//        bản ghi ĐÃ KÝ (mã băm + chữ ký, KHÔNG có mã CDKEY) ở Script Properties `license:<mã thư mục>`;
+//        mọi máy kết nối đúng thư mục + Apps Script gọi `getLicense` (GET) → phần mềm tự kiểm tra chữ ký và kích hoạt.
 // 1.1.6: giáo viên đã đăng nhập phần mềm → chấm công / kê khai KHÔNG hỏi lại mật khẩu: staffAuth, staffCheckIn, teachGet,
 //        teachSaveProfile, teachSaveLog nhận `account: {username, password}` (tài khoản CSDL có staffCode).
 //        Công tắc kê khai tiết dạy cho GVCN (`teachSettings`, Quản trị / BGH): tắt → tài khoản vai trò GVCN chỉ điểm danh.
@@ -69,7 +72,7 @@ var REPORT_PREFIX = "bc_";
 //        rồi mã hóa lại (healStaffCccdHashes) — khi đăng nhập, khi Quản trị / BGH mở hoặc lưu danh sách nhân sự.
 // QUY TẮC ĐẶT TÊN PHIÊN BẢN (từ 11/2026): "Phiên bản A.B.C" — mỗi lần sửa mã tăng C thêm 1;
 // C tối đa 20: sau 1.1.20 là 1.2.1, sau 1.2.20 là 1.3.1… Các bản cũ dạng "4.x" (4.1 → 4.12) được coi là cũ hơn 1.1.2.
-var SCRIPT_VERSION = "1.1.6";
+var SCRIPT_VERSION = "1.1.7";
 // Thư mục của yêu cầu đang xử lý (để verifyUser đọc được danh sách nhân sự khi đăng nhập bằng CCCD)
 var CTX_FOLDER = null;
 
@@ -105,6 +108,13 @@ function doPost(e) {
       if (action === "teachDeleteLog") return createJsonResponse(handleTeachDeleteLog(staffFolder, payload));
       if (action === "teachSettings") return createJsonResponse(handleTeachSettings(staffFolder, payload));
       return createJsonResponse(handleStaffAttendanceRange(staffFolder, payload));
+    }
+
+    if (action === "setLicense") {
+      var licFolder = resolveFolder(folderId);
+      if (!licFolder) return createJsonResponse({ success: false, message: "Không tìm thấy thư mục Google Drive: " + folderId });
+      CTX_FOLDER = licFolder;
+      return createJsonResponse(handleSetLicense(licFolder, payload));
     }
 
     if (action === "saveSchoolDb" || action === "getSchoolDb" || action === "login" || action === "changePassword") {
@@ -188,6 +198,10 @@ function doGet(e) {
 
     if (action === "listSchools") {
       return createJsonResponse(handleListSchools(folder));
+    }
+
+    if (action === "getLicense") {
+      return createJsonResponse(handleGetLicense(folder));
     }
 
     if (action === "getLatest" || action === "getFile") {
@@ -354,6 +368,39 @@ function verifyStaffLinkedUser(db, username, password, byName) {
     if (users[k].staffCode && normalizeStaffCode(users[k].staffCode) === staff.code && !users[k].disabled) return users[k];
   }
   return null;
+}
+
+// ---------------------------------------------------------------- 1.1.7: BẢN QUYỀN DÙNG CHUNG CẢ TRƯỜNG
+function licensePropKey(folder) { return "license:" + folder.getId(); }
+
+/** Công khai: chỉ trả bản ghi đã ký (mã băm + chữ ký), không có mã CDKEY */
+function handleGetLicense(folder) {
+  var raw = PropertiesService.getScriptProperties().getProperty(licensePropKey(folder));
+  var rec = null;
+  try { rec = raw ? JSON.parse(raw) : null; } catch (_) { rec = null; }
+  return { success: true, record: rec };
+}
+
+/** Quản trị (tối cao / trường) lưu bản ghi kích hoạt đã ký cho cả trường */
+function handleSetLicense(folder, payload) {
+  var auth = payload.auth || {};
+  var sdb = readSchoolDb(folder);
+  var actor = sdb ? verifyUser(sdb, auth.username, auth.password) : null;
+  if (!actor || actor.disabled || !isAdminUser(actor)) {
+    return { success: false, code: "UNAUTHORIZED", message: "Chỉ Quản trị mới lưu được bản quyền dùng chung cho cả trường." };
+  }
+  var r = payload.record || {};
+  var h = String(r.h || ""), sig = String(r.sig || ""), at = String(r.activatedAt || "");
+  if (!/^[0-9a-z]{4,24}$/.test(h) || !/^[0-9a-z]{4,24}$/.test(sig) || !at || at.length > 40) {
+    return { success: false, message: "Bản ghi bản quyền không hợp lệ." };
+  }
+  var rec = {
+    h: h, sig: sig, activatedAt: at,
+    licensedTo: String(r.licensedTo || "").slice(0, 120), schoolName: String(r.schoolName || "").slice(0, 160),
+    by: actor.username, savedAt: new Date().toISOString()
+  };
+  PropertiesService.getScriptProperties().setProperty(licensePropKey(folder), JSON.stringify(rec));
+  return { success: true, record: rec, message: "Đã lưu bản quyền dùng chung cho cả trường." };
 }
 
 function isAdminUser(u) {

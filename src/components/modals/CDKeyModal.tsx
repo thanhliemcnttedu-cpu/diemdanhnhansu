@@ -1,3 +1,4 @@
+import { licenseSyncService } from '../../services/licenseSyncService';
 import React, { useState, useEffect } from 'react';
 import { 
   KeyRound, X, Clipboard, Check, AlertTriangle, 
@@ -81,6 +82,11 @@ export const CDKeyModal: React.FC<CDKeyModalProps> = ({ isOpen, onClose }) => {
 
     if (res.success) {
       setMessage({ type: 'success', text: res.message });
+      // Quản trị đã kết nối Drive dùng chung: áp dụng bản quyền cho MỌI máy của trường (Apps Script 1.1.7)
+      licenseSyncService.push().then(r => {
+        if (r.shared) setMessage({ type: 'success', text: `${res.message} Đã áp dụng cho cả trường: mọi máy kết nối đúng thư mục và Apps Script sẽ tự kích hoạt, không cần nhập lại CDKEY.` });
+        else if (r.message) setMessage({ type: 'success', text: `${res.message} ${r.message}` });
+      }).catch(() => {});
       playFanfareSound();
       try {
         confetti({
