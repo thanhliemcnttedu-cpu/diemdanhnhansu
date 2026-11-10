@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import * as XLSX from 'xlsx';
 import {
-  UserCheck, RefreshCw, Download, Upload, Users, Link2, Copy, Check, Plus, KeyRound, Lock, Unlock, Trash2, Search, Loader2, ShieldAlert, TrendingUp, TrendingDown, Minus, Pencil, MapPin, CheckCircle2, Info, Eye, EyeOff,
+  UserCheck, RefreshCw, Download, Upload, Users, Link2, Copy, Check, Plus, KeyRound, Lock, Unlock, Trash2, Search, Loader2, ShieldAlert, TrendingUp, TrendingDown, Minus, Pencil, MapPin, CheckCircle2, Info, Eye, EyeOff, BookOpenCheck,
 } from 'lucide-react';
 import { useClassroom } from '../../../context/ClassroomContext';
 import {
@@ -9,10 +9,11 @@ import {
   parseStaffSheet, STAFF_TEMPLATE_HEADERS, isLockedFor, StaffDayLock, composeTripNote, randomPin, weekdayShort, attemptOf, attemptsOf, systemNoteOf, timeHMS, StaffMember, StaffRecord, StaffStatus, StaffUpsert, ParsedStaffRow,
 } from '../../../services/staffAttendanceService';
 import { StaffCheckInQrCard } from './StaffCheckInQr';
+import { TeachingReportPanel } from './TeachingReportPanel';
 import { appsScriptSetupService } from '../../../services/appsScriptSetupService';
 import { openReinitSchoolDb } from '../../modals/ReinitSchoolDbModal';
 
-type Tab = 'summary' | 'roster' | 'link';
+type Tab = 'summary' | 'roster' | 'teach' | 'link';
 type Period = 'today' | 'yesterday' | 'week' | 'month' | 'custom';
 type DaysMap = Record<string, Record<string, StaffRecord>>;
 
@@ -291,7 +292,7 @@ export const StaffAttendanceView: React.FC = () => {
           </div>
         </div>
         <div className="flex gap-1 sm:gap-1.5 bg-slate-100 p-1 rounded-2xl overflow-x-auto no-scrollbar max-w-full self-stretch sm:self-start xl:self-auto" role="tablist">
-          {([['summary', 'Tổng hợp', 'Tổng hợp', <TrendingUp key="i" className="w-4 h-4" />], ['roster', 'Danh sách nhân sự', 'Nhân sự', <Users key="i" className="w-4 h-4" />], ['link', 'Link điểm danh', 'Link', <Link2 key="i" className="w-4 h-4" />]] as const).map(([id, label, shortLabel, icon]) => (
+          {([['summary', 'Tổng hợp', 'Tổng hợp', <TrendingUp key="i" className="w-4 h-4" />], ['roster', 'Danh sách nhân sự', 'Nhân sự', <Users key="i" className="w-4 h-4" />], ['teach', 'Kê khai tiết dạy', 'Tiết dạy', <BookOpenCheck key="i" className="w-4 h-4" />], ['link', 'Link điểm danh', 'Link', <Link2 key="i" className="w-4 h-4" />]] as const).map(([id, label, shortLabel, icon]) => (
             <button key={id} type="button" role="tab" aria-selected={tab === id} onClick={() => setTab(id)}
               className={`flex-1 sm:flex-none justify-center px-3 sm:px-3.5 py-2 rounded-xl text-sm font-black inline-flex items-center gap-1.5 whitespace-nowrap shrink-0 ${tab === id ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600 hover:text-slate-900'}`}>
               {icon}<span className="sm:hidden">{shortLabel}</span><span className="hidden sm:inline">{label}</span>
@@ -431,6 +432,7 @@ export const StaffAttendanceView: React.FC = () => {
       )}
 
       {tab === 'roster' && <RosterPanel canManage={canManage} auth={auth} schoolName={schoolName} />}
+      {tab === 'teach' && auth && <TeachingReportPanel auth={auth} schoolName={schoolName} today={today} />}
       {tab === 'link' && <LinkPanel schoolName={schoolName} isBghOnly={Boolean(isBgh && !canManage)} />}
     </div>
   );

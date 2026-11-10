@@ -48,3 +48,6 @@ data/storage_location.json
 # Python cache
 __pycache__/
 *.pyc
+
+# Bảng kê tiết dạy thủ công của nhà trường (dữ liệu cá nhân, không đưa lên kho)
+Thu_muc_thong_ke_tiet_day/

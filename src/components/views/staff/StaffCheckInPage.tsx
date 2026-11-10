@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { CheckCircle2, Eye, EyeOff, LogOut, ShieldCheck, Stethoscope, Briefcase, CalendarDays, Loader2, AlertTriangle, PencilLine, Lock, Plane } from 'lucide-react';
+import { CheckCircle2, Eye, EyeOff, LogOut, ShieldCheck, Stethoscope, Briefcase, CalendarDays, Loader2, AlertTriangle, PencilLine, Lock, Plane, UserCheck, BookOpenCheck } from 'lucide-react';
+import { TeachingLogPanel } from './TeachingLogPanel';
 import { staffAttendanceService, composeTripNote, parseTripNote, STAFF_STATUS_META, longDateLabel, StaffStatus, StaffMember, StaffRecord, attemptOf, attemptsOf, timeSpoken, timeHMS } from '../../../services/staffAttendanceService';
 
 /**
@@ -37,6 +38,8 @@ export const StaffCheckInPage: React.FC = () => {
   const [tripPlace, setTripPlace] = useState('');
   const [tripContent, setTripContent] = useState('');
   const [done, setDone] = useState<StaffRecord | null>(null);
+  // Sau khi đăng nhập: thẻ Điểm danh / Kê khai tiết dạy
+  const [mainTab, setMainTab] = useState<'checkin' | 'teach'>('checkin');
   // Đã điểm danh hôm nay → phải bấm "Sửa điểm danh" mới mở lại phiếu
   const [editing, setEditing] = useState(false);
   // BGH / Quản trị đã khóa chốt số liệu điểm danh hôm nay (Apps Script 4.5)
@@ -53,7 +56,7 @@ export const StaffCheckInPage: React.FC = () => {
   }, [conn]);
 
   const reset = () => {
-    setStaff(null); setPin(''); setStatus(''); setNote(''); setExisting(null); setDone(null); setError(''); setEditing(false); setLockedMsg('');
+    setStaff(null); setPin(''); setStatus(''); setNote(''); setExisting(null); setDone(null); setError(''); setEditing(false); setLockedMsg(''); setMainTab('checkin');
     if (!remember) setCccd('');
   };
 
@@ -163,8 +166,28 @@ export const StaffCheckInPage: React.FC = () => {
           </form>
         )}
 
+        {/* ===== Sau khi đăng nhập: chọn Điểm danh / Kê khai tiết dạy ===== */}
+        {conn && staff && (
+          <div className="space-y-2">
+            <div className="flex items-center justify-between gap-2 px-1">
+              <p className="text-sm text-slate-700 truncate">Xin chào <strong className="text-slate-900">{staff.name}</strong></p>
+              <button type="button" onClick={reset} className="shrink-0 text-sm font-bold text-slate-600 hover:text-slate-900 inline-flex items-center gap-1"><LogOut className="w-4 h-4" /> Thoát</button>
+            </div>
+            <div className="flex gap-1 bg-slate-200/70 p-1 rounded-2xl" role="tablist" aria-label="Chức năng">
+              <button type="button" role="tab" aria-selected={mainTab === 'checkin'} onClick={() => setMainTab('checkin')}
+                className={`no-hover-fx flex-1 h-11 rounded-xl text-sm font-black inline-flex items-center justify-center gap-1.5 ${mainTab === 'checkin' ? 'bg-white text-emerald-800 shadow-xs' : 'text-slate-700'}`}><UserCheck className="w-4 h-4" /> Điểm danh</button>
+              <button type="button" role="tab" aria-selected={mainTab === 'teach'} onClick={() => setMainTab('teach')}
+                className={`no-hover-fx flex-1 h-11 rounded-xl text-sm font-black inline-flex items-center justify-center gap-1.5 ${mainTab === 'teach' ? 'bg-white text-indigo-800 shadow-xs' : 'text-slate-700'}`}><BookOpenCheck className="w-4 h-4" /> Kê khai tiết dạy</button>
+            </div>
+          </div>
+        )}
+
+        {conn && staff && mainTab === 'teach' && (
+          <TeachingLogPanel cccd={cccd.replace(/\D/g, '')} pin={pin} today={today} />
+        )}
+
         {/* ===== Bước 2: điểm danh hôm nay ===== */}
-        {conn && staff && !done && (
+        {conn && staff && mainTab === 'checkin' && !done && (
           <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
             <div className="bg-emerald-700 text-white px-5 py-4">
               <p className="text-xs font-bold uppercase tracking-wide text-emerald-50">Điểm danh cho ngày hôm nay</p>
@@ -293,7 +316,7 @@ export const StaffCheckInPage: React.FC = () => {
         )}
 
         {/* ===== Hoàn tất ===== */}
-        {conn && staff && done && (
+        {conn && staff && mainTab === 'checkin' && done && (
           <div className="bg-white rounded-3xl border-2 border-emerald-300 shadow-sm p-6 space-y-3">
             <CheckCircle2 className="w-16 h-16 mx-auto text-emerald-700" />
             <h2 className="text-xl font-black text-slate-900 text-center">Điểm danh thành công</h2>

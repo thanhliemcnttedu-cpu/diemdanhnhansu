@@ -13,6 +13,9 @@
  * - CHỈ tổng hợp tệp của GVCN (gvcn_*.json, teacherRole = homeroom). Tệp GV bộ môn (gvbm_*.json),
  *   BGH, Quản trị không được tính để không dôi số lớp / số học sinh.
  *
+ * - V4.8: KÊ KHAI TIẾT DẠY (kekhai_tietday.json, tệp khóa): giáo viên đăng nhập bằng CCCD + mật khẩu điểm danh,
+ *   khai báo môn / lớp (HS khuyết tật, GDTC, Tiếng Anh) rồi kê số tiết theo từng tuần trong tháng
+ *   (GDTC, trong đó dạy ngoài trời, lớp có HS khuyết tật theo từng môn, thừa giờ Tiếng Anh). BGH / Quản trị xem tổng hợp (teachReport).
  * - V4.7: BGH / Quản trị ĐIỂM DANH HỘ nhân sự (action=staffProxyCheckIn; 1 / nhiều người; hôm nay hoặc ngày đã qua;
  *   bỏ qua khóa chốt; bản ghi có "by" = người điểm danh hộ).
  * - V4.6: Thêm trạng thái điểm danh "Đi công tác" (business_trip) – ghi chú ghi nơi / nội dung công tác.
@@ -44,7 +47,7 @@
 var FOLDER_ID = "__FOLDER_ID__";
 var TARGET_FILENAME = "du_lieu_lop_hoc_hanh_phuc.json";
 var REPORT_PREFIX = "bc_";
-var SCRIPT_VERSION = "4.7";
+var SCRIPT_VERSION = "4.8";
 
 // ---------------------------------------------------------------------------------------
 // HTTP POST: lưu dữ liệu lớp
@@ -58,7 +61,8 @@ function doPost(e) {
     var folderId = payload.folderId || "";
     var action = payload.action || "saveClassData";
 
-    if (action === "staffAuth" || action === "staffCheckIn" || action === "getStaffRoster" || action === "saveStaffRoster" || action === "staffAttendanceRange" || action === "staffLock" || action === "staffProxyCheckIn") {
+    if (action === "staffAuth" || action === "staffCheckIn" || action === "getStaffRoster" || action === "saveStaffRoster" || action === "staffAttendanceRange" || action === "staffLock" || action === "staffProxyCheckIn"
+        || action === "teachGet" || action === "teachSaveProfile" || action === "teachSaveLog" || action === "teachReport") {
       var staffFolder = resolveFolder(folderId);
       if (!staffFolder) return createJsonResponse({ success: false, message: "Không tìm thấy thư mục Google Drive: " + folderId });
       if (action === "staffAuth") return createJsonResponse(handleStaffAuth(staffFolder, payload));
@@ -67,6 +71,10 @@ function doPost(e) {
       if (action === "saveStaffRoster") return createJsonResponse(handleSaveStaffRoster(staffFolder, payload));
       if (action === "staffLock") return createJsonResponse(handleStaffLock(staffFolder, payload));
       if (action === "staffProxyCheckIn") return createJsonResponse(handleStaffProxyCheckIn(staffFolder, payload));
+      if (action === "teachGet") return createJsonResponse(handleTeachGet(staffFolder, payload));
+      if (action === "teachSaveProfile") return createJsonResponse(handleTeachSaveProfile(staffFolder, payload));
+      if (action === "teachSaveLog") return createJsonResponse(handleTeachSaveLog(staffFolder, payload));
+      if (action === "teachReport") return createJsonResponse(handleTeachReport(staffFolder, payload));
       return createJsonResponse(handleStaffAttendanceRange(staffFolder, payload));
     }
 
@@ -804,13 +812,14 @@ function aggregateSingleDay(folder, reportDate) {
 //   - Quản trị (admin / school_admin) quản lý danh sách; BGH + Quản trị xem tổng hợp.
 // =======================================================================================
 var STAFF_FILE = "nhansu_truong.json";
+var TEACH_FILE = "kekhai_tietday.json";
 var STAFF_ATT_PREFIX = "chamcong_nhansu_";
 var STAFF_STATUSES = { present: true, business_trip: true, sick_leave: true, personal_unpaid: true };
 var STAFF_TZ = "GMT+7";
 
 function isProtectedFile(name) {
   var n = String(name || "").toLowerCase();
-  return PROTECTED_FILES[n] === true || n === STAFF_FILE || n.indexOf(STAFF_ATT_PREFIX) === 0;
+  return PROTECTED_FILES[n] === true || n === STAFF_FILE || n === TEACH_FILE || n.indexOf(STAFF_ATT_PREFIX) === 0;
 }
 
 function staffToday() {
@@ -912,6 +921,119 @@ function isStaffLocked(month, dateStr, code) {
   var L = month && month.locks && month.locks[dateStr];
   if (!L) return false;
   return L.all === true || !!(L.codes && L.codes[code]);
+}
+
+// ---------------------------------------------------------------- V4.8: KÊ KHAI TIẾT DẠY
+// kekhai_tietday.json = { profiles: { MÃ: { subjects, classesDisabled, classesPE, classesEnglish, updatedAt } },
+//                         logs: { "YYYY-MM": { MÃ: { weeks: { "YYYY-MM-DD"(Thứ Hai): { outdoor, pe, disabled, english } }, note, updatedAt } } } }
+var TEACH_KEYS = ["outdoor", "pe", "disabled", "english"];
+
+function readTeachDb(folder) {
+  var db = readJsonFile(folder, TEACH_FILE, null);
+  if (!db || typeof db !== "object") db = {};
+  if (!db.profiles) db.profiles = {};
+  if (!db.logs) db.logs = {};
+  return db;
+}
+
+function cleanList(v) {
+  var arr = Array.isArray(v) ? v : String(v || "").split(/[,;\n]/);
+  var out = [], seen = {};
+  for (var i = 0; i < arr.length && out.length < 40; i++) {
+    var t = String(arr[i] || "").trim().slice(0, 40);
+    if (t && !seen[t.toLowerCase()]) { seen[t.toLowerCase()] = true; out.push(t); }
+  }
+  return out;
+}
+
+function cleanMonth(m) {
+  var s = String(m || "").slice(0, 7);
+  return /^\d{4}-\d{2}$/.test(s) ? s : staffToday().slice(0, 7);
+}
+
+function handleTeachGet(folder, payload) {
+  var v = verifyStaff(folder, payload.cccd, payload.pin);
+  if (!v.ok) return { success: false, code: v.code, message: v.message };
+  var month = cleanMonth(payload.month);
+  var db = readTeachDb(folder);
+  return { success: true, staff: publicStaff(v.staff), month: month, today: staffToday(),
+    profile: db.profiles[v.staff.code] || null, log: (db.logs[month] || {})[v.staff.code] || null };
+}
+
+function handleTeachSaveProfile(folder, payload) {
+  var v = verifyStaff(folder, payload.cccd, payload.pin);
+  if (!v.ok) return { success: false, code: v.code, message: v.message };
+  var p = payload.profile || {};
+  var lock = LockService.getScriptLock();
+  try { lock.waitLock(20000); } catch (_) {}
+  try {
+    var db = readTeachDb(folder);
+    db.profiles[v.staff.code] = {
+      subjects: cleanList(p.subjects), classesDisabled: cleanList(p.classesDisabled),
+      classesPE: cleanList(p.classesPE), classesEnglish: cleanList(p.classesEnglish),
+      updatedAt: new Date().toISOString()
+    };
+    db.updatedAt = new Date().toISOString();
+    writeFileOverwrite(folder, TEACH_FILE, JSON.stringify(db));
+    return { success: true, profile: db.profiles[v.staff.code], message: "Đã lưu khai báo." };
+  } finally { try { lock.releaseLock(); } catch (_) {} }
+}
+
+function handleTeachSaveLog(folder, payload) {
+  var v = verifyStaff(folder, payload.cccd, payload.pin);
+  if (!v.ok) return { success: false, code: v.code, message: v.message };
+  var month = cleanMonth(payload.month);
+  if (month > staffToday().slice(0, 7)) return { success: false, message: "Chưa kê khai được cho tháng chưa tới." };
+  var weeksIn = payload.weeks || {};
+  var weeks = {};
+  for (var wk in weeksIn) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(wk)) continue;
+    var w = weeksIn[wk] || {}, row = {}, any = false;
+    for (var k = 0; k < TEACH_KEYS.length; k++) {
+      var n = Math.round(Number(w[TEACH_KEYS[k]]) || 0);
+      if (n < 0) n = 0;
+      if (n > 80) n = 80;
+      row[TEACH_KEYS[k]] = n;
+      if (n) any = true;
+    }
+    // Lớp có HS khuyết tật: số tiết theo TỪNG MÔN (kt = { mã môn: số tiết }), disabled = tổng các môn
+    if (w.kt && typeof w.kt === "object") {
+      var kt = {}, ktSum = 0, ktCount = 0;
+      for (var sc in w.kt) {
+        if (!/^[a-z0-9_]{1,16}$/.test(sc) || ktCount >= 30) continue;
+        var x = Math.round(Number(w.kt[sc]) || 0);
+        if (x < 0) x = 0;
+        if (x > 80) x = 80;
+        if (x) { kt[sc] = x; ktSum += x; ktCount++; }
+      }
+      row.disabled = ktSum;
+      if (ktCount) { row.kt = kt; any = true; }
+    }
+    if (any) weeks[wk] = row;
+  }
+  var lock = LockService.getScriptLock();
+  try { lock.waitLock(20000); } catch (_) {}
+  try {
+    var db = readTeachDb(folder);
+    if (!db.logs[month]) db.logs[month] = {};
+    db.logs[month][v.staff.code] = { weeks: weeks, note: String(payload.note || "").slice(0, 300), updatedAt: new Date().toISOString() };
+    db.updatedAt = new Date().toISOString();
+    writeFileOverwrite(folder, TEACH_FILE, JSON.stringify(db));
+    return { success: true, month: month, log: db.logs[month][v.staff.code], message: "Đã lưu kê khai tháng " + month + "." };
+  } finally { try { lock.releaseLock(); } catch (_) {} }
+}
+
+// BGH / Quản trị: tổng hợp kê khai các tháng from..to (tối đa 12 tháng)
+function handleTeachReport(folder, payload) {
+  var actor = staffActor(folder, payload.auth, false);
+  if (!actor) return { success: false, code: "UNAUTHORIZED", message: "Chỉ BGH / Quản trị được xem tổng hợp kê khai." };
+  var from = cleanMonth(payload.from), to = cleanMonth(payload.to || payload.from);
+  if (from > to) { var t = from; from = to; to = t; }
+  var db = readTeachDb(folder);
+  var logs = {}, n = 0;
+  for (var m in db.logs) if (m >= from && m <= to && n++ < 12) logs[m] = db.logs[m];
+  var sdb = readStaffDb(folder);
+  return { success: true, from: from, to: to, today: staffToday(), profiles: db.profiles, logs: logs, staff: sdb.staff.map(publicStaff) };
 }
 
 // --- V4.7: BGH / Quản trị điểm danh HỘ (nhân sự báo qua điện thoại…): 1 / nhiều người, hôm nay hoặc ngày đã qua
