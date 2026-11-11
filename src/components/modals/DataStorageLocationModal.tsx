@@ -12,6 +12,8 @@ interface DataStorageLocationModalProps {
   isOpen: boolean;
   /** Render inside a page (no overlay, no header) */
   embedded?: boolean;
+  /** Which half to show: 'folder' = autosave folder, 'file' = download / load this account's file, 'all' = both */
+  parts?: 'all' | 'folder' | 'file';
   onClose: () => void;
 }
 
@@ -20,7 +22,7 @@ interface DataStorageLocationModalProps {
  * - Bản web (Vercel): trình duyệt chỉ ghi được vào thư mục người dùng TỰ CHỌN (hộp chọn thư mục) → ghi tệp thật.
  * - Bản có máy chủ / Desktop: ghi theo đường dẫn ổ đĩa (D:\…) qua máy chủ / Electron.
  */
-export const DataStorageLocationModal: React.FC<DataStorageLocationModalProps> = ({ isOpen: isOpenProp, onClose, embedded = false }) => {
+export const DataStorageLocationModal: React.FC<DataStorageLocationModalProps> = ({ isOpen: isOpenProp, onClose, embedded = false, parts = 'all' }) => {
   const isOpen = isOpenProp || embedded;
   const {
     exportBackupJson, importBackupJson, currentUser, teacherRole, classes, activeClassId,
@@ -157,7 +159,7 @@ export const DataStorageLocationModal: React.FC<DataStorageLocationModalProps> =
         try { parsed = JSON.parse(await file.text()); } catch (_) { parsed = null; }
         if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) { notify('error', 'Tệp JSON không đúng định dạng hoặc bị lỗi.'); return; }
         if (parsed.format === 'lhhp_drive_backup' || parsed.format === 'lop_hoc_hanh_phuc_backup') {
-          notify('error', 'Đây là tệp sao lưu của mục "Sao lưu & khôi phục", không phải tệp dữ liệu của một tài khoản. Hãy nạp tệp này ở thẻ Sao lưu & khôi phục.');
+          notify('error', 'Đây là tệp sao lưu hệ thống, không phải tệp dữ liệu của một tài khoản. Hãy dùng nút khôi phục ở thẻ Sao lưu & khôi phục (phần Khôi phục cơ sở dữ liệu).');
           return;
         }
         if (!Array.isArray(parsed.classes) && !Array.isArray(parsed.students)) {
@@ -216,7 +218,10 @@ export const DataStorageLocationModal: React.FC<DataStorageLocationModalProps> =
         </div>
 
         <div className={embedded ? 'space-y-3 text-sm text-slate-700' : 'p-3 sm:p-4 overflow-y-auto space-y-3 text-sm text-slate-700'}>
-          {embedded && (
+          {embedded && parts === 'file' && (
+            <h3 className="text-sm font-black uppercase text-slate-900">Tệp riêng của tài khoản này</h3>
+          )}
+          {embedded && parts !== 'folder' && (
             <p className="text-xs text-slate-600">{roleTitleDisplay} • tệp <strong className="font-mono text-indigo-700">{roleFileName}</strong> — 1 tệp JSON của tài khoản này, dễ chép sang USB và nạp lại.</p>
           )}
           {toastMessage && (
@@ -228,11 +233,11 @@ export const DataStorageLocationModal: React.FC<DataStorageLocationModalProps> =
             </div>
           )}
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+          <div className={parts === 'all' ? 'grid grid-cols-1 lg:grid-cols-2 gap-3' : 'grid grid-cols-1 gap-3'}>
             {/* ───────── CỘT TRÁI: nơi lưu ───────── */}
-            {browserMode ? (
+            {parts !== 'file' && (browserMode ? (
               <section className={cardCls}>
-                <h3 className={titleCls}><FolderOpen className="w-4 h-4 text-amber-700" /> 1. Thư mục lưu trên máy tính này</h3>
+                <h3 className={titleCls}><FolderOpen className="w-4 h-4 text-amber-700" /> {parts === 'folder' ? 'Tự lưu vào thư mục trên máy tính này' : '1. Thư mục lưu trên máy tính này'}</h3>
 
                 {!pickerSupported ? (
                   <p className="rounded-xl bg-amber-50 border border-amber-200 px-3 py-2 text-amber-950">
@@ -335,12 +340,13 @@ export const DataStorageLocationModal: React.FC<DataStorageLocationModalProps> =
                   <span className={`ml-1.5 px-1.5 py-0.5 rounded font-bold ${isCurrentSafe ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}`}>{isCurrentSafe ? 'Ổ an toàn' : 'Ổ C — nên đổi'}</span>
                 </p>
               </section>
-            )}
+            ))}
 
             {/* ───────── CỘT PHẢI: tải về + khôi phục ───────── */}
-            <div className="space-y-3">
+            {parts !== 'folder' && (
+            <div className={parts === 'file' ? 'grid grid-cols-1 md:grid-cols-2 gap-3' : 'space-y-3'}>
               <section className={cardCls}>
-                <h3 className={titleCls}><FileJson className="w-4 h-4 text-emerald-700" /> 2. Tải tệp dữ liệu về máy</h3>
+                <h3 className={titleCls}><FileJson className="w-4 h-4 text-emerald-700" /> {parts === 'file' ? '' : '2. '}Tải tệp dữ liệu về máy</h3>
                 <p className="text-xs text-slate-600">Tải ngay 1 bản <strong className="font-mono">{roleFileName}</strong> vào thư mục Tải xuống — dùng để chép sang USB, gửi Zalo hoặc cất dự phòng.</p>
                 <button type="button" onClick={handleExportRoleJson} className="no-hover-fx h-10 px-4 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-sm font-black inline-flex items-center gap-2 whitespace-nowrap cursor-pointer">
                   <Download className="w-4 h-4" /> Tải tệp về máy
@@ -348,7 +354,7 @@ export const DataStorageLocationModal: React.FC<DataStorageLocationModalProps> =
               </section>
 
               <section className={cardCls}>
-                <h3 className={titleCls}><Usb className="w-4 h-4 text-indigo-700" /> 3. Khôi phục khi đổi máy tính</h3>
+                <h3 className={titleCls}><Usb className="w-4 h-4 text-indigo-700" /> {parts === 'file' ? 'Nạp lại tệp khi đổi máy tính' : '3. Khôi phục khi đổi máy tính'}</h3>
                 <p className="text-xs text-slate-600">Cắm USB hoặc mở thư mục chứa tệp dữ liệu cũ, rồi chọn tệp <strong>.json</strong> để nạp lại.</p>
                 <input type="file" ref={fileInputRef} accept=".json,.zip" className="hidden" onChange={handleRestoreFile} />
                 <div className="flex flex-wrap gap-2">
@@ -363,9 +369,10 @@ export const DataStorageLocationModal: React.FC<DataStorageLocationModalProps> =
                 </div>
               </section>
             </div>
+            )}
           </div>
 
-          <p className="rounded-xl bg-amber-50 border border-amber-200 px-3 py-2 text-xs text-amber-950">
+          <p style={parts === 'file' ? { display: 'none' } : undefined} className="rounded-xl bg-amber-50 border border-amber-200 px-3 py-2 text-xs text-amber-950">
             <strong>Nên lưu ở ổ D hoặc E:</strong> khi máy phải cài lại Windows, ổ C thường bị xóa sạch còn ổ D / E vẫn giữ nguyên dữ liệu lớp học.
           </p>
         </div>

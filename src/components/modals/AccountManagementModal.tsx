@@ -28,6 +28,10 @@ interface AccountManagementModalProps {
   onSwitchToUser: (username: string) => Promise<boolean>;
   /** Render only the data tab (storage usage, backup, restore) inside the Data page — no dialog chrome */
   embeddedDatabase?: boolean;
+  /** Rendered right under the backup / restore cards when embedded (e.g. this account's own data file) */
+  embeddedExtra?: React.ReactNode;
+  /** Embedded only: 'backup' = export / restore cards, 'stats' = storage usage + per-teacher table, 'all' = both */
+  embeddedPart?: 'all' | 'backup' | 'stats';
 }
 
 export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
@@ -37,7 +41,9 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
   allUsers,
   onRefreshUsers,
   onSwitchToUser,
-  embeddedDatabase = false
+  embeddedDatabase = false,
+  embeddedExtra,
+  embeddedPart = 'all'
 }) => {
   const { setIsGithubModalOpen } = useClassroom();
   const isOpen = isOpenProp || embeddedDatabase;
@@ -48,7 +54,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
   const [editingUser, setEditingUser] = useState<UserAccount | null>(null);
   const [stats, setStats] = useState<DatabaseStats | null>(null);
   // Bản web (không có máy chủ Express): số liệu 3 thẻ Mô hình lớp / Lịch sử / Data JSON đọc từ Google Drive dùng chung
-  const [driveMode, setDriveMode] = useState(false);
+  const [driveMode, setDriveMode] = useState(() => driveBackupService.isDriveMode());
   const [driveFileCount, setDriveFileCount] = useState(0);
   // Hộp xác nhận trước khi vào xem lớp của giáo viên (chế độ chỉ xem)
   const [viewConfirm, setViewConfirm] = useState<{ username: string; fullName: string; role: string; className?: string } | null>(null);
@@ -3433,7 +3439,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
         {activeTab === 'database' && (
           <div className={embeddedDatabase ? 'flex flex-col gap-4' : 'flex-1 overflow-y-auto p-5 md:p-8 space-y-6'}>
             {/* Thống kê dung lượng dữ liệu (tông sáng; bản web đọc từ Google Drive dùng chung) */}
-            <section className="bg-white border border-slate-200 rounded-3xl p-5 md:p-6 shadow-xs space-y-5">
+            <section style={embeddedPart === 'backup' ? { display: 'none' } : undefined} className="bg-white border border-slate-200 rounded-3xl p-5 md:p-6 shadow-xs space-y-5">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
                   <div className="w-11 h-11 rounded-2xl bg-indigo-50 border border-indigo-100 text-indigo-700 flex items-center justify-center shrink-0">
@@ -3459,7 +3465,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                     className="no-hover-fx h-9 px-3 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-800 text-sm font-bold inline-flex items-center gap-1.5">
                     <RotateCcw className="w-4 h-4" /> Làm mới
                   </button>
-                  {!driveMode && (
+                  {!driveMode && apiAvailable && (
                     <button type="button" onClick={handleCompactDatabase} title="Nén và tối ưu hóa tệp dữ liệu"
                       className="no-hover-fx h-9 px-3 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white text-sm font-bold inline-flex items-center gap-1.5">
                       <Sparkles className="w-4 h-4" /> Tối ưu hóa
@@ -3515,7 +3521,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
             </section>
 
             {/* BẢNG THỐNG KÊ CHI TIẾT DUNG LƯỢNG TỪNG TÀI KHOẢN GIÁO VIÊN (Yêu cầu 4) */}
-            <div className="bg-white border border-slate-200 rounded-3xl p-5 md:p-6 shadow-xs space-y-4">
+            <div style={embeddedPart === 'backup' ? { display: 'none' } : undefined} className="bg-white border border-slate-200 rounded-3xl p-5 md:p-6 shadow-xs space-y-4">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
                   <h4 className="text-sm font-black text-slate-900 uppercase flex items-center gap-2">
@@ -3662,7 +3668,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
             })()}
 
             {/* Storage & Backup / Restore Actions (shown first inside the Data page) */}
-            <div className={`grid grid-cols-1 md:grid-cols-2 gap-5 ${embeddedDatabase ? 'order-first' : ''}`}>
+            <div style={embeddedPart === 'stats' ? { display: 'none' } : undefined} className={`grid grid-cols-1 md:grid-cols-2 gap-5 ${embeddedDatabase ? 'order-first' : ''}`}>
               {/* Box 1: Export DB */}
               <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-2xs flex flex-col justify-between">
                 <div>
@@ -3724,6 +3730,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                 </div>
               </div>
             </div>
+            {embeddedDatabase && embeddedExtra && embeddedPart !== 'stats' && <div className="order-first">{embeddedExtra}</div>}
 
             {apiAvailable && (<>
             {/* KHU VỰC QUẢN LÝ DỮ LIỆU & CHUẨN BỊ NĂM HỌC MỚI (Yêu cầu c, d, e) */}

@@ -391,7 +391,8 @@ export const GoogleDriveSyncModal: React.FC<GoogleDriveSyncModalProps> = ({ isOp
 
         <div className={embedded ? 'space-y-3 text-sm text-slate-700' : 'p-3 sm:p-4 overflow-y-auto space-y-3 text-sm text-slate-700'}>
           {/* 🔌 TRẠNG THÁI KẾT NỐI + PHIÊN BẢN (luôn hiện, tự kiểm tra mỗi lần mở) */}
-          <div className={`rounded-2xl border px-3 py-2.5 flex flex-wrap items-center gap-x-3 gap-y-2 ${connTone}`} role="status" aria-live="polite">
+          {/* Inside the Data page the banner lives on the Connect tab; other tabs only show it when something is wrong */}
+          <div style={embedded && !show('connect') && (connState === 'connected' || connState === 'checking') ? { display: 'none' } : undefined} className={`rounded-2xl border px-3 py-2.5 flex flex-wrap items-center gap-x-3 gap-y-2 ${connTone}`} role="status" aria-live="polite">
             <span className="shrink-0">
               {connState === 'checking' ? <Loader2 className="w-6 h-6 animate-spin text-slate-600" />
                 : connState === 'connected' ? <CheckCircle2 className="w-6 h-6 text-emerald-700" />
@@ -467,7 +468,7 @@ export const GoogleDriveSyncModal: React.FC<GoogleDriveSyncModalProps> = ({ isOp
                   <button type="button" onClick={testAndRecheck} disabled={isTesting || !scriptUrlInput.trim()} className={btnIndigo}>
                     <RefreshCw className={`w-4 h-4 ${isTesting ? 'animate-spin' : ''}`} /> {isTesting ? 'Đang kiểm tra…' : 'Kiểm tra link'}
                   </button>
-                  {isSetupAdmin && (
+                  {isSetupAdmin && !embedded && (
                     <button type="button" onClick={() => openWizard()} className={btnLight} title="Hướng dẫn từng bước cài / cập nhật Apps Script, tự kiểm tra link /exec">
                       <Wand2 className="w-4 h-4 text-indigo-600" /> Trình cài đặt Apps Script
                     </button>
@@ -604,7 +605,7 @@ export const GoogleDriveSyncModal: React.FC<GoogleDriveSyncModalProps> = ({ isOp
                 )}
                 <button type="button" onClick={handleSaveConfig} className={btnLight}><Check className="w-4 h-4" /> Lưu thiết lập</button>
               </section>
-              <section className={cardCls}>
+              <section className={cardCls} style={embedded ? { display: 'none' } : undefined}>
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <h3 className={titleCls}><Code2 className="w-4 h-4 text-amber-700" /> Mã Apps Script ({versionLabel(conn?.latest || appsScriptSetupService.getBundledVersion()).toLowerCase()})</h3>
                   <div className="flex items-center gap-2">
