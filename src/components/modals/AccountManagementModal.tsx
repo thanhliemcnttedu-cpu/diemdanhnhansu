@@ -16,6 +16,7 @@ import { databaseService, DatabaseStats, AuditLogItem, UserSummaryItem } from '.
 import { schoolDriveDbService } from '../../services/schoolDriveDbService';
 import { driveOverviewService } from '../../services/driveOverviewService';
 import { googleDriveService } from '../../services/googleDriveService';
+import { driveBackupService, type DriveBackup } from '../../services/driveBackupService';
 import { useClassroom } from '../../context/ClassroomContext';
 
 interface AccountManagementModalProps {
@@ -46,6 +47,9 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
   // Hộp xác nhận trước khi vào xem lớp của giáo viên (chế độ chỉ xem)
   const [viewConfirm, setViewConfirm] = useState<{ username: string; fullName: string; role: string; className?: string } | null>(null);
   const [loading, setLoading] = useState(false);
+  // 💾 Sao lưu / khôi phục toàn hệ thống — bản web (Drive dùng chung)
+  const [backupProgress, setBackupProgress] = useState('');
+  const [restoreState, setRestoreState] = useState<null | { backup: DriveBackup; overwrite: boolean; fallbackPw: string; adminUser: string; adminPw: string; running: boolean; report: string[] }>(null);
   const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
   // 🎯 QUYỀN HẠN PHÂN CẤP 3 NHÓM CHÍNH (Yêu cầu e, c, d)
@@ -1105,9 +1109,43 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
     }
   };
 
-  const handleExportDatabase = () => {
+  const handleExportDatabase = async () => {
+    // Bản web (Vercel, không có máy chủ /api): đọc toàn bộ hệ thống từ Google Drive dùng chung
+    if (driveBackupService.isDriveMode()) {
+      if (backupProgress) return;
+      setBackupProgress('Đang chuẩn bị…');
+      try {
+        const backup = await driveBackupService.exportAll(setBackupProgress);
+        driveBackupService.download(backup);
+        const sm = driveBackupService.summarize(backup);
+        showNotify('success', `Đã tải về bản sao lưu toàn hệ thống: ${sm.schools} trường, ${sm.users} tài khoản, ${sm.classFiles} tệp lớp, ${sm.staff} nhân sự.${backup.notes.length ? ' ' + backup.notes.join(' ') : ''}`);
+      } catch (err: any) {
+        showNotify('error', err?.message || 'Không tải được dữ liệu từ Google Drive.');
+      } finally {
+        setBackupProgress('');
+      }
+      return;
+    }
     databaseService.downloadDatabaseExport();
     showNotify('success', 'Đã tải xuống file cơ sở dữ liệu classroom_database.json thành công!');
+  };
+
+  const runDriveRestore = async () => {
+    if (!restoreState) return;
+    const { backup, overwrite, fallbackPw, adminUser, adminPw } = restoreState;
+    if (!adminUser.trim() || !adminPw) { showNotify('error', 'Nhập tài khoản và mật khẩu Quản trị của thư mục đích.'); return; }
+    setRestoreState({ ...restoreState, running: true, report: [] });
+    try {
+      const report = await driveBackupService.restore(backup, { auth: { username: adminUser.trim().toLowerCase(), password: adminPw }, fallbackPassword: fallbackPw.trim(), overwrite }, setBackupProgress);
+      setRestoreState(st => (st ? { ...st, running: false, report } : st));
+      showNotify('success', 'Đã khôi phục dữ liệu vào thư mục Google Drive đang kết nối.');
+      onRefreshUsers();
+      loadStats();
+    } catch (err: any) {
+      setRestoreState(st => (st ? { ...st, running: false, report: [`LỖI: ${err?.message || 'không khôi phục được'}`] } : st));
+    } finally {
+      setBackupProgress('');
+    }
   };
 
   const handleImportDatabase = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -1118,6 +1156,13 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
     reader.onload = async (ev) => {
       try {
         const json = JSON.parse(ev.target?.result as string);
+        // Tệp sao lưu toàn hệ thống của bản web → khôi phục vào thư mục Drive đang kết nối (hỏi xác nhận trước)
+        if (driveBackupService.isBackup(json)) {
+          if (!driveBackupService.isDriveMode()) { showNotify('error', 'Tệp này là sao lưu bản web (Google Drive). Hãy kết nối thư mục Drive dùng chung trước khi khôi phục.'); return; }
+          const sess = schoolDriveDbService.getAdminAuth();
+          setRestoreState({ backup: json, overwrite: false, fallbackPw: '', adminUser: sess?.username || currentUser?.username || '', adminPw: sess?.password || '', running: false, report: [] });
+          return;
+        }
         setLoading(true);
         const res = await databaseService.importDatabase(json);
         if (res.success) {
@@ -3567,6 +3612,55 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
               </div>
             </div>
 
+            {restoreState && (() => {
+              const sm = driveBackupService.summarize(restoreState.backup);
+              const target = googleDriveService.getConfig();
+              return (
+                <div className="fixed inset-0 z-[70] bg-sky-900/20 backdrop-blur-xs flex items-center justify-center p-3" role="dialog" aria-modal="true" aria-labelledby="restore-title">
+                  <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-xl max-h-[92vh] overflow-y-auto p-5 space-y-3">
+                    <h3 id="restore-title" className="text-base font-black text-slate-900">Khôi phục toàn hệ thống vào thư mục đang kết nối</h3>
+                    <div className="rounded-xl bg-slate-50 border border-slate-200 p-3 text-sm text-slate-800 space-y-1">
+                      <div><strong>Tệp sao lưu:</strong> {sm.schoolNames.join(', ') || '—'} · {new Date(sm.exportedAt).toLocaleString('vi-VN')}</div>
+                      <div>{sm.schools} trường · {sm.users} tài khoản{sm.usersNoPassword ? ` (${sm.usersNoPassword} chưa có mật khẩu xem được)` : ''} · {sm.classFiles} tệp lớp · {sm.otherFiles} tệp khác · {sm.staff} nhân sự</div>
+                      <div><strong>Thư mục đích:</strong> <code className="text-xs">{(target.folderId || '').slice(0, 10)}…</code> (Apps Script đang kết nối)</div>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <label className="text-sm font-bold text-slate-700">Tài khoản Quản trị (thư mục đích)
+                        <input value={restoreState.adminUser} onChange={(e) => setRestoreState({ ...restoreState, adminUser: e.target.value })} className="mt-1 w-full h-10 px-3 rounded-xl border border-slate-300 text-sm" />
+                      </label>
+                      <label className="text-sm font-bold text-slate-700">Mật khẩu Quản trị
+                        <input type="password" value={restoreState.adminPw} onChange={(e) => setRestoreState({ ...restoreState, adminPw: e.target.value })} className="mt-1 w-full h-10 px-3 rounded-xl border border-slate-300 text-sm" />
+                      </label>
+                    </div>
+                    {sm.usersNoPassword > 0 && (
+                      <label className="block text-sm font-bold text-slate-700">Mật khẩu chung cho {sm.usersNoPassword} tài khoản chưa có mật khẩu xem được (để trống = bỏ qua các tài khoản này)
+                        <input value={restoreState.fallbackPw} onChange={(e) => setRestoreState({ ...restoreState, fallbackPw: e.target.value })} placeholder="VD: Truong2026" className="mt-1 w-full h-10 px-3 rounded-xl border border-slate-300 text-sm" />
+                      </label>
+                    )}
+                    <label className="flex items-start gap-2 text-sm text-slate-800">
+                      <input type="checkbox" checked={restoreState.overwrite} onChange={(e) => setRestoreState({ ...restoreState, overwrite: e.target.checked })} className="mt-1" />
+                      <span><strong>Ghi đè tệp đã có</strong> trong thư mục đích (không tích: chỉ thêm tệp còn thiếu, giữ nguyên dữ liệu đang có).</span>
+                    </label>
+                    <p className="text-xs text-slate-600">Tài khoản được GỘP (giữ tài khoản đang có ở thư mục đích). Lịch sử chấm công chỉ nằm trong tệp sao lưu (Apps Script không cho ghi lại tự động).</p>
+                    {backupProgress && restoreState.running && <p className="text-sm font-bold text-indigo-700">{backupProgress}</p>}
+                    {restoreState.report.length > 0 && (
+                      <ul className="rounded-xl bg-emerald-50 border border-emerald-200 p-3 text-sm text-emerald-900 space-y-1 list-disc pl-6">
+                        {restoreState.report.map((r, i) => <li key={i}>{r}</li>)}
+                      </ul>
+                    )}
+                    <div className="flex flex-wrap justify-end gap-2 pt-1">
+                      <button type="button" onClick={() => setRestoreState(null)} disabled={restoreState.running} className="h-10 px-4 rounded-xl border border-slate-300 bg-white text-sm font-bold text-slate-700 disabled:opacity-50">{restoreState.report.length ? 'Đóng' : 'Hủy'}</button>
+                      {!restoreState.report.length && (
+                        <button type="button" onClick={runDriveRestore} disabled={restoreState.running} className="h-10 px-5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-sm font-black disabled:opacity-60">
+                          {restoreState.running ? 'Đang khôi phục…' : 'Khôi phục vào thư mục này'}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+
             {/* Storage & Backup / Restore Actions */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               {/* Box 1: Export DB */}
@@ -3588,11 +3682,15 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                 <div className="mt-5">
                   <button
                     onClick={handleExportDatabase}
-                    className="w-full py-2.5 px-4 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs uppercase shadow-md shadow-indigo-600/20 transition-all flex items-center justify-center gap-2"
+                    disabled={!!backupProgress}
+                    className="w-full py-2.5 px-4 rounded-2xl bg-indigo-600 hover:bg-indigo-700 disabled:opacity-70 text-white font-black text-xs uppercase shadow-md shadow-indigo-600/20 transition-all flex items-center justify-center gap-2"
                   >
-                    <Download className="w-4 h-4" />
-                    <span>TẢI VỀ TỆP DATABASE (.JSON)</span>
+                    <Download className={`w-4 h-4 ${backupProgress ? 'animate-bounce' : ''}`} />
+                    <span>{backupProgress && !restoreState ? backupProgress : 'TẢI VỀ TỆP DATABASE (.JSON)'}</span>
                   </button>
+                  {driveBackupService.isDriveMode() && (
+                    <p className="text-xs text-slate-600 mt-2">Bản web: tải toàn bộ trường, tài khoản (kèm mật khẩu), dữ liệu các lớp, nhân sự, chấm công từ Google Drive. Tệp có mật khẩu và số CCCD — cất ở nơi an toàn.</p>
+                  )}
                 </div>
               </div>
 
