@@ -81,7 +81,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     setDriveChecking(true);
     const res = await schoolDriveDbService.listSchools();
     setDriveChecking(false);
-    if (res.success) {
+    if (res.success && res.message === 'offline-cache') {
+      // Không gọi được Apps Script: KHÔNG báo "đã kết nối" bằng thông tin lưu trên máy
+      setDriveInitialized(false);
+      setSchools(res.schools);
+      setDriveNotice('Không kết nối được Apps Script — bấm Đổi để kiểm tra link');
+    } else if (res.success) {
       setDriveInitialized(res.initialized);
       setDriveNotice(res.initialized ? '' : 'Thư mục dùng chung chưa có cơ sở dữ liệu trường. Quản trị đăng nhập để khởi tạo trường và cấp tài khoản.');
       setSchools(res.schools);
@@ -530,6 +535,32 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                       <Cloud className="w-3.5 h-3.5" />
                       Cài đặt / kiểm tra Apps Script
                     </button>
+                    {driveConfigured && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (!window.confirm(`Làm sạch kết nối trên máy này?
+
+Xóa link thư mục, link Apps Script, lịch sử các thư mục cũ, thông tin trường và phiên Quản trị đã nhớ trên trình duyệt này. Dữ liệu trên Google Drive KHÔNG bị ảnh hưởng.
+
+Sau đó dán link thư mục + Apps Script mới để khởi tạo.`)) return;
+                          googleDriveService.resetLocalConnection();
+                          setFolderLinkInput('');
+                          setScriptLinkInput('');
+                          setSchools([]);
+                          setDriveNotice('');
+                          setDriveConfigured(false);
+                          setDriveInitialized(false);
+                          setShowDriveForm(false);
+                          setErrorMessage('');
+                          setSuccessMessage('Đã làm sạch kết nối cũ trên máy này. Dán link thư mục + Apps Script mới rồi bấm Xác thực.');
+                        }}
+                        className="w-full py-1.5 rounded-lg border border-rose-200/70 bg-rose-700/40 hover:bg-rose-700/60 text-white text-[12px] font-black cursor-pointer"
+                        title="Khởi tạo hệ thống lần đầu / chuyển sang thư mục mới: xóa các kết nối cũ đã lưu trên máy"
+                      >
+                        Làm sạch kết nối cũ trên máy này
+                      </button>
+                    )}
                     {!driveConfigured && (
                       <p className="text-[12px] text-white font-medium leading-snug">
                         Quản trị nhà trường lần đầu: chọn vai trò Quản trị cao nhất và đăng nhập để tạo thư mục, mã script.

@@ -596,14 +596,22 @@ export const GoogleDriveSyncModal: React.FC<GoogleDriveSyncModalProps> = ({ isOp
           </div>
 
           {/* Lịch Sử Các Thư Mục Google Drive Thầy/Cô Đã Từng Dùng (Ảnh 6) */}
-          {Array.isArray(config.folderHistory) && config.folderHistory.length > 0 && (
+          {Array.isArray(config.folderHistory) && config.folderHistory.some(h => h.id !== config.folderId) && (
             <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 space-y-1.5">
               <span className="text-[12px] font-black text-slate-700 uppercase flex items-center gap-1.5">
                 <History className="w-3.5 h-3.5 text-slate-500" />
-                LỊCH SỬ CÁC THƯ MỤC GOOGLE DRIVE THẦY/CÔ ĐÃ TỪNG DÙNG:
+                <span className="flex-1">LỊCH SỬ CÁC THƯ MỤC GOOGLE DRIVE THẦY/CÔ ĐÃ TỪNG DÙNG:</span>
+                <button
+                  type="button"
+                  onClick={() => { setConfig(googleDriveService.clearFolderHistory()); setActionMessage({ type: 'success', text: 'Đã xóa lịch sử các thư mục cũ trên máy này.' }); }}
+                  className="px-2 py-0.5 rounded-md border border-rose-200 bg-white hover:bg-rose-50 text-rose-700 font-bold text-[12px] normal-case cursor-pointer shrink-0"
+                  title="Xóa mọi thư mục cũ khỏi danh sách (giữ thư mục đang kết nối)"
+                >
+                  Xóa lịch sử
+                </button>
               </span>
               <div className="space-y-1">
-                {config.folderHistory.map((item, idx) => (
+                {config.folderHistory.filter(h => h.id !== config.folderId).map((item, idx) => (
                   <div key={idx} className="flex items-center justify-between p-2 rounded-lg bg-white border border-slate-200 text-xs">
                     <div className="flex items-center gap-2 truncate">
                       <Folder className="w-3.5 h-3.5 text-amber-500 shrink-0" />
@@ -616,6 +624,15 @@ export const GoogleDriveSyncModal: React.FC<GoogleDriveSyncModalProps> = ({ isOp
                       className="px-2.5 py-0.5 rounded-md bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-[12px] border border-indigo-200 transition-colors cursor-pointer shrink-0"
                     >
                       Chọn lại
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setConfig(googleDriveService.removeFolderHistory(item.id))}
+                      className="ml-1 w-6 h-6 rounded-md text-rose-600 hover:bg-rose-50 flex items-center justify-center cursor-pointer shrink-0"
+                      title="Xóa thư mục này khỏi lịch sử"
+                      aria-label="Xóa thư mục này khỏi lịch sử"
+                    >
+                      <X className="w-3.5 h-3.5" />
                     </button>
                   </div>
                 ))}

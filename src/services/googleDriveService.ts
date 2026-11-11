@@ -197,6 +197,38 @@ export const googleDriveService = {
   /**
    * 💾 Lưu cấu hình Google Drive (Bảo toàn dữ liệu thông minh)
    */
+  /** Xóa 1 thư mục khỏi lịch sử "các thư mục đã từng dùng" */
+  removeFolderHistory(id: string): GoogleDriveConfig {
+    const cfg = this.getConfig();
+    const folderHistory = (cfg.folderHistory || []).filter(h => h.id !== id);
+    const updated = { ...cfg, folderHistory };
+    try { localStorage.setItem(LOCAL_DRIVE_CONFIG_KEY, JSON.stringify(updated)); } catch (_) { /* ignore */ }
+    return updated;
+  },
+
+  /** Xóa toàn bộ lịch sử thư mục cũ (chỉ giữ thư mục đang kết nối) */
+  clearFolderHistory(): GoogleDriveConfig {
+    const cfg = this.getConfig();
+    const folderHistory = (cfg.folderHistory || []).filter(h => h.id === cfg.folderId);
+    const updated = { ...cfg, folderHistory };
+    try { localStorage.setItem(LOCAL_DRIVE_CONFIG_KEY, JSON.stringify(updated)); } catch (_) { /* ignore */ }
+    return updated;
+  },
+
+  /**
+   * 🧹 Làm sạch kết nối trên MÁY NÀY (khởi tạo hệ thống lần đầu / chuyển sang thư mục + Apps Script mới):
+   * xóa link thư mục, link Apps Script, lịch sử thư mục, thông tin trường lưu tạm, kết nối chấm công đã nhớ,
+   * phiên Quản trị / BGH đã nhớ. KHÔNG đụng dữ liệu trên Google Drive.
+   */
+  resetLocalConnection() {
+    try {
+      [LOCAL_DRIVE_CONFIG_KEY, 'lhhp_drive_schools_cache', 'lhhp_cache_owner_folder', 'lhhp_staff_checkin_conn', 'lhhp_mgr_auth_v1']
+        .forEach(k => localStorage.removeItem(k));
+      ['lhhp_gas_version_check', 'lhhp_staff_viewer_auth'].forEach(k => sessionStorage.removeItem(k));
+    } catch (_) { /* ignore */ }
+    this.notifyStatusListeners({ status: 'idle' });
+  },
+
   saveConfig(newConfig: Partial<GoogleDriveConfig>): GoogleDriveConfig {
     const current = this.getConfig();
     const updated: GoogleDriveConfig = { ...current, ...newConfig };
