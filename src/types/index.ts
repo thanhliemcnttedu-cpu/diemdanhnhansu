@@ -501,6 +501,16 @@ export interface UserClassroomData {
   teacherProfile: TeacherProfile;
   quizBank?: QuestionItem[];
   infographicConfig?: any;
+  /** Két cá nhân: link Drive cá nhân (kho câu hỏi) MÃ HÓA bằng mật khẩu giáo viên — xem utils/personalVault.ts */
+  personalQuizVault?: PersonalQuizVault;
   updatedAt?: number;
+}
+
+export interface PersonalQuizVault {
+  at: number;          // thời điểm cập nhật (bản mới hơn thắng khi gộp)
+  i?: string;          // IV (base64)
+  c?: string;          // bản mã {scriptUrl, folderId, folderUrl}
+  h?: string;          // dấu vân tay cấu hình (không lộ link)
+  cleared?: boolean;   // giáo viên đã Ngắt kết nối
 }
 

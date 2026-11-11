@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { HeadTiltQuizConfig, HEAD_TILT_STORAGE_KEY, DEFAULT_TRIAL_QUIZ } from './types';
+import { HeadTiltQuizConfig, DEFAULT_TRIAL_QUIZ, loadHeadTiltQuizzes, saveHeadTiltQuizzes } from './types';
+import { useClassroom } from '../../../../context/ClassroomContext';
 import { HeadTiltQuizManageView } from './HeadTiltQuizManageView';
 import { HeadTiltQuizEditorView } from './HeadTiltQuizEditorView';
 import { HeadTiltGamePlayView } from './HeadTiltGamePlayView';
@@ -9,6 +10,7 @@ interface HeadTiltGameProps {
 }
 
 export const HeadTiltGame: React.FC<HeadTiltGameProps> = ({ onBackToDashboard }) => {
+  const { currentUser } = useClassroom();
   // Current view within Head Tilt Game: 'manage' | 'editor' | 'play'
   const [currentSubView, setCurrentSubView] = useState<'manage' | 'editor' | 'play'>('manage');
   
@@ -37,8 +39,7 @@ export const HeadTiltGame: React.FC<HeadTiltGameProps> = ({ onBackToDashboard })
   // Save quiz from editor
   const handleSaveQuiz = (savedConfig: HeadTiltQuizConfig) => {
     try {
-      const stored = localStorage.getItem(HEAD_TILT_STORAGE_KEY);
-      let list: HeadTiltQuizConfig[] = stored ? JSON.parse(stored) : [DEFAULT_TRIAL_QUIZ];
+      let list: HeadTiltQuizConfig[] = loadHeadTiltQuizzes(currentUser?.username) || [DEFAULT_TRIAL_QUIZ];
       
       const existsIndex = list.findIndex(q => q.id === savedConfig.id);
       if (existsIndex >= 0) {
@@ -47,7 +48,7 @@ export const HeadTiltGame: React.FC<HeadTiltGameProps> = ({ onBackToDashboard })
         list = [savedConfig, ...list];
       }
 
-      localStorage.setItem(HEAD_TILT_STORAGE_KEY, JSON.stringify(list));
+      saveHeadTiltQuizzes(currentUser?.username, list);
     } catch (e) {
       console.warn('Error saving quiz to storage', e);
     }

@@ -1,5 +1,35 @@
 # ERRORS.md - Nhật ký lỗi & bài học
 
+## [2026-11-11 15:30] - Kết nối Drive cá nhân trên máy mới có thể XÓA TRẮNG kho câu hỏi trên Drive
+
+- **Type**: Logic / Data loss
+- **Severity**: Critical
+- **File**: `src/services/quizBankStore.ts` (`pullDrive`)
+- **Agent**: Claude
+- **Root Cause**: `pullDrive` dùng "bản nào `updatedAt` mới hơn thì thắng". Trên máy mới, lúc đăng nhập phần mềm tạo kho trên máy (chỉ câu mẫu) với `updatedAt` = bây giờ → mới hơn bản trên Drive → đẩy đè lên Drive → mất toàn bộ câu tự soạn (thử: 14 câu → 0).
+- **Error Message**:
+  ```
+  getLatest nganhang_cauhoi_<tk>.json → items: 0 (trước đó 14)
+  ```
+- **Fix Applied**: Đổi sang GỘP từng câu (`mergeBanks`): câu có ở bên nào cũng giữ, cùng mã lấy bản của bên cập nhật sau, câu đã xóa ghi vào `deleted` (tombstone, tối đa 1000) để không "hồi sinh"; chỉ đẩy lên Drive khi bản gộp khác bản trên Drive.
+- **Prevention**: Không bao giờ đồng bộ hai nơi lưu bằng "bản mới hơn thay cả bộ"; luôn gộp theo mã + ghi nhận xóa.
+- **Status**: Fixed
+
+---
+
+## [2026-11-11 14:30] - Nhiều giáo viên dùng chung máy: bộ câu hỏi / bài Quiz Nghiêng Đầu có thể lẫn sang tài khoản khác
+
+- **Type**: Logic / Data isolation
+- **Severity**: High
+- **File**: `src/context/ClassroomContext.tsx` (effect đăng nhập kho câu hỏi, `logoutUser`), `src/components/views/picker/headtilt/*`
+- **Agent**: Claude
+- **Root Cause**: (1) Khi đăng nhập, effect gọi `quizBankStore.adopt(tài khoản mới, quizBankRef.current)` — bộ câu hỏi đang nằm trong bộ nhớ / khóa chung `lop_hoc_hanh_phuc_quiz_bank_v2` có thể là của giáo viên đăng nhập TRƯỚC trên cùng máy (nhất là khi dữ liệu riêng của tài khoản mới nạp từ Drive trường — không có `quizBank`). (2) Đăng xuất không xóa bộ câu hỏi khỏi bộ nhớ chung. (3) Bài Quiz Nghiêng Đầu lưu ở khóa chung `lhhp_head_tilt_quizzes_v1`. (4) Danh mục môn / bài chỉ ở localStorage, không theo sang máy khác.
+- **Fix Applied**: Đăng nhập chỉ nạp `quizBankStore.load(tài khoản)` (hoặc bộ mẫu), không gộp bộ nhớ đang có; đăng xuất đặt lại bộ câu hỏi về mẫu; Quiz Nghiêng Đầu theo khóa `lhhp_head_tilt_quizzes_v1:<tk>` (lần đầu nhận khóa chung cũ rồi xóa); tệp câu hỏi (thư mục máy, Drive cá nhân, tệp xuất) kèm `catalog` {subjects, lessons}, khi kéo / đọc / nhập thì gộp cộng thêm.
+- **Prevention**: Mọi dữ liệu cá nhân của giáo viên phải dùng khóa có tên tài khoản; không bao giờ "nhận" dữ liệu đang nằm trong bộ nhớ chung khi đổi tài khoản; đăng xuất phải dọn bộ nhớ chung.
+- **Status**: Fixed
+
+---
+
 ## [2026-10-15 07:30] - Auto-save của Admin ghi đè dữ liệu cũ lên chỉnh sửa mới của GVCN
 
 - **Type**: Logic

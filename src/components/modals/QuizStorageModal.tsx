@@ -100,7 +100,9 @@ export const QuizStorageModal: React.FC = () => {
   });
   const onImport = (file: File) => run('import', async () => {
     try {
-      const imported = quizBankStore.parseImport(await file.text());
+      const text = await file.text();
+      const imported = quizBankStore.parseImport(text);
+      quizBankStore.mergeCatalogFromText(username, text);
       if (!imported.length) { setMsg({ type: 'err', text: 'Tệp không có câu hỏi nào.' }); return; }
       const r = quizBankStore.mergeImport(quizBank, imported);
       updateQuizBank(r.questions);
@@ -202,6 +204,8 @@ export const QuizStorageModal: React.FC = () => {
   const onDisconnect = () => {
     if (!confirm('Ngắt kết nối Google Drive cá nhân? Bộ câu hỏi vẫn còn trên máy này và tệp trên Drive cá nhân không bị xóa.')) return;
     quizBankStore.setDriveConfig(username, null);
+    // Ngắt hẳn: bỏ link đã nhớ theo tài khoản (máy khác không tự kết nối lại nữa)
+    window.dispatchEvent(new CustomEvent('lhhp:quiz-drive-disconnected', { detail: { username } }));
     setMsg({ type: 'ok', text: 'Đã ngắt kết nối. Bộ câu hỏi tiếp tục lưu trên máy này.' });
   };
 

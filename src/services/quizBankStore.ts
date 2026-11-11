@@ -18,7 +18,34 @@ import { isLegacySample } from '../utils/legacySampleQuestions';
 import { googleDriveService } from './googleDriveService';
 import { shrinkImageDataUrl } from '../utils/driveCompact';
 
-interface StoredBank { order: string[]; items: QuestionItem[]; updatedAt: number }
+interface StoredBank { order: string[]; items: QuestionItem[]; updatedAt: number; deleted?: string[] }
+const MAX_TOMBSTONES = 1000;
+/**
+ * GỘP hai bản kho câu hỏi (máy ↔ Drive cá nhân) — KHÔNG để bản này xóa trắng bản kia (11/2026).
+ * Câu có ở bất kỳ bên nào đều giữ; cùng mã ở cả hai bên → lấy bản của bên cập nhật sau; câu đã xóa (deleted) ở
+ * bên nào cũng bị bỏ ở cả hai. Thứ tự: theo bên mới hơn, rồi thêm câu chỉ bên kia có.
+ */
+function mergeBanks(a: StoredBank | null, b: StoredBank | null): StoredBank {
+  if (!a) return b ? { ...b, deleted: b.deleted || [] } : { order: [], items: [], updatedAt: 0, deleted: [] };
+  if (!b) return { ...a, deleted: a.deleted || [] };
+  const [older, newer] = (a.updatedAt || 0) <= (b.updatedAt || 0) ? [a, b] : [b, a];
+  const deleted = Array.from(new Set([...(older.deleted || []), ...(newer.deleted || [])])).slice(-MAX_TOMBSTONES);
+  const gone = new Set(deleted);
+  const byId = new Map<string, QuestionItem>();
+  (older.items || []).forEach(q => { if (q && q.id) byId.set(q.id, q); });
+  (newer.items || []).forEach(q => { if (q && q.id) byId.set(q.id, q); });
+  const order: string[] = [];
+  const seen = new Set<string>();
+  [...(newer.order || []), ...(older.order || []), ...Array.from(byId.keys())].forEach(id => {
+    if (!id || seen.has(id) || gone.has(id)) return;
+    seen.add(id); order.push(id);
+  });
+  return { order, items: Array.from(byId.values()).filter(q => !gone.has(q.id)), updatedAt: Math.max(a.updatedAt || 0, b.updatedAt || 0), deleted };
+}
+const sameBank = (x: StoredBank | null, y: StoredBank | null) => Boolean(x && y)
+  && JSON.stringify(x!.order) === JSON.stringify(y!.order)
+  && JSON.stringify([...(x!.items || [])].sort((p, q) => p.id.localeCompare(q.id))) === JSON.stringify([...(y!.items || [])].sort((p, q) => p.id.localeCompare(q.id)))
+  && JSON.stringify([...(x!.deleted || [])].sort()) === JSON.stringify([...(y!.deleted || [])].sort());
 export interface DriveCheckStep { key: string; label: string; status: 'ok' | 'fail' | 'skip'; detail?: string }
 export interface DriveDiagnosis { ok: boolean; steps: DriveCheckStep[]; message: string; next?: string; cfg?: PersonalDriveConfig }
 export interface PersonalDriveConfig { scriptUrl: string; folderId: string; folderUrl?: string; lastSyncAt?: number; lastError?: string }
@@ -34,6 +61,7 @@ const LESSON_KEY = 'lhhp_quiz_lessons:';
 export const DEFAULT_TEACHER_SUBJECTS = ['Toán học', 'Tiếng Việt', 'Tiếng Anh', 'Khoa học', 'Lịch sử & Địa lý', 'Tin học', 'Đạo đức & Kỹ năng sống', 'Âm nhạc', 'Mỹ thuật', 'Hoạt động trải nghiệm', 'Giáo dục thể chất'];
 const LOCAL_KEY = 'lhhp_quiz_local:';
 const HANDLE_KEY = '__folder_handle__:';
+const VAULT_KEY = '__vault_key__:';
 /** Nơi lưu trên máy: 'folder' = thư mục máy tính đã chọn; 'browser' = chỉ bộ nhớ phần mềm (trình duyệt không hỗ trợ chọn thư mục) */
 export interface LocalStorageInfo { mode: 'folder' | 'browser'; folderName?: string; setAt: number; lastWriteAt?: number; lastError?: string; needsPermission?: boolean }
 const DEFAULT_JSON = new Map(DEFAULT_QUESTIONS.map(q => [q.id, JSON.stringify(q)]));
@@ -160,7 +188,12 @@ export const quizBankStore = {
   async save(username: string, questions: QuestionItem[]): Promise<void> {
     const u = norm(username);
     if (!u) return;
-    await idbPut(u, await pack(questions));
+    const prev = await idbGet(u);
+    const next = await pack(questions);
+    const keep = new Set(next.order);
+    const removed = (prev?.items || []).map(q => q.id).filter(id => id && !keep.has(id)); // chỉ câu tự soạn / đã sửa
+    next.deleted = Array.from(new Set([...(prev?.deleted || []), ...removed])).filter(id => !keep.has(id)).slice(-MAX_TOMBSTONES);
+    await idbPut(u, next);
     emit();
     if (this.getDriveConfig(u)) this.schedulePush(u);
     if (this.getLocalInfo(u)?.mode === 'folder') this.scheduleLocalWrite(u);
@@ -182,6 +215,13 @@ export const quizBankStore = {
   setSubjects(username: string, list: string[]) {
     try { localStorage.setItem(SUBJ_KEY + norm(username), JSON.stringify(Array.from(new Set(list.map(x => x.trim()).filter(Boolean))))); } catch (_) { /* ignore */ }
     emit();
+    this.catalogChanged(username);
+  },
+  /** Danh mục đổi → hẹn ghi lại tệp (thư mục máy / Drive cá nhân) để danh mục đi kèm */
+  catalogChanged(username: string) {
+    const u = norm(username);
+    if (this.getLocalInfo(u)?.mode === 'folder') this.scheduleLocalWrite(u);
+    if (this.getDriveConfig(u)) this.schedulePush(u);
   },
   addSubject(username: string, name: string) {
     const n = name.trim(); if (!n) return;
@@ -192,12 +232,37 @@ export const quizBankStore = {
     this.setSubjects(username, this.getSubjects(username).filter(x => x !== name));
     const les = this.getLessons(username); if (les[name]) { delete les[name]; this.setLessons(username, les); }
   },
+  /** Danh mục môn + bài của giáo viên (đi kèm tệp câu hỏi để máy khác dựng lại được) */
+  catalog(username: string): { subjects: string[]; lessons: Record<string, string[]> } {
+    return { subjects: this.getSubjects(username), lessons: this.getLessons(username) };
+  },
+  /** Gộp CỘNG THÊM danh mục từ tệp (Drive cá nhân / thư mục / tệp nhập), không xóa môn, bài nào trên máy */
+  mergeCatalog(username: string, cat: any) {
+    if (!cat || typeof cat !== 'object') return;
+    const subs = Array.isArray(cat.subjects) ? cat.subjects.map(String).filter(Boolean) : [];
+    const cur = this.getSubjects(username);
+    const nextSubs = Array.from(new Set([...cur, ...subs]));
+    if (nextSubs.length !== cur.length) this.setSubjects(username, nextSubs);
+    if (cat.lessons && typeof cat.lessons === 'object') {
+      const m = this.getLessons(username); let changed = false;
+      Object.entries(cat.lessons).forEach(([sub, arr]) => {
+        if (!Array.isArray(arr)) return;
+        const merged = Array.from(new Set([...(m[sub] || []), ...arr.map(String).filter(Boolean)]));
+        if (merged.length !== (m[sub] || []).length) { m[sub] = merged; changed = true; }
+      });
+      if (changed) this.setLessons(username, m);
+    }
+  },
+  mergeCatalogFromText(username: string, text: string) {
+    try { const d = JSON.parse(text); if (d && !Array.isArray(d)) this.mergeCatalog(username, d.catalog); } catch (_) { /* ignore */ }
+  },
   getLessons(username: string): Record<string, string[]> {
     try { const v = JSON.parse(localStorage.getItem(LESSON_KEY + norm(username)) || '{}'); return v && typeof v === 'object' ? v : {}; } catch (_) { return {}; }
   },
   setLessons(username: string, map: Record<string, string[]>) {
     try { localStorage.setItem(LESSON_KEY + norm(username), JSON.stringify(map)); } catch (_) { /* ignore */ }
     emit();
+    this.catalogChanged(username);
   },
   addLesson(username: string, subject: string, name: string) {
     const n = name.trim(); if (!n || !subject) return;
@@ -209,6 +274,10 @@ export const quizBankStore = {
     const m = this.getLessons(username);
     if (m[subject]) { m[subject] = m[subject].filter(x => x !== name); this.setLessons(username, m); }
   },
+
+  // ---------- Khóa két cá nhân (sinh từ mật khẩu lúc đăng nhập, KHÔNG xuất được; xóa khi Đăng xuất)
+  async setVaultKey(username: string, key: CryptoKey | null) { await idbPutAny(VAULT_KEY + norm(username), key); },
+  async getVaultKey(username: string): Promise<CryptoKey | null> { return (await idbGetAny(VAULT_KEY + norm(username))) || null; },
 
   // ---------- Nơi lưu bắt buộc trước khi thêm câu hỏi
   /** Đã cấu hình nơi lưu câu hỏi (thư mục máy tính / bộ nhớ máy / Drive cá nhân) */
@@ -291,7 +360,7 @@ export const quizBankStore = {
     try {
       const fh = await handle.getFileHandle(remoteFileName(u), { create: true });
       const w = await fh.createWritable();
-      await w.write(JSON.stringify({ format: 'lhhp_quiz_bank', version: 1, owner: u, ...rec }));
+      await w.write(JSON.stringify({ format: 'lhhp_quiz_bank', version: 1, owner: u, ...rec, catalog: this.catalog(u) }));
       await w.close();
       this.setLocalInfo(u, { ...(this.getLocalInfo(u) as LocalStorageInfo), lastWriteAt: Date.now(), lastError: undefined, needsPermission: false });
       return { ok: true, message: `Đã lưu vào thư mục "${handle.name}".` };
@@ -308,6 +377,7 @@ export const quizBankStore = {
     try {
       const fh = await handle.getFileHandle(remoteFileName(u));
       const text = await (await fh.getFile()).text();
+      this.mergeCatalogFromText(u, text);
       return this.parseImport(text);
     } catch (_) { return null; }
   },
@@ -334,7 +404,7 @@ export const quizBankStore = {
   // ---------- Xuất / Nhập tệp
   async exportFile(username: string, questions: QuestionItem[], teacherName?: string): Promise<number> {
     const rec = await pack(questions);
-    const payload = { format: 'lhhp_quiz_bank', version: 1, exportedAt: new Date().toISOString(), teacher: teacherName || username, ...rec };
+    const payload = { format: 'lhhp_quiz_bank', version: 1, exportedAt: new Date().toISOString(), teacher: teacherName || username, ...rec, catalog: this.catalog(username) };
     const blob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
@@ -448,7 +518,7 @@ export const quizBankStore = {
       const res = await fetch(cfg.scriptUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify({ action: 'saveClassData', folderId: cfg.folderId, fileName: remoteFileName(u), data: { format: 'lhhp_quiz_bank', version: 1, owner: u, ...rec } }),
+        body: JSON.stringify({ action: 'saveClassData', folderId: cfg.folderId, fileName: remoteFileName(u), data: { format: 'lhhp_quiz_bank', version: 1, owner: u, ...rec, catalog: this.catalog(u) } }),
       });
       const data = await res.json().catch(() => null);
       const ok = Boolean(data && data.success !== false);
@@ -471,14 +541,14 @@ export const quizBankStore = {
         if (await idbGet(u)) await this.pushDrive(u); // Drive chưa có tệp → đưa bản trên máy lên
         return null;
       }
+      this.mergeCatalog(u, remote.catalog);
       const local = await idbGet(u);
-      if (local && (local.updatedAt || 0) >= (remote.updatedAt || 0)) {
-        if ((local.updatedAt || 0) > (remote.updatedAt || 0)) await this.pushDrive(u);
-        return null;
-      }
-      const rec: StoredBank = { order: remote.order, items: remote.items || [], updatedAt: remote.updatedAt || Date.now() };
-      await idbPut(u, rec);
+      const remoteRec: StoredBank = { order: remote.order, items: remote.items || [], updatedAt: remote.updatedAt || 0, deleted: Array.isArray(remote.deleted) ? remote.deleted : [] };
+      const rec = mergeBanks(local, remoteRec);
+      if (!sameBank(rec, remoteRec)) { await idbPut(u, rec); await this.pushDrive(u); } // Drive thiếu phần của máy → đưa lên (đã gộp)
+      else if (!sameBank(rec, local)) await idbPut(u, rec);
       this.setDriveConfig(u, { ...cfg, lastSyncAt: Date.now(), lastError: undefined });
+      if (sameBank(rec, local)) return null; // máy đã đủ
       return smartMergeQuizBank(unpack(rec));
     } catch (_) {
       return null;

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { HeadTiltQuizConfig, HEAD_TILT_STORAGE_KEY, DEFAULT_TRIAL_QUIZ } from './types';
+import { HeadTiltQuizConfig, DEFAULT_TRIAL_QUIZ, loadHeadTiltQuizzes, saveHeadTiltQuizzes } from './types';
 import { 
   Play, Plus, Edit3, Trash2, Copy, Sparkles, 
   HelpCircle, BookOpen, Library, Award, ArrowLeft
@@ -24,18 +24,8 @@ export const HeadTiltQuizManageView: React.FC<HeadTiltQuizManageViewProps> = ({
   const { quizBank, updateQuizBank, currentUser } = useClassroom();
   // Saved quizzes in localStorage
   const [quizzes, setQuizzes] = useState<HeadTiltQuizConfig[]>(() => {
-    try {
-      const saved = localStorage.getItem(HEAD_TILT_STORAGE_KEY);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          return parsed;
-        }
-      }
-    } catch (e) {
-      console.warn('Error reading head tilt quizzes', e);
-    }
-    return [DEFAULT_TRIAL_QUIZ];
+    const saved = loadHeadTiltQuizzes(currentUser?.username);
+    return saved && saved.length > 0 ? saved : [DEFAULT_TRIAL_QUIZ];
   });
 
   const [activeTab, setActiveTab] = useState<'my_quizzes' | 'new' | 'bank'>('my_quizzes');
@@ -44,11 +34,7 @@ export const HeadTiltQuizManageView: React.FC<HeadTiltQuizManageViewProps> = ({
   // Sync to localStorage
   const saveQuizzes = (updated: HeadTiltQuizConfig[]) => {
     setQuizzes(updated);
-    try {
-      localStorage.setItem(HEAD_TILT_STORAGE_KEY, JSON.stringify(updated));
-    } catch (e) {
-      console.warn('Error saving head tilt quizzes', e);
-    }
+    saveHeadTiltQuizzes(currentUser?.username, updated);
   };
 
   // Delete quiz

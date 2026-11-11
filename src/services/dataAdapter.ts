@@ -634,6 +634,10 @@ export const dataAdapter = {
         ...localData.seatingAssignments,
         ...(incomingFull?.seatingAssignments || {})
       },
+      // Két cá nhân (link Drive cá nhân đã mã hóa): bản mới hơn thắng
+      personalQuizVault: ((incomingFull as any)?.personalQuizVault?.at || 0) > ((localData as any).personalQuizVault?.at || 0)
+        ? (incomingFull as any).personalQuizVault
+        : (localData as any).personalQuizVault,
       updatedAt: Date.now()
     };
   },

@@ -47,7 +47,26 @@ export interface HeadTiltQuizResult {
   completedAt: string;
 }
 
-export const HEAD_TILT_STORAGE_KEY = 'lhhp_head_tilt_quizzes_v1';
+export const HEAD_TILT_STORAGE_KEY = 'lhhp_head_tilt_quizzes_v1'; // khóa CHUNG cũ (trước 11/2026)
+/** Khóa lưu bài Quiz Nghiêng Đầu theo tài khoản (không để giáo viên khác dùng chung máy nhìn thấy) */
+export const headTiltKey = (username?: string) => `${HEAD_TILT_STORAGE_KEY}:${String(username || 'guest').trim().toLowerCase()}`;
+/** Đọc danh sách bài của tài khoản; lần đầu nhận dữ liệu ở khóa chung cũ (rồi xóa khóa chung) */
+export function loadHeadTiltQuizzes(username?: string): HeadTiltQuizConfig[] | null {
+  try {
+    const own = localStorage.getItem(headTiltKey(username));
+    if (own) { const v = JSON.parse(own); return Array.isArray(v) ? v : null; }
+    const legacy = localStorage.getItem(HEAD_TILT_STORAGE_KEY);
+    if (legacy && username) {
+      localStorage.setItem(headTiltKey(username), legacy);
+      localStorage.removeItem(HEAD_TILT_STORAGE_KEY);
+      const v = JSON.parse(legacy); return Array.isArray(v) ? v : null;
+    }
+  } catch (_) { /* ignore */ }
+  return null;
+}
+export function saveHeadTiltQuizzes(username: string | undefined, list: HeadTiltQuizConfig[]) {
+  try { localStorage.setItem(headTiltKey(username), JSON.stringify(list)); } catch (_) { /* ignore */ }
+}
 
 export const DEFAULT_TRIAL_QUIZ: HeadTiltQuizConfig = {
   id: 'trial-quiz-1',
