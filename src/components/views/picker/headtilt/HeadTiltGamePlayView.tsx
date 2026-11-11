@@ -17,6 +17,7 @@ import {
 } from '../../../../utils/audio';
 import confetti from 'canvas-confetti';
 import { HeadTiltReportModal } from './HeadTiltReportModal';
+import { QuestionAudioButton } from '../QuestionAudioButton';
 
 interface HeadTiltGamePlayViewProps {
   quiz: HeadTiltQuizConfig;
@@ -415,6 +416,7 @@ export const HeadTiltGamePlayView: React.FC<HeadTiltGamePlayViewProps> = ({
             <h1 className="text-xl md:text-3xl font-black text-slate-800 tracking-tight leading-relaxed">
               {currentQuestion?.question}
             </h1>
+            <QuestionAudioButton src={currentQuestion?.audio} className="pt-1" />
             {currentQuestion?.image && (
               <img
                 src={currentQuestion.image}

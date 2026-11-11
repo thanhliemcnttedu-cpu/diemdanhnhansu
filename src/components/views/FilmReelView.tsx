@@ -21,6 +21,7 @@ import { loadQuizBank, saveQuizBank } from '../../utils/quizParser';
 
 import { handleAvatarImgError } from '../../utils/avatarConfig';
 import { CalledStudentModal } from './picker/CalledStudentModal';
+import { QuestionAudioButton } from './picker/QuestionAudioButton';
 import { useQuizSelection } from './picker/QuizSetPicker';
 const FRAME_WIDTH = 155; // Width of each 35mm film frame
 const FRAME_GAP = 14; // Gap between frames
@@ -1219,6 +1220,7 @@ export const FilmReelView: React.FC = () => {
                 </div>
 
                 {/* Ảnh minh họa câu hỏi nếu có */}
+                <QuestionAudioButton src={currentQuestion.audio} className="pt-1" />
                 {currentQuestion.image && (
                   <div className="pt-0.5 flex justify-center">
                     <div className="relative inline-block group">

@@ -2,6 +2,7 @@ export interface HeadTiltQuestion {
   id: string;
   question: string;
   image?: string;
+  audio?: string; // âm thanh câu hỏi (lấy từ kho câu hỏi)
   optionA: string; // Nghiêng trái (Left)
   optionB: string; // Nghiêng phải (Right)
   correctAnswer: 'A' | 'B';

@@ -18,6 +18,7 @@ import { loadQuizBank, saveQuizBank } from '../../../utils/quizParser';
 
 import { handleAvatarImgError } from '../../../utils/avatarConfig';
 import { CalledStudentModal } from './CalledStudentModal';
+import { QuestionAudioButton } from './QuestionAudioButton';
 import { useQuizSelection, QuizSelectionChip } from './QuizSetPicker';
 interface GiftBoxItem {
   id: number;
@@ -470,6 +471,7 @@ export const MysteryGiftBoxGame: React.FC = () => {
               </div>
 
               {/* Question Image */}
+              <QuestionAudioButton src={currentQuestion.audio} className="pt-1" />
               {currentQuestion.image && (
                 <div className="pt-1">
                   <img 

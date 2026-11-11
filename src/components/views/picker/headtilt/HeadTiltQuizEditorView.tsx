@@ -126,6 +126,7 @@ export const HeadTiltQuizEditorView: React.FC<HeadTiltQuizEditorViewProps> = ({
         id: `bank-q-${Date.now()}-${idx}`,
         question: item.questionText,
         image: item.image,
+        audio: item.audio,
         optionA: optA,
         optionB: optB,
         correctAnswer: correct,

@@ -129,6 +129,7 @@ export interface QuestionItem {
   questionText: string;
   image?: string; // Tùy chọn ảnh minh họa câu hỏi
   answerImage?: string; // Tùy chọn ảnh minh họa câu trả lời / đáp án giáo viên
+  audio?: string; // Tùy chọn âm thanh câu hỏi (dataURL: ghi âm / tệp mp3…), trò chơi có nút nghe
   
   // Trắc nghiệm 1 đáp án & Nhiều đáp án
   options?: string[]; // Mảng lựa chọn linh hoạt (2, 3, 4, 5, 6...)
