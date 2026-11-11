@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { BookOpen, X, HardDrive, Download, Upload, Cloud, CheckCircle2, AlertTriangle, Loader2, Copy, ExternalLink, RefreshCw, Unplug, FolderOpen, ShieldCheck, ArrowRight, FolderCog } from 'lucide-react';
+import { BookOpen, X, HardDrive, Download, Upload, Cloud, CheckCircle2, AlertTriangle, Loader2, Copy, ExternalLink, RefreshCw, Unplug, FolderOpen, ShieldCheck, ArrowRight, FolderCog, Save } from 'lucide-react';
 import { useClassroom } from '../../context/ClassroomContext';
 import { quizBankStore, countCustom, isPersonalQuizAccount, supportsLocalFolder } from '../../services/quizBankStore';
 import { googleDriveService } from '../../services/googleDriveService';
@@ -8,6 +8,7 @@ import type { UserAccount } from '../../types';
 
 /** Mở hộp "Nơi lưu câu hỏi": window.dispatchEvent(new Event(OPEN_QUIZ_STORAGE_EVENT)) */
 export const OPEN_QUIZ_STORAGE_EVENT = 'lhhp:open-quiz-storage';
+const DRAFT_KEY = 'lhhp_quiz_drive_draft:';
 
 /**
  * Gọi khi giáo viên bấm nút THÊM câu hỏi. Chưa cấu hình nơi lưu (thư mục máy tính / Drive cá nhân) → mở hộp
@@ -58,8 +59,11 @@ export const QuizStorageModal: React.FC = () => {
   const cfg = username ? quizBankStore.getDriveConfig(username) : null;
   useEffect(() => {
     if (!open) return;
-    setFolderUrl(cfg?.folderUrl || '');
-    setScriptUrl(cfg?.scriptUrl || '');
+    // Link đã kết nối, nếu chưa thì link nháp đã bấm "Lưu cài đặt"
+    let draft: { folderUrl?: string; scriptUrl?: string } = {};
+    try { draft = JSON.parse(localStorage.getItem(DRAFT_KEY + username.toLowerCase()) || '{}') || {}; } catch (_) { draft = {}; }
+    setFolderUrl(cfg?.folderUrl || draft.folderUrl || '');
+    setScriptUrl(cfg?.scriptUrl || draft.scriptUrl || '');
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
@@ -110,6 +114,40 @@ export const QuizStorageModal: React.FC = () => {
     else await quizBankStore.pushDrive(username);
     setMsg({ type: 'ok', text: `${r.message} Bộ câu hỏi sẽ tự đồng bộ vào tệp ${quizBankStore.remoteFileName(username)} trong thư mục cá nhân.` });
   });
+  const saveDraft = (f: string, sUrl: string) => {
+    try {
+      if (f.trim() || sUrl.trim()) localStorage.setItem(DRAFT_KEY + username.toLowerCase(), JSON.stringify({ folderUrl: f.trim(), scriptUrl: sUrl.trim() }));
+      else localStorage.removeItem(DRAFT_KEY + username.toLowerCase());
+    } catch (_) { /* ignore */ }
+  };
+  /** Lưu cài đặt: đủ 2 link → kiểm tra rồi kết nối; chưa kết nối được / thiếu link → giữ link nháp để lần sau làm tiếp */
+  const onSaveSettings = () => run('save', async () => {
+    const f = folderUrl.trim(), sUrl = scriptUrl.trim();
+    if (!f && !sUrl) {
+      saveDraft('', '');
+      if (cfg && confirm('Hai ô link đang trống. Ngắt kết nối Google Drive cá nhân? (Câu hỏi trên máy và tệp trên Drive không bị xóa.)')) {
+        quizBankStore.setDriveConfig(username, null);
+        setMsg({ type: 'ok', text: 'Đã lưu cài đặt: ngắt kết nối Google Drive cá nhân.' });
+      } else {
+        setMsg({ type: 'ok', text: 'Đã xóa link đã lưu.' });
+      }
+      return;
+    }
+    saveDraft(f, sUrl);
+    if (!f || !sUrl) { setMsg({ type: 'ok', text: 'Đã lưu link. Điền đủ link thư mục và link Apps Script để kết nối.' }); return; }
+    const r = await quizBankStore.testDrive(sUrl, f);
+    if (!r.ok || !r.cfg) { setMsg({ type: 'err', text: `Đã lưu link nhưng chưa kết nối được: ${r.message}` }); return; }
+    quizBankStore.setDriveConfig(username, r.cfg);
+    saveDraft('', '');
+    const remote = await quizBankStore.pullDrive(username);
+    if (remote) updateQuizBank(remote);
+    else await quizBankStore.pushDrive(username);
+    setMsg({ type: 'ok', text: `Đã lưu cài đặt. ${r.message}` });
+  });
+  const clearField = (which: 'folder' | 'script') => {
+    if (which === 'folder') { setFolderUrl(''); saveDraft('', scriptUrl); } else { setScriptUrl(''); saveDraft(folderUrl, ''); }
+  };
+
   const onSync = () => run('sync', async () => {
     const remote = await quizBankStore.pullDrive(username);
     if (remote) { updateQuizBank(remote); setMsg({ type: 'ok', text: 'Đã lấy bộ câu hỏi mới hơn từ Google Drive cá nhân.' }); return; }
@@ -273,8 +311,16 @@ export const QuizStorageModal: React.FC = () => {
             <ol className="text-sm text-slate-700 space-y-2 list-decimal pl-5">
               <li>
                 Trên <strong>tài khoản Google của bạn</strong> (không dùng thư mục của trường), tạo một thư mục, ví dụ "Câu hỏi lớp học", rồi dán link thư mục:
-                <input value={folderUrl} onChange={(e) => setFolderUrl(e.target.value)} placeholder="https://drive.google.com/drive/folders/..."
-                  className="mt-1 w-full h-10 px-3 rounded-xl border border-slate-300 text-sm" aria-label="Link thư mục Google Drive cá nhân" />
+                <div className="relative mt-1">
+                  <input value={folderUrl} onChange={(e) => setFolderUrl(e.target.value)} placeholder="https://drive.google.com/drive/folders/..."
+                    className="w-full h-10 pl-3 pr-10 rounded-xl border border-slate-300 text-sm" aria-label="Link thư mục Google Drive cá nhân" />
+                  {folderUrl && (
+                    <button type="button" onClick={() => clearField('folder')} title="Xóa link thư mục" aria-label="Xóa link thư mục"
+                      className="no-hover-fx absolute right-1.5 top-1/2 -translate-y-1/2 w-7 h-7 rounded-lg text-slate-500 hover:text-rose-700 hover:bg-rose-50 inline-flex items-center justify-center">
+                      <X className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
               </li>
               <li className="space-y-1">
                 <span>Sao chép mã Apps Script (đã điền sẵn thư mục), mở <strong>script.new</strong>, xóa mã mẫu, dán mã rồi bấm Lưu.</span>
@@ -286,13 +332,24 @@ export const QuizStorageModal: React.FC = () => {
               <li>Bấm <strong>Triển khai → Tùy chọn triển khai mới → Ứng dụng web</strong>, "Người có quyền truy cập": <strong>Bất kỳ ai</strong> → Triển khai → cho phép quyền → sao chép link kết thúc bằng <code>/exec</code>.</li>
               <li>
                 Dán link Apps Script cá nhân:
-                <input value={scriptUrl} onChange={(e) => setScriptUrl(e.target.value)} placeholder="https://script.google.com/macros/s/.../exec"
-                  className="mt-1 w-full h-10 px-3 rounded-xl border border-slate-300 text-sm" aria-label="Link Apps Script cá nhân" />
+                <div className="relative mt-1">
+                  <input value={scriptUrl} onChange={(e) => setScriptUrl(e.target.value)} placeholder="https://script.google.com/macros/s/.../exec"
+                    className="w-full h-10 pl-3 pr-10 rounded-xl border border-slate-300 text-sm" aria-label="Link Apps Script cá nhân" />
+                  {scriptUrl && (
+                    <button type="button" onClick={() => clearField('script')} title="Xóa link Apps Script" aria-label="Xóa link Apps Script"
+                      className="no-hover-fx absolute right-1.5 top-1/2 -translate-y-1/2 w-7 h-7 rounded-lg text-slate-500 hover:text-rose-700 hover:bg-rose-50 inline-flex items-center justify-center">
+                      <X className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
               </li>
             </ol>
             <div className="flex flex-wrap gap-2">
               <button type="button" onClick={onConnect} disabled={!!busy || !folderUrl.trim() || !scriptUrl.trim()} className={`${btn} bg-sky-700 hover:bg-sky-800 text-white`}>
                 {busy === 'connect' ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />} Kiểm tra & kết nối
+              </button>
+              <button type="button" onClick={onSaveSettings} disabled={!!busy} className={`${btn} border border-sky-300 bg-white hover:bg-sky-50 text-sky-800`} title="Lưu link đã nhập (đủ 2 link thì kiểm tra và kết nối luôn)">
+                {busy === 'save' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Lưu cài đặt
               </button>
               {cfg && (
                 <>
