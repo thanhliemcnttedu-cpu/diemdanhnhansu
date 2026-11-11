@@ -18,6 +18,8 @@ import { googleDriveService } from './googleDriveService';
 import { shrinkImageDataUrl } from '../utils/driveCompact';
 
 interface StoredBank { order: string[]; items: QuestionItem[]; updatedAt: number }
+export interface DriveCheckStep { key: string; label: string; status: 'ok' | 'fail' | 'skip'; detail?: string }
+export interface DriveDiagnosis { ok: boolean; steps: DriveCheckStep[]; message: string; next?: string; cfg?: PersonalDriveConfig }
 export interface PersonalDriveConfig { scriptUrl: string; folderId: string; folderUrl?: string; lastSyncAt?: number; lastError?: string }
 
 const DB_NAME = 'lhhp_personal';
@@ -320,27 +322,64 @@ export const quizBankStore = {
     emit();
   },
   /** Kiểm tra link: đúng định dạng, Apps Script trả lời, mở được thư mục, KHÔNG trùng thư mục của trường */
-  async testDrive(scriptUrlRaw: string, folderRaw: string): Promise<{ ok: boolean; message: string; cfg?: PersonalDriveConfig }> {
+  /** Kiểm tra từng bước kết nối Drive cá nhân: mỗi bước Đạt / Không đạt + việc cần làm tiếp (dừng ở bước lỗi đầu tiên) */
+  async diagnoseDrive(scriptUrlRaw: string, folderRaw: string): Promise<DriveDiagnosis> {
     const scriptUrl = googleDriveService.normalizeScriptUrl(scriptUrlRaw.trim());
     const folderId = googleDriveService.extractFolderIdFromUrl(folderRaw.trim()) || folderRaw.trim();
-    if (!/^https:\/\/script\.google\.com\/macros\/s\/[\w-]+\/exec$/.test(scriptUrl) && !/^http:\/\/localhost:\d+\/exec$/.test(scriptUrl)) {
-      return { ok: false, message: 'Link Apps Script chưa đúng (phải là link Ứng dụng web kết thúc bằng /exec).' };
+    const steps: DriveCheckStep[] = [
+      { key: 'folder', label: 'Link thư mục Google Drive', status: 'skip' },
+      { key: 'script', label: 'Link Apps Script (Ứng dụng web /exec)', status: 'skip' },
+      { key: 'personal', label: 'Là thư mục & Apps Script CÁ NHÂN (không phải của trường)', status: 'skip' },
+      { key: 'ping', label: 'Apps Script trả lời (quyền "Bất kỳ ai")', status: 'skip' },
+      { key: 'open', label: 'Apps Script mở được thư mục', status: 'skip' },
+    ];
+    const fail = (k: string, detail: string, next: string): DriveDiagnosis => {
+      const st = steps.find(x => x.key === k)!; st.status = 'fail'; st.detail = detail;
+      return { ok: false, steps, next, message: detail };
+    };
+    const pass = (k: string, detail?: string) => { const st = steps.find(x => x.key === k)!; st.status = 'ok'; st.detail = detail; };
+
+    if (!folderId || folderId.length < 10 || /\s/.test(folderId)) {
+      return fail('folder', folderRaw.trim() ? 'Không đọc được mã thư mục từ link.' : 'Chưa nhập link thư mục.',
+        'Mở thư mục cá nhân trên drive.google.com, sao chép link trên thanh địa chỉ (dạng https://drive.google.com/drive/folders/...) rồi dán vào ô 1.');
     }
-    if (!folderId || folderId.length < 10) return { ok: false, message: 'Chưa đọc được mã thư mục từ link thư mục Google Drive.' };
+    pass('folder', `Mã thư mục: ${folderId.slice(0, 6)}…${folderId.slice(-4)}`);
+    if (!/^https:\/\/script\.google\.com\/macros\/s\/[\w-]+\/exec$/.test(scriptUrl) && !/^http:\/\/localhost:\d+\/exec$/.test(scriptUrl)) {
+      return fail('script', scriptUrlRaw.trim() ? 'Link chưa đúng dạng Ứng dụng web (phải kết thúc bằng /exec).' : 'Chưa nhập link Apps Script.',
+        'Trong Apps Script bấm Triển khai → Quản lý các bản triển khai → sao chép "URL ứng dụng web" (kết thúc bằng /exec). Không dùng link trang soạn mã (…/edit).');
+    }
+    pass('script');
     const school = googleDriveService.getConfig();
     if (folderId === (school.folderId || '').trim() || scriptUrl === googleDriveService.normalizeScriptUrl(school.scriptUrl)) {
-      return { ok: false, message: 'Đây là thư mục / Apps Script CỦA TRƯỜNG. Hãy dùng thư mục và Apps Script trên tài khoản Google cá nhân của bạn.' };
+      return fail('personal', 'Đây là thư mục / Apps Script CỦA TRƯỜNG.',
+        'Tạo thư mục và dự án Apps Script trên tài khoản Google CÁ NHÂN của bạn (bước 1–3), rồi dán 2 link mới.');
+    }
+    pass('personal');
+    const sep = scriptUrl.includes('?') ? '&' : '?';
+    try {
+      const ping = await (await fetch(`${scriptUrl}${sep}action=ping`)).json();
+      if (!ping?.success) throw new Error('no');
+      pass('ping', ping.version ? `Phiên bản mã ${ping.version}` : undefined);
+    } catch (_) {
+      return fail('ping', 'Apps Script không trả lời.',
+        'Mở dự án Apps Script → Triển khai → Tùy chọn triển khai mới → Ứng dụng web, "Người có quyền truy cập": Bất kỳ ai → Triển khai → cho phép quyền, rồi dán link /exec mới.');
     }
     try {
-      const sep = scriptUrl.includes('?') ? '&' : '?';
-      const ping = await (await fetch(`${scriptUrl}${sep}action=ping`)).json();
-      if (!ping?.success) return { ok: false, message: 'Apps Script không trả lời. Kiểm tra đã triển khai Ứng dụng web, quyền truy cập "Bất kỳ ai".' };
       const ls = await (await fetch(`${scriptUrl}${sep}action=listFiles&folderId=${encodeURIComponent(folderId)}`)).json();
-      if (!ls?.success) return { ok: false, message: `Apps Script không mở được thư mục (${ls?.message || 'kiểm tra lại link thư mục'}).` };
-      return { ok: true, message: 'Kết nối Google Drive cá nhân thành công.', cfg: { scriptUrl, folderId, folderUrl: folderRaw.trim() } };
+      if (!ls?.success) {
+        return fail('open', `Không mở được thư mục${ls?.message ? ` (${ls.message})` : ''}.`,
+          'Thư mục phải thuộc CÙNG tài khoản Google đã triển khai Apps Script. Kiểm tra lại link thư mục, bấm "Sao chép mã" để lấy mã mới, dán vào Apps Script, Lưu và triển khai phiên bản mới.');
+      }
+      pass('open', `Thư mục có ${Array.isArray(ls.files) ? ls.files.length : 0} tệp`);
     } catch (_) {
-      return { ok: false, message: 'Không kết nối được Apps Script (link sai, dự án bị xóa hoặc chưa mở quyền "Bất kỳ ai").' };
+      return fail('open', 'Mất kết nối khi mở thư mục.', 'Kiểm tra kết nối mạng rồi bấm Kiểm tra lại.');
     }
+    return { ok: true, steps, message: 'Kết nối Google Drive cá nhân thành công.', cfg: { scriptUrl, folderId, folderUrl: folderRaw.trim() } };
+  },
+  /** Kiểm tra link (dạng rút gọn của diagnoseDrive) */
+  async testDrive(scriptUrlRaw: string, folderRaw: string): Promise<{ ok: boolean; message: string; cfg?: PersonalDriveConfig }> {
+    const d = await this.diagnoseDrive(scriptUrlRaw, folderRaw);
+    return { ok: d.ok, message: d.message, cfg: d.cfg };
   },
   schedulePush(username: string, delay = 10000) {
     const u = norm(username);
