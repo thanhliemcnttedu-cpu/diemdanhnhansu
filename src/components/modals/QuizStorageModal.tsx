@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { BookOpen, X, HardDrive, Download, Upload, Cloud, CheckCircle2, AlertTriangle, Loader2, Copy, ExternalLink, RefreshCw, Unplug, FolderOpen, ShieldCheck, ArrowRight } from 'lucide-react';
+import { BookOpen, X, HardDrive, Download, Upload, Cloud, CheckCircle2, AlertTriangle, Loader2, Copy, ExternalLink, RefreshCw, Unplug, FolderOpen, ShieldCheck, ArrowRight, FolderCog } from 'lucide-react';
 import { useClassroom } from '../../context/ClassroomContext';
 import { quizBankStore, countCustom, isPersonalQuizAccount, supportsLocalFolder } from '../../services/quizBankStore';
 import { googleDriveService } from '../../services/googleDriveService';
@@ -310,6 +310,59 @@ export const QuizStorageModal: React.FC = () => {
         </div>
       </div>
     </div>
+  );
+};
+
+/** Nhãn ngắn nơi lưu câu hỏi hiện tại của giáo viên */
+export function quizStorageLabel(username: string): string {
+  if (!username) return '';
+  const local = quizBankStore.getLocalInfo(username);
+  const drive = quizBankStore.getDriveConfig(username);
+  const parts: string[] = [];
+  if (local?.mode === 'folder') parts.push(`Thư mục "${local.folderName || 'đã chọn'}"`);
+  if (local?.mode === 'browser') parts.push('Bộ nhớ máy này');
+  if (drive) parts.push('Drive cá nhân');
+  return parts.length ? parts.join(' + ') : 'Chưa cấu hình';
+}
+
+/** Nút "Nơi lưu câu hỏi" (chỉ tài khoản giáo viên): mở hộp cấu hình — đổi thư mục, Drive cá nhân, xuất / nhập, đọc lại thư mục */
+export const QuizStorageButton: React.FC<{ className?: string; compact?: boolean; variant?: 'default' | 'tab' }> = ({ className = '', compact, variant = 'default' }) => {
+  const { currentUser } = useClassroom();
+  const [, bump] = useState(0);
+  useEffect(() => quizBankStore.subscribe(() => bump(n => n + 1)), []);
+  if (!isPersonalQuizAccount(currentUser)) return null;
+  const label = quizStorageLabel(currentUser?.username || '');
+  const missing = label === 'Chưa cấu hình';
+  if (variant === 'tab') {
+    // Dạng thẻ trên thanh trò chơi của màn Gọi tên học sinh
+    return (
+      <button
+        type="button"
+        onClick={() => window.dispatchEvent(new Event(OPEN_QUIZ_STORAGE_EVENT))}
+        className={`px-3 py-2 rounded-xl text-xs font-black inline-flex items-center justify-center gap-1.5 uppercase cursor-pointer whitespace-nowrap border ${
+          missing ? 'bg-amber-50 border-amber-300 text-amber-900 hover:bg-amber-100' : 'bg-white border-indigo-200 text-indigo-800 hover:bg-indigo-50'
+        } ${className}`}
+        title={`Nơi lưu câu hỏi của tôi: ${label} — đổi thư mục, kết nối Drive cá nhân, xuất / nhập bộ câu hỏi`}
+      >
+        <FolderCog className="w-4 h-4 shrink-0" />
+        <span>Nơi lưu câu hỏi của tôi</span>
+        {missing && <span className="px-1.5 rounded-md bg-amber-600 text-white text-[12px] font-black normal-case">Chưa cấu hình</span>}
+      </button>
+    );
+  }
+  return (
+    <button
+      type="button"
+      onClick={() => window.dispatchEvent(new Event(OPEN_QUIZ_STORAGE_EVENT))}
+      className={`no-hover-fx px-3 py-2 rounded-xl text-xs font-bold inline-flex items-center gap-1.5 transition-colors cursor-pointer border whitespace-nowrap ${
+        missing ? 'bg-amber-50 hover:bg-amber-100 border-amber-300 text-amber-900' : 'bg-white hover:bg-slate-100 border-slate-200 text-slate-700'
+      } ${className}`}
+      title={`Nơi lưu câu hỏi cá nhân: ${label} — đổi thư mục, kết nối Drive cá nhân, xuất / nhập bộ câu hỏi`}
+    >
+      <FolderCog className="w-4 h-4 text-indigo-700 shrink-0" />
+      <span>{compact ? 'Nơi lưu câu hỏi' : 'Cấu hình nơi lưu câu hỏi'}</span>
+      <span className={`hidden md:inline max-w-[200px] truncate font-semibold ${missing ? 'text-amber-800' : 'text-slate-600'}`}>· {label}</span>
+    </button>
   );
 };
 

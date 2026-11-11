@@ -11,6 +11,7 @@ import { DuckRaceGame } from './picker/DuckRaceGame';
 import { GameHomeView } from './picker/GameHomeView';
 import { HeadTiltGame } from './picker/headtilt/HeadTiltGame';
 import { LuckyLensGame } from './picker/LuckyLensGame';
+import { QuizStorageButton } from '../modals/QuizStorageModal';
 
 export type PickerGameMode = 'dashboard' | 'wheel' | 'reel' | 'rocket' | 'mystery_box' | 'duck_race' | 'head_tilt' | 'lucky_lens';
 
@@ -162,6 +163,9 @@ export const RandomStudentPickerView: React.FC<RandomStudentPickerViewProps> = (
             <span>ỐNG KÍNH</span>
             <span className="px-1.5 py-0.2 bg-cyan-400 text-slate-950 rounded-md text-[12px] font-black">HOT</span>
           </button>
+
+          {/* Nơi lưu câu hỏi của tôi: cấu hình thư mục máy tính / Drive cá nhân cho bộ câu hỏi trò chơi */}
+          <QuizStorageButton variant="tab" />
         </div>
       </div>
 

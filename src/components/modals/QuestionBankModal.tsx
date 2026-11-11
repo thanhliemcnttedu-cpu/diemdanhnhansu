@@ -12,7 +12,7 @@ import {
   parseQuestionsFromRawText, DEFAULT_QUESTIONS, saveQuizBank 
 } from '../../utils/quizParser';
 import { useClassroom } from '../../context/ClassroomContext';
-import { requireQuizStorage } from './QuizStorageModal';
+import { requireQuizStorage, QuizStorageButton } from './QuizStorageModal';
 
 interface QuestionBankModalProps {
   isOpen: boolean;
@@ -549,6 +549,9 @@ export const QuestionBankModal: React.FC<QuestionBankModalProps> = ({
               <RotateCcw className="w-3.5 h-3.5 text-slate-500" />
               <span className="hidden sm:inline">Khôi Phục Mẫu</span>
             </button>
+
+            {/* Nơi lưu câu hỏi cá nhân: đổi thư mục, kết nối Drive cá nhân, xuất / nhập tệp, đọc lại từ thư mục */}
+            <QuizStorageButton compact />
           </div>
 
           {/* Right Search & Filter */}
