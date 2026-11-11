@@ -35,6 +35,7 @@ export const TeachingReportPanel: React.FC<{ auth: { username: string; password:
   const [profiles, setProfiles] = useState<Record<string, TeachProfile>>({});
   const [logs, setLogs] = useState<Record<string, TeachLog>>({});
   const [menu, setMenu] = useState(false);
+  const [menuPos, setMenuPos] = useState<{ top: number; right: number }>({ top: 0, right: 16 });
   // Phạm vi xuất: tháng đang xem hoặc tất cả các tháng (từ tháng 8 của năm học tới tháng hiện tại) đã có số liệu
   const [scope, setScope] = useState<'month' | 'all'>('month');
   const [exporting, setExporting] = useState(false);
@@ -284,14 +285,21 @@ export const TeachingReportPanel: React.FC<{ auth: { username: string; password:
             {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />} Tải lại
           </button>
           <div className="relative">
-            <button type="button" onClick={() => setMenu(v => !v)} disabled={loading || !staff.length} aria-expanded={menu} aria-haspopup="menu"
+            <button type="button" onClick={(e) => {
+                // The card clips its content (overflow-hidden), so the menu is placed with fixed coordinates under the button
+                const r = e.currentTarget.getBoundingClientRect();
+                setMenuPos({ top: Math.round(r.bottom + 8), right: Math.max(8, Math.round(window.innerWidth - r.right)) });
+                setMenu(v => !v);
+              }} disabled={loading || !staff.length} aria-expanded={menu} aria-haspopup="menu"
               className="no-hover-fx h-9 px-3.5 rounded-lg text-sm font-bold bg-emerald-700 hover:bg-emerald-800 text-white inline-flex items-center gap-1.5 whitespace-nowrap disabled:opacity-50">
               {exporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />} {exporting ? 'Đang tạo tệp…' : 'Xuất Excel'} <ChevronDown className="w-4 h-4" />
             </button>
             {menu && (
               <>
                 <div className="fixed inset-0 z-40" onClick={() => setMenu(false)} aria-hidden="true" />
-                <div role="menu" className="absolute right-0 top-11 z-50 w-80 max-w-[calc(100vw-2rem)] rounded-2xl bg-white border border-slate-200 shadow-xl p-3 space-y-2">
+                <div role="menu" style={{ top: menuPos.top, right: menuPos.right, maxHeight: `calc(100vh - ${menuPos.top + 12}px)` }}
+                  className="fixed z-50 w-[680px] max-w-[calc(100vw-1rem)] overflow-y-auto rounded-2xl bg-white border border-slate-200 shadow-xl p-3 grid grid-cols-1 md:grid-cols-2 gap-3 items-start">
+                  <div className="space-y-2">
                   <label className="block space-y-1">
                     <span className="text-xs font-bold text-slate-700">Cơ quan chủ quản (dòng 1 của bảng kê)</span>
                     <input value={org} onChange={(e) => saveOrg(e.target.value.slice(0, 80))} placeholder="Ví dụ: UBND XÃ …"
@@ -312,6 +320,9 @@ export const TeachingReportPanel: React.FC<{ auth: { username: string; password:
                       </label>
                     ))}
                   </fieldset>
+                  <p className="text-xs text-slate-600">Chọn phạm vi ở đây, rồi bấm biểu cần tải ở cột bên.</p>
+                  </div>
+                  <div className="space-y-2">
                   {([
                     ['TH1', 'TH1. Bảng kê dạy lớp có HS khuyết tật', 'Đúng mẫu TonghopKT', () => runExport((ms, c) => exportTH1(packsOf(ms, src => listFor('disabled', src)), c)), listFor('disabled').length || declaredFor('disabled')],
                     ['TH2', 'TH2. Bảng kê dạy GDTC (ngoài trời)', 'Đúng mẫu TonghopGDTC', () => runExport((ms, c) => exportTH2(packsOf(ms, src => listFor('pe', src)), c)), listFor('pe').length || declaredFor('pe')],
@@ -329,6 +340,7 @@ export const TeachingReportPanel: React.FC<{ auth: { username: string; password:
                   ))}
                   <button type="button" role="menuitem" disabled={exporting} onClick={() => { runExport(exportExcel); }}
                     className="no-hover-fx w-full text-left rounded-xl border border-slate-200 hover:bg-slate-50 px-3 py-2 text-sm font-bold text-slate-800">Tổng hợp tất cả mục (1 tệp)</button>
+                  </div>
                 </div>
               </>
             )}
