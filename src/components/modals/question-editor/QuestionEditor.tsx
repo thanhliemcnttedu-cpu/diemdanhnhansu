@@ -4,7 +4,7 @@ import {
   Plus, Trash2, Check, X, Save, ArrowUp, ArrowDown, Eye, Lightbulb, Coins, BookOpen, AlertTriangle, Volume2,
 } from 'lucide-react';
 import type { QuestionItem, QuestionType, QuestionMatchingPair } from '../../../types';
-import { ImageSlot, AudioSlot, imageFromClipboardEvent, imageFileToDataUrl } from './MediaInputs';
+import { ImageSlot, AudioSlot, MiniImage, imageFromClipboardEvent, imageFileToDataUrl } from './MediaInputs';
 import { QuestionPlayer } from './QuestionPlayer';
 import { Play } from 'lucide-react';
 
@@ -50,6 +50,7 @@ function shapeFor(q: QuestionItem, type: QuestionType): QuestionItem {
     next.distractorWords = q.distractorWords || [];
   } else if (type === 'sequence_order') {
     next.sequenceItems = q.sequenceItems && q.sequenceItems.length ? [...q.sequenceItems] : ['', '', ''];
+    next.sequenceImages = (next.sequenceItems || []).map((_, i) => q.sequenceImages?.[i] || '');
   } else if (type === 'matching') {
     next.matchingPairs = q.matchingPairs && q.matchingPairs.length ? q.matchingPairs.map(p => ({ ...p })) : [{ left: '', right: '' }, { left: '', right: '' }, { left: '', right: '' }];
   }
@@ -84,13 +85,20 @@ function finalize(q: QuestionItem): { error?: string; section?: string; question
     out.blankAnswers = ans;
     out.distractorWords = (q.distractorWords || []).map(w => w.trim()).filter(Boolean);
   } else if (q.type === 'sequence_order') {
-    const items = (q.sequenceItems || []).map(s => (s || '').trim()).filter(Boolean);
-    if (items.length < 2) return { error: 'Cần ít nhất 2 bước để sắp xếp.', section: 'answers' };
-    out.sequenceItems = items;
+    const steps = (q.sequenceItems || []).map((t, i) => ({ t: (t || '').trim(), img: q.sequenceImages?.[i] || '' })).filter(x => x.t || x.img);
+    if (steps.length < 2) return { error: 'Cần ít nhất 2 bước (có chữ hoặc ảnh) để sắp xếp.', section: 'answers' };
+    out.sequenceItems = steps.map(x => x.t);
+    if (steps.some(x => x.img)) out.sequenceImages = steps.map(x => x.img); else delete out.sequenceImages;
   } else if (q.type === 'matching') {
-    const pairs = (q.matchingPairs || []).map(p => ({ left: (p.left || '').trim(), right: (p.right || '').trim() }));
-    if (pairs.some(p => (p.left && !p.right) || (!p.left && p.right))) return { error: 'Có cặp nối mới nhập 1 bên — hãy nhập đủ cả cột A và cột B (hoặc xóa cặp đó).', section: 'answers' };
-    const full = pairs.filter(p => p.left && p.right);
+    const pairs = (q.matchingPairs || []).map(p => {
+      const o: QuestionMatchingPair = { left: (p.left || '').trim(), right: (p.right || '').trim() };
+      if (p.leftImage) o.leftImage = p.leftImage;
+      if (p.rightImage) o.rightImage = p.rightImage;
+      return o;
+    });
+    const hasL = (p: QuestionMatchingPair) => Boolean(p.left || p.leftImage), hasR = (p: QuestionMatchingPair) => Boolean(p.right || p.rightImage);
+    if (pairs.some(p => hasL(p) !== hasR(p))) return { error: 'Có cặp nối mới nhập 1 bên — hãy nhập đủ cả cột A và cột B (chữ hoặc ảnh), hoặc xóa cặp đó.', section: 'answers' };
+    const full = pairs.filter(p => hasL(p) && hasR(p));
     if (full.length < 2) return { error: 'Cần ít nhất 2 cặp nối.', section: 'answers' };
     out.matchingPairs = full;
   }
@@ -132,12 +140,22 @@ export const QuestionEditor: React.FC<Props> = ({ question, isNew, subjects, onC
   const setSlotImage = (slot: string, v: string | undefined) => {
     if (slot === 'image') patch({ image: v });
     else if (slot === 'answer') patch({ answerImage: v });
-    else if (slot.startsWith('opt-')) {
+    else if (slot.startsWith('seq-')) {
+      const i = Number(slot.slice(4));
+      setQ(prev => { const imgs = [...(prev.sequenceImages || [])]; while (imgs.length <= i) imgs.push(''); imgs[i] = v || ''; return { ...prev, sequenceImages: imgs }; });
+    } else if (slot.startsWith('ml-') || slot.startsWith('mr-')) {
+      const i = Number(slot.slice(3)); const key = slot.startsWith('ml-') ? 'leftImage' : 'rightImage';
+      setQ(prev => { const a = (prev.matchingPairs || []).map(p => ({ ...p })); if (a[i]) { if (v) a[i][key] = v; else delete a[i][key]; } return { ...prev, matchingPairs: a }; });
+    } else if (slot.startsWith('opt-')) {
       const i = Number(slot.slice(4));
       setQ(prev => { const imgs = [...(prev.optionImages || [])]; while (imgs.length <= i) imgs.push(''); imgs[i] = v || ''; return { ...prev, optionImages: imgs }; });
     }
   };
-  const slotLabel = (slot: string) => slot === 'image' ? 'ảnh câu hỏi' : slot === 'answer' ? 'ảnh lời giải' : `ảnh phương án ${LETTERS[Number(slot.slice(4))] || ''}`;
+  const slotLabel = (slot: string) => slot === 'image' ? 'ảnh câu hỏi' : slot === 'answer' ? 'ảnh lời giải'
+    : slot.startsWith('seq-') ? `ảnh bước ${Number(slot.slice(4)) + 1}`
+    : slot.startsWith('ml-') ? `ảnh cột A dòng ${Number(slot.slice(3)) + 1}`
+    : slot.startsWith('mr-') ? `ảnh cột B dòng ${Number(slot.slice(3)) + 1}`
+    : `ảnh phương án ${LETTERS[Number(slot.slice(4))] || ''}`;
   const onRootPaste = async (e: React.ClipboardEvent) => {
     const file = imageFromClipboardEvent(e);
     if (!file) return;
@@ -147,7 +165,7 @@ export const QuestionEditor: React.FC<Props> = ({ question, isNew, subjects, onC
     if (inField && text.trim()) return; // dán chữ (kể cả từ Word) → giữ nguyên hành vi dán chữ
     e.preventDefault();
     const slot = (target.closest('[data-paste-slot]') as HTMLElement | null)?.dataset.pasteSlot || active || 'image';
-    const max = slot.startsWith('opt-') ? 600 : 1280;
+    const max = /^(opt|seq|ml|mr)-/.test(slot) ? 600 : 1280;
     try { setSlotImage(slot, await imageFileToDataUrl(file, max)); setActive(slot); flash(`Đã dán ảnh vào ${slotLabel(slot)}.`); } catch (err: any) { fail(err?.message || 'Không dán được ảnh.'); }
   };
 
@@ -209,7 +227,13 @@ export const QuestionEditor: React.FC<Props> = ({ question, isNew, subjects, onC
 
   // ---- sắp xếp / nối
   const seq = q.sequenceItems || [];
-  const moveSeq = (i: number, d: -1 | 1) => { const j = i + d; if (j < 0 || j >= seq.length) return; const a = [...seq]; [a[i], a[j]] = [a[j], a[i]]; patch({ sequenceItems: a }); };
+  const seqImgs = seq.map((_, i) => q.sequenceImages?.[i] || '');
+  const moveSeq = (i: number, d: -1 | 1) => {
+    const j = i + d; if (j < 0 || j >= seq.length) return;
+    const a = [...seq]; [a[i], a[j]] = [a[j], a[i]];
+    const b = [...seqImgs]; [b[i], b[j]] = [b[j], b[i]];
+    patch({ sequenceItems: a, sequenceImages: b });
+  };
   const pairs = q.matchingPairs || [];
   const setPair = (i: number, side: keyof QuestionMatchingPair, v: string) => { const a = pairs.map(p => ({ ...p })); a[i][side] = v; patch({ matchingPairs: a }); };
 
@@ -385,33 +409,41 @@ export const QuestionEditor: React.FC<Props> = ({ question, isNew, subjects, onC
                 <>
                   <div className="flex flex-wrap items-end gap-2">
                     <span className={`${label} mb-0 mr-auto`}>Các bước theo THỨ TỰ ĐÚNG</span>
-                    <span className="text-sm text-slate-600">Khi chơi, phần mềm tự xáo trộn</span>
+                    <span className="text-sm text-slate-600">Khi chơi, phần mềm tự xáo trộn · mỗi bước có thể thêm ảnh (Ctrl+V trong ô chữ)</span>
                   </div>
                   <div className="space-y-2">
                     {seq.map((s, i) => (
                       <div key={i} className="flex items-center gap-2">
                         <span className="w-9 h-9 rounded-xl bg-indigo-600 text-white text-sm font-black inline-flex items-center justify-center shrink-0">{i + 1}</span>
-                        <input value={s} onChange={(e) => { const a = [...seq]; a[i] = e.target.value; patch({ sequenceItems: a }); }} placeholder={`Bước ${i + 1}`} className={input} aria-label={`Bước ${i + 1}`} />
+                        <input value={s} data-paste-slot={`seq-${i}`} onChange={(e) => { const a = [...seq]; a[i] = e.target.value; patch({ sequenceItems: a }); }} placeholder={seqImgs[i] ? `Bước ${i + 1} (có thể chỉ dùng ảnh)` : `Bước ${i + 1}`} className={input} aria-label={`Bước ${i + 1}`} />
+                        <MiniImage value={seqImgs[i] || undefined} onChange={(v) => setSlotImage(`seq-${i}`, v)} label={`ảnh bước ${i + 1}`} onError={fail} />
                         <button type="button" onClick={() => moveSeq(i, -1)} disabled={i === 0} title="Đưa lên" aria-label={`Đưa bước ${i + 1} lên`} className={`${iconBtn} text-slate-600 hover:bg-slate-100`}><ArrowUp className="w-4 h-4" /></button>
                         <button type="button" onClick={() => moveSeq(i, 1)} disabled={i === seq.length - 1} title="Đưa xuống" aria-label={`Đưa bước ${i + 1} xuống`} className={`${iconBtn} text-slate-600 hover:bg-slate-100`}><ArrowDown className="w-4 h-4" /></button>
-                        <button type="button" onClick={() => patch({ sequenceItems: seq.filter((_, k) => k !== i) })} disabled={seq.length <= 2} title="Xóa bước" aria-label={`Xóa bước ${i + 1}`} className={`${iconBtn} text-rose-700 hover:bg-rose-50`}><Trash2 className="w-4 h-4" /></button>
+                        <button type="button" onClick={() => patch({ sequenceItems: seq.filter((_, k) => k !== i), sequenceImages: seqImgs.filter((_, k) => k !== i) })} disabled={seq.length <= 2} title="Xóa bước" aria-label={`Xóa bước ${i + 1}`} className={`${iconBtn} text-rose-700 hover:bg-rose-50`}><Trash2 className="w-4 h-4" /></button>
                       </div>
                     ))}
                   </div>
-                  <button type="button" onClick={() => patch({ sequenceItems: [...seq, ''] })} className={`${smallBtn} border border-dashed border-indigo-300 text-indigo-700 hover:bg-indigo-50`}><Plus className="w-4 h-4" /> Thêm bước</button>
+                  <button type="button" onClick={() => patch({ sequenceItems: [...seq, ''], sequenceImages: [...seqImgs, ''] })} className={`${smallBtn} border border-dashed border-indigo-300 text-indigo-700 hover:bg-indigo-50`}><Plus className="w-4 h-4" /> Thêm bước</button>
                 </>
               )}
 
               {q.type === 'matching' && (
                 <>
-                  <div className="grid grid-cols-[1fr_auto_1fr_auto] gap-2 items-center">
+                  <p className="text-sm text-slate-600">Mỗi ô có thể là chữ, ảnh hoặc cả hai (Ctrl+V trong ô chữ để dán ảnh). Khi chơi, cả hai cột được xáo trộn.</p>
+                  <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)_auto] gap-2 items-center">
                     <span className={`${label} mb-0`}>Cột A</span><span />
                     <span className={`${label} mb-0`}>Cột B (nối đúng)</span><span />
                     {pairs.map((p, i) => (
                       <React.Fragment key={i}>
-                        <input value={p.left} onChange={(e) => setPair(i, 'left', e.target.value)} placeholder={`A${i + 1}`} className={input} aria-label={`Cột A dòng ${i + 1}`} />
+                        <span className="flex items-center gap-1.5 min-w-0">
+                          <input value={p.left} data-paste-slot={`ml-${i}`} onChange={(e) => setPair(i, 'left', e.target.value)} placeholder={`A${i + 1}`} className={`${input} min-w-0`} aria-label={`Cột A dòng ${i + 1}`} />
+                          <MiniImage value={p.leftImage} onChange={(v) => setSlotImage(`ml-${i}`, v)} label={`ảnh A${i + 1}`} onError={fail} />
+                        </span>
                         <Link2 className="w-4 h-4 text-slate-400" />
-                        <input value={p.right} onChange={(e) => setPair(i, 'right', e.target.value)} placeholder={`B${i + 1}`} className={input} aria-label={`Cột B dòng ${i + 1}`} />
+                        <span className="flex items-center gap-1.5 min-w-0">
+                          <input value={p.right} data-paste-slot={`mr-${i}`} onChange={(e) => setPair(i, 'right', e.target.value)} placeholder={`B${i + 1}`} className={`${input} min-w-0`} aria-label={`Cột B dòng ${i + 1}`} />
+                          <MiniImage value={p.rightImage} onChange={(v) => setSlotImage(`mr-${i}`, v)} label={`ảnh B${i + 1}`} onError={fail} />
+                        </span>
                         <button type="button" onClick={() => patch({ matchingPairs: pairs.filter((_, k) => k !== i) })} disabled={pairs.length <= 2} title="Xóa cặp" aria-label={`Xóa cặp ${i + 1}`} className={`${iconBtn} text-rose-700 hover:bg-rose-50`}><Trash2 className="w-4 h-4" /></button>
                       </React.Fragment>
                     ))}
@@ -534,10 +566,10 @@ const QuestionPreview: React.FC<{ q: QuestionItem }> = ({ q }) => {
         </div>
       )}
       {q.type === 'sequence_order' && (
-        <ol className="space-y-1.5">{(q.sequenceItems || []).filter(Boolean).map((s, i) => <li key={i} className="flex items-center gap-2 text-sm text-slate-800"><span className="w-6 h-6 rounded-md bg-indigo-100 text-indigo-800 text-xs font-black inline-flex items-center justify-center">{i + 1}</span>{s}</li>)}</ol>
+        <ol className="space-y-1.5">{(q.sequenceItems || []).map((s, i) => ({ s, img: q.sequenceImages?.[i] })).filter(x => x.s || x.img).map((x, i) => <li key={i} className="flex items-center gap-2 text-sm text-slate-800"><span className="w-6 h-6 rounded-md bg-indigo-100 text-indigo-800 text-xs font-black inline-flex items-center justify-center shrink-0">{i + 1}</span>{x.img && <img src={x.img} alt="" className="w-10 h-10 object-contain rounded-md border border-slate-200 bg-white" />}{x.s}</li>)}</ol>
       )}
       {q.type === 'matching' && (
-        <div className="space-y-1.5">{(q.matchingPairs || []).filter(p => p.left || p.right).map((p, i) => <div key={i} className="grid grid-cols-[1fr_auto_1fr] gap-2 items-center text-sm"><span className="px-2 py-1 rounded-lg bg-amber-50 border border-amber-200 text-slate-900">{p.left}</span><Link2 className="w-4 h-4 text-slate-400" /><span className="px-2 py-1 rounded-lg bg-sky-50 border border-sky-200 text-slate-900">{p.right}</span></div>)}</div>
+        <div className="space-y-1.5">{(q.matchingPairs || []).filter(p => p.left || p.right || p.leftImage || p.rightImage).map((p, i) => <div key={i} className="grid grid-cols-[1fr_auto_1fr] gap-2 items-center text-sm"><span className="px-2 py-1 rounded-lg bg-amber-50 border border-amber-200 text-slate-900 flex items-center gap-1.5 min-w-0">{p.leftImage && <img src={p.leftImage} alt="" className="w-9 h-9 object-contain rounded bg-white shrink-0" />}<span className="truncate">{p.left}</span></span><Link2 className="w-4 h-4 text-slate-400" /><span className="px-2 py-1 rounded-lg bg-sky-50 border border-sky-200 text-slate-900 flex items-center gap-1.5 min-w-0">{p.rightImage && <img src={p.rightImage} alt="" className="w-9 h-9 object-contain rounded bg-white shrink-0" />}<span className="truncate">{p.right}</span></span></div>)}</div>
       )}
       {(q.teacherAnswerKey || q.answerImage) && (
         <div className="rounded-xl bg-amber-50 border border-amber-200 p-2.5 space-y-1.5">

@@ -203,3 +203,38 @@ export const AudioSlot: React.FC<AudioSlotProps> = ({ value, onChange, onError }
     </div>
   );
 };
+
+/** Ô ảnh nhỏ gọn (bước sắp xếp, ô nối cột): Dán ảnh từ Clipboard / Chọn tệp; có ảnh thì hiện ảnh thu nhỏ + nút bỏ */
+export const MiniImage: React.FC<{ value?: string; onChange: (v: string | undefined) => void; label: string; onError?: (m: string) => void; maxSide?: number }> = ({ value, onChange, label, onError, maxSide = 600 }) => {
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [busy, setBusy] = useState(false);
+  const take = async (file?: Blob | null) => {
+    if (!file) return;
+    if (!file.type.startsWith('image/')) { onError?.('Tệp này không phải ảnh.'); return; }
+    setBusy(true);
+    try { onChange(await imageFileToDataUrl(file, maxSide)); } catch (e: any) { onError?.(e?.message || 'Không đọc được ảnh.'); } finally { setBusy(false); }
+  };
+  const paste = async () => {
+    try {
+      const items = await (navigator.clipboard as any).read();
+      for (const it of items) { const t = it.types.find((x: string) => x.startsWith('image/')); if (t) { await take(await it.getType(t)); return; } }
+      onError?.('Clipboard chưa có ảnh. Sao chép ảnh rồi bấm lại (hoặc nhấn Ctrl+V trong ô chữ bên cạnh).');
+    } catch (_) { onError?.('Trình duyệt chưa cho đọc Clipboard. Hãy bấm vào ô chữ bên cạnh rồi nhấn Ctrl+V.'); }
+  };
+  const btn = 'no-hover-fx w-9 h-9 rounded-lg border inline-flex items-center justify-center shrink-0';
+  if (busy) return <span className={`${btn} border-slate-200 text-slate-500`}><Loader2 className="w-4 h-4 animate-spin" /></span>;
+  if (value) return (
+    <span className="relative shrink-0" title={label}>
+      <img src={value} alt={label} className="w-10 h-10 rounded-lg object-cover border border-slate-300 bg-white" />
+      <button type="button" onClick={() => onChange(undefined)} aria-label={`Bỏ ${label}`} title={`Bỏ ${label}`}
+        className="no-hover-fx absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-rose-600 text-white inline-flex items-center justify-center shadow"><Trash2 className="w-3 h-3" /></button>
+    </span>
+  );
+  return (
+    <span className="flex items-center gap-1 shrink-0">
+      <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ''; take(f); }} />
+      <button type="button" onClick={paste} title={`Dán ${label} từ Clipboard`} aria-label={`Dán ${label}`} className={`${btn} border-indigo-200 text-indigo-700 hover:bg-indigo-50`}><ClipboardPaste className="w-4 h-4" /></button>
+      <button type="button" onClick={() => fileRef.current?.click()} title={`Chọn ${label} từ máy`} aria-label={`Chọn ${label}`} className={`${btn} border-slate-300 text-slate-700 hover:bg-slate-50`}><ImagePlus className="w-4 h-4" /></button>
+    </span>
+  );
+};

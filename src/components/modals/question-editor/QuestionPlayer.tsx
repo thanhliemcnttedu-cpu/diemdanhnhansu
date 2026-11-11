@@ -4,6 +4,7 @@ import type { QuestionItem } from '../../../types';
 import { shuffle, shuffleAvoid, shuffleMatching } from '../../../utils/shuffle';
 import { QuestionAudioButton } from '../../views/picker/QuestionAudioButton';
 import { typeLabel } from './QuestionEditor';
+import { SequenceBoard, MatchingBoard } from '../../views/picker/AnswerBoards';
 
 /**
  * ▶ CHƠI THỬ câu hỏi / bộ câu hỏi với vai trò HỌC SINH (11/2026) — để giáo viên kiểm tra câu hỏi trước khi dùng.
@@ -210,69 +211,26 @@ const PlayOne: React.FC<{ q: QuestionItem; onResult: (ok: boolean) => void }> = 
       )}
 
       {q.type === 'sequence_order' && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <p className="text-sm font-bold text-slate-700">Bấm lần lượt theo thứ tự đúng:</p>
-            {seqOrder.map(i => {
-              const pos = seqPicked.indexOf(i);
-              return (
-                <button key={i} type="button" disabled={locked || pos >= 0} onClick={() => setSeqPicked(p => [...p, i])}
-                  className="no-hover-fx w-full text-left rounded-xl border-2 border-slate-200 bg-white hover:border-indigo-400 px-3 py-2.5 text-base font-bold text-slate-900 disabled:opacity-40">{(q.sequenceItems || [])[i]}</button>
-              );
-            })}
-          </div>
-          <div className="space-y-2">
-            <p className="text-sm font-bold text-slate-700">Thứ tự của em (bấm để bỏ):</p>
-            {seqPicked.length === 0 && <p className="text-sm text-slate-500 italic">Chưa chọn bước nào.</p>}
-            {seqPicked.map((i, pos) => (
-              <button key={i} type="button" disabled={locked} onClick={() => setSeqPicked(p => p.filter(x => x !== i))}
-                className={`no-hover-fx w-full text-left rounded-xl border-2 px-3 py-2.5 text-base font-bold flex items-center gap-2 ${locked ? (i === pos ? 'border-emerald-600 bg-emerald-50 text-emerald-900' : 'border-rose-600 bg-rose-50 text-rose-900') : 'border-indigo-300 bg-indigo-50 text-indigo-900'}`}>
-                <span className="w-7 h-7 rounded-lg bg-white text-sm font-black inline-flex items-center justify-center shrink-0">{pos + 1}</span>{(q.sequenceItems || [])[i]}
-              </button>
-            ))}
-          </div>
-        </div>
+        <SequenceBoard
+          items={(q.sequenceItems || []).map((t, k) => ({ text: t, image: q.sequenceImages?.[k] || undefined }))}
+          pool={seqOrder} order={seqPicked} onChange={setSeqPicked} locked={locked} />
       )}
 
       {q.type === 'matching' && (
         <div className="space-y-2">
-          <p className="text-sm font-bold text-slate-700">Bấm một ô ở cột A, rồi bấm ô tương ứng ở cột B (bấm lại ô A để nối lại):</p>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-2">
-              {matchOrder.left.map((li, pos) => {
-                const pairNo = matches[li] !== undefined ? Object.keys(matches).map(Number).sort((a, b) => matchOrder.left.indexOf(a) - matchOrder.left.indexOf(b)).indexOf(li) + 1 : 0;
-                const ok = locked ? matches[li] === li : null;
-                return (
-                  <button key={li} type="button" disabled={locked}
-                    onClick={() => { setMatchSel(li); setMatches(m => { const n = { ...m }; delete n[li]; return n; }); }}
-                    className={`no-hover-fx w-full text-left rounded-xl border-2 px-3 py-2.5 text-base font-bold flex items-center gap-2 ${ok === true ? 'border-emerald-600 bg-emerald-50' : ok === false ? 'border-rose-600 bg-rose-50' : matchSel === li ? 'border-indigo-600 bg-indigo-50' : matches[li] !== undefined ? 'border-amber-400 bg-amber-50' : 'border-slate-200 bg-white hover:border-indigo-400'}`}>
-                    <span className="w-7 h-7 rounded-lg bg-amber-500 text-white text-xs font-black inline-flex items-center justify-center shrink-0">A{pos + 1}</span>
-                    <span className="flex-1 text-slate-900">{(q.matchingPairs || [])[li]?.left}</span>
-                    {pairNo > 0 && <span className="text-xs font-black text-amber-800">↔ {pairNo}</span>}
-                  </button>
-                );
-              })}
-            </div>
-            <div className="space-y-2">
-              {matchOrder.right.map((ri, pos) => {
-                const owner = Object.keys(matches).map(Number).find(k => matches[k] === ri);
-                const pairNo = owner !== undefined ? Object.keys(matches).map(Number).sort((a, b) => matchOrder.left.indexOf(a) - matchOrder.left.indexOf(b)).indexOf(owner) + 1 : 0;
-                return (
-                  <button key={ri} type="button" disabled={locked || matchSel === null || owner !== undefined}
-                    onClick={() => { if (matchSel === null) return; setMatches(m => ({ ...m, [matchSel]: ri })); setMatchSel(null); }}
-                    className={`no-hover-fx w-full text-left rounded-xl border-2 px-3 py-2.5 text-base font-bold flex items-center gap-2 ${owner !== undefined ? 'border-amber-400 bg-amber-50' : matchSel !== null ? 'border-sky-400 bg-white hover:bg-sky-50' : 'border-slate-200 bg-white'} disabled:cursor-default`}>
-                    <span className="w-7 h-7 rounded-lg bg-sky-600 text-white text-xs font-black inline-flex items-center justify-center shrink-0">B{pos + 1}</span>
-                    <span className="flex-1 text-slate-900">{(q.matchingPairs || [])[ri]?.right}</span>
-                    {pairNo > 0 && <span className="text-xs font-black text-amber-800">↔ {pairNo}</span>}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
+          <p className="text-sm font-bold text-slate-700">Bấm một ô ở cột A, rồi bấm ô cần nối ở cột B (bấm lại ô A để nối lại):</p>
+          <MatchingBoard
+            left={(q.matchingPairs || []).map(p => ({ text: p.left, image: p.leftImage }))}
+            right={(q.matchingPairs || []).map(p => ({ text: p.right, image: p.rightImage }))}
+            leftOrder={matchOrder.left} rightOrder={matchOrder.right}
+            matches={matches} selected={matchSel} onSelect={setMatchSel}
+            onMatch={(l, r) => setMatches(m => ({ ...m, [l]: r }))}
+            onUnmatch={(l) => setMatches(m => { const n = { ...m }; delete n[l]; return n; })}
+            locked={locked} />
           {locked && result === false && (
             <div className="rounded-xl bg-white border border-slate-200 p-3 text-sm text-slate-800 space-y-1">
               <strong>Đáp án đúng:</strong>
-              {(q.matchingPairs || []).map((p, i) => <div key={i}>{p.left} ↔ {p.right}</div>)}
+              {(q.matchingPairs || []).map((p, k) => <div key={k}>{p.left || '(ảnh)'} ↔ {p.right || '(ảnh)'}</div>)}
             </div>
           )}
         </div>

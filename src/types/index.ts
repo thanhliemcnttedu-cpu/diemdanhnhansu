@@ -146,6 +146,7 @@ export interface QuestionItem {
   
   // Dạng Sắp xếp thứ tự các bước
   sequenceItems?: string[]; // Các bước theo đúng thứ tự chuẩn
+  sequenceImages?: string[]; // Ảnh cho từng bước (cùng vị trí với sequenceItems), tùy chọn
   
   // Dạng Nối cột A với cột B
   matchingPairs?: QuestionMatchingPair[]; // Các cặp nối A - B

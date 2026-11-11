@@ -23,6 +23,7 @@ import { handleAvatarImgError } from '../../utils/avatarConfig';
 import { CalledStudentModal } from './picker/CalledStudentModal';
 import { QuestionAudioButton } from './picker/QuestionAudioButton';
 import { shuffleAvoid, shuffleMatching } from '../../utils/shuffle';
+import { SequenceBoard, MatchingBoard } from './picker/AnswerBoards';
 import { useQuizSelection } from './picker/QuizSetPicker';
 const FRAME_WIDTH = 155; // Width of each 35mm film frame
 const FRAME_GAP = 14; // Gap between frames
@@ -77,6 +78,9 @@ export const FilmReelView: React.FC = () => {
   const [shuffledSequence, setShuffledSequence] = useState<string[]>([]);
   const [shuffledRightMatching, setShuffledRightMatching] = useState<Array<{ id: number; text: string }>>([]);
   const [leftMatchOrder, setLeftMatchOrder] = useState<number[]>([]); // thứ tự hiển thị cột A (đã xáo)
+  // Sắp xếp: bấm các bước theo thứ tự → seqAnswer (chỉ số bước), có thể kéo thả đổi chỗ trước khi kiểm tra
+  const [seqPool, setSeqPool] = useState<number[]>([]);
+  const [seqAnswer, setSeqAnswer] = useState<number[]>([]);
   const [selectedLeftMatchIndex, setSelectedLeftMatchIndex] = useState<number | null>(null);
   const [userMatches, setUserMatches] = useState<Record<number, number>>({}); // leftIdx -> rightId
 
@@ -251,6 +255,8 @@ export const FilmReelView: React.FC = () => {
     if (q.type === 'sequence_order' && q.sequenceItems) {
       // Xáo trộn các bước
       setShuffledSequence(shuffleAvoid(q.sequenceItems));
+      setSeqPool(shuffleAvoid(q.sequenceItems.map((_, i) => i)));
+      setSeqAnswer([]);
     } else {
       setShuffledSequence([]);
     }
@@ -383,8 +389,7 @@ export const FilmReelView: React.FC = () => {
   const handleSubmitSequence = () => {
     if (!currentQuestion || !winner || isAnswerCorrect !== null) return;
     const expected = currentQuestion.sequenceItems || [];
-    const isCorrect = expected.length === shuffledSequence.length &&
-      expected.every((item, idx) => item === shuffledSequence[idx]);
+    const isCorrect = expected.length === seqAnswer.length && seqAnswer.every((v, idx) => v === idx || (expected[v] === expected[idx] && (currentQuestion.sequenceImages?.[v] || '') === (currentQuestion.sequenceImages?.[idx] || '')));
 
     setIsAnswerCorrect(isCorrect);
     if (isCorrect) {
@@ -1564,67 +1569,81 @@ export const FilmReelView: React.FC = () => {
               {/* DẠNG 5: SẮP XẾP THỨ TỰ CÁC BƯỚC */}
               {currentQuestion.type === 'sequence_order' && (
                 <div className="space-y-2 pt-0.5">
-                  <div className="text-[12px] font-bold text-cyan-300">
-                    Sắp xếp theo đúng trình tự (bấm mũi tên ↑ / ↓):
-                  </div>
-
-                  <div className="space-y-1.5">
-                    {shuffledSequence.map((step, idx) => (
-                      <div 
-                        key={idx}
-                        className="p-2.5 bg-slate-100/90 border border-slate-200 hover:border-cyan-400 rounded-xl flex items-center justify-between gap-2.5 text-slate-800 transition-all shadow-sm"
-                      >
-                        <div className="flex items-center gap-2">
-                          <span className="w-6 h-6 rounded-lg bg-cyan-700 text-white font-black text-xs flex items-center justify-center shrink-0">
-                            {idx + 1}
-                          </span>
-                          <span className="font-bold text-xs sm:text-sm leading-snug">{step}</span>
-                        </div>
-
-                        {isAnswerCorrect === null && (
-                          <div className="flex items-center gap-1 shrink-0">
-                            <button
-                              type="button"
-                              disabled={idx === 0}
-                              onClick={() => {
-                                const newSeq = [...shuffledSequence];
-                                const temp = newSeq[idx - 1];
-                                newSeq[idx - 1] = newSeq[idx];
-                                newSeq[idx] = temp;
-                                setShuffledSequence(newSeq);
-                              }}
-                              className="px-2.5 py-1 bg-slate-200 hover:bg-cyan-600 disabled:opacity-20 text-slate-800 font-black text-xs rounded-lg cursor-pointer"
-                              title="Di chuyển lên trên"
-                            >
-                              ↑
-                            </button>
-                            <button
-                              type="button"
-                              disabled={idx === shuffledSequence.length - 1}
-                              onClick={() => {
-                                const newSeq = [...shuffledSequence];
-                                const temp = newSeq[idx + 1];
-                                newSeq[idx + 1] = newSeq[idx];
-                                newSeq[idx] = temp;
-                                setShuffledSequence(newSeq);
-                              }}
-                              className="px-2.5 py-1 bg-slate-200 hover:bg-cyan-600 disabled:opacity-20 text-slate-800 font-black text-xs rounded-lg cursor-pointer"
-                              title="Di chuyển xuống dưới"
-                            >
-                              ↓
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
+                  <SequenceBoard
+                    items={(currentQuestion.sequenceItems || []).map((t, k) => ({ text: t, image: currentQuestion.sequenceImages?.[k] || undefined }))}
+                    pool={seqPool.length === (currentQuestion.sequenceItems || []).length ? seqPool : (currentQuestion.sequenceItems || []).map((_, k) => k)}
+                    order={seqAnswer} onChange={setSeqAnswer} locked={isAnswerCorrect !== null} textSize="text-sm sm:text-base" />
 
                   {isAnswerCorrect === null && (
                     <div className="pt-1 flex justify-center">
                       <button
                         type="button"
                         onClick={handleSubmitSequence}
-                        className="px-6 py-2 bg-gradient-to-r from-cyan-700 to-blue-600 hover:from-cyan-800 hover:to-blue-700 text-white font-black text-xs sm:text-sm rounded-xl shadow-md cursor-pointer transition-all hover-zoom-btn uppercase"
+                        disabled={seqAnswer.length < (currentQuestion.sequenceItems || []).length}
+                        className="disabled:opacity-40 px-6 py-2 bg-gradient-to-r from-cyan-700 to-blue-600 hover:from-cyan-800 hover:to-blue-700 text-white font-black text-xs sm:text-sm rounded-xl shadow-md cursor-pointer transition-all hover-zoom-btn uppercase"
+                      >
+                        ✓ KIỂM TRA THỨ TỰ
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* DẠNG 6: NỐI CỘT A VỚI CỘT B */}
+              {currentQuestion.type === 'matching' && (
+                <div className="space-y-2.5 pt-0.5">
+                  <div className="text-[12px] font-bold text-pink-700">
+                    Bấm chọn 1 ô ở Cột A, sau đó bấm ô cần nối ở Cột B (bấm lại ô A để nối lại):
+                  </div>
+                  <MatchingBoard
+                    left={(currentQuestion.matchingPairs || []).map(p => ({ text: p.left, image: p.leftImage }))}
+                    right={(currentQuestion.matchingPairs || []).map(p => ({ text: p.right, image: p.rightImage }))}
+                    leftOrder={leftMatchOrder.length === (currentQuestion.matchingPairs || []).length ? leftMatchOrder : (currentQuestion.matchingPairs || []).map((_, k) => k)}
+                    rightOrder={shuffledRightMatching.length === (currentQuestion.matchingPairs || []).length ? shuffledRightMatching.map(r => r.id) : (currentQuestion.matchingPairs || []).map((_, k) => k)}
+                    matches={userMatches}
+                    selected={selectedLeftMatchIndex}
+                    onSelect={setSelectedLeftMatchIndex}
+                    onMatch={(l, r) => setUserMatches(m => ({ ...m, [l]: r }))}
+                    onUnmatch={(l) => setUserMatches(m => { const n = { ...m }; delete n[l]; return n; })}
+                    locked={isAnswerCorrect !== null} />
+
+                  {isAnswerCorrect === null && (
+                    <div className="pt-1 flex justify-center gap-2.5">
+                      <button
+                        type="button"
+                        onClick={() => setFilledBlankWords({})}
+                        className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-xs rounded-xl"
+                      >
+                        Làm lại
+                      </button>
+                      <button
+                        type="button"
+                        disabled={Object.keys(filledBlankWords).length < (currentQuestion.blankAnswers || []).length}
+                        onClick={handleSubmitFillBlank}
+                        className="px-6 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 disabled:opacity-40 text-white font-black text-xs sm:text-sm rounded-xl shadow-md cursor-pointer transition-all hover-zoom-btn uppercase"
+                      >
+                        ✓ KIỂM TRA CÂU TRẢ LỜI
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* DẠNG 5: SẮP XẾP THỨ TỰ CÁC BƯỚC */}
+              {currentQuestion.type === 'sequence_order' && (
+                <div className="space-y-2 pt-0.5">
+                  <SequenceBoard
+                    items={(currentQuestion.sequenceItems || []).map((t, k) => ({ text: t, image: currentQuestion.sequenceImages?.[k] || undefined }))}
+                    pool={seqPool.length === (currentQuestion.sequenceItems || []).length ? seqPool : (currentQuestion.sequenceItems || []).map((_, k) => k)}
+                    order={seqAnswer} onChange={setSeqAnswer} locked={isAnswerCorrect !== null} textSize="text-sm sm:text-base" />
+
+                  {isAnswerCorrect === null && (
+                    <div className="pt-1 flex justify-center">
+                      <button
+                        type="button"
+                        onClick={handleSubmitSequence}
+                        disabled={seqAnswer.length < (currentQuestion.sequenceItems || []).length}
+                        className="disabled:opacity-40 px-6 py-2 bg-gradient-to-r from-cyan-700 to-blue-600 hover:from-cyan-800 hover:to-blue-700 text-white font-black text-xs sm:text-sm rounded-xl shadow-md cursor-pointer transition-all hover-zoom-btn uppercase"
                       >
                         ✓ KIỂM TRA THỨ TỰ
                       </button>
