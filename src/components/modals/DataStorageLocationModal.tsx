@@ -1,12 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
   X, HardDrive, CheckCircle2, AlertTriangle, FolderOpen, Download, RefreshCw, Usb, Upload,
-  ShieldCheck, FileJson, Save, Trash2
+  ShieldCheck, FileJson, Save, Trash2, Database, Loader2
 } from 'lucide-react';
 import {
   dataStorageService, StorageConfig, getRoleScopedDataFileName, LOCAL_FOLDER_EVENT, LocalFolderStatus
 } from '../../services/dataStorageService';
 import { useClassroom } from '../../context/ClassroomContext';
+import { localSystemMirrorService, SYSTEM_ONE_FILE_DIR, SYSTEM_ONE_FILE_NAME, SYSTEM_MIRROR_DIR, type LocalMirrorSummary } from '../../services/localSystemMirrorService';
+import { driveBackupService } from '../../services/driveBackupService';
+import { schoolDriveDbService } from '../../services/schoolDriveDbService';
 
 interface DataStorageLocationModalProps {
   isOpen: boolean;
@@ -23,10 +26,28 @@ interface DataStorageLocationModalProps {
  * - Bản có máy chủ / Desktop: ghi theo đường dẫn ổ đĩa (D:\…) qua máy chủ / Electron.
  */
 export const DataStorageLocationModal: React.FC<DataStorageLocationModalProps> = ({ isOpen: isOpenProp, onClose, embedded = false, parts = 'all' }) => {
+  // Whole-system snapshot into the chosen folder (admins on the web build with the shared Drive connected)
+  const [mirrorBusy, setMirrorBusy] = useState('');
+  const [mirrorLast, setMirrorLast] = useState<LocalMirrorSummary | null>(() => localSystemMirrorService.getLast());
+  const [mirrorError, setMirrorError] = useState('');
   const isOpen = isOpenProp || embedded;
+  const handleSaveWholeSystem = async () => {
+    if (mirrorBusy) return;
+    setMirrorError('');
+    setMirrorBusy('Đang chuẩn bị…');
+    try {
+      const r = await localSystemMirrorService.run(setMirrorBusy);
+      if (r.success && r.summary) setMirrorLast(r.summary);
+      else setMirrorError(r.message);
+    } catch (err: any) {
+      setMirrorError(err?.message || 'Không lưu được toàn bộ hệ thống vào thư mục.');
+    } finally {
+      setMirrorBusy('');
+    }
+  };
   const {
     exportBackupJson, importBackupJson, currentUser, teacherRole, classes, activeClassId,
-    isBgh, isSchoolAdmin, isAdmin, getCurrentUserData
+    isBgh, isSchoolAdmin, isAdmin, getCurrentUserData, canManageAccounts
   } = useClassroom();
   const [config, setConfig] = useState<StorageConfig>(dataStorageService.getConfig());
   const [selectedDrive, setSelectedDrive] = useState(config.selectedDrive);
@@ -40,6 +61,8 @@ export const DataStorageLocationModal: React.FC<DataStorageLocationModalProps> =
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const browserMode = dataStorageService.isBrowserFolderMode();
+  // Whole-system snapshot: admin session + shared Drive connected (the data is read from Drive)
+  const canMirrorSystem = Boolean(canManageAccounts) && driveBackupService.isDriveMode() && schoolDriveDbService.hasAdminSession();
   const pickerSupported = dataStorageService.isFolderPickerSupported();
 
   const isSuperAdmin = currentUser?.username?.toLowerCase() === 'adminquantri' || (isAdmin && !currentUser?.schoolId && !isSchoolAdmin);
@@ -341,6 +364,46 @@ export const DataStorageLocationModal: React.FC<DataStorageLocationModalProps> =
                 </p>
               </section>
             ))}
+
+            {/* ───────── TOÀN BỘ HỆ THỐNG VÀO THƯ MỤC NÀY (quản trị, bản web đã kết nối Drive) ───────── */}
+            {parts !== 'file' && browserMode && canMirrorSystem && (
+              <section className={cardCls}>
+                <h3 className={titleCls}><Database className="w-4 h-4 text-indigo-700" /> Lưu toàn bộ hệ thống vào thư mục này</h3>
+                <p className="text-slate-700">
+                  Tệp <strong className="font-mono">{roleFileName}</strong> ở trên chỉ là dữ liệu của riêng tài khoản này. Bấm nút dưới để ghi thêm vào thư mục đã chọn <strong>2 thư mục con</strong>:
+                </p>
+                <ul className="space-y-1.5">
+                  <li className="rounded-xl bg-indigo-50 border border-indigo-200 px-3 py-2">
+                    <span className="block font-black text-indigo-950 font-mono text-xs break-all">{SYSTEM_ONE_FILE_DIR} / {SYSTEM_ONE_FILE_NAME}</span>
+                    <span className="block text-xs text-slate-700"><strong>1 tệp duy nhất</strong> chứa tất cả: CSDL trường, tài khoản giáo viên, lớp học, học sinh, điểm danh học sinh, chấm công giáo viên, kê khai tiết dạy. Dùng được để khôi phục.</span>
+                  </li>
+                  <li className="rounded-xl bg-emerald-50 border border-emerald-200 px-3 py-2">
+                    <span className="block font-black text-emerald-950 font-mono text-xs break-all">{SYSTEM_MIRROR_DIR}</span>
+                    <span className="block text-xs text-slate-700"><strong>Từng tệp riêng</strong>, cùng tên như trong thư mục Google Drive của trường (csdl_truong, gvcn_…, gvbm_…, nhansu_truong, chamcong_nhansu_…, kekhai_tietday…).</span>
+                  </li>
+                </ul>
+                <div className="flex flex-wrap items-center gap-2">
+                  <button type="button" onClick={handleSaveWholeSystem} disabled={Boolean(mirrorBusy) || !local.picked} className={btnPrimary}>
+                    {mirrorBusy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Database className="w-4 h-4" />}
+                    {mirrorBusy ? 'Đang lưu…' : 'Lưu toàn bộ hệ thống vào thư mục này'}
+                  </button>
+                  {!local.picked && <span className="text-xs font-bold text-amber-800">Hãy chọn thư mục trên máy tính trước.</span>}
+                </div>
+                {mirrorBusy && <p role="status" className="text-xs font-bold text-indigo-800">{mirrorBusy}</p>}
+                {mirrorError && <p role="alert" className="rounded-xl bg-rose-50 border border-rose-300 px-3 py-2 text-sm font-bold text-rose-900">{mirrorError}</p>}
+                {mirrorLast && !mirrorBusy && (
+                  <div className="rounded-xl bg-emerald-50 border border-emerald-300 px-3 py-2 text-xs text-emerald-950 space-y-0.5">
+                    <p className="font-black text-sm">Lần lưu gần nhất: {mirrorLast.savedAt} • thư mục {mirrorLast.folderName}</p>
+                    <p>Tệp tổng: <strong>{mirrorLast.oneFileKb >= 1024 ? `${(mirrorLast.oneFileKb / 1024).toFixed(2)} MB` : `${mirrorLast.oneFileKb} KB`}</strong> • {mirrorLast.mirrorFiles} tệp riêng</p>
+                    <p>{mirrorLast.schools} trường • {mirrorLast.users} tài khoản • {mirrorLast.classFiles} tệp lớp • {mirrorLast.staff} nhân sự • {mirrorLast.attendanceDays} ngày chấm công • {mirrorLast.teachingMonths} tháng kê khai tiết dạy</p>
+                    {mirrorLast.notes.length > 0 && <p className="text-amber-900">Ghi chú: {mirrorLast.notes.join(' ')}</p>}
+                  </div>
+                )}
+                <p className="text-xs text-slate-600">
+                  Hai thư mục này <strong>không tự cập nhật</strong>: muốn có bản mới thì bấm lại nút. Các tệp có mật khẩu và số CCCD — chỉ lưu trên máy của quản trị.
+                </p>
+              </section>
+            )}
 
             {/* ───────── CỘT PHẢI: tải về + khôi phục ───────── */}
             {parts !== 'folder' && (

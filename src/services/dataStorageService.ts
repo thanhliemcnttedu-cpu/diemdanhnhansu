@@ -327,6 +327,63 @@ class DataStorageService {
     this.setLocalStatus({ picked: false, folderName: '', needsPermission: false, fileName: undefined, sizeKb: undefined, savedAt: undefined, error: undefined });
   }
 
+  /**
+   * Kiểm tra (và xin lại nếu cần) quyền ghi thư mục đã chọn. Gọi NGAY trong thao tác bấm nút, trước các việc
+   * chạy lâu — trình duyệt chỉ hiện hộp xin quyền khi còn trong thao tác của người dùng.
+   */
+  public async ensureLocalWritePermission(): Promise<{ ok: boolean; code?: 'UNSUPPORTED' | 'NO_FOLDER' | 'NEED_PERMISSION'; message: string; folderName?: string }> {
+    if (!this.isFolderPickerSupported()) return { ok: false, code: 'UNSUPPORTED', message: 'Trình duyệt này không ghi được tệp vào thư mục máy tính. Hãy dùng Chrome hoặc Edge trên máy tính.' };
+    const handle = await fsGetHandle();
+    if (!handle) return { ok: false, code: 'NO_FOLDER', message: 'Chưa chọn thư mục trên máy tính. Hãy bấm "Chọn thư mục trên máy tính" trước.' };
+    try {
+      let perm = handle.queryPermission ? await handle.queryPermission({ mode: 'readwrite' }) : 'granted';
+      if (perm !== 'granted' && handle.requestPermission) perm = await handle.requestPermission({ mode: 'readwrite' });
+      this.setLocalStatus({ picked: true, folderName: handle.name || '', needsPermission: perm !== 'granted' });
+      if (perm !== 'granted') return { ok: false, code: 'NEED_PERMISSION', folderName: handle.name, message: 'Trình duyệt chưa được phép ghi vào thư mục. Hãy bấm "Cho phép ghi vào thư mục" rồi thử lại.' };
+      return { ok: true, message: '', folderName: handle.name };
+    } catch (_) {
+      return { ok: false, code: 'NEED_PERMISSION', folderName: handle.name, message: 'Không xin được quyền ghi vào thư mục. Hãy chọn lại thư mục.' };
+    }
+  }
+
+  /**
+   * Ghi nhiều tệp vào thư mục đã chọn, có thể nằm trong thư mục con (`dir`, tự tạo nếu chưa có).
+   * Chỉ tạo / ghi đè đúng các tệp được truyền vào; không xóa gì khác. Không hỏi quyền — gọi ensureLocalWritePermission trước.
+   */
+  public async writeFilesToLocalFolder(
+    entries: Array<{ dir?: string; name: string; data?: any; text?: string }>,
+    onProgress?: (done: number, total: number) => void
+  ): Promise<{ success: boolean; message: string; code?: 'UNSUPPORTED' | 'NO_FOLDER' | 'NEED_PERMISSION' | 'WRITE_ERROR'; folderName?: string; written: number; totalKb: number; sizes?: Record<string, number> }> {
+    if (!this.isFolderPickerSupported()) return { success: false, code: 'UNSUPPORTED', message: 'Trình duyệt này không ghi được tệp vào thư mục máy tính.', written: 0, totalKb: 0 };
+    const handle = await fsGetHandle();
+    if (!handle) return { success: false, code: 'NO_FOLDER', message: 'Chưa chọn thư mục trên máy tính.', written: 0, totalKb: 0 };
+    const perm = handle.queryPermission ? await handle.queryPermission({ mode: 'readwrite' }) : 'granted';
+    if (perm !== 'granted') return { success: false, code: 'NEED_PERMISSION', folderName: handle.name, message: 'Trình duyệt cần được cho phép ghi lại vào thư mục.', written: 0, totalKb: 0 };
+    const dirs: Record<string, any> = { '': handle };
+    const sizes: Record<string, number> = {};
+    let written = 0, totalBytes = 0;
+    try {
+      for (const e of entries) {
+        const dirName = (e.dir || '').trim();
+        if (!dirs[dirName]) dirs[dirName] = await handle.getDirectoryHandle(dirName, { create: true });
+        const text = typeof e.text === 'string' ? e.text : JSON.stringify(e.data ?? null, null, 2);
+        const fh = await dirs[dirName].getFileHandle(e.name, { create: true });
+        const w = await fh.createWritable();
+        await w.write(text);
+        await w.close();
+        const bytes = new Blob([text]).size;
+        totalBytes += bytes;
+        sizes[dirName ? `${dirName}/${e.name}` : e.name] = Math.round(bytes / 102.4) / 10;
+        written++;
+        if (onProgress) onProgress(written, entries.length);
+      }
+    } catch (err: any) {
+      return { success: false, code: 'WRITE_ERROR', folderName: handle.name, written, totalKb: Math.round(totalBytes / 102.4) / 10, sizes,
+        message: `Không ghi được tệp vào thư mục "${handle.name || ''}" (đã ghi ${written}/${entries.length} tệp): ${err?.message || 'lỗi không rõ'}.` };
+    }
+    return { success: true, folderName: handle.name, written, totalKb: Math.round(totalBytes / 102.4) / 10, sizes, message: `Đã ghi ${written} tệp vào thư mục "${handle.name}".` };
+  }
+
   /** Ghi tệp thật vào thư mục đã chọn. Không hỏi quyền (để dùng được trong tự động lưu). */
   private async writeToLocalFolder(fileName: string, data: any): Promise<{ success: boolean; message: string; sizeKb?: number; folderName?: string; code?: 'UNSUPPORTED' | 'NO_FOLDER' | 'NEED_PERMISSION' | 'WRITE_ERROR' }> {
     if (!this.isFolderPickerSupported()) return { success: false, code: 'UNSUPPORTED', message: 'Trình duyệt này không ghi được tệp vào thư mục máy tính (cần Chrome hoặc Edge trên máy tính).' };
