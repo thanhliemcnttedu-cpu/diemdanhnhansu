@@ -25,3 +25,4 @@
 - Ba khối lọc cũ (lọc theo trường của siêu quản trị, nút lọc dạng viên có số lớp, thanh giáo viên) giữ nguyên mã nhưng nằm trong bảng **Lọc chi tiết**, mặc định đóng (`showClassFilterPanel`); nút hiện số điều kiện đang áp (`classActiveFilterCount`).
 - Không thêm lại thẻ số liệu gradient đậm hay thẻ tiêu đề "Danh sách không gian lớp học".
 - Lọc theo giáo viên trong bảng Lọc chi tiết là **một ô chọn** (`#class-teacher-filter`, tên A–Z kèm số lớp), thay bảng nút tên giáo viên cũ (trùng với thông tin trên thẻ lớp). Bảng tổng hợp sĩ số luôn xếp theo khối rồi tên lớp (so số tự nhiên: 1A2 trước 1A10).
+- Ô **Lọc theo giáo viên** (`#class-teacher-filter`) là ô gõ tìm (combobox): danh sách xếp theo lớp của giáo viên (khối nhỏ trước, tên lớp so số tự nhiên), giáo viên chưa có lớp xếp cuối; gõ tên giáo viên hoặc tên lớp, không cần dấu (`foldVi`); Enter chọn dòng đầu, Esc đóng. Số lớp đếm theo tài khoản, không theo họ tên (tránh cộng nhầm người trùng tên).

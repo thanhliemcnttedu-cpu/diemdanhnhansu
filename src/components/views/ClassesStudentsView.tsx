@@ -193,6 +193,9 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
   const [selectedRoleFilter, setSelectedRoleFilter] = useState<string>('all');
   const [adminTeacherFilter, setAdminTeacherFilter] = useState<string>('all');
   const [teacherSearchQuery, setTeacherSearchQuery] = useState<string>('');
+  const [isTeacherComboOpen, setIsTeacherComboOpen] = useState(false);
+  // Lower-case, accent-free form for Vietnamese search ("hue" finds "Huệ")
+  const foldVi = (v: string) => v.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd');
   const [isTeacherFilterExpanded, setIsTeacherFilterExpanded] = useState<boolean>(false);
   const [teacherGroupTab, setTeacherGroupTab] = useState<'all' | 'school' | 'guest'>('all');
   const [newClassAssignedUsername, setNewClassAssignedUsername] = useState<string>('');
@@ -2620,31 +2623,105 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                     ? c.teacherUsername.toLowerCase() === uname
                     : Boolean(fname && c.teacherName && c.teacherName.toLowerCase() === fname)
                 );
-                const classNames = own.map(c => (c.name || '').trim()).filter(Boolean)
-                  .sort((x, y) => x.localeCompare(y, 'vi', { numeric: true }));
+                // Classes of this teacher, smallest grade first then natural class name (1A2 before 1A10)
+                const ownSorted = [...own].sort((x, y) =>
+                  (getClassGradeNumber(x) - getClassGradeNumber(y)) ||
+                  (x.name || '').trim().localeCompare((y.name || '').trim(), 'vi', { numeric: true, sensitivity: 'base' })
+                );
+                const classNames = ownSorted.map(c => (c.name || '').trim()).filter(Boolean);
                 const detail = own.length === 0
                   ? 'chưa có lớp'
                   : own.length <= 3 ? `lớp ${classNames.join(', ')}` : `${own.length} lớp`;
-                return { username: t.username, label: t.fullName || t.username, detail };
+                const label = t.fullName || t.username;
+                return {
+                  username: t.username, label, detail, first: ownSorted[0],
+                  hay: foldVi(`${label} ${classNames.join(' ')} ${classNames.map(n => `lớp ${n}`).join(' ')}`),
+                };
               })
-              .sort((x, y) => x.label.localeCompare(y.label, 'vi', { sensitivity: 'base' }));
+              // Order by the teacher's first class (grade, then class name); teachers without a class go last, by name
+              .sort((x, y) => {
+                if (x.first && !y.first) return -1;
+                if (!x.first && y.first) return 1;
+                if (x.first && y.first) {
+                  const g = getClassGradeNumber(x.first) - getClassGradeNumber(y.first);
+                  if (g !== 0) return g;
+                  const n = (x.first.name || '').trim().localeCompare((y.first.name || '').trim(), 'vi', { numeric: true, sensitivity: 'base' });
+                  if (n !== 0) return n;
+                }
+                return x.label.localeCompare(y.label, 'vi', { sensitivity: 'base' });
+              });
+            const selectedTeacher = teacherOptions.find(t => t.username === adminTeacherFilter);
+            const q = foldVi(teacherSearchQuery.trim());
+            const shownTeachers = q ? teacherOptions.filter(t => t.hay.includes(q)) : teacherOptions;
+            const pickTeacher = (username: string) => {
+              setAdminTeacherFilter(username);
+              setTeacherSearchQuery('');
+              setIsTeacherComboOpen(false);
+            };
             return (
               <div className="p-2.5 sm:p-3 bg-white rounded-2xl border border-indigo-200 shadow-2xs flex flex-wrap items-center gap-2">
                 <label htmlFor="class-teacher-filter" className="text-xs font-black text-indigo-950 uppercase flex items-center gap-1.5">
                   <Users2 className="w-4 h-4 text-indigo-700" />
                   <span>Lọc theo giáo viên</span>
                 </label>
-                <select
-                  id="class-teacher-filter"
-                  value={adminTeacherFilter}
-                  onChange={(e) => setAdminTeacherFilter(e.target.value)}
-                  className="text-xs font-bold text-slate-800 bg-white border border-slate-300 rounded-xl px-2.5 py-2 outline-none cursor-pointer hover:bg-slate-50 focus:ring-2 focus:ring-indigo-500 min-w-[240px] max-w-full"
-                >
-                  <option value="all">Tất cả giáo viên ({teacherOptions.length})</option>
-                  {teacherOptions.map(t => (
-                    <option key={t.username} value={t.username}>{t.label} — {t.detail}</option>
-                  ))}
-                </select>
+                <div className="relative w-full sm:w-[340px]">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <Search className="h-4 w-4 text-slate-500" />
+                  </div>
+                  <input
+                    id="class-teacher-filter"
+                    type="text"
+                    role="combobox"
+                    aria-expanded={isTeacherComboOpen}
+                    aria-controls="class-teacher-list"
+                    aria-autocomplete="list"
+                    autoComplete="off"
+                    value={isTeacherComboOpen ? teacherSearchQuery : (selectedTeacher ? `${selectedTeacher.label} — ${selectedTeacher.detail}` : '')}
+                    onFocus={() => { setTeacherSearchQuery(''); setIsTeacherComboOpen(true); }}
+                    onClick={() => setIsTeacherComboOpen(true)}
+                    onChange={(e) => { setTeacherSearchQuery(e.target.value); setIsTeacherComboOpen(true); }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Escape') { setIsTeacherComboOpen(false); (e.target as HTMLInputElement).blur(); }
+                      if (e.key === 'Enter' && shownTeachers.length > 0) { e.preventDefault(); pickTeacher(shownTeachers[0].username); (e.target as HTMLInputElement).blur(); }
+                    }}
+                    placeholder={`Gõ tên giáo viên hoặc tên lớp (${teacherOptions.length} giáo viên)`}
+                    className="block w-full pl-9 pr-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-bold text-slate-800 placeholder:font-semibold placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                  {isTeacherComboOpen && (
+                    <>
+                      <div className="fixed inset-0 z-10" onClick={() => setIsTeacherComboOpen(false)} aria-hidden="true" />
+                      <div id="class-teacher-list" role="listbox" className="absolute left-0 right-0 top-full mt-1 z-20 max-h-64 overflow-y-auto bg-white rounded-xl border border-slate-200 shadow-lg p-1">
+                        {!q && (
+                          <button
+                            type="button"
+                            role="option"
+                            aria-selected={adminTeacherFilter === 'all'}
+                            onClick={() => pickTeacher('all')}
+                            className={`no-hover-fx w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-bold ${adminTeacherFilter === 'all' ? 'bg-indigo-100 text-indigo-950' : 'text-slate-800 hover:bg-indigo-50'}`}
+                          >
+                            Tất cả giáo viên ({teacherOptions.length})
+                          </button>
+                        )}
+                        {shownTeachers.map(t => (
+                          <button
+                            key={t.username}
+                            type="button"
+                            role="option"
+                            aria-selected={adminTeacherFilter === t.username}
+                            onClick={() => pickTeacher(t.username)}
+                            className={`no-hover-fx w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-bold flex items-center justify-between gap-2 ${adminTeacherFilter === t.username ? 'bg-indigo-100 text-indigo-950' : 'text-slate-800 hover:bg-indigo-50'}`}
+                          >
+                            <span className="truncate">{t.label}</span>
+                            <span className={`shrink-0 font-semibold ${t.first ? 'text-indigo-700' : 'text-slate-600'}`}>{t.detail}</span>
+                          </button>
+                        ))}
+                        {shownTeachers.length === 0 && (
+                          <p className="px-2.5 py-2 text-xs font-semibold text-slate-600">Không có giáo viên hoặc lớp nào khớp.</p>
+                        )}
+                      </div>
+                    </>
+                  )}
+                </div>
                 {adminTeacherFilter !== 'all' && (
                   <button
                     type="button"
@@ -2654,7 +2731,6 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                     Bỏ lọc giáo viên
                   </button>
                 )}
-                <span className="text-[12px] font-medium text-slate-600">Cũng có thể gõ tên giáo viên vào ô tìm ở trên.</span>
               </div>
             );
           })()}
