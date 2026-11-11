@@ -15,6 +15,8 @@ import { useClassroom } from '../../context/ClassroomContext';
 import { requireQuizStorage, QuizStorageButton } from './QuizStorageModal';
 import { QuestionEditor } from './question-editor/QuestionEditor';
 import { QuestionPlayer } from './question-editor/QuestionPlayer';
+import { isSampleQuestion } from '../../services/quizBankStore';
+import { UserRound, Sparkles as SparklesIcon, Library } from 'lucide-react';
 import { Play } from 'lucide-react';
 
 interface QuestionBankModalProps {
@@ -57,6 +59,8 @@ export const QuestionBankModal: React.FC<QuestionBankModalProps> = ({
   const [isFullscreen, setIsFullscreen] = useState(false);
   // Menu thả xuống: Nhập câu hỏi (tệp / dán văn bản) và Thêm (khôi phục mẫu)
   const [menu, setMenu] = useState<'' | 'import' | 'more'>('');
+  // Tách nguồn câu hỏi: 'mine' = giáo viên tự soạn / đã sửa · 'sample' = câu mẫu có sẵn của phần mềm
+  const [source, setSource] = useState<'mine' | 'sample' | 'all'>(() => (questions.some(q => q && !isSampleQuestion(q)) ? 'mine' : 'all'));
   // Chơi thử (vai trò học sinh): danh sách câu + câu bắt đầu
   const [play, setPlay] = useState<{ list: QuestionItem[]; start: number; title: string } | null>(null);
 
@@ -111,8 +115,13 @@ export const QuestionBankModal: React.FC<QuestionBankModalProps> = ({
       (q.subject && q.subject.toLowerCase().includes(searchTerm.toLowerCase()));
     const matchSubject = selectedSubject === 'all' || (q.subject || 'Tổng hợp') === selectedSubject;
     const matchType = selectedType === 'all' || q.type === selectedType;
-    return matchSearch && matchSubject && matchType;
+    const matchSource = source === 'all' || (source === 'sample' ? isSampleQuestion(q) : !isSampleQuestion(q));
+    return matchSearch && matchSubject && matchType && matchSource;
   });
+  const sourceBank = bank.filter(q => source === 'all' || (source === 'sample' ? isSampleQuestion(q) : !isSampleQuestion(q)));
+  const mineCount = bank.filter(q => !isSampleQuestion(q)).length;
+  const sampleCount = bank.length - mineCount;
+  const sideSubjects = Array.from(new Set(sourceBank.map(q => q.subject || 'Tổng hợp'))).filter(Boolean);
 
   const allSubjects = Array.from(new Set(bank.map(q => q.subject || 'Tổng hợp'))).filter(Boolean);
 
@@ -382,7 +391,7 @@ export const QuestionBankModal: React.FC<QuestionBankModalProps> = ({
     setSelectedSubject(sub);
     if (sub !== 'all') { setUploadSubject(sub); setIsCustomSubject(false); }
   };
-  const subjectCount = (sub: string) => bank.filter(q => (q.subject || 'Tổng hợp') === sub).length;
+  const subjectCount = (sub: string) => sourceBank.filter(q => (q.subject || 'Tổng hợp') === sub).length;
   const menuItem = 'no-hover-fx w-full text-left px-3 py-2.5 rounded-xl hover:bg-slate-100 flex items-start gap-2.5 text-sm text-slate-800';
 
   return (
@@ -423,9 +432,34 @@ export const QuestionBankModal: React.FC<QuestionBankModalProps> = ({
         <div className="flex-1 min-h-0 grid grid-cols-1 md:grid-cols-[230px_minmax(0,1fr)]">
           {/* Cột môn học (bộ câu hỏi) */}
           <aside className="border-b md:border-b-0 md:border-r border-slate-200 bg-slate-50 md:overflow-y-auto">
-            <div className="px-3 pt-3 pb-1 text-xs font-black uppercase tracking-wide text-slate-600 hidden md:block">Bộ câu hỏi theo môn</div>
+            <div className="p-2 pb-1">
+              <div className="grid grid-cols-3 md:grid-cols-1 gap-1" role="radiogroup" aria-label="Nguồn câu hỏi">
+                {([
+                  ['mine', 'Câu hỏi của tôi', mineCount, UserRound, 'Bạn tự soạn / đã sửa'],
+                  ['sample', 'Câu hỏi mẫu', sampleCount, SparklesIcon, 'Có sẵn trong phần mềm'],
+                  ['all', 'Tất cả', bank.length, Library, 'Của tôi + mẫu'],
+                ] as Array<['mine' | 'sample' | 'all', string, number, React.ElementType, string]>).map(([k, name, n, Icon, hint]) => {
+                  const on = source === k;
+                  return (
+                    <button key={k} type="button" role="radio" aria-checked={on} title={hint}
+                      onClick={() => { setSource(k); setSelectedSubject('all'); }}
+                      className={`no-hover-fx flex items-center gap-2 px-2.5 h-10 rounded-xl border-2 text-sm text-left transition-colors ${
+                        on ? (k === 'mine' ? 'border-emerald-600 bg-emerald-50 text-emerald-900' : k === 'sample' ? 'border-slate-500 bg-white text-slate-900' : 'border-indigo-600 bg-indigo-50 text-indigo-900') : 'border-transparent text-slate-700 hover:bg-white'
+                      }`}>
+                      <Icon className="w-4 h-4 shrink-0 max-sm:hidden" />
+                      <span className="flex-1 font-black truncate"><span className="md:hidden">{k === 'mine' ? 'Của tôi' : k === 'sample' ? 'Mẫu' : 'Tất cả'}</span><span className="hidden md:inline">{name}</span></span>
+                      <span className="text-xs font-black tabular-nums px-1.5 rounded-md bg-white border border-slate-200 text-slate-700">{n}</span>
+                    </button>
+                  );
+                })}
+              </div>
+              {source === 'mine' && mineCount === 0 && (
+                <p className="mt-2 text-xs text-slate-700 bg-white border border-dashed border-slate-300 rounded-xl p-2.5">Bạn chưa có câu hỏi riêng. Bấm <strong>Thêm câu mới</strong> hoặc <strong>Nhập nhiều câu</strong>. Sửa một câu mẫu cũng thành câu của bạn.</p>
+              )}
+            </div>
+            <div className="px-3 pt-2 pb-1 text-xs font-black uppercase tracking-wide text-slate-600 hidden md:block border-t border-slate-200 mx-2">Môn học</div>
             <nav className="flex md:flex-col gap-1 p-2 md:p-2 overflow-x-auto" aria-label="Môn học">
-              {[['all', 'Tất cả câu hỏi', bank.length] as [string, string, number], ...allSubjects.map(sub => [sub, sub, subjectCount(sub)] as [string, string, number])].map(([key, name, count]) => {
+              {[['all', 'Tất cả các môn', sourceBank.length] as [string, string, number], ...sideSubjects.map(sub => [sub, sub, subjectCount(sub)] as [string, string, number])].map(([key, name, count]) => {
                 const on = selectedSubject === key;
                 return (
                   <button key={key} type="button" onClick={() => pickSubject(key)} aria-current={on ? 'true' : undefined} title={name}
@@ -447,7 +481,7 @@ export const QuestionBankModal: React.FC<QuestionBankModalProps> = ({
 
           {/* Khu chính: thanh công cụ + danh sách */}
           <div className="min-h-0 flex flex-col">
-            <div className="px-3 sm:px-4 py-2.5 border-b border-slate-200 flex flex-wrap lg:flex-nowrap items-center gap-2 relative">
+            <div className="px-3 sm:px-4 pt-2.5 pb-2 flex flex-wrap items-center gap-2 relative">
               <button type="button" onClick={() => withStorage(handleStartCreateNew)}
                 className="no-hover-fx h-10 px-4 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-sm font-black inline-flex items-center gap-2 whitespace-nowrap">
                 <Plus className="w-4 h-4" /> Thêm câu mới
@@ -494,15 +528,7 @@ export const QuestionBankModal: React.FC<QuestionBankModalProps> = ({
                 title="Làm thử các câu đang hiển thị như học sinh" className="no-hover-fx h-10 px-3.5 rounded-xl border border-emerald-300 bg-white hover:bg-emerald-50 text-emerald-800 text-sm font-bold inline-flex items-center gap-2 whitespace-nowrap disabled:opacity-40">
                 <Play className="w-4 h-4 fill-emerald-700" /> Chơi thử <span className="tabular-nums">({filteredList.length})</span>
               </button>
-              <div className="relative flex-1 min-w-[140px]">
-                <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
-                <input type="text" placeholder="Tìm câu hỏi…" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} aria-label="Tìm câu hỏi"
-                  className="w-full h-10 pl-9 pr-3 rounded-xl border border-slate-300 bg-white text-sm focus:outline-none focus:border-indigo-500" />
-              </div>
-              <select value={selectedType} onChange={(e) => setSelectedType(e.target.value)} aria-label="Lọc dạng câu"
-                className="h-10 px-2.5 rounded-xl border border-slate-300 bg-white text-sm font-bold text-slate-800">
-                {TYPE_FILTERS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
-              </select>
+              <span className="flex-1" />
               <div className="relative">
                 <button type="button" onClick={() => setMenu(menu === 'more' ? '' : 'more')} aria-expanded={menu === 'more'} aria-haspopup="menu" title="Thêm thao tác" aria-label="Thêm thao tác"
                   className="no-hover-fx w-10 h-10 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-lg font-black inline-flex items-center justify-center">⋯</button>
@@ -527,8 +553,21 @@ export const QuestionBankModal: React.FC<QuestionBankModalProps> = ({
               </div>
             </div>
 
+            <div className="px-3 sm:px-4 pb-2.5 border-b border-slate-200 flex flex-wrap items-center gap-2">
+              <div className="relative flex-1 min-w-[180px]">
+                <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+                <input type="text" placeholder="Tìm câu hỏi…" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} aria-label="Tìm câu hỏi"
+                  className="w-full h-10 pl-9 pr-3 rounded-xl border border-slate-300 bg-white text-sm focus:outline-none focus:border-indigo-500" />
+              </div>
+              <select value={selectedType} onChange={(e) => setSelectedType(e.target.value)} aria-label="Lọc dạng câu"
+                className="h-10 px-2.5 rounded-xl border border-slate-300 bg-white text-sm font-bold text-slate-800">
+                {TYPE_FILTERS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+              </select>
+              <span className="text-sm text-slate-600 whitespace-nowrap tabular-nums">{filteredList.length} câu</span>
+            </div>
+
         {/* 4. Content Body: Question List or Editor Modal */}
-        <div className="p-3 sm:p-4 overflow-y-auto flex-1 min-h-0 space-y-3">
+        <div className="p-3 sm:p-4 overflow-y-auto overflow-x-hidden flex-1 min-h-0 space-y-3">
           {editingQuestion ? (
             /* TRÌNH SOẠN CÂU HỎI (mở lớn, có xem trước) */
             <QuestionEditor
@@ -630,11 +669,16 @@ export const QuestionBankModal: React.FC<QuestionBankModalProps> = ({
                     className="p-4 bg-white rounded-2xl border border-slate-200 hover:border-indigo-300 shadow-2xs space-y-2.5 transition-all"
                   >
                     <div className="flex items-start justify-between gap-3">
-                      <div className="flex items-center gap-2 flex-wrap">
+                      <div className="flex items-center gap-2 flex-wrap min-w-0 flex-1">
                         <span className="w-6 h-6 rounded-lg bg-indigo-50 text-indigo-700 text-xs font-black flex items-center justify-center shrink-0">
                           {idx + 1}
                         </span>
                         
+                        {isSampleQuestion(q) ? (
+                          <span className="px-2 py-0.5 rounded-md text-xs font-black bg-slate-100 text-slate-700 border border-slate-300" title="Câu hỏi mẫu có sẵn của phần mềm">MẪU</span>
+                        ) : (
+                          <span className="px-2 py-0.5 rounded-md text-xs font-black bg-emerald-50 text-emerald-800 border border-emerald-300" title="Câu hỏi bạn tự soạn hoặc đã sửa">CỦA TÔI</span>
+                        )}
                         {/* Type Badges */}
                         {q.type === 'multiple_choice' && (
                           <span className="px-2 py-0.5 rounded-md text-[12px] font-black uppercase bg-blue-50 text-blue-700 border border-blue-200">
@@ -860,7 +904,7 @@ export const QuestionBankModal: React.FC<QuestionBankModalProps> = ({
         {/* Footer */}
         <div className="p-3.5 sm:p-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between">
           <span className="text-xs text-slate-500 font-semibold">
-            Đang hiển thị {filteredList.length} / {bank.length} câu hỏi
+            Đang hiển thị {filteredList.length} / {bank.length} câu hỏi · {source === 'mine' ? 'Câu hỏi của tôi' : source === 'sample' ? 'Câu hỏi mẫu' : 'Tất cả'}
             {selectedSubject !== 'all' && ` • Môn: ${selectedSubject}`}
           </span>
           <button
