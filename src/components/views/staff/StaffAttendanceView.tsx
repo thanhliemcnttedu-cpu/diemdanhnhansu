@@ -450,7 +450,7 @@ export const StaffAttendanceView: React.FC = () => {
               </div>
 
               {/* 📊 So sánh số liệu: người dùng chọn 2 ngày / tuần này – tuần trước / tháng này – tháng trước */}
-              <ComparePanel staff={staff} auth={auth} today={today} />
+              <ComparePanel staff={staff} auth={auth} today={today} liveDays={days} liveRange={loadedRange} />
 
               {/* Hôm nay: chi tiết từng người */}
               <TodayDetail staff={staff} records={days[dd] || {}} today={today} date={dd} dayLock={locks[dd] || null} auth={auth}
@@ -483,7 +483,12 @@ const monthOfKey = (k: string): Period2 => {
 };
 const dayPeriod = (k: string): Period2 => ({ from: k, to: k, label: `${weekdayLabel(k)} ${shortDateLabel(k)}/${k.slice(0, 4)}` });
 
-const ComparePanel: React.FC<{ staff: StaffMember[]; auth: { username: string; password: string } | null; today: string }> = ({ staff, auth, today }) => {
+/**
+ * `liveDays` / `liveRange` = the data the main dashboard already holds (refreshed every minute and right after
+ * marking). Periods inside that range are read from it, so the comparison never shows older numbers than the
+ * cards above; only periods outside it (last week, last month…) are fetched here.
+ */
+const ComparePanel: React.FC<{ staff: StaffMember[]; auth: { username: string; password: string } | null; today: string; liveDays: DaysMap; liveRange: { from: string; to: string } | null }> = ({ staff, auth, today, liveDays, liveRange }) => {
   const [mode, setMode] = useState<CmpMode>('day');
   const [dayA, setDayA] = useState(today);
   const [dayB, setDayB] = useState(() => prevWorkday(today));
@@ -503,7 +508,10 @@ const ComparePanel: React.FC<{ staff: StaffMember[]; auth: { username: string; p
     let alive = true;
     setBusy(true); setErr('');
     const clip = (p: Period2) => ({ from: p.from, to: p.to > today ? today : p.to });
-    Promise.all([A, B].map(p => { const c = clip(p); return staffAttendanceService.range(c.from, c.to, auth); }))
+    const covered = (c: { from: string; to: string }) => Boolean(liveRange && c.from >= liveRange.from && c.to <= liveRange.to);
+    const need = [A, B].map(clip).filter(c => !covered(c));
+    if (need.length === 0) { setBusy(false); setDays({}); return; }
+    Promise.all(need.map(c => staffAttendanceService.range(c.from, c.to, auth)))
       .then(rs => {
         if (!alive) return;
         const bad = rs.find(r => !r?.success);
@@ -513,10 +521,16 @@ const ComparePanel: React.FC<{ staff: StaffMember[]; auth: { username: string; p
       .catch((e: any) => { if (alive) setErr(e?.message || 'Lỗi kết nối.'); })
       .finally(() => { if (alive) setBusy(false); });
     return () => { alive = false; };
-  }, [A.from, A.to, B.from, B.to, auth, today]);
+  }, [A.from, A.to, B.from, B.to, auth, today, liveRange?.from, liveRange?.to]);
 
-  const sa = useMemo(() => aggregate(staff, days, A.from, A.to, today), [staff, days, A, today]);
-  const sb = useMemo(() => aggregate(staff, days, B.from, B.to, today), [staff, days, B, today]);
+  // Live data wins inside its range (a day whose marks were all removed must not fall back to an older fetch)
+  const merged = useMemo<DaysMap>(() => {
+    const out: DaysMap = {};
+    Object.keys(days).forEach(k => { if (!liveRange || k < liveRange.from || k > liveRange.to) out[k] = days[k]; });
+    return Object.assign(out, liveDays);
+  }, [days, liveDays, liveRange]);
+  const sa = useMemo(() => aggregate(staff, merged, A.from, A.to, today), [staff, merged, A, today]);
+  const sb = useMemo(() => aggregate(staff, merged, B.from, B.to, today), [staff, merged, B, today]);
   const multi = mode !== 'day';
   const unit = multi ? 'lượt' : 'người';
   const rows: Array<{ label: string; a: number; b: number; goodUp: boolean | null; pct?: boolean }> = [

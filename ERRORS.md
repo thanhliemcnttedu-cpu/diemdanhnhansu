@@ -278,3 +278,16 @@
 - **Fix Applied**: Bản web (`isBrowserFolderMode`) dùng File System Access API: `pickLocalFolder` (thẻ thư mục lưu IndexedDB `lhhp_local_folder`), `writeToLocalFolder` ghi tệp THẬT, trả lỗi rõ (`NO_FOLDER`, `NEED_PERMISSION`, `UNSUPPORTED`) thay cho thành công giả; tự động lưu gom 3 giây; chế độ chỉ xem không ghi. Hộp Nơi lưu dữ liệu hiện trạng thái thật (tên thư mục, dung lượng, giờ ghi).
 - **Prevention**: Nhánh dự phòng không được trả `success: true` khi chưa làm được việc; không hiển thị số liệu mặc định giả. Tính năng phụ thuộc máy chủ phải có đường riêng cho bản web hoặc báo rõ là không dùng được.
 - **Status**: Fixed
+
+---
+
+## [2026-11-11 21:30] - Chấm công: bảng "So sánh số liệu" hiện 0 có mặt trong khi thẻ tổng hợp hiện đủ
+
+- **Type**: Logic
+- **Severity**: Medium
+- **File**: `src/components/views/staff/StaffAttendanceView.tsx` (`ComparePanel`)
+- **Agent**: Claude Code
+- **Root Cause**: `ComparePanel` tự gọi `staffAttendanceRange` MỘT lần khi mở màn và giữ bản sao riêng. Màn chính thì cập nhật `days` mỗi phút và ngay sau khi điểm danh hộ. Điểm danh sau khi mở màn → thẻ trên cùng đúng (119 có mặt), bảng so sánh vẫn là số lúc mở (0 có mặt, 119 chưa điểm danh).
+- **Fix Applied**: Truyền `liveDays` / `liveRange` (dữ liệu màn chính đang giữ) vào `ComparePanel`. Kỳ nằm trong `liveRange` đọc thẳng từ đó, không gọi mạng; chỉ kỳ nằm ngoài (tuần trước, tháng trước…) mới tải riêng. Trong `liveRange` dữ liệu trực tiếp luôn thắng bản tải riêng.
+- **Prevention**: Hai khối cùng một màn hiển thị cùng một số liệu phải dùng chung một nguồn; khối con không giữ bản sao tải một lần của dữ liệu mà khối cha đang làm mới.
+- **Status**: Fixed
