@@ -157,6 +157,8 @@ interface ClassroomContextType {
   unlockQuizVault: (password: string) => Promise<{ ok: boolean; message: string }>;
   /** Tải lại két từ dữ liệu tài khoản trên Drive trường (máy khác vừa lưu) */
   refreshQuizVault: () => Promise<boolean>;
+  /** Đồng bộ GỘP kho câu hỏi với Drive cá nhân ngay (đẩy phần máy có, lấy phần Drive có) */
+  syncPersonalQuiz: () => Promise<boolean>;
   infographicConfig: any;
   updateInfographicConfig: (cfg: any) => void;
 
@@ -807,6 +809,13 @@ export const ClassroomProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     setVaultKeyTick(t => t + 1); // chạy lại mở két / khóa két
     return { ok: true, message: vault?.c && !vault.cleared && !vaultStaleRef.current ? 'Đã mở link Drive cá nhân đã lưu theo tài khoản.' : 'Đã ghi nhớ link Drive cá nhân theo tài khoản.' };
   };
+  const syncPersonalQuiz = async (): Promise<boolean> => {
+    const user = currentUserRef.current;
+    if (!user || !isPersonalQuizUser(user) || !quizBankStore.getDriveConfig(user.username)) return false;
+    const remote = await quizBankStore.pullDrive(user.username);
+    if (remote && currentUserRef.current?.username === user.username) { setQuizBank(remote); saveQuizBank(remote); return true; }
+    return false;
+  };
   const refreshQuizVault = async (): Promise<boolean> => {
     const user = currentUserRef.current;
     if (!user || !isPersonalQuizUser(user) || !schoolDriveDbService.isConfigured()) return false;
@@ -839,8 +848,9 @@ export const ClassroomProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         vaultStaleRef.current = false;
         if (!quizBankStore.getDriveConfig(user.username) && cfg.scriptUrl && cfg.folderId) {
           quizBankStore.setDriveConfig(user.username, { scriptUrl: cfg.scriptUrl, folderId: cfg.folderId, folderUrl: cfg.folderUrl });
+          // Không phụ thuộc "alive": két có thể được nạp lại giữa chừng (tải lại dữ liệu tài khoản) → vẫn phải hiện câu hỏi vừa lấy
           const remote = await quizBankStore.pullDrive(user.username);
-          if (alive && remote && currentUserRef.current?.username === user.username) { setQuizBank(remote); saveQuizBank(remote); }
+          if (remote && currentUserRef.current?.username === user.username) { setQuizBank(remote); saveQuizBank(remote); }
         }
       } else if (!vault) {
         await sealPersonalVault(); // chưa có két mà máy đã có link → khóa vào két
@@ -4846,6 +4856,7 @@ export const ClassroomProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       quizVaultStatus,
       unlockQuizVault,
       refreshQuizVault,
+      syncPersonalQuiz,
       infographicConfig,
       updateInfographicConfig,
 

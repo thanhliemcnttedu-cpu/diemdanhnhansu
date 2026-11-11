@@ -31,7 +31,7 @@ export function requireQuizStorage(user: UserAccount | null | undefined): Promis
  * Trên máy (IndexedDB, luôn bật) · Xuất / Nhập tệp .json · Google Drive cá nhân (tùy chọn, Apps Script cá nhân).
  */
 export const QuizStorageModal: React.FC = () => {
-  const { currentUser, quizBank, updateQuizBank, quizVaultStatus, unlockQuizVault, refreshQuizVault } = useClassroom();
+  const { currentUser, quizBank, updateQuizBank, quizVaultStatus, unlockQuizVault, refreshQuizVault, syncPersonalQuiz } = useClassroom();
   const [vaultPw, setVaultPw] = useState('');
   const [vaultMsg, setVaultMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null);
   const [vaultBusy, setVaultBusy] = useState(false);
@@ -82,6 +82,8 @@ export const QuizStorageModal: React.FC = () => {
     setVaultPw(''); setVaultMsg(null);
     // Máy này chưa có link → xem tài khoản đã lưu link từ máy khác chưa (tải lại dữ liệu tài khoản trên Drive trường)
     if (!cfg && username) refreshQuizVault().catch(() => {});
+    // Đã kết nối Drive cá nhân → đồng bộ GỘP hai chiều mỗi lần mở hộp (máy này có câu mới → đưa lên; Drive có câu từ máy khác → lấy về)
+    if (cfg && username) syncPersonalQuiz().catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
@@ -347,7 +349,15 @@ export const QuizStorageModal: React.FC = () => {
                 try {
                   const r = await unlockQuizVault(vaultPw);
                   setVaultMsg({ type: r.ok ? 'ok' : 'err', text: r.message });
-                  if (r.ok) setVaultPw('');
+                  if (r.ok) {
+                    setVaultPw('');
+                    // Chờ link được mở & đặt cấu hình (tối đa ~8 giây) rồi đồng bộ câu hỏi ngay
+                    for (let k = 0; k < 16 && !quizBankStore.getDriveConfig(username); k++) await new Promise(res => setTimeout(res, 500));
+                    if (quizBankStore.getDriveConfig(username)) {
+                      await syncPersonalQuiz().catch(() => false);
+                      setVaultMsg({ type: 'ok', text: `${r.message} Đã đồng bộ bộ câu hỏi với Google Drive cá nhân.` });
+                    }
+                  }
                 } finally { setVaultBusy(false); }
               };
               return (
