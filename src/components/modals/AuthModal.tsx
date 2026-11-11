@@ -12,6 +12,7 @@ import { useClassroom } from '../../context/ClassroomContext';
 import { databaseService } from '../../services/databaseService';
 import { googleDriveService } from '../../services/googleDriveService';
 import { schoolDriveDbService } from '../../services/schoolDriveDbService';
+import { appsScriptSetupService } from '../../services/appsScriptSetupService';
 import { StaffCheckInQrModal } from '../views/staff/StaffCheckInQr';
 
 interface AuthModalProps {
@@ -519,6 +520,15 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     >
                       <ShieldCheck className="w-3.5 h-3.5" />
                       {driveChecking ? 'Đang xác thực với Google Drive...' : 'Xác thực & kết nối'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => appsScriptSetupService.open('install')}
+                      className="w-full py-2 rounded-lg border border-white/50 bg-white/15 hover:bg-white/25 text-white text-[12px] font-black cursor-pointer flex items-center justify-center gap-1.5"
+                      title="Cài mới / kiểm tra link Apps Script (/exec): quyền Bất kỳ ai, phiên bản, mở được thư mục"
+                    >
+                      <Cloud className="w-3.5 h-3.5" />
+                      Cài đặt / kiểm tra Apps Script
                     </button>
                     {!driveConfigured && (
                       <p className="text-[12px] text-white font-medium leading-snug">
