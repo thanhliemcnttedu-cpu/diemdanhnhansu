@@ -217,6 +217,9 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
   const [selectedBranchFilter, setSelectedBranchFilter] = useState<string>('all');
   const [selectedCampusFilter, setSelectedCampusFilter] = useState<string>('all');
   const [selectedGradeFilter, setSelectedGradeFilter] = useState<string>('all');
+  // Compact class toolbar: detailed filter panel is collapsed by default
+  const [showClassFilterPanel, setShowClassFilterPanel] = useState(false);
+  const [isClassMoreMenuOpen, setIsClassMoreMenuOpen] = useState(false);
   const [classSortBy, setClassSortBy] = useState<'grade' | 'branch' | 'campus' | 'name'>('grade');
   const [classSortOrder, setClassSortOrder] = useState<'asc' | 'desc'>('asc');
 
@@ -1743,6 +1746,8 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
     }, 0);
   }, [statsHomeroomClasses, students]);
 
+  const classActiveFilterCount = [selectedSchoolFilter, selectedBranchFilter, selectedCampusFilter, selectedGradeFilter, adminTeacherFilter].filter(v => v !== 'all').length;
+
   return (
     <div className="p-2.5 sm:p-3.5 md:p-4 max-w-7xl mx-auto space-y-2.5 sm:space-y-3">
       {/* Top Header Switch */}
@@ -1796,73 +1801,392 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
       {/* ========================================================================= */}
       {activeTabMode === 'classes' && (
         <div className="space-y-3">
-          {/* STATS OVERVIEW: Thống kê số lớp đang quản lý, mỗi lớp bao nhiêu học sinh */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5 sm:gap-3">
-            {/* Card 1: Tổng số lớp đang quản lý */}
-            <div className="bg-gradient-to-br from-indigo-600 via-blue-600 to-cyan-700 rounded-2xl p-3 sm:p-3.5 text-white shadow-sm shadow-indigo-500/20 hover-zoom-card flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-md text-white flex items-center justify-center font-black shadow-xs shrink-0">
+          {/* STATS OVERVIEW: one slim row — classes, students, per-class detail */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+            <div className="bg-white rounded-2xl border border-indigo-200 px-3 py-2 flex items-center gap-3 shadow-2xs">
+              <div className="w-9 h-9 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center shrink-0">
                 <School className="w-5 h-5" />
               </div>
-              <div>
-                <span className="text-[12px] font-black text-white uppercase tracking-wider block">TỔNG LỚP ĐANG QUẢN LÝ</span>
-                <div className="text-xl sm:text-2xl font-black text-white font-mono mt-0.5">
-                  {allSchoolHomeroomClasses.length} <span className="text-xs font-bold text-white uppercase">LỚP HỌC</span>
+              <div className="min-w-0">
+                <div className="text-xl font-black text-indigo-950 tabular-nums leading-tight">
+                  {allSchoolHomeroomClasses.length} <span className="text-xs font-bold text-slate-600">lớp học</span>
                 </div>
-                {statsHomeroomClasses.length !== allSchoolHomeroomClasses.length && (
-                  <div className="text-[12px] font-bold text-white mt-0.5 flex items-center gap-1">
-                    <span>⚡ Đang hiển thị:</span>
-                    <span className="bg-white/20 px-1.5 py-0.2 rounded-md">{statsHomeroomClasses.length} lớp</span>
-                  </div>
-                )}
+                <div className="text-[12px] font-semibold text-slate-600 truncate">
+                  Tổng lớp đang quản lý
+                  {statsHomeroomClasses.length !== allSchoolHomeroomClasses.length && ` • đang hiển thị ${statsHomeroomClasses.length} lớp`}
+                </div>
               </div>
             </div>
 
-            {/* Card 2: Tổng số học sinh toàn trường */}
-            <div className="bg-gradient-to-br from-emerald-700 via-teal-700 to-green-700 rounded-2xl p-3 sm:p-3.5 text-white shadow-sm shadow-emerald-500/20 hover-zoom-card flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-md text-white flex items-center justify-center font-black shadow-xs shrink-0">
+            <div className="bg-white rounded-2xl border border-emerald-200 px-3 py-2 flex items-center gap-3 shadow-2xs">
+              <div className="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
                 <Users className="w-5 h-5" />
               </div>
-              <div>
-                <span className="text-[12px] font-black text-white uppercase tracking-wider block">TỔNG SỐ HỌC SINH CÁC LỚP</span>
-                <div className="text-xl sm:text-2xl font-black text-white font-mono mt-0.5">
-                  {totalSchoolStudentsCount} <span className="text-xs font-bold text-white uppercase">EM HỌC SINH</span>
+              <div className="min-w-0">
+                <div className="text-xl font-black text-emerald-950 tabular-nums leading-tight">
+                  {totalSchoolStudentsCount} <span className="text-xs font-bold text-slate-600">học sinh</span>
                 </div>
-                {statsHomeroomClasses.length !== allSchoolHomeroomClasses.length && (
-                  <div className="text-[12px] font-bold text-white mt-0.5 flex items-center gap-1">
-                    <span>⚡ Đang lọc:</span>
-                    <span className="bg-white/20 px-1.5 py-0.2 rounded-md">{statsTotalStudents} em</span>
-                  </div>
-                )}
+                <div className="text-[12px] font-semibold text-slate-600 truncate">
+                  Tổng số học sinh các lớp
+                  {statsHomeroomClasses.length !== allSchoolHomeroomClasses.length && ` • đang lọc ${statsTotalStudents} em`}
+                </div>
               </div>
             </div>
 
-            {/* Card 3: Thống kê nhanh sĩ số từng lớp */}
-            <div className="bg-gradient-to-br from-amber-700 via-orange-700 to-rose-600 rounded-2xl p-3 sm:p-3.5 text-white shadow-sm shadow-orange-500/20 hover-zoom-card flex flex-col justify-between h-full space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-[12px] font-black text-white uppercase tracking-wider block">CHI TIẾT SĨ SỐ TỪNG LỚP</span>
-                <div className="p-1.5 rounded-lg bg-white/20 backdrop-blur-md text-white font-black shadow-xs shrink-0">
-                  <BarChart3 className="w-4 h-4" />
-                </div>
+            <div className="bg-white rounded-2xl border border-amber-200 px-3 py-2 flex items-center gap-3 shadow-2xs">
+              <div className="w-9 h-9 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center shrink-0">
+                <BarChart3 className="w-5 h-5" />
               </div>
-              <div className="flex items-center justify-between mt-auto pt-1">
-                <div>
-                  <div className="text-lg font-black text-white mt-1">Bảng Tổng Hợp</div>
-                  <div className="text-[12px] text-white font-semibold">
-                    {allSchoolHomeroomClasses.length} lớp học đang hoạt động
-                    {statsHomeroomClasses.length !== allSchoolHomeroomClasses.length && ` (Lọc: ${statsHomeroomClasses.length})`}
-                  </div>
+              <div className="min-w-0 flex-1">
+                <div className="text-sm font-black text-amber-950 leading-tight">Sĩ số từng lớp</div>
+                <div className="text-[12px] font-semibold text-slate-600 truncate">Bảng tổng hợp nam, nữ theo lớp</div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsClassStatsModalOpen(true)}
+                className="px-3 py-1.5 bg-amber-100 hover:bg-amber-200 text-amber-950 border border-amber-300 rounded-xl text-xs font-black flex items-center gap-1.5 shrink-0"
+              >
+                <Eye className="w-3.5 h-3.5" />
+                Xem chi tiết
+              </button>
+            </div>
+          </div>
+
+          {/* CLASS TOOLBAR: search + quick filters + sort (row 1), select-all + actions (row 2) */}
+          <div className="bg-white rounded-2xl border border-indigo-200 shadow-2xs p-2.5 sm:p-3 space-y-2.5">
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="relative flex-1 min-w-[170px]">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Search className="h-4 w-4 text-slate-500" />
                 </div>
-                <button
-                  onClick={() => setIsClassStatsModalOpen(true)}
-                  className="px-3 py-2 bg-white text-orange-700 hover:bg-orange-50 rounded-xl text-xs font-black flex items-center gap-1.5 shadow-md transition-all hover:-translate-y-0.5"
+                <input
+                  type="text"
+                  value={classSearchQuery}
+                  onChange={(e) => setClassSearchQuery(e.target.value)}
+                  placeholder="Tìm tên lớp, giáo viên, phân hiệu, điểm trường..."
+                  aria-label="Tìm lớp học"
+                  className="block w-full pl-9 pr-8 py-2 bg-white border border-slate-300 rounded-xl text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+                {classSearchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => setClassSearchQuery('')}
+                    className="no-hover-fx absolute inset-y-0 right-0 pr-3 flex items-center"
+                    aria-label="Xóa từ khóa tìm"
+                  >
+                    <X className="h-4 w-4 text-slate-500 hover:text-slate-800" />
+                  </button>
+                )}
+              </div>
+
+              {(isSchoolScopeAccount || isSuperAdmin) && (
+                <>
+                  {(availableBranches.length > 0 || hasUnassignedBranch) && (
+                    <select
+                      aria-label="Lọc theo phân hiệu"
+                      value={selectedBranchFilter}
+                      onChange={(e) => { setSelectedBranchFilter(e.target.value); setSelectedCampusFilter('all'); }}
+                      className="text-xs font-bold text-slate-800 bg-white border border-slate-300 rounded-xl px-2.5 py-2 outline-none cursor-pointer hover:bg-slate-50 focus:ring-2 focus:ring-indigo-500 max-w-[150px]"
+                    >
+                      <option value="all">Phân hiệu: Tất cả</option>
+                      {availableBranches.map(br => <option key={br} value={br}>{br}</option>)}
+                      {hasUnassignedBranch && <option value="__unassigned__">Chưa gán phân hiệu</option>}
+                    </select>
+                  )}
+                  {(availableCampuses.length > 0 || hasUnassignedCampus) && (
+                    <select
+                      aria-label="Lọc theo điểm trường"
+                      value={selectedCampusFilter}
+                      onChange={(e) => setSelectedCampusFilter(e.target.value)}
+                      className="text-xs font-bold text-slate-800 bg-white border border-slate-300 rounded-xl px-2.5 py-2 outline-none cursor-pointer hover:bg-slate-50 focus:ring-2 focus:ring-indigo-500 max-w-[150px]"
+                    >
+                      <option value="all">Điểm trường: Tất cả</option>
+                      {availableCampuses.map(cp => <option key={cp} value={cp}>{cp}</option>)}
+                      {hasUnassignedCampus && <option value="__unassigned__">Chưa gán điểm trường</option>}
+                    </select>
+                  )}
+                  {availableGrades.length > 0 && (
+                    <select
+                      aria-label="Lọc theo khối lớp"
+                      value={selectedGradeFilter}
+                      onChange={(e) => setSelectedGradeFilter(e.target.value)}
+                      className="text-xs font-bold text-slate-800 bg-white border border-slate-300 rounded-xl px-2.5 py-2 outline-none cursor-pointer hover:bg-slate-50 focus:ring-2 focus:ring-indigo-500 max-w-[150px]"
+                    >
+                      <option value="all">Khối: Tất cả</option>
+                      {availableGrades.map(gr => <option key={gr} value={gr}>{gr}</option>)}
+                    </select>
+                  )}
+                </>
+              )}
+
+              <div className="flex items-center gap-1">
+                <select
+                  aria-label="Sắp xếp lớp theo"
+                  value={classSortBy}
+                  onChange={(e) => setClassSortBy(e.target.value as any)}
+                  className="text-xs font-bold text-slate-800 bg-white border border-slate-300 rounded-xl px-2.5 py-2 outline-none cursor-pointer hover:bg-slate-50 focus:ring-2 focus:ring-indigo-500 max-w-[150px]"
                 >
-                  <Eye className="w-3.5 h-3.5" />
-                  XEM CHI TIẾT
+                  <option value="grade">Xếp theo: Khối lớp</option>
+                  <option value="branch">Xếp theo: Phân hiệu</option>
+                  <option value="campus">Xếp theo: Điểm trường</option>
+                  <option value="name">Xếp theo: Tên lớp</option>
+                </select>
+                <button
+                  type="button"
+                  onClick={() => setClassSortOrder(prev => prev === 'asc' ? 'desc' : 'asc')}
+                  className="px-2.5 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-800 rounded-xl text-xs font-bold border border-indigo-200 whitespace-nowrap"
+                  title={classSortOrder === 'asc' ? 'Đang tăng dần (A-Z / 1-5). Bấm để đổi sang giảm dần' : 'Đang giảm dần (Z-A / 5-1). Bấm để đổi sang tăng dần'}
+                >
+                  {classSortOrder === 'asc' ? '▲ Tăng dần' : '▼ Giảm dần'}
                 </button>
+              </div>
+
+            </div>
+
+            <div className="flex flex-wrap items-center justify-between gap-2 pt-2.5 border-t border-slate-100">
+          {displayedClasses.length > 0 && (
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (selectedClassIds.length === displayedClasses.length) {
+                      setSelectedClassIds([]);
+                    } else {
+                      setSelectedClassIds(displayedClasses.map(c => c.id));
+                    }
+                  }}
+                  className={`px-3 py-2 rounded-xl font-black text-xs flex items-center gap-2 transition-all hover-zoom-btn uppercase shadow-xs ${
+                    selectedClassIds.length > 0 && selectedClassIds.length === displayedClasses.length
+                      ? 'bg-amber-100 hover:bg-amber-200 text-amber-900 border-2 border-amber-300'
+                      : 'bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border-2 border-indigo-200'
+                  }`}
+                  title="Tích chọn tất cả các lớp hoặc bỏ chọn"
+                >
+                  <CheckSquare className="w-4 h-4 text-indigo-600" />
+                  <span>{selectedClassIds.length === displayedClasses.length ? 'BỎ CHỌN TẤT CẢ' : `TÍCH CHỌN TẤT CẢ (${displayedClasses.length} LỚP)`}</span>
+                </button>
+
+                {selectedClassIds.length > 0 && (
+                  <span className="px-3 py-2 rounded-xl bg-amber-50 text-amber-900 border-2 border-amber-300 text-xs font-black uppercase flex items-center gap-1.5 shadow-2xs">
+                    <span>🎯</span>
+                    <span>ĐÃ CHỌN: <strong className="text-amber-950 font-black">{selectedClassIds.length}</strong> / {displayedClasses.length} LỚP</span>
+                  </span>
+                )}
+              </div>
+
+              {selectedClassIds.length > 0 ? (
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => openBulkClassEdit(true)}
+                    className="px-3 py-2 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white rounded-xl font-black text-xs flex items-center gap-2 transition-all hover-zoom-btn shadow-md shadow-teal-600/25 uppercase"
+                    title="Gán phân hiệu, điểm trường cho các lớp đã tích chọn cùng lúc"
+                  >
+                    <Building2 className="w-4 h-4" />
+                    <span>GÁN PHÂN HIỆU, ĐIỂM TRƯỜNG ({selectedClassIds.length} LỚP)</span>
+                  </button>
+
+                  <button
+                    {...(isSchoolAdminOrBgh ? { style: { display: 'none' } } : {})}
+                    type="button"
+                    onClick={() => openBulkClassEdit(false)}
+                    className="px-3 py-2 bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 hover:from-blue-700 hover:to-violet-700 text-white rounded-xl font-black text-xs flex items-center gap-2 transition-all hover-zoom-btn shadow-md shadow-indigo-600/25 uppercase"
+                    title="Sửa thông tin các lớp đã chọn cùng lúc (Năm học, Khối, Giáo viên, Màu, Khẩu hiệu)"
+                  >
+                    <Edit3 className="w-4 h-4 text-cyan-200" />
+                    <span>SỬA THÔNG TIN ĐỒNG LOẠT ({selectedClassIds.length} LỚP)</span>
+                  </button>
+
+                  <button
+                    {...(isSchoolAdminOrBgh ? { style: { display: 'none' } } : {})}
+                    type="button"
+                    onClick={() => setIsBulkClassDeleteOpen(true)}
+                    className="px-3 py-2 bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-700 hover:to-red-700 text-white rounded-xl font-black text-xs flex items-center gap-2 transition-all hover-zoom-btn shadow-md shadow-rose-600/25 uppercase"
+                    title="Xóa đồng loạt các lớp đã tích chọn"
+                  >
+                    <Trash2 className="w-4 h-4 text-rose-100" />
+                    <span>XÓA ĐỒNG LOẠT ({selectedClassIds.length} LỚP)</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setSelectedClassIds([])}
+                    className="p-2.5 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-xl transition-colors"
+                    title="Hủy chọn"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              ) : null}
+            </div>
+          )}
+              <div className="flex flex-wrap items-center gap-2 ml-auto">
+                {(isSchoolScopeAccount || isSuperAdmin || isAdmin) && (
+                  <button
+                    type="button"
+                    onClick={() => setShowClassFilterPanel(v => !v)}
+                    aria-expanded={showClassFilterPanel}
+                    className={`px-3 py-2 rounded-xl text-xs font-black border flex items-center gap-1.5 whitespace-nowrap ${
+                      showClassFilterPanel || classActiveFilterCount > 0
+                        ? 'bg-teal-100 text-teal-950 border-teal-300'
+                        : 'bg-white text-slate-800 border-slate-300 hover:bg-slate-50'
+                    }`}
+                    title="Mở bộ lọc chi tiết: theo trường, phân hiệu, điểm trường, khối lớp (kèm số lớp) và theo giáo viên"
+                  >
+                    <SlidersHorizontal className="w-3.5 h-3.5" />
+                    <span>Lọc chi tiết{classActiveFilterCount > 0 ? ` (${classActiveFilterCount})` : ''}</span>
+                    {showClassFilterPanel ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                  </button>
+                )}
+
+                {(classActiveFilterCount > 0 || classSearchQuery) && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedSchoolFilter('all');
+                      setSelectedBranchFilter('all');
+                      setSelectedCampusFilter('all');
+                      setSelectedGradeFilter('all');
+                      setAdminTeacherFilter('all');
+                      setClassSearchQuery('');
+                    }}
+                    className="px-2.5 py-2 rounded-xl text-xs font-bold text-slate-800 bg-white border border-slate-300 hover:bg-slate-50 flex items-center gap-1.5 whitespace-nowrap"
+                    title="Bỏ toàn bộ điều kiện lọc và từ khóa tìm"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5" />
+                    <span>Bỏ lọc • {displayedClasses.length}/{classes.length} lớp</span>
+                  </button>
+                )}
+              {teacherRole === 'subject' && (
+                <button
+                  type="button"
+                  disabled={isClassLimitReached}
+                  onClick={() => {
+                    if (isClassLimitReached) {
+                      showTrialLimit('Bản dùng thử (chưa nhập CDKEY) chỉ được tạo tối đa 01 lớp học. Vui lòng nhập CDKEY bản quyền để quản lý nhiều lớp.');
+                      return;
+                    }
+                    setIsInitSubjectClassesModalOpen(true);
+                  }}
+                  className={`px-4 py-2.5 rounded-2xl font-black text-xs md:text-sm flex items-center gap-2 transition-all uppercase ${
+                    isClassLimitReached
+                      ? 'bg-slate-300 text-slate-500 cursor-not-allowed opacity-60 shadow-none'
+                      : 'bg-gradient-to-r from-emerald-700 via-teal-700 to-cyan-700 hover:from-emerald-800 hover:to-cyan-800 text-white hover-zoom-btn shadow-md shadow-emerald-600/25'
+                  }`}
+                  title={isClassLimitReached ? 'Bản dùng thử (chưa nhập CDKEY) chỉ được tạo tối đa 01 lớp học. Vui lòng nhập CDKEY bản quyền để quản lý nhiều lớp.' : 'Khởi tạo nhanh danh sách các lớp dạy bộ môn, điền thông tin lớp và số lượng học sinh'}
+                >
+                  <Sparkles className={`w-4 h-4 ${isClassLimitReached ? 'text-slate-400' : 'text-amber-300 animate-pulse'}`} />
+                  <span>KHỞI TẠO LỚP DẠY BỘ MÔN</span>
+                </button>
+              )}
+              {/* Input file ẩn cho upload excel lớp học */}
+              <input
+                type="file"
+                ref={importClassesFileInputRef}
+                accept=".xlsx,.xls,.csv"
+                className="hidden"
+                onChange={handleUploadClassExcel}
+              />
+              <button
+                type="button"
+                disabled={isClassLimitReached}
+                onClick={() => {
+                  if (isClassLimitReached) {
+                    showTrialLimit('Bản dùng thử (chưa nhập CDKEY) chỉ được tạo tối đa 01 lớp học. Vui lòng nhập CDKEY bản quyền để quản lý nhiều lớp.');
+                    return;
+                  }
+                  importClassesFileInputRef.current?.click();
+                }}
+                className={`btn-3d btn-3d-sm ${
+                  isClassLimitReached
+                    ? 'bg-slate-200 text-slate-400 border-slate-300 cursor-not-allowed opacity-60 shadow-none'
+                    : 'btn-3d-cyan'
+                } gap-1.5`}
+                title={isClassLimitReached ? 'Bản dùng thử (chưa nhập CDKEY) chỉ được tạo tối đa 01 lớp học. Vui lòng nhập CDKEY bản quyền để quản lý nhiều lớp.' : 'Tải lên file Excel để tạo hàng loạt lớp học'}
+              >
+                <Upload className="w-3.5 h-3.5" />
+                <span>NHẬP LỚP TỪ EXCEL</span>
+              </button>
+              <button
+                type="button"
+                disabled={isClassLimitReached}
+                onClick={() => {
+                  if (isClassLimitReached) {
+                    showTrialLimit('Bản dùng thử (chưa nhập CDKEY) chỉ được tạo tối đa 01 lớp học. Vui lòng nhập CDKEY bản quyền để quản lý nhiều lớp.');
+                    return;
+                  }
+                  setIsCreateClassOpen(true);
+                }}
+                className={`btn-3d btn-3d-sm ${
+                  isClassLimitReached
+                    ? 'bg-slate-300 text-slate-500 cursor-not-allowed opacity-60 shadow-none'
+                    : 'btn-3d-blue'
+                } gap-1.5`}
+                title={isClassLimitReached ? 'Bản dùng thử (chưa nhập CDKEY) chỉ được tạo tối đa 01 lớp học. Vui lòng nhập CDKEY bản quyền để quản lý nhiều lớp.' : 'Thêm lớp học mới'}
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>THÊM LỚP HỌC MỚI</span>
+              </button>
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setIsClassMoreMenuOpen(v => !v)}
+                    aria-haspopup="menu"
+                    aria-expanded={isClassMoreMenuOpen}
+                    className="btn-3d btn-3d-sm btn-3d-light gap-1.5"
+                    title="Mẫu Excel lớp, khai báo phân hiệu – điểm trường, xóa hết lớp"
+                  >
+                    <span>THAO TÁC KHÁC</span>
+                    <ChevronDown className="w-3.5 h-3.5" />
+                  </button>
+                  {isClassMoreMenuOpen && (
+                    <>
+                      <div className="fixed inset-0 z-10" onClick={() => setIsClassMoreMenuOpen(false)} aria-hidden="true" />
+                      <div role="menu" className="absolute right-0 top-full mt-1.5 z-20 w-64 bg-white rounded-xl border border-slate-200 shadow-lg p-1.5 space-y-0.5">
+                        {canManageSchoolBranches && (
+                          <button
+                            type="button"
+                            role="menuitem"
+                            onClick={() => { setIsClassMoreMenuOpen(false); handleOpenSchoolBranchModal(); }}
+                            className="no-hover-fx w-full text-left px-3 py-2 rounded-lg text-sm font-bold text-slate-800 hover:bg-sky-50 flex items-center gap-2"
+                          >
+                            <Building2 className="w-4 h-4 text-sky-700" />
+                            <span>Phân hiệu & điểm trường</span>
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          role="menuitem"
+                          onClick={() => { setIsClassMoreMenuOpen(false); handleDownloadClassExcelTemplate(); }}
+                          className="no-hover-fx w-full text-left px-3 py-2 rounded-lg text-sm font-bold text-slate-800 hover:bg-indigo-50 flex items-center gap-2"
+                        >
+                          <Download className="w-4 h-4 text-indigo-700" />
+                          <span>Tải mẫu Excel lớp</span>
+                        </button>
+                        {classes.length > 0 && (
+                          <button
+                            {...(isSchoolAdminOrBgh ? { style: { display: 'none' } } : {})}
+                            type="button"
+                            role="menuitem"
+                            onClick={() => { setIsClassMoreMenuOpen(false); setIsDeleteAllClassesOpen(true); }}
+                            className="no-hover-fx w-full text-left px-3 py-2 rounded-lg text-sm font-bold text-rose-700 hover:bg-rose-50 flex items-center gap-2 border-t border-slate-100"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                            <span>Xóa hết lớp…</span>
+                          </button>
+                        )}
+                      </div>
+                    </>
+                  )}
+                </div>
               </div>
             </div>
           </div>
 
+          {/* DETAILED FILTERS (collapsed by default): school, branch / campus / grade pills, teacher */}
+          {showClassFilterPanel && (
+          <div className="space-y-3">
           {/* 🏫 BỘ LỌC DÀNH CHO ADMIN QUẢN TRỊ CẤP CAO: LỌC XEM CÁC LỚP THEO TRƯỜNG (CHỈ HIỆN KHI ĐÃ CÓ TRƯỜNG/LỚP) */}
           {isSuperAdmin && availableSchools.length > 0 && (
             <div className="p-3 bg-gradient-to-r from-indigo-50/80 via-purple-50/80 to-pink-50/80 rounded-2xl border border-indigo-200 shadow-2xs">
@@ -2543,275 +2867,8 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
               </div>
             );
           })()}
-
-          {/* Class List Action Header (Thiết kế thanh thoát, gọn gàng, nút bấm trực quan) */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-gradient-to-r from-indigo-50/90 via-sky-50/90 to-purple-50/90 p-3.5 rounded-2xl border border-indigo-200 shadow-2xs">
-            <div className="space-y-0.5">
-              <div className="flex items-center gap-2">
-                <h3 className="text-sm sm:text-base font-black text-indigo-950 uppercase tracking-tight">
-                  DANH SÁCH KHÔNG GIAN LỚP HỌC
-                </h3>
-                <span className="px-2.5 py-0.5 rounded-full text-xs font-black bg-indigo-600 text-white shadow-2xs">
-                  {displayedClasses.length} LỚP
-                </span>
-                {isAdmin && adminTeacherFilter !== 'all' && (
-                  <span className="text-[12px] font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-lg border border-amber-200">
-                    Đang lọc theo giáo viên
-                  </span>
-                )}
-              </div>
-              <p className="text-[12px] text-indigo-700 font-semibold">
-                Năm học 2026–2027 • Mỗi lớp có ảnh đại diện, giáo viên và thời khóa biểu riêng cố định
-              </p>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-2.5">
-              {teacherRole === 'subject' && (
-                <button
-                  type="button"
-                  disabled={isClassLimitReached}
-                  onClick={() => {
-                    if (isClassLimitReached) {
-                      showTrialLimit('Bản dùng thử (chưa nhập CDKEY) chỉ được tạo tối đa 01 lớp học. Vui lòng nhập CDKEY bản quyền để quản lý nhiều lớp.');
-                      return;
-                    }
-                    setIsInitSubjectClassesModalOpen(true);
-                  }}
-                  className={`px-4 py-2.5 rounded-2xl font-black text-xs md:text-sm flex items-center gap-2 transition-all uppercase ${
-                    isClassLimitReached
-                      ? 'bg-slate-300 text-slate-500 cursor-not-allowed opacity-60 shadow-none'
-                      : 'bg-gradient-to-r from-emerald-700 via-teal-700 to-cyan-700 hover:from-emerald-800 hover:to-cyan-800 text-white hover-zoom-btn shadow-md shadow-emerald-600/25'
-                  }`}
-                  title={isClassLimitReached ? 'Bản dùng thử (chưa nhập CDKEY) chỉ được tạo tối đa 01 lớp học. Vui lòng nhập CDKEY bản quyền để quản lý nhiều lớp.' : 'Khởi tạo nhanh danh sách các lớp dạy bộ môn, điền thông tin lớp và số lượng học sinh'}
-                >
-                  <Sparkles className={`w-4 h-4 ${isClassLimitReached ? 'text-slate-400' : 'text-amber-300 animate-pulse'}`} />
-                  <span>KHỞI TẠO LỚP DẠY BỘ MÔN</span>
-                </button>
-              )}
-
-              {classes.length > 0 && (
-                <button
-                  {...(isSchoolAdminOrBgh ? { style: { display: 'none' } } : {})}
-                  type="button"
-                  onClick={() => setIsDeleteAllClassesOpen(true)}
-                  className="btn-3d btn-3d-sm btn-3d-rose gap-1.5"
-                  title="Xóa tất cả các lớp học trong hệ thống"
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                  <span>XÓA HẾT LỚP</span>
-                </button>
-              )}
-
-              {/* Input file ẩn cho upload excel lớp học */}
-              <input
-                type="file"
-                ref={importClassesFileInputRef}
-                accept=".xlsx,.xls,.csv"
-                className="hidden"
-                onChange={handleUploadClassExcel}
-              />
-
-              {/* 🏛️ Nút Cấu hình Phân hiệu & Điểm trường */}
-              {canManageSchoolBranches && (
-                <button
-                  type="button"
-                  onClick={handleOpenSchoolBranchModal}
-                  className="btn-3d btn-3d-sm btn-3d-light gap-1.5 shrink-0"
-                  title="Khai báo và quản lý danh mục Phân hiệu, Điểm trường trực thuộc nhà trường"
-                >
-                  <Building2 className="w-3.5 h-3.5 text-sky-700" />
-                  <span>PHÂN HIỆU & ĐIỂM TRƯỜNG</span>
-                </button>
-              )}
-
-              <button
-                type="button"
-                onClick={handleDownloadClassExcelTemplate}
-                className="btn-3d btn-3d-sm btn-3d-light gap-1.5"
-                title="Tải file Excel mẫu danh sách lớp học để điền thông tin và tạo hàng loạt"
-              >
-                <Download className="w-3.5 h-3.5" />
-                <span>MẪU EXCEL LỚP</span>
-              </button>
-
-              <button
-                type="button"
-                disabled={isClassLimitReached}
-                onClick={() => {
-                  if (isClassLimitReached) {
-                    showTrialLimit('Bản dùng thử (chưa nhập CDKEY) chỉ được tạo tối đa 01 lớp học. Vui lòng nhập CDKEY bản quyền để quản lý nhiều lớp.');
-                    return;
-                  }
-                  importClassesFileInputRef.current?.click();
-                }}
-                className={`btn-3d btn-3d-sm ${
-                  isClassLimitReached
-                    ? 'bg-slate-200 text-slate-400 border-slate-300 cursor-not-allowed opacity-60 shadow-none'
-                    : 'btn-3d-cyan'
-                } gap-1.5`}
-                title={isClassLimitReached ? 'Bản dùng thử (chưa nhập CDKEY) chỉ được tạo tối đa 01 lớp học. Vui lòng nhập CDKEY bản quyền để quản lý nhiều lớp.' : 'Tải lên file Excel để tạo hàng loạt lớp học'}
-              >
-                <Upload className="w-3.5 h-3.5" />
-                <span>NHẬP LỚP TỪ EXCEL</span>
-              </button>
-
-              <button
-                type="button"
-                disabled={isClassLimitReached}
-                onClick={() => {
-                  if (isClassLimitReached) {
-                    showTrialLimit('Bản dùng thử (chưa nhập CDKEY) chỉ được tạo tối đa 01 lớp học. Vui lòng nhập CDKEY bản quyền để quản lý nhiều lớp.');
-                    return;
-                  }
-                  setIsCreateClassOpen(true);
-                }}
-                className={`btn-3d btn-3d-sm ${
-                  isClassLimitReached
-                    ? 'bg-slate-300 text-slate-500 cursor-not-allowed opacity-60 shadow-none'
-                    : 'btn-3d-blue'
-                } gap-1.5`}
-                title={isClassLimitReached ? 'Bản dùng thử (chưa nhập CDKEY) chỉ được tạo tối đa 01 lớp học. Vui lòng nhập CDKEY bản quyền để quản lý nhiều lớp.' : 'Thêm lớp học mới'}
-              >
-                <Plus className="w-3.5 h-3.5" />
-                <span>THÊM LỚP HỌC MỚI</span>
-              </button>
-            </div>
           </div>
-
-          {/* NÚT LỆNH TÍCH CHỌN NHIỀU LỚP & THAO TÁC ĐỒNG LOẠT (CẢ 3 VAI TRÒ) */}
-          {displayedClasses.length > 0 && (
-            <div className="flex flex-wrap items-center justify-between gap-3 p-4 bg-white rounded-3xl border-2 border-indigo-200/90 shadow-xs">
-              <div className="flex flex-wrap items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (selectedClassIds.length === displayedClasses.length) {
-                      setSelectedClassIds([]);
-                    } else {
-                      setSelectedClassIds(displayedClasses.map(c => c.id));
-                    }
-                  }}
-                  className={`px-4 py-2.5 rounded-2xl font-black text-xs md:text-sm flex items-center gap-2 transition-all hover-zoom-btn uppercase shadow-xs ${
-                    selectedClassIds.length > 0 && selectedClassIds.length === displayedClasses.length
-                      ? 'bg-amber-100 hover:bg-amber-200 text-amber-900 border-2 border-amber-300'
-                      : 'bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border-2 border-indigo-200'
-                  }`}
-                  title="Tích chọn tất cả các lớp hoặc bỏ chọn"
-                >
-                  <CheckSquare className="w-4 h-4 text-indigo-600" />
-                  <span>{selectedClassIds.length === displayedClasses.length ? 'BỎ CHỌN TẤT CẢ' : `TÍCH CHỌN TẤT CẢ (${displayedClasses.length} LỚP)`}</span>
-                </button>
-
-                {selectedClassIds.length > 0 && (
-                  <span className="px-3.5 py-2 rounded-2xl bg-amber-50 text-amber-900 border-2 border-amber-300 text-xs font-black uppercase flex items-center gap-1.5 shadow-2xs">
-                    <span>🎯</span>
-                    <span>ĐÃ CHỌN: <strong className="text-amber-950 font-black">{selectedClassIds.length}</strong> / {displayedClasses.length} LỚP</span>
-                  </span>
-                )}
-              </div>
-
-              {selectedClassIds.length > 0 ? (
-                <div className="flex flex-wrap items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => openBulkClassEdit(true)}
-                    className="px-4 py-2.5 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white rounded-2xl font-black text-xs md:text-sm flex items-center gap-2 transition-all hover-zoom-btn shadow-md shadow-teal-600/25 uppercase"
-                    title="Gán phân hiệu, điểm trường cho các lớp đã tích chọn cùng lúc"
-                  >
-                    <Building2 className="w-4 h-4" />
-                    <span>GÁN PHÂN HIỆU, ĐIỂM TRƯỜNG ({selectedClassIds.length} LỚP)</span>
-                  </button>
-
-                  <button
-                    {...(isSchoolAdminOrBgh ? { style: { display: 'none' } } : {})}
-                    type="button"
-                    onClick={() => openBulkClassEdit(false)}
-                    className="px-4 py-2.5 bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 hover:from-blue-700 hover:to-violet-700 text-white rounded-2xl font-black text-xs md:text-sm flex items-center gap-2 transition-all hover-zoom-btn shadow-md shadow-indigo-600/25 uppercase"
-                    title="Sửa thông tin các lớp đã chọn cùng lúc (Năm học, Khối, Giáo viên, Màu, Khẩu hiệu)"
-                  >
-                    <Edit3 className="w-4 h-4 text-cyan-200" />
-                    <span>SỬA THÔNG TIN ĐỒNG LOẠT ({selectedClassIds.length} LỚP)</span>
-                  </button>
-
-                  <button
-                    {...(isSchoolAdminOrBgh ? { style: { display: 'none' } } : {})}
-                    type="button"
-                    onClick={() => setIsBulkClassDeleteOpen(true)}
-                    className="px-4 py-2.5 bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-700 hover:to-red-700 text-white rounded-2xl font-black text-xs md:text-sm flex items-center gap-2 transition-all hover-zoom-btn shadow-md shadow-rose-600/25 uppercase"
-                    title="Xóa đồng loạt các lớp đã tích chọn"
-                  >
-                    <Trash2 className="w-4 h-4 text-rose-100" />
-                    <span>XÓA ĐỒNG LOẠT ({selectedClassIds.length} LỚP)</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setSelectedClassIds([])}
-                    className="p-2.5 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-xl transition-colors"
-                    title="Hủy chọn"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
-              ) : (
-                <div className="text-xs text-slate-500 font-medium italic flex items-center gap-1.5">
-                  <span>💡</span>
-                  <span>Tích chọn nút trên từng thẻ lớp học để thao tác xóa hoặc sửa thông tin đồng loạt</span>
-                </div>
-              )}
-            </div>
           )}
-
-          {/* TÌM KIẾM NHANH LỚP HỌC & THANH SẮP XẾP NHANH */}
-          <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-            <div className="relative flex-1 min-w-[280px] max-w-lg">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Search className="h-4 w-4 text-slate-400" />
-              </div>
-              <input
-                type="text"
-                value={classSearchQuery}
-                onChange={(e) => setClassSearchQuery(e.target.value)}
-                placeholder="Nhập tên lớp, giáo viên, phân hiệu, điểm trường..."
-                className="block w-full pl-10 pr-8 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm transition-shadow"
-              />
-              {classSearchQuery && (
-                <button
-                  type="button"
-                  onClick={() => setClassSearchQuery('')}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                >
-                  <X className="h-4 w-4 text-slate-400 hover:text-slate-600 transition-colors" />
-                </button>
-              )}
-            </div>
-
-            {/* Quick Sort Bar bên cạnh ô tìm kiếm */}
-            <div className="flex items-center gap-2 bg-white px-3 py-2 rounded-xl border border-indigo-200 shadow-2xs">
-              <span className="text-xs font-black text-slate-600 flex items-center gap-1 uppercase">
-                <ArrowUpDown className="w-3.5 h-3.5 text-indigo-600" />
-                <span>Sắp xếp:</span>
-              </span>
-              <select
-                value={classSortBy}
-                onChange={(e) => setClassSortBy(e.target.value as any)}
-                className="text-xs font-bold text-indigo-950 bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 outline-none cursor-pointer hover:bg-slate-100"
-              >
-                <option value="grade">🎓 Khối lớp</option>
-                <option value="branch">🏛️ Phân hiệu</option>
-                <option value="campus">📍 Điểm trường</option>
-                <option value="name">🔤 Tên lớp (A-Z)</option>
-              </select>
-              <button
-                type="button"
-                onClick={() => setClassSortOrder(prev => prev === 'asc' ? 'desc' : 'asc')}
-                className="px-2 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg text-xs font-bold transition-all border border-indigo-200 flex items-center gap-1"
-                title={classSortOrder === 'asc' ? 'Đang tăng dần (A-Z / 1-5). Click đổi sang giảm dần' : 'Đang giảm dần (Z-A / 5-1). Click đổi sang tăng dần'}
-              >
-                <span>{classSortOrder === 'asc' ? '▲ Tăng dần' : '▼ Giảm dần'}</span>
-              </button>
-            </div>
-          </div>
 
           {/* Grid Thẻ Lớp Học LỚN, RÕ NÉT kèm Ảnh Đại Diện To Rõ */}
           {displayedClasses.length === 0 ? (

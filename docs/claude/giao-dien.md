@@ -18,3 +18,9 @@
 ## Banner mặc định của thẻ lớp (11/2026)
 - Lớp chưa có ảnh đại diện dùng `components/common/ClassDefaultBanner.tsx`: nền sáng (màu lớp pha trắng bằng `color-mix`), hình vẽ SVG lớp học thông minh (sách, màn hình mặt cười, mặt trời, mạch điện), tên lớp ở giữa. Không tô đặc màu lớp như trước.
 - Hình minh họa chỉ đặt ở dải giữa (y 34–104 / 140) vì phía trên và dưới có nhãn khối, nút Tích chọn, Căn chỉnh ảnh. Lớp phủ gradient chàm chỉ áp cho ảnh thật (`cls.avatar`).
+
+## Đầu màn Quản lý lớp học gọn (11/2026)
+- Thứ tự: đầu trang 1 dòng → dải 3 ô số liệu mỏng nền trắng (số lớp, số học sinh, Sĩ số từng lớp + Xem chi tiết) → **một thẻ thanh công cụ** → lưới thẻ lớp. Ở 1366×640 thẻ lớp đầu tiên bắt đầu ở ~320px.
+- Thanh công cụ hàng 1: ô tìm, 3 ô chọn lọc nhanh (Phân hiệu, Điểm trường, Khối — chỉ tài khoản phạm vi trường/siêu quản trị), ô chọn sắp xếp + nút tăng/giảm. Hàng 2: Tích chọn tất cả + nút thao tác đồng loạt (bên trái); Lọc chi tiết, Bỏ lọc, Nhập lớp từ Excel, Thêm lớp học mới, menu **Thao tác khác** (Phân hiệu & điểm trường, Tải mẫu Excel lớp, Xóa hết lớp) bên phải.
+- Ba khối lọc cũ (lọc theo trường của siêu quản trị, nút lọc dạng viên có số lớp, thanh giáo viên) giữ nguyên mã nhưng nằm trong bảng **Lọc chi tiết**, mặc định đóng (`showClassFilterPanel`); nút hiện số điều kiện đang áp (`classActiveFilterCount`).
+- Không thêm lại thẻ số liệu gradient đậm hay thẻ tiêu đề "Danh sách không gian lớp học".
