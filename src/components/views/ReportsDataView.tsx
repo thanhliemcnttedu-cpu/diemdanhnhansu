@@ -656,16 +656,37 @@ export const ReportsDataView: React.FC<ReportsDataViewProps> = ({ defaultTab = '
     };
 
     return (
-      <div className="p-4 md:p-6 max-w-7xl mx-auto space-y-6">
-        {/* Top Header Navigation Tabs */}
-        <div className="bg-white/95 backdrop-blur-md rounded-3xl border border-slate-200/90 p-4 md:p-5 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4 hover-zoom-card">
+      <div className="p-3 md:p-4 max-w-7xl mx-auto space-y-4">
+        {/* Thanh đầu trang gọn (1 dòng): thẻ Thống kê hiện luôn bộ chọn loại báo cáo, số liệu nằm ngay bên dưới */}
+        <div className="bg-white/95 backdrop-blur-md rounded-2xl border border-slate-200/90 px-3 py-2 shadow-xs flex flex-wrap items-center justify-between gap-2">
+          {activeTab === 'stats' ? (
+            <div className="flex flex-wrap items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200" role="tablist" aria-label="Loại báo cáo">
+              {([
+                ['realtime_admin', 'Báo cáo toàn trường', ShieldCheck],
+                ...(teacherRole === 'subject' ? [['subject_reports', `Báo cáo bộ môn (${classes.length} lớp)`, Trophy]] : []),
+                ['comprehensive', 'Thống kê trực quan', BarChart3],
+                ['coins', 'Thi đua & xu', Award],
+              ] as Array<[typeof statsSubMode, string, React.ComponentType<{ className?: string }>]>).map(([id, label, Icon]) => (
+                <button
+                  key={id}
+                  type="button"
+                  role="tab"
+                  aria-selected={statsSubMode === id}
+                  onClick={() => setStatsSubMode(id)}
+                  className={`no-hover-fx h-9 px-3 rounded-lg text-sm font-bold whitespace-nowrap flex items-center gap-1.5 cursor-pointer ${statsSubMode === id ? 'bg-white text-indigo-700 shadow-xs' : 'text-slate-700 hover:text-slate-900'}`}
+                >
+                  <Icon className="w-4 h-4" />
+                  <span>{label}</span>
+                </button>
+              ))}
+            </div>
+          ) : (
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-2xl bg-indigo-50 text-indigo-700 flex items-center justify-center font-black shadow-2xs">
               <BarChart3 className="w-5 h-5" />
             </div>
             <div>
               <h2 className="text-base md:text-lg font-black text-slate-900 tracking-tight">
-                {activeTab === 'stats' && 'Báo Cáo & Thống Kê Tổng Quan Lớp Học'}
                 {activeTab === 'data' && (
                   isCurrentUserSuperAdmin
                     ? 'Quản Lý Sao Lưu & Phục Hồi Dữ Liệu Đa Tầng (Admin Toàn Hệ Thống)'
@@ -677,7 +698,6 @@ export const ReportsDataView: React.FC<ReportsDataViewProps> = ({ defaultTab = '
                 {activeTab === 'profile' && 'Cài Đặt Hồ Sơ Giáo Viên & Thông Tin Hệ Thống'}
               </h2>
               <p className="text-xs text-slate-500">
-                {activeTab === 'stats' && 'Biểu đồ trực quan, phân tích đa chiều và bảng xếp hạng thi đua.'}
                 {activeTab === 'data' && (
                   isCurrentUserSuperAdmin
                     ? 'Tùy chọn sao lưu & phục hồi toàn bộ hệ thống hoặc sao lưu & phục hồi độc lập theo từng trường trong CSDL.'
@@ -690,35 +710,26 @@ export const ReportsDataView: React.FC<ReportsDataViewProps> = ({ defaultTab = '
               </p>
             </div>
           </div>
+          )}
 
-          {/* 3 Main Tabs */}
-          <div className="flex items-center gap-1.5 bg-slate-100 p-1.5 rounded-2xl border border-slate-200/80 self-start md:self-auto">
-            <button
-              onClick={() => setActiveTab('stats')}
-              className={`px-3.5 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 hover-zoom-btn uppercase ${activeTab === 'stats' ? 'bg-white text-indigo-700 shadow-xs' : 'text-slate-600 hover:text-slate-900'
-                }`}
-            >
-              <BarChart3 className="w-4 h-4" />
-              <span>THỐNG KÊ</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('data')}
-              className={`px-3.5 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 hover-zoom-btn uppercase ${activeTab === 'data' ? 'bg-white text-indigo-700 shadow-xs' : 'text-slate-600 hover:text-slate-900'
-                }`}
-            >
-              <Download className="w-4 h-4" />
-              <span>DỮ LIỆU</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('profile')}
-              className={`px-3.5 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 hover-zoom-btn uppercase ${activeTab === 'profile' ? 'bg-white text-indigo-700 shadow-xs' : 'text-slate-600 hover:text-slate-900'
-                }`}
-            >
-              <User className="w-4 h-4" />
-              <span>CÀI ĐẶT</span>
-            </button>
+          <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200" role="tablist" aria-label="Nội dung">
+            {([
+              ['stats', 'Thống kê', BarChart3],
+              ['data', 'Dữ liệu', Download],
+              ['profile', 'Cài đặt', User],
+            ] as Array<[typeof activeTab, string, React.ComponentType<{ className?: string }>]>).map(([id, label, Icon]) => (
+              <button
+                key={id}
+                type="button"
+                role="tab"
+                aria-selected={activeTab === id}
+                onClick={() => setActiveTab(id)}
+                className={`no-hover-fx h-9 px-3 rounded-lg text-sm font-bold whitespace-nowrap flex items-center gap-1.5 cursor-pointer ${activeTab === id ? 'bg-white text-indigo-700 shadow-xs' : 'text-slate-700 hover:text-slate-900'}`}
+              >
+                <Icon className="w-4 h-4" />
+                <span>{label}</span>
+              </button>
+            ))}
           </div>
         </div>
 
@@ -736,73 +747,7 @@ export const ReportsDataView: React.FC<ReportsDataViewProps> = ({ defaultTab = '
         {/* TAB 1: THỐNG KÊ (User request 6 & New Comprehensive Dashboard) */}
         {/* ========================================================================= */}
         {activeTab === 'stats' && (
-          <div className="space-y-6">
-            {/* Sub-navigation switcher */}
-            <div className="bg-white rounded-3xl border border-slate-200/90 p-3 shadow-2xs flex flex-wrap items-center justify-between gap-3">
-              <div className="flex flex-wrap items-center gap-1.5 bg-slate-100 p-1.5 rounded-2xl border border-slate-200">
-                {/* BGH & Admin Realtime Multi-level Dashboard Tab */}
-                <button
-                  type="button"
-                  onClick={() => setStatsSubMode('realtime_admin')}
-                  className={`px-4 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-2 cursor-pointer uppercase ${statsSubMode === 'realtime_admin'
-                      ? 'bg-gradient-to-r from-indigo-600 to-indigo-700 text-white shadow-xs'
-                      : 'text-indigo-900 hover:text-indigo-950 font-black'
-                    }`}
-                >
-                  <ShieldCheck className="w-4 h-4 text-amber-300" />
-                  <span>BÁO CÁO REALTIME ĐA TẦNG (BGH)</span>
-                </button>
-
-                {teacherRole === 'subject' && (
-                  <button
-                    type="button"
-                    onClick={() => setStatsSubMode('subject_reports')}
-                    className={`px-4 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-2 cursor-pointer uppercase ${statsSubMode === 'subject_reports'
-                        ? 'bg-emerald-700 text-white shadow-xs'
-                        : 'text-slate-600 hover:text-slate-900'
-                      }`}
-                  >
-                    <Trophy className="w-4 h-4" />
-                    <span>BÁO CÁO BỘ MÔN ({classes.length} LỚP)</span>
-                  </button>
-                )}
-
-                <button
-                  type="button"
-                  onClick={() => setStatsSubMode('comprehensive')}
-                  className={`px-4 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-2 cursor-pointer uppercase ${statsSubMode === 'comprehensive'
-                      ? 'bg-white text-indigo-700 shadow-xs'
-                      : 'text-slate-600 hover:text-slate-900'
-                    }`}
-                >
-                  <BarChart3 className="w-4 h-4 text-indigo-600" />
-                  <span>{teacherRole === 'subject' ? 'THỐNG KÊ TRỰC QUAN' : '1. THỐNG KÊ TRỰC QUAN TOÀN DIỆN'}</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setStatsSubMode('coins')}
-                  className={`px-4 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-2 cursor-pointer uppercase ${statsSubMode === 'coins'
-                      ? 'bg-white text-indigo-700 shadow-xs'
-                      : 'text-slate-600 hover:text-slate-900'
-                    }`}
-                >
-                  <Award className="w-4 h-4 text-amber-500" />
-                  <span>{teacherRole === 'subject' ? 'THI ĐUA XU THEO LỚP' : '2. THI ĐUA & XU TÍCH LŨY'}</span>
-                </button>
-              </div>
-
-              <span className="text-[12px] font-bold text-slate-500 uppercase px-2 hidden sm:inline">
-                {statsSubMode === 'realtime_admin'
-                  ? 'Đồng bộ 2 chiều thời gian thực theo Phân hiệu & Điểm trường'
-                  : statsSubMode === 'subject_reports'
-                    ? `Tổng hợp chi tiết ${classes.length} lớp môn ${subjectTeacherConfig.subjectName}`
-                    : statsSubMode === 'comprehensive'
-                      ? 'Tổng hợp chuyên cần, bán trú, biểu đồ & tiến bộ học sinh'
-                      : 'Bảng xếp hạng thi đua lớp học'}
-              </span>
-            </div>
-
+          <div className="space-y-4">
             {statsSubMode === 'realtime_admin' ? (
               <AdminRealtimeDashboardView />
             ) : statsSubMode === 'subject_reports' ? (

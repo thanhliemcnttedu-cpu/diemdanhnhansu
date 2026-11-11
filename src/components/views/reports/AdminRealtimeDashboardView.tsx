@@ -958,420 +958,167 @@ export const AdminRealtimeDashboardView: React.FC = () => {
   };
 
   return (
-    <div className="space-y-4 animate-in fade-in duration-200">
-      {/* 1. Header Banner & Realtime Connection Status */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-sky-700 via-indigo-600 to-blue-600 p-4 sm:p-5 text-white border border-indigo-500/30 shadow-xl">
-        <div className="absolute top-0 right-0 -mt-8 -mr-8 w-48 h-48 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 left-1/3 -mb-8 w-40 h-40 bg-blue-500/10 rounded-full blur-2xl pointer-events-none" />
-
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 relative z-10">
-          <div>
-            <div className="flex flex-wrap items-center gap-2 mb-1.5">
-              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-400/30 text-[12px] font-black uppercase tracking-wider">
-                <ShieldCheck className="w-3 h-3 text-indigo-400" />
-                <span>BAN GIÁM HIỆU & QUẢN TRỊ VIÊN</span>
-              </span>
-
-              {/* Anti-Duplication Protocol Badge */}
-              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-blue-500/20 text-blue-300 border border-blue-400/30 text-[12px] font-black uppercase tracking-wider">
-                <CheckCircle2 className="w-3 h-3 text-emerald-400" />
-                <span>CHỐNG TRÙNG LẶP: {homeroomClasses.length} LỚP GVCN</span>
-                {excludedSubjectClassesCount > 0 && (
-                  <span className="text-amber-300 font-bold lowercase">
-                    (loại trừ {excludedSubjectClassesCount} lớp GVBM)
-                  </span>
-                )}
-              </span>
-
-              {/* Realtime Live Pulse Badge */}
-              <div className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[12px] font-black transition-all ${
-                isPulseActive 
-                  ? 'bg-emerald-500/30 text-emerald-300 border border-emerald-400 shadow-sm shadow-emerald-500/50 scale-105'
-                  : 'bg-emerald-700/60 text-white border border-emerald-500/30'
-              }`}>
-                <span className="relative flex h-2 w-2">
-                  <span className={`animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-700 opacity-75 ${isPulseActive ? 'duration-500' : ''}`} />
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-700" />
-                </span>
-                <Wifi className="w-3 h-3" />
-                <span>LIÊN THÔNG REALTIME</span>
-              </div>
-
-              {lastEventTime && (
-                <span className="text-[12px] text-slate-400 flex items-center gap-1">
-                  <Clock className="w-2.5 h-2.5 text-slate-400" />
-                  <span>Vừa nhận: <strong className="text-emerald-400">{lastEventTime}</strong></span>
-                </span>
-              )}
-            </div>
-
-            <h1 className="text-base sm:text-lg md:text-xl font-black text-white uppercase tracking-tight flex items-center gap-2">
-              <span>HỆ THỐNG BÁO CÁO ĐA TẦNG THỜI GIAN THỰC</span>
-              <Sparkles className="w-4 h-4 text-amber-400 shrink-0" />
-            </h1>
-            <p className="text-xs text-white mt-0.5">
-              Tự động cộng dồn số liệu Phân hiệu & Điểm trường • Tổng hợp Chuyên cần & Bán trú theo Ngày, Tuần, Tháng
-            </p>
+    <div className="space-y-3 animate-in fade-in duration-200">
+      {/* 1. THANH CÔNG CỤ GỌN (2 dòng): khung thời gian + ngày • thao tác | bộ lọc phân hiệu – điểm trường – khối • phạm vi.
+          Thay cho banner lớn + khung thời gian + bộ lọc 4 cột trước đây để số liệu hiện ngay khi mở trang. */}
+      <div className="bg-white rounded-2xl border border-slate-200 shadow-xs p-2.5 space-y-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="flex items-center bg-slate-100 p-0.5 rounded-lg border border-slate-200" role="group" aria-label="Khung thời gian báo cáo">
+            {([['day', 'Ngày'], ['week', 'Tuần'], ['month', 'Tháng']] as const).map(([id, label]) => (
+              <button
+                key={id}
+                type="button"
+                onClick={() => setTimeframe(id)}
+                aria-pressed={timeframe === id}
+                className={`no-hover-fx h-8 px-3 rounded-md text-sm font-bold whitespace-nowrap cursor-pointer ${timeframe === id ? 'bg-white text-indigo-800 shadow-xs border border-slate-200' : 'text-slate-700 hover:text-slate-900'}`}
+              >
+                {label}
+              </button>
+            ))}
           </div>
 
-          {/* Action buttons on Header */}
-          <div className="flex flex-wrap items-center gap-2 shrink-0">
+          <div className="flex items-center gap-1">
             <button
-              onClick={() => setSoundEnabled(prev => !prev)}
-              className={`p-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer border ${
-                soundEnabled 
-                  ? 'bg-indigo-600/40 text-white border-indigo-400/40 hover:bg-indigo-700/60' 
-                  : 'bg-slate-100 text-slate-500 border-slate-200'
-              }`}
-              title={soundEnabled ? 'Đang bật chuông thông báo Realtime' : 'Đã tắt chuông thông báo'}
+              type="button"
+              onClick={timeframe === 'day' ? handlePrevDay : timeframe === 'week' ? handlePrevWeek : handlePrevMonth}
+              className="no-hover-fx w-8 h-8 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 rounded-lg flex items-center justify-center cursor-pointer"
+              title={timeframe === 'day' ? 'Ngày hôm trước' : timeframe === 'week' ? 'Tuần trước' : 'Tháng trước'}
+              aria-label={timeframe === 'day' ? 'Ngày hôm trước' : timeframe === 'week' ? 'Tuần trước' : 'Tháng trước'}
             >
-              {soundEnabled ? <Volume2 className="w-3.5 h-3.5 text-amber-600" /> : <VolumeX className="w-3.5 h-3.5" />}
-              <span className="hidden sm:inline text-[12px] font-bold">{soundEnabled ? 'Bật chuông' : 'Tắt chuông'}</span>
+              <ChevronLeft className="w-4 h-4" />
             </button>
-
+            {timeframe === 'month' ? (
+              <input type="month" value={selectedMonth} onChange={(e) => setSelectedMonth(e.target.value)} aria-label="Tháng báo cáo"
+                className="h-8 px-2 bg-white border border-slate-300 rounded-lg text-sm font-bold text-slate-800" />
+            ) : (
+              <input type="date" value={timeframe === 'day' ? selectedDate : selectedWeekDate}
+                onChange={(e) => (timeframe === 'day' ? setSelectedDate(e.target.value) : setSelectedWeekDate(e.target.value))}
+                aria-label={timeframe === 'day' ? 'Ngày báo cáo' : 'Một ngày trong tuần cần xem'}
+                title={timeframe === 'week' ? 'Chọn một ngày bất kỳ trong tuần cần xem' : undefined}
+                className="h-8 px-2 bg-white border border-slate-300 rounded-lg text-sm font-bold text-slate-800" />
+            )}
             <button
+              type="button"
+              onClick={timeframe === 'day' ? handleNextDay : timeframe === 'week' ? handleNextWeek : handleNextMonth}
+              className="no-hover-fx w-8 h-8 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 rounded-lg flex items-center justify-center cursor-pointer"
+              title={timeframe === 'day' ? 'Ngày hôm sau' : timeframe === 'week' ? 'Tuần sau' : 'Tháng sau'}
+              aria-label={timeframe === 'day' ? 'Ngày hôm sau' : timeframe === 'week' ? 'Tuần sau' : 'Tháng sau'}
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+            {timeframe === 'day' && selectedDate !== todayStr && (
+              <button type="button" onClick={() => setSelectedDate(todayStr)} className="no-hover-fx h-8 px-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-bold whitespace-nowrap cursor-pointer">Hôm nay</button>
+            )}
+            {timeframe === 'day' && (
+              <button
+                type="button"
+                onClick={() => { const d = new Date(); d.setDate(d.getDate() - 1); setSelectedDate(toLocalDateString(d)); }}
+                className="no-hover-fx h-8 px-2.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 rounded-lg text-sm font-bold whitespace-nowrap cursor-pointer max-sm:hidden"
+              >
+                Hôm qua
+              </button>
+            )}
+            {timeframe === 'week' && selectedWeekDate !== todayStr && (
+              <button type="button" onClick={() => setSelectedWeekDate(todayStr)} className="no-hover-fx h-8 px-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-bold whitespace-nowrap cursor-pointer">Tuần này</button>
+            )}
+            {timeframe === 'month' && selectedMonth !== currentMonthStr && (
+              <button type="button" onClick={() => setSelectedMonth(currentMonthStr)} className="no-hover-fx h-8 px-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-bold whitespace-nowrap cursor-pointer">Tháng này</button>
+            )}
+          </div>
+
+          {timeframe !== 'day' && (
+            <span className="text-xs font-bold text-indigo-900 bg-indigo-50 px-2 py-1 rounded-lg border border-indigo-200 whitespace-nowrap" title="Khoảng tính toán">{dateRange.label}</span>
+          )}
+
+          <div className="ml-auto flex flex-wrap items-center gap-1.5">
+            <span
+              className={`inline-flex items-center gap-1.5 h-8 px-2.5 rounded-lg text-xs font-bold border whitespace-nowrap ${isPulseActive ? 'bg-emerald-100 text-emerald-900 border-emerald-400' : 'bg-emerald-50 text-emerald-800 border-emerald-200'}`}
+              title={`Số liệu tự cập nhật khi giáo viên chủ nhiệm gửi báo cáo${lastEventTime ? ` • vừa nhận lúc ${lastEventTime}` : ''}`}
+            >
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-600 opacity-60" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-700" />
+              </span>
+              <span className="max-md:hidden">Tự cập nhật</span>
+              {lastEventTime && <span className="max-lg:hidden">• {lastEventTime}</span>}
+            </span>
+            <button
+              type="button"
+              onClick={() => setSoundEnabled(prev => !prev)}
+              className={`no-hover-fx w-8 h-8 rounded-lg border flex items-center justify-center cursor-pointer ${soundEnabled ? 'bg-amber-50 text-amber-800 border-amber-300' : 'bg-white text-slate-500 border-slate-300'}`}
+              title={soundEnabled ? 'Đang bật chuông khi có báo cáo mới — bấm để tắt' : 'Đang tắt chuông — bấm để bật'}
+              aria-label={soundEnabled ? 'Tắt chuông báo cáo mới' : 'Bật chuông báo cáo mới'}
+              aria-pressed={soundEnabled}
+            >
+              {soundEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
+            </button>
+            <button
+              type="button"
               onClick={handleManualSync}
               disabled={isManualSyncing}
-              className="px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-black flex items-center gap-1.5 shadow-md transition-all hover:scale-102 cursor-pointer disabled:opacity-50"
-              title="Làm mới số liệu từ máy chủ và các tệp dữ liệu lớp học"
+              className="no-hover-fx h-8 px-2.5 bg-white hover:bg-slate-100 text-slate-800 border border-slate-300 rounded-lg text-sm font-bold flex items-center gap-1.5 whitespace-nowrap cursor-pointer disabled:opacity-60"
+              title="Làm mới số liệu từ các tệp dữ liệu lớp học"
             >
-              <RefreshCw className={`w-3.5 h-3.5 ${isManualSyncing ? 'animate-spin' : ''}`} />
-              <span>{isManualSyncing ? 'Đang nạp...' : 'Làm mới ngay'}</span>
+              <RefreshCw className={`w-4 h-4 ${isManualSyncing ? 'animate-spin' : ''}`} />
+              <span className="max-sm:hidden">{isManualSyncing ? 'Đang nạp…' : 'Làm mới'}</span>
             </button>
-
             <button
+              type="button"
               onClick={handleDriveSync}
               disabled={isDriveSyncing}
-              className="px-3 py-2 bg-gradient-to-r from-sky-700 to-cyan-700 hover:from-sky-800 hover:to-cyan-800 text-white rounded-xl text-xs font-black flex items-center gap-1.5 shadow-md transition-all hover:scale-102 cursor-pointer disabled:opacity-50"
-              title="Kéo và cập nhật số liệu mới nhất từ tất cả các lớp học trên Google Drive dùng chung"
+              className="no-hover-fx h-8 px-2.5 bg-white hover:bg-sky-50 text-sky-800 border border-sky-300 rounded-lg text-sm font-bold flex items-center gap-1.5 whitespace-nowrap cursor-pointer disabled:opacity-60"
+              title="Kéo số liệu mới nhất của tất cả các lớp từ Google Drive dùng chung"
             >
-              <Cloud className={`w-3.5 h-3.5 ${isDriveSyncing ? 'animate-bounce text-amber-300' : 'text-sky-200'}`} />
-              <span>{isDriveSyncing ? 'Đang kéo Drive...' : 'Đồng bộ Google Drive'}</span>
+              <Cloud className={`w-4 h-4 ${isDriveSyncing ? 'animate-bounce' : ''}`} />
+              <span className="max-sm:hidden">{isDriveSyncing ? 'Đang kéo…' : 'Đồng bộ Drive'}</span>
             </button>
-
-            {driveSyncMessage && (
-              <span className="px-2.5 py-1 rounded-xl bg-amber-400 text-slate-900 text-[12px] font-black animate-in fade-in duration-200 flex items-center gap-1 shadow-xs">
-                <span>⚡</span>
-                <span>{driveSyncMessage}</span>
-              </span>
-            )}
-
             <button
+              type="button"
               onClick={handleExportExcel}
-              className="px-3 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-black flex items-center gap-1.5 shadow-md transition-all hover:scale-102 cursor-pointer"
+              className="no-hover-fx h-8 px-3 bg-emerald-700 hover:bg-emerald-800 text-white rounded-lg text-sm font-bold flex items-center gap-1.5 whitespace-nowrap cursor-pointer"
+              title={`Xuất Excel theo ${timeframe === 'day' ? 'ngày' : timeframe === 'week' ? 'tuần' : 'tháng'} đang xem`}
             >
-              <Download className="w-3.5 h-3.5" />
-              <span>Xuất Excel ({timeframe === 'day' ? 'Ngày' : timeframe === 'week' ? 'Tuần' : 'Tháng'})</span>
+              <Download className="w-4 h-4" />
+              <span>Xuất Excel</span>
             </button>
           </div>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2">
+          <select value={selectedBranch} onChange={(e) => handleSelectBranch(e.target.value)} aria-label="Phân hiệu"
+            className="h-9 flex-1 min-w-[11rem] px-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-bold text-slate-800 cursor-pointer">
+            <option value="all">Tất cả phân hiệu</option>
+            {availableBranches.map(branch => <option key={branch} value={branch}>{branch}</option>)}
+            {hasUnassignedBranch && <option value="__unassigned__">Chưa gán phân hiệu</option>}
+          </select>
+          <select value={selectedCampus} onChange={(e) => handleSelectCampus(e.target.value)} aria-label="Điểm trường"
+            className="h-9 flex-1 min-w-[11rem] px-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-bold text-slate-800 cursor-pointer">
+            <option value="all">Tất cả điểm trường ({availableCampuses.length})</option>
+            {availableCampuses.map(campus => <option key={campus} value={campus}>{campus}</option>)}
+            {hasUnassignedCampus && <option value="__unassigned__">Chưa gán điểm trường</option>}
+          </select>
+          <select value={selectedGrade} onChange={(e) => handleSelectGrade(e.target.value)} aria-label="Khối học"
+            className="h-9 flex-1 min-w-[9rem] px-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-bold text-slate-800 cursor-pointer">
+            <option value="all">Tất cả các khối ({availableGrades.length})</option>
+            {availableGrades.map(grade => <option key={grade} value={grade}>{grade}</option>)}
+          </select>
+          <span
+            className="h-9 px-3 inline-flex items-center gap-1.5 bg-indigo-50 border border-indigo-200 rounded-lg text-sm font-bold text-indigo-900 whitespace-nowrap"
+            title={`Chỉ tính lớp chủ nhiệm (${homeroomClasses.length} lớp)${excludedSubjectClassesCount > 0 ? `, không tính ${excludedSubjectClassesCount} lớp bộ môn` : ''} để không trùng số liệu`}
+          >
+            <School className="w-4 h-4 text-indigo-700" />
+            {filteredClasses.length} lớp • {totalStudents} học sinh
+          </span>
+          {(selectedBranch !== 'all' || selectedCampus !== 'all' || selectedGrade !== 'all') && (
+            <button type="button" onClick={handleFilterAll} className="no-hover-fx h-9 px-3 bg-white hover:bg-indigo-50 text-indigo-700 border border-indigo-300 rounded-lg text-sm font-bold whitespace-nowrap cursor-pointer" title="Bỏ lọc, xem toàn trường">
+              Bỏ lọc
+            </button>
+          )}
+          {driveSyncMessage && (
+            <span className="px-2.5 py-1 rounded-lg bg-amber-100 border border-amber-300 text-amber-950 text-xs font-bold" role="status">{driveSyncMessage}</span>
+          )}
         </div>
       </div>
-
-      {/* 2. Thanh Công Cụ Bộ Lọc Đa Tầng & Khung Thời Gian Báo Cáo */}
-      <div className="bg-white rounded-2xl p-3.5 sm:p-4 border border-indigo-100 shadow-sm space-y-3.5">
-        
-        {/* Hàng 1: Tabs chọn chế độ thời gian & Bộ điều hướng mốc thời gian */}
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 pb-3 border-b border-slate-100">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold shrink-0">
-              <Calendar className="w-4 h-4" />
-            </div>
-            <div>
-              <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                <h3 className="text-xs sm:text-sm font-black text-indigo-950 uppercase tracking-tight whitespace-nowrap">
-                  KHUNG THỜI GIAN BÁO CÁO TỔNG HỢP
-                </h3>
-                <span className="px-2 py-0.5 rounded-full text-[12px] font-black bg-indigo-50 text-indigo-700 border border-indigo-200">
-                  {dateRange.shortLabel}
-                </span>
-              </div>
-              <p className="text-[12px] text-slate-500">
-                Lựa chọn xem tổng hợp toàn trường và từng lớp theo Ngày cụ thể, theo Tuần hoặc trọn vẹn cả Tháng
-              </p>
-            </div>
-          </div>
-
-          {/* 3 Tabs: [THEO NGÀY] [THEO TUẦN] [THEO THÁNG] */}
-          <div className="flex items-center bg-slate-100 p-1 rounded-xl self-start lg:self-auto border border-slate-200/80">
-            <button
-              onClick={() => setTimeframe('day')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-black flex items-center gap-1.5 transition-all cursor-pointer ${
-                timeframe === 'day'
-                  ? 'bg-white text-indigo-950 shadow-xs scale-102 border border-slate-200'
-                  : 'text-slate-600 hover:text-indigo-900'
-              }`}
-            >
-              <CalendarDays className="w-3.5 h-3.5 text-indigo-600" />
-              <span>THEO NGÀY</span>
-            </button>
-
-            <button
-              onClick={() => setTimeframe('week')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-black flex items-center gap-1.5 transition-all cursor-pointer ${
-                timeframe === 'week'
-                  ? 'bg-white text-indigo-950 shadow-xs scale-102 border border-slate-200'
-                  : 'text-slate-600 hover:text-indigo-900'
-              }`}
-            >
-              <CalendarRange className="w-3.5 h-3.5 text-indigo-600" />
-              <span>THEO TUẦN</span>
-            </button>
-
-            <button
-              onClick={() => setTimeframe('month')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-black flex items-center gap-1.5 transition-all cursor-pointer ${
-                timeframe === 'month'
-                  ? 'bg-white text-indigo-950 shadow-xs scale-102 border border-slate-200'
-                  : 'text-slate-600 hover:text-indigo-900'
-              }`}
-            >
-              <Clock3 className="w-3.5 h-3.5 text-indigo-600" />
-              <span>THEO THÁNG</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Hàng 2: Bộ điều khiển chi tiết theo chế độ đã chọn */}
-        <div className="flex flex-wrap items-center justify-between gap-3 p-2.5 rounded-xl bg-gradient-to-r from-slate-50 via-indigo-50/30 to-blue-50/40 border border-slate-200/80">
-          <div className="flex flex-wrap items-center gap-2 text-xs">
-            {/* Chế độ THEO NGÀY */}
-            {timeframe === 'day' && (
-              <>
-                <span className="text-[12px] font-bold text-slate-700">Ngày giám sát:</span>
-                <div className="flex items-center gap-1">
-                  <button
-                    onClick={handlePrevDay}
-                    className="p-1.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 rounded-lg transition-colors cursor-pointer"
-                    title="Ngày hôm trước"
-                  >
-                    <ChevronLeft className="w-3.5 h-3.5" />
-                  </button>
-                  <input
-                    type="date"
-                    value={selectedDate}
-                    onChange={(e) => setSelectedDate(e.target.value)}
-                    className="px-2.5 py-1 bg-white border border-slate-300 rounded-lg text-xs font-bold text-slate-800 focus:ring-2 focus:ring-indigo-500 shadow-2xs"
-                  />
-                  <button
-                    onClick={handleNextDay}
-                    className="p-1.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 rounded-lg transition-colors cursor-pointer"
-                    title="Ngày hôm sau"
-                  >
-                    <ChevronRight className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-
-                <div className="flex items-center gap-1 ml-1">
-                  {selectedDate !== todayStr && (
-                    <button
-                      onClick={() => setSelectedDate(todayStr)}
-                      className="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-[12px] font-black shadow-2xs cursor-pointer"
-                    >
-                      Hôm nay
-                    </button>
-                  )}
-                  <button
-                    onClick={() => {
-                      const d = new Date();
-                      d.setDate(d.getDate() - 1);
-                      setSelectedDate(toLocalDateString(d));
-                    }}
-                    className="px-2.5 py-1 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 rounded-lg text-[12px] font-bold shadow-2xs cursor-pointer"
-                  >
-                    Hôm qua
-                  </button>
-                </div>
-              </>
-            )}
-
-            {/* Chế độ THEO TUẦN */}
-            {timeframe === 'week' && (
-              <>
-                <span className="text-[12px] font-bold text-slate-700">Chọn tuần cần xem:</span>
-                <div className="flex items-center gap-1">
-                  <button
-                    onClick={handlePrevWeek}
-                    className="px-2 py-1 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 rounded-lg text-xs font-bold flex items-center gap-1 transition-colors cursor-pointer"
-                  >
-                    <ChevronLeft className="w-3.5 h-3.5" />
-                    <span>Tuần trước</span>
-                  </button>
-                  <input
-                    type="date"
-                    value={selectedWeekDate}
-                    onChange={(e) => setSelectedWeekDate(e.target.value)}
-                    className="px-2.5 py-1 bg-white border border-slate-300 rounded-lg text-xs font-bold text-slate-800 focus:ring-2 focus:ring-indigo-500 shadow-2xs"
-                    title="Chọn một ngày bất kỳ trong tuần cần xem"
-                  />
-                  <button
-                    onClick={handleNextWeek}
-                    className="px-2 py-1 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 rounded-lg text-xs font-bold flex items-center gap-1 transition-colors cursor-pointer"
-                  >
-                    <span>Tuần sau</span>
-                    <ChevronRight className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-
-                {selectedWeekDate !== todayStr && (
-                  <button
-                    onClick={() => setSelectedWeekDate(todayStr)}
-                    className="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-[12px] font-black shadow-2xs cursor-pointer ml-1"
-                  >
-                    Tuần này
-                  </button>
-                )}
-              </>
-            )}
-
-            {/* Chế độ THEO THÁNG */}
-            {timeframe === 'month' && (
-              <>
-                <span className="text-[12px] font-bold text-slate-700">Chọn tháng báo cáo:</span>
-                <div className="flex items-center gap-1">
-                  <button
-                    onClick={handlePrevMonth}
-                    className="px-2 py-1 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 rounded-lg text-xs font-bold flex items-center gap-1 transition-colors cursor-pointer"
-                  >
-                    <ChevronLeft className="w-3.5 h-3.5" />
-                    <span>Tháng trước</span>
-                  </button>
-                  <input
-                    type="month"
-                    value={selectedMonth}
-                    onChange={(e) => setSelectedMonth(e.target.value)}
-                    className="px-2.5 py-1 bg-white border border-slate-300 rounded-lg text-xs font-bold text-slate-800 focus:ring-2 focus:ring-indigo-500 shadow-2xs"
-                  />
-                  <button
-                    onClick={handleNextMonth}
-                    className="px-2 py-1 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 rounded-lg text-xs font-bold flex items-center gap-1 transition-colors cursor-pointer"
-                  >
-                    <span>Tháng sau</span>
-                    <ChevronRight className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-
-                {selectedMonth !== currentMonthStr && (
-                  <button
-                    onClick={() => setSelectedMonth(currentMonthStr)}
-                    className="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-[12px] font-black shadow-2xs cursor-pointer ml-1"
-                  >
-                    Tháng này
-                  </button>
-                )}
-              </>
-            )}
-          </div>
-
-          {/* Dòng tóm tắt khung thời gian */}
-          <div className="flex items-center gap-2 text-xs">
-            <span className="text-[12px] text-slate-500 font-medium">Khoảng tính toán:</span>
-            <span className="font-black text-indigo-900 bg-white px-2.5 py-1 rounded-lg border border-indigo-200 font-mono shadow-2xs">
-              {dateRange.label}
-            </span>
-          </div>
-        </div>
-
-        {/* Hàng 3: 4 Cột Bộ lọc Đa tầng: Phân hiệu • Điểm trường • Khối • Phạm vi */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-1">
-          {/* Cấp 1: Phân hiệu */}
-          <div className="space-y-1">
-            <label className="text-[12px] font-black text-slate-700 flex items-center gap-1.5">
-              <Building2 className="w-3.5 h-3.5 text-indigo-600" />
-              <span className="whitespace-nowrap">CẤP 1: PHÂN HIỆU</span>
-            </label>
-            <select
-              value={selectedBranch}
-              onChange={(e) => handleSelectBranch(e.target.value)}
-              className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 focus:ring-2 focus:ring-indigo-500 cursor-pointer"
-            >
-              <option value="all">🌐 Toàn trường (Tất cả phân hiệu)</option>
-              {availableBranches.map(branch => (
-                <option key={branch} value={branch}>
-                  🏛️ {branch}
-                </option>
-              ))}
-              {hasUnassignedBranch && (
-                <option value="__unassigned__">⚠️ Chưa cấu hình phân hiệu (Null)</option>
-              )}
-            </select>
-          </div>
-
-          {/* Cấp 2: Điểm trường */}
-          <div className="space-y-1">
-            <label className="text-[12px] font-black text-slate-700 flex items-center gap-1.5">
-              <MapPin className="w-3.5 h-3.5 text-rose-600" />
-              <span className="whitespace-nowrap">CẤP 2: ĐIỂM TRƯỜNG</span>
-            </label>
-            <select
-              value={selectedCampus}
-              onChange={(e) => handleSelectCampus(e.target.value)}
-              className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 focus:ring-2 focus:ring-indigo-500 cursor-pointer"
-            >
-              <option value="all">📍 Tất cả điểm trường ({availableCampuses.length} điểm)</option>
-              {availableCampuses.map(campus => (
-                <option key={campus} value={campus}>
-                  📍 {campus}
-                </option>
-              ))}
-              {hasUnassignedCampus && (
-                <option value="__unassigned__">⚠️ Chưa cấu hình điểm trường (Null)</option>
-              )}
-            </select>
-          </div>
-
-          {/* Cấp 3: Khối học */}
-          <div className="space-y-1">
-            <label className="text-[12px] font-black text-slate-700 flex items-center gap-1.5">
-              <GraduationCap className="w-3.5 h-3.5 text-amber-600" />
-              <span className="whitespace-nowrap">CẤP 3: KHỐI HỌC</span>
-            </label>
-            <select
-              value={selectedGrade}
-              onChange={(e) => handleSelectGrade(e.target.value)}
-              className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 focus:ring-2 focus:ring-indigo-500 cursor-pointer"
-            >
-              <option value="all">🎓 Tất cả các khối ({availableGrades.length} khối)</option>
-              {availableGrades.map(grade => (
-                <option key={grade} value={grade}>
-                  📚 {grade}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Thông tin phạm vi áp dụng & Nút Reset */}
-          <div className="space-y-1">
-            <label className="text-[12px] font-black text-slate-700 flex items-center gap-1.5">
-              <School className="w-3.5 h-3.5 text-emerald-600" />
-              <span>PHẠM VI ĐANG THEO DÕI</span>
-            </label>
-            <div className="flex items-center justify-between p-1.5 px-3 bg-gradient-to-r from-indigo-50 to-blue-50 border border-indigo-200 rounded-xl min-h-[38px]">
-              <div className="truncate mr-1">
-                <span className="text-[12px] font-black text-indigo-950 block truncate">
-                  {selectedBranch === 'all' ? 'TOÀN TRƯỜNG' : selectedBranch}
-                  {selectedCampus !== 'all' && ` • ${selectedCampus}`}
-                  {selectedGrade !== 'all' && ` • ${selectedGrade}`}
-                </span>
-                <span className="text-[12px] text-indigo-700 font-bold">
-                  {filteredClasses.length} lớp • {totalStudents} HS • Tự xếp ABC
-                </span>
-              </div>
-              {(selectedBranch !== 'all' || selectedCampus !== 'all' || selectedGrade !== 'all') && (
-                <button
-                  onClick={handleFilterAll}
-                  className="px-2 py-1 bg-white hover:bg-indigo-100 text-indigo-700 border border-indigo-300 rounded-lg text-[12px] font-black shadow-xs shrink-0 cursor-pointer"
-                  title="Đặt lại về Toàn trường"
-                >
-                  Toàn trường
-                </button>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* 2b. Thống kê toàn trường từ Google Drive dùng chung (hôm nay / hôm qua / tuần / tháng) */}
-      <DriveAttendanceStatsPanel />
 
       {/* 3. Thẻ Chỉ Số Tổng Hợp (Executive KPI Cards) */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
@@ -1516,6 +1263,9 @@ export const AdminRealtimeDashboardView: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* 2b. Thống kê toàn trường từ Google Drive dùng chung (hôm nay / hôm qua / tuần / tháng) */}
+      <DriveAttendanceStatsPanel />
 
       {/* 4. Biểu Đồ Tròn Trực Quan Sinh Động (Realtime Donut Charts) */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
