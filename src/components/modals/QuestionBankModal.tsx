@@ -14,6 +14,8 @@ import {
 import { useClassroom } from '../../context/ClassroomContext';
 import { requireQuizStorage, QuizStorageButton } from './QuizStorageModal';
 import { QuestionEditor } from './question-editor/QuestionEditor';
+import { QuestionPlayer } from './question-editor/QuestionPlayer';
+import { Play } from 'lucide-react';
 
 interface QuestionBankModalProps {
   isOpen: boolean;
@@ -55,6 +57,8 @@ export const QuestionBankModal: React.FC<QuestionBankModalProps> = ({
   const [isFullscreen, setIsFullscreen] = useState(false);
   // Menu thả xuống: Nhập câu hỏi (tệp / dán văn bản) và Thêm (khôi phục mẫu)
   const [menu, setMenu] = useState<'' | 'import' | 'more'>('');
+  // Chơi thử (vai trò học sinh): danh sách câu + câu bắt đầu
+  const [play, setPlay] = useState<{ list: QuestionItem[]; start: number; title: string } | null>(null);
 
   // Subject selector for uploading question sets
   const [uploadSubject, setUploadSubject] = useState<string>('Toán học');
@@ -485,6 +489,11 @@ export const QuestionBankModal: React.FC<QuestionBankModalProps> = ({
                 )}
               </div>
 
+              <button type="button" disabled={filteredList.length === 0}
+                onClick={() => setPlay({ list: filteredList, start: 0, title: selectedSubject === 'all' ? 'tất cả câu hỏi' : `môn ${selectedSubject}` })}
+                title="Làm thử các câu đang hiển thị như học sinh" className="no-hover-fx h-10 px-3.5 rounded-xl border border-emerald-300 bg-white hover:bg-emerald-50 text-emerald-800 text-sm font-bold inline-flex items-center gap-2 whitespace-nowrap disabled:opacity-40">
+                <Play className="w-4 h-4 fill-emerald-700" /> Chơi thử <span className="tabular-nums">({filteredList.length})</span>
+              </button>
               <div className="relative flex-1 min-w-[140px]">
                 <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
                 <input type="text" placeholder="Tìm câu hỏi…" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} aria-label="Tìm câu hỏi"
@@ -675,6 +684,13 @@ export const QuestionBankModal: React.FC<QuestionBankModalProps> = ({
                       {/* Action buttons */}
                       <div className="flex items-center gap-1.5 shrink-0">
                         <button
+                          onClick={() => setPlay({ list: filteredList, start: idx, title: selectedSubject === 'all' ? 'tất cả câu hỏi' : `môn ${selectedSubject}` })}
+                          className="p-1.5 text-slate-500 hover:text-emerald-700 hover:bg-emerald-50 rounded-lg cursor-pointer transition-colors"
+                          title="Chơi thử câu này (vai trò học sinh)" aria-label="Chơi thử câu này"
+                        >
+                          <Play className="w-4 h-4" />
+                        </button>
+                        <button
                           onClick={() => { setEditingQuestion(q); setIsCreatingNew(false); }}
                           className="p-1.5 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg cursor-pointer transition-colors"
                           title="Chỉnh sửa câu hỏi & hình ảnh"
@@ -838,6 +854,8 @@ export const QuestionBankModal: React.FC<QuestionBankModalProps> = ({
 
           </div>
         </div>
+
+        {play && <QuestionPlayer questions={play.list} startIndex={play.start} title={play.title} onClose={() => setPlay(null)} />}
 
         {/* Footer */}
         <div className="p-3.5 sm:p-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between">

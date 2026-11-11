@@ -22,6 +22,7 @@ import { loadQuizBank, saveQuizBank } from '../../utils/quizParser';
 import { handleAvatarImgError } from '../../utils/avatarConfig';
 import { CalledStudentModal } from './picker/CalledStudentModal';
 import { QuestionAudioButton } from './picker/QuestionAudioButton';
+import { shuffleAvoid, shuffleMatching } from '../../utils/shuffle';
 import { useQuizSelection } from './picker/QuizSetPicker';
 const FRAME_WIDTH = 155; // Width of each 35mm film frame
 const FRAME_GAP = 14; // Gap between frames
@@ -75,6 +76,7 @@ export const FilmReelView: React.FC = () => {
   const [filledBlankWords, setFilledBlankWords] = useState<Record<number, string>>({});
   const [shuffledSequence, setShuffledSequence] = useState<string[]>([]);
   const [shuffledRightMatching, setShuffledRightMatching] = useState<Array<{ id: number; text: string }>>([]);
+  const [leftMatchOrder, setLeftMatchOrder] = useState<number[]>([]); // thứ tự hiển thị cột A (đã xáo)
   const [selectedLeftMatchIndex, setSelectedLeftMatchIndex] = useState<number | null>(null);
   const [userMatches, setUserMatches] = useState<Record<number, number>>({}); // leftIdx -> rightId
 
@@ -248,19 +250,20 @@ export const FilmReelView: React.FC = () => {
 
     if (q.type === 'sequence_order' && q.sequenceItems) {
       // Xáo trộn các bước
-      const copy = [...q.sequenceItems];
-      const shuffled = copy.sort(() => Math.random() - 0.5);
-      setShuffledSequence(shuffled);
+      setShuffledSequence(shuffleAvoid(q.sequenceItems));
     } else {
       setShuffledSequence([]);
     }
 
     if (q.type === 'matching' && q.matchingPairs) {
-      // Xáo trộn Cột B
-      const rightItems = q.matchingPairs.map((pair, idx) => ({ id: idx, text: pair.right }));
-      setShuffledRightMatching(rightItems.sort(() => Math.random() - 0.5));
+      // Xáo trộn CẢ cột A và cột B (không để các cặp đúng nằm thẳng hàng)
+      const pairs = q.matchingPairs;
+      const order = shuffleMatching(pairs.length);
+      setLeftMatchOrder(order.left);
+      setShuffledRightMatching(order.right.map(idx => ({ id: idx, text: pairs[idx].right })));
     } else {
       setShuffledRightMatching([]);
+      setLeftMatchOrder([]);
     }
   };
 
@@ -1643,7 +1646,8 @@ export const FilmReelView: React.FC = () => {
                       <div className="text-[12px] font-black uppercase text-amber-400 pb-0.5 border-b border-slate-700">
                         📌 CỘT A:
                       </div>
-                      {(currentQuestion.matchingPairs || []).map((pair, leftIdx) => {
+                      {(leftMatchOrder.length === (currentQuestion.matchingPairs || []).length ? leftMatchOrder : (currentQuestion.matchingPairs || []).map((_, i) => i)).map((leftIdx, leftPos) => {
+                        const pair = (currentQuestion.matchingPairs || [])[leftIdx];
                         const isSelected = selectedLeftMatchIndex === leftIdx;
                         const matchedRightId = userMatches[leftIdx];
                         const matchedRightObj = shuffledRightMatching.find(r => r.id === matchedRightId);
@@ -1668,7 +1672,7 @@ export const FilmReelView: React.FC = () => {
                             <div className="flex items-center justify-between gap-1.5">
                               <div className="flex items-center gap-2">
                                 <span className="w-5 h-5 rounded-md bg-amber-500 text-slate-950 font-black text-[12px] flex items-center justify-center shrink-0">
-                                  A{leftIdx + 1}
+                                  A{leftPos + 1}
                                 </span>
                                 <span className="text-xs sm:text-sm font-bold text-slate-800 leading-snug">{pair.left}</span>
                               </div>

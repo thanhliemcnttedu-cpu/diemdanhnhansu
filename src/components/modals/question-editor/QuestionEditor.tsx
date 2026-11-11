@@ -5,6 +5,8 @@ import {
 } from 'lucide-react';
 import type { QuestionItem, QuestionType, QuestionMatchingPair } from '../../../types';
 import { ImageSlot, AudioSlot, imageFromClipboardEvent, imageFileToDataUrl } from './MediaInputs';
+import { QuestionPlayer } from './QuestionPlayer';
+import { Play } from 'lucide-react';
 
 /**
  * ✏️ TRÌNH SOẠN CÂU HỎI (thiết kế lại 11/2026, theo góc nhìn giáo viên):
@@ -113,6 +115,7 @@ export const QuestionEditor: React.FC<Props> = ({ question, isNew, subjects, onC
   const [error, setError] = useState<{ text: string; section?: string } | null>(null);
   const [note, setNote] = useState('');
   const [showPreviewMobile, setShowPreviewMobile] = useState(false);
+  const [tryQ, setTryQ] = useState<QuestionItem | null>(null); // Chơi thử câu đang soạn
   const textRef = useRef<HTMLTextAreaElement>(null);
   const [distractorDraft, setDistractorDraft] = useState('');
   const initialJson = useRef(JSON.stringify(question));
@@ -219,6 +222,15 @@ export const QuestionEditor: React.FC<Props> = ({ question, isNew, subjects, onC
       return;
     }
     onSave(r.question, addAnother);
+  };
+  const tryPlay = () => {
+    const r = finalize(q);
+    if (r.error || !r.question) {
+      setError({ text: `Chưa chơi thử được: ${r.error}`, section: r.section });
+      document.getElementById(`qe-${r.section || 'question'}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      return;
+    }
+    setTryQ(r.question);
   };
   const cancel = () => {
     if (JSON.stringify(q) !== initialJson.current && (q.questionText || q.image || (q.options || []).some(Boolean))) {
@@ -443,7 +455,8 @@ export const QuestionEditor: React.FC<Props> = ({ question, isNew, subjects, onC
 
           {/* Xem trước */}
           <aside className={`border-l border-slate-100 bg-slate-50 overflow-y-auto px-4 py-4 ${showPreviewMobile ? '' : 'hidden lg:block'}`} aria-label="Xem trước">
-            <div className="text-xs font-black uppercase tracking-wide text-slate-600 mb-2 flex items-center gap-1.5"><Eye className="w-4 h-4" /> Xem trước — học sinh sẽ thấy</div>
+            <div className="text-xs font-black uppercase tracking-wide text-slate-600 mb-2 flex items-center gap-1.5"><Eye className="w-4 h-4" /> Xem trước — đáp án đúng tô xanh</div>
+            <p className="text-xs text-slate-600 mb-2">Bấm <strong>Chơi thử</strong> để tự làm câu này như học sinh (thứ tự được xáo trộn như khi chơi).</p>
             <QuestionPreview q={q} />
           </aside>
         </div>
@@ -460,10 +473,12 @@ export const QuestionEditor: React.FC<Props> = ({ question, isNew, subjects, onC
             )}
           </div>
           <button type="button" onClick={cancel} className={`${smallBtn} h-10 border border-slate-300 bg-white hover:bg-slate-50 text-slate-700`}>Hủy</button>
+          <button type="button" onClick={tryPlay} className={`${smallBtn} h-10 border border-emerald-300 bg-white hover:bg-emerald-50 text-emerald-800`} title="Làm thử câu này như học sinh để kiểm tra"><Play className="w-4 h-4 fill-emerald-700" /> Chơi thử</button>
           <button type="button" onClick={() => save(true)} className={`${smallBtn} h-10 border border-indigo-300 bg-white hover:bg-indigo-50 text-indigo-800`} title="Lưu câu này rồi soạn ngay câu tiếp theo (giữ dạng câu và môn học)"><Plus className="w-4 h-4" /> Lưu & soạn câu tiếp</button>
           <button type="button" onClick={() => save(false)} className={`${smallBtn} h-10 px-5 bg-indigo-600 hover:bg-indigo-700 text-white`}><Save className="w-4 h-4" /> Lưu câu hỏi</button>
         </div>
       </div>
+      {tryQ && <QuestionPlayer questions={[tryQ]} title="câu đang soạn" onClose={() => setTryQ(null)} />}
     </div>
   );
 };
