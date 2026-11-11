@@ -2607,263 +2607,46 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
             </div>
           )}
 
-          {/* 🛡️ ADMIN UNIFIED TEACHER FILTER BAR - MẶC ĐỊNH THU GỌN HOÀN TOÀN, CHỈ KHI BẤM "XEM CHI TIẾT" MỚI MỞ DANH SÁCH GIÁO VIÊN */}
-          {isAdmin && (relevantTeachers.length > 0 || classes.length > 0) && (() => {
-            // Lọc danh sách giáo viên theo từ khóa tìm kiếm khi mở chi tiết
-            const filteredTeachers = relevantTeachers.filter(t => {
-              if (!teacherSearchQuery.trim()) return true;
-              const q = teacherSearchQuery.toLowerCase();
-              return (t.fullName && t.fullName.toLowerCase().includes(q)) ||
-                     (t.username && t.username.toLowerCase().includes(q));
-            });
-
-            // Giáo viên đang được chọn (nếu có)
-            const activeTeacherObj = relevantTeachers.find(t => t.username === adminTeacherFilter);
-
-            // Các lớp thuộc giáo viên đang chọn (nếu đang lọc theo GV)
-            const activeTeacherClasses = adminTeacherFilter === 'all'
-              ? allSchoolHomeroomClasses
-              : classes.filter(c => 
-                  (c.teacherUsername && c.teacherUsername.toLowerCase() === adminTeacherFilter.toLowerCase()) ||
-                  (activeTeacherObj && c.teacherName && c.teacherName.toLowerCase() === activeTeacherObj.fullName.toLowerCase())
-                );
-            const activeTeacherClassIds = new Set(activeTeacherClasses.map(c => c.id));
-            const activeTeacherStudentsCount = adminTeacherFilter === 'all'
-              ? totalSchoolStudentsCount
-              : students.filter(s => Boolean(s.classId && activeTeacherClassIds.has(s.classId))).length;
-
+          {/* TEACHER FILTER: one compact select (the old chip wall repeated what every class card already shows) */}
+          {isAdmin && relevantTeachers.length > 0 && (() => {
+            const teacherOptions = relevantTeachers
+              .map(t => {
+                const uname = (t.username || '').toLowerCase();
+                const fname = (t.fullName || '').toLowerCase();
+                const count = classes.filter(c =>
+                  (c.teacherUsername && c.teacherUsername.toLowerCase() === uname) ||
+                  (fname && c.teacherName && c.teacherName.toLowerCase() === fname)
+                ).length;
+                return { username: t.username, label: t.fullName || t.username, count };
+              })
+              .sort((x, y) => x.label.localeCompare(y.label, 'vi', { sensitivity: 'base' }));
             return (
-              <div className="p-2.5 sm:p-3 bg-gradient-to-r from-amber-50/80 via-indigo-50/70 to-purple-50/80 rounded-2xl border border-indigo-200/90 shadow-2xs space-y-2">
-                {/* Thanh điều khiển chính: Cực kỳ gọn gàng */}
-                <div className="flex flex-wrap items-center justify-between gap-2.5">
-                  <div className="flex items-center gap-2">
-                    <span className="p-1.5 bg-indigo-600 text-white rounded-lg shadow-2xs">
-                      <ShieldCheck className="w-3.5 h-3.5" />
-                    </span>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-black text-indigo-950 uppercase tracking-tight">
-                          QUẢN TRỊ VIÊN TOÀN TRƯỜNG • ĐỒNG BỘ DỮ LIỆU GIÁO VIÊN
-                        </span>
-                        <span className="text-[12px] font-bold px-2 py-0.2 rounded-full bg-indigo-100 text-indigo-800 border border-indigo-200">
-                          {relevantTeachers.length} GV
-                        </span>
-                      </div>
-                      <div className="text-[12px] text-slate-500 font-medium">
-                        {adminTeacherFilter === 'all' ? (
-                          <>
-                            Tổng số: <strong className="text-indigo-700">{allSchoolHomeroomClasses.length} lớp</strong> • <strong className="text-emerald-700">{totalSchoolStudentsCount} học sinh</strong>
-                          </>
-                        ) : (
-                          <>
-                            Giáo viên <strong className="text-indigo-900">{activeTeacherObj?.fullName || adminTeacherFilter}</strong>: <strong className="text-indigo-700">{activeTeacherClasses.length} lớp</strong> • <strong className="text-emerald-700">{activeTeacherStudentsCount} học sinh</strong>
-                            <span className="ml-2 font-bold text-indigo-900 bg-white/90 px-2 py-0.5 rounded-md border border-indigo-200">
-                              Toàn trường: {allSchoolHomeroomClasses.length} lớp • {totalSchoolStudentsCount} HS
-                            </span>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Cụm tương tác: Nút chọn Tất cả + Nút Xem chi tiết giáo viên */}
-                  <div className="flex items-center gap-2">
-                    {/* Nút Xem tất cả lớp học */}
-                    {adminTeacherFilter !== 'all' && (
-                      <button
-                        type="button"
-                        onClick={() => setAdminTeacherFilter('all')}
-                        className="px-2.5 py-1 text-xs font-bold text-slate-700 bg-white hover:bg-indigo-50 border border-indigo-200 rounded-xl shadow-2xs transition-all flex items-center gap-1"
-                      >
-                        <span>🌐</span>
-                        <span>Xem tất cả ({allSchoolHomeroomClasses.length} lớp • {totalSchoolStudentsCount} HS)</span>
-                      </button>
-                    )}
-
-                    {/* Nút Xem chi tiết danh sách giáo viên (Bật/Tắt) */}
-                    <button
-                      type="button"
-                      onClick={() => setIsTeacherFilterExpanded(!isTeacherFilterExpanded)}
-                      className={`px-3 py-1.5 text-xs font-bold rounded-xl shadow-2xs flex items-center gap-1.5 transition-all ${
-                        isTeacherFilterExpanded
-                          ? 'bg-indigo-600 text-white ring-2 ring-indigo-300'
-                          : 'bg-white text-indigo-900 hover:bg-indigo-50 border border-indigo-300'
-                      }`}
-                    >
-                      {isTeacherFilterExpanded ? (
-                        <>
-                          <ChevronUp className="w-3.5 h-3.5" />
-                          <span>Thu gọn danh sách</span>
-                        </>
-                      ) : (
-                        <>
-                          <ChevronDown className="w-3.5 h-3.5" />
-                          <span>Xem chi tiết giáo viên ({relevantTeachers.length})</span>
-                        </>
-                      )}
-                    </button>
-                  </div>
-                </div>
-
-                {/* KHU VỰC CHI TIẾT: CHỈ HIỂN THỊ KHI NGƯỜI DÙNG BẤM "XEM CHI TIẾT GIÁO VIÊN" */}
-                {isTeacherFilterExpanded && (() => {
-                  // Phân loại giáo viên trường và giáo viên vãng lai
-                  const isGuestTeacher = (t: any) => {
-                    const sch = (t.schoolName || '').toLowerCase();
-                    return t.tenantType === 'guest' || sch.includes('cá nhân') || sch.includes('tự do') || sch.includes('vãng lai');
-                  };
-
-                  const schoolTeachers = relevantTeachers.filter(t => !isGuestTeacher(t));
-                  const guestTeachers = relevantTeachers.filter(t => isGuestTeacher(t));
-
-                  // Lọc theo Tab đã chọn
-                  const tabFiltered = teacherGroupTab === 'school' 
-                    ? schoolTeachers 
-                    : teacherGroupTab === 'guest' 
-                      ? guestTeachers 
-                      : relevantTeachers;
-
-                  // Lọc tiếp theo từ khóa tìm kiếm
-                  const finalTeachers = tabFiltered.filter(t => {
-                    if (!teacherSearchQuery.trim()) return true;
-                    const q = teacherSearchQuery.toLowerCase();
-                    return (t.fullName && t.fullName.toLowerCase().includes(q)) ||
-                           (t.username && t.username.toLowerCase().includes(q));
-                  });
-
-                  return (
-                    <div className="pt-2 border-t border-indigo-200/60 space-y-2 animate-fadeIn">
-                      {/* Hàng Tab phân nhóm & Ô tìm kiếm nhanh */}
-                      <div className="flex flex-wrap items-center justify-between gap-2 bg-white/80 p-2 rounded-xl border border-indigo-100">
-                        {/* 3 Tabs phân nhóm */}
-                        <div className="flex items-center gap-1 bg-slate-100/90 p-1 rounded-xl">
-                          <button
-                            type="button"
-                            onClick={() => setTeacherGroupTab('all')}
-                            className={`px-2.5 py-1 text-xs font-bold rounded-lg transition-all flex items-center gap-1 ${
-                              teacherGroupTab === 'all'
-                                ? 'bg-white text-indigo-900 shadow-2xs font-black'
-                                : 'text-slate-600 hover:text-slate-900'
-                            }`}
-                          >
-                            <span>👥 Tất cả</span>
-                            <span className="text-[12px] px-1.5 py-0.2 rounded-full bg-slate-200 text-slate-700">
-                              {relevantTeachers.length}
-                            </span>
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={() => setTeacherGroupTab('school')}
-                            className={`px-2.5 py-1 text-xs font-bold rounded-lg transition-all flex items-center gap-1 ${
-                              teacherGroupTab === 'school'
-                                ? 'bg-indigo-600 text-white shadow-2xs font-black'
-                                : 'text-slate-600 hover:text-slate-900'
-                            }`}
-                          >
-                            <span>🏫 Thuộc nhà trường</span>
-                            <span className={`text-[12px] px-1.5 py-0.2 rounded-full ${teacherGroupTab === 'school' ? 'bg-indigo-700 text-white' : 'bg-slate-200 text-slate-700'}`}>
-                              {schoolTeachers.length}
-                            </span>
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={() => setTeacherGroupTab('guest')}
-                            className={`px-2.5 py-1 text-xs font-bold rounded-lg transition-all flex items-center gap-1 ${
-                              teacherGroupTab === 'guest'
-                                ? 'bg-emerald-700 text-white shadow-2xs font-black'
-                                : 'text-slate-600 hover:text-slate-900'
-                            }`}
-                          >
-                            <span>🌱 Giáo viên vãng lai</span>
-                            <span className={`text-[12px] px-1.5 py-0.2 rounded-full ${teacherGroupTab === 'guest' ? 'bg-emerald-700 text-white' : 'bg-slate-200 text-slate-700'}`}>
-                              {guestTeachers.length}
-                            </span>
-                          </button>
-                        </div>
-
-                        {/* Ô tìm kiếm nhanh */}
-                        <div className="relative">
-                          <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
-                          <input
-                            type="text"
-                            value={teacherSearchQuery}
-                            onChange={(e) => setTeacherSearchQuery(e.target.value)}
-                            placeholder="Tìm theo tên hoặc tài khoản..."
-                            className="pl-7 pr-7 py-1 text-xs bg-white rounded-xl border border-indigo-200 focus:outline-hidden focus:ring-2 focus:ring-indigo-400 w-44 sm:w-56 placeholder:text-slate-400 font-medium shadow-2xs"
-                          />
-                          {teacherSearchQuery && (
-                            <button
-                              type="button"
-                              onClick={() => setTeacherSearchQuery('')}
-                              className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs"
-                            >
-                              ✕
-                            </button>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Vùng hiển thị toàn bộ giáo viên: khung cuộn trang nhã không làm dài màn hình */}
-                      <div className="max-h-56 overflow-y-auto p-2 bg-white/90 rounded-xl border border-indigo-100 flex flex-wrap gap-1.5 scrollbar-thin">
-                        {/* Nút Tất cả lớp học */}
-                        <button
-                          type="button"
-                          onClick={() => setAdminTeacherFilter('all')}
-                          className={`px-3 py-1 rounded-xl text-xs font-bold uppercase transition-all flex items-center gap-1.5 whitespace-nowrap shrink-0 shadow-2xs ${
-                            adminTeacherFilter === 'all'
-                              ? 'bg-indigo-600 text-white ring-2 ring-indigo-300'
-                              : 'bg-white text-slate-700 hover:bg-indigo-50 border border-slate-200'
-                          }`}
-                        >
-                          <span>🌟</span>
-                          <span>Tất cả ({allSchoolHomeroomClasses.length} lớp • {totalSchoolStudentsCount} HS)</span>
-                        </button>
-
-                        {/* Danh sách các giáo viên sau khi phân nhóm và tìm kiếm */}
-                        {finalTeachers.map(t => {
-                          const tClasses = classes.filter(c => 
-                            (c.teacherUsername && c.teacherUsername.toLowerCase() === t.username.toLowerCase()) ||
-                            (c.teacherName && c.teacherName.toLowerCase() === t.fullName.toLowerCase())
-                          );
-                          const tClassIds = new Set(tClasses.map(c => c.id));
-                          const tStudentsCount = students.filter(s => Boolean(s.classId && tClassIds.has(s.classId))).length;
-                          const isSelected = adminTeacherFilter === t.username;
-                          const isGuest = isGuestTeacher(t);
-
-                          return (
-                            <button
-                              key={t.id || t.username}
-                              type="button"
-                              onClick={() => setAdminTeacherFilter(isSelected ? 'all' : t.username)}
-                              className={`px-2.5 py-1 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap shrink-0 shadow-2xs ${
-                                isSelected
-                                  ? 'bg-indigo-600 text-white ring-2 ring-indigo-300 scale-102'
-                                  : tClasses.length > 0
-                                    ? 'bg-indigo-50/70 text-indigo-950 hover:bg-indigo-100 border border-indigo-200 font-extrabold'
-                                    : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200'
-                              }`}
-                              title={`Tài khoản: ${t.username} • Đơn vị: ${t.schoolName || 'Chưa rõ'} • Số lớp: ${tClasses.length} • Sĩ số: ${tStudentsCount} học sinh`}
-                            >
-                              <span className="text-[12px]">{isSelected ? '✓' : isGuest ? '🌱' : '🏫'}</span>
-                              <span>{t.fullName}</span>
-                              <span className={`text-[12px] px-1.5 py-0.2 rounded-md ${isSelected ? 'bg-indigo-700 text-white' : 'bg-slate-100 text-slate-600'}`}>
-                                {tClasses.length} lớp{tStudentsCount > 0 ? ` • ${tStudentsCount} HS` : ''}
-                              </span>
-                            </button>
-                          );
-                        })}
-
-                        {finalTeachers.length === 0 && (
-                          <div className="text-xs text-slate-500 italic py-2 px-3">
-                            Không có giáo viên nào trong danh mục này khớp với "{teacherSearchQuery}"
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })()}
+              <div className="p-2.5 sm:p-3 bg-white rounded-2xl border border-indigo-200 shadow-2xs flex flex-wrap items-center gap-2">
+                <label htmlFor="class-teacher-filter" className="text-xs font-black text-indigo-950 uppercase flex items-center gap-1.5">
+                  <Users2 className="w-4 h-4 text-indigo-700" />
+                  <span>Lọc theo giáo viên</span>
+                </label>
+                <select
+                  id="class-teacher-filter"
+                  value={adminTeacherFilter}
+                  onChange={(e) => setAdminTeacherFilter(e.target.value)}
+                  className="text-xs font-bold text-slate-800 bg-white border border-slate-300 rounded-xl px-2.5 py-2 outline-none cursor-pointer hover:bg-slate-50 focus:ring-2 focus:ring-indigo-500 min-w-[240px] max-w-full"
+                >
+                  <option value="all">Tất cả giáo viên ({teacherOptions.length})</option>
+                  {teacherOptions.map(t => (
+                    <option key={t.username} value={t.username}>{t.label} — {t.count} lớp</option>
+                  ))}
+                </select>
+                {adminTeacherFilter !== 'all' && (
+                  <button
+                    type="button"
+                    onClick={() => setAdminTeacherFilter('all')}
+                    className="px-2.5 py-2 rounded-xl text-xs font-bold text-slate-800 bg-white border border-slate-300 hover:bg-slate-50"
+                  >
+                    Bỏ lọc giáo viên
+                  </button>
+                )}
+                <span className="text-[12px] font-medium text-slate-600">Cũng có thể gõ tên giáo viên vào ô tìm ở trên.</span>
               </div>
             );
           })()}
@@ -7680,7 +7463,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                       </td>
                     </tr>
                   ) : (
-                    statsHomeroomClasses.map((c, idx) => {
+                    [...statsHomeroomClasses].sort((a, b) => (getClassGradeNumber(a) - getClassGradeNumber(b)) || (a.name || "").trim().localeCompare((b.name || "").trim(), "vi", { numeric: true, sensitivity: "base" })).map((c, idx) => {
                       const num = students.filter(s => s.classId === c.id).length;
                       return (
                         <tr key={c.id} className="hover:bg-slate-50/50 transition-colors">

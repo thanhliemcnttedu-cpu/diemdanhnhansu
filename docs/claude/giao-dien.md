@@ -24,3 +24,4 @@
 - Thanh công cụ hàng 1: ô tìm, 3 ô chọn lọc nhanh (Phân hiệu, Điểm trường, Khối — chỉ tài khoản phạm vi trường/siêu quản trị), ô chọn sắp xếp + nút tăng/giảm. Hàng 2: Tích chọn tất cả + nút thao tác đồng loạt (bên trái); Lọc chi tiết, Bỏ lọc, Nhập lớp từ Excel, Thêm lớp học mới, menu **Thao tác khác** (Phân hiệu & điểm trường, Tải mẫu Excel lớp, Xóa hết lớp) bên phải.
 - Ba khối lọc cũ (lọc theo trường của siêu quản trị, nút lọc dạng viên có số lớp, thanh giáo viên) giữ nguyên mã nhưng nằm trong bảng **Lọc chi tiết**, mặc định đóng (`showClassFilterPanel`); nút hiện số điều kiện đang áp (`classActiveFilterCount`).
 - Không thêm lại thẻ số liệu gradient đậm hay thẻ tiêu đề "Danh sách không gian lớp học".
+- Lọc theo giáo viên trong bảng Lọc chi tiết là **một ô chọn** (`#class-teacher-filter`, tên A–Z kèm số lớp), thay bảng nút tên giáo viên cũ (trùng với thông tin trên thẻ lớp). Bảng tổng hợp sĩ số luôn xếp theo khối rồi tên lớp (so số tự nhiên: 1A2 trước 1A10).
