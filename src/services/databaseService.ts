@@ -387,6 +387,17 @@ export const databaseService = {
     };
     const isAdminScope = !selectedRoleScope || selectedRoleScope === 'admin';
     let driveDbInitialized = false;
+    // Kết quả Drive khi không đăng nhập được qua Drive (Quản trị thử tiếp nguồn dự phòng) — để báo ĐÚNG nguyên nhân
+    let driveFail: { status: string; message?: string } | null = null;
+    const wrongCredMessage = () => {
+      if (driveFail?.status === 'not_initialized') {
+        return 'Thư mục dùng chung đã kết nối nhưng cơ sở dữ liệu nhà trường CHƯA CÓ TÀI KHOẢN nào (tệp csdl_truong.json trống hoặc bị mất, hoặc khôi phục sao lưu chưa ghi được tài khoản). Quản trị tối cao đăng nhập bằng mật khẩu khởi tạo mặc định để khởi tạo lại / khôi phục tệp sao lưu.';
+      }
+      if (driveFail?.status === 'unreachable') {
+        return `Không kiểm tra được tài khoản trên Google Drive: ${driveFail.message || 'Apps Script không trả lời'}. Kiểm tra link Apps Script (/exec) đang kết nối, quyền truy cập "Bất kỳ ai" và phiên bản Apps Script (mục Cài đặt Apps Script).`;
+      }
+      return 'Bạn đã nhập sai tài khoản mật khẩu.';
+    };
     try {
       driveDbInitialized = Boolean(JSON.parse(localStorage.getItem('lhhp_drive_schools_cache') || 'null')?.initialized);
     } catch (_) {}
@@ -404,6 +415,7 @@ export const databaseService = {
       if (driveRes.status === 'invalid' || driveRes.status === 'disabled') {
         return { success: false, message: driveRes.message };
       }
+      driveFail = { status: driveRes.status, message: driveRes.message };
       if (driveRes.status === 'not_initialized') {
         driveDbInitialized = false;
         if (!isAdminScope) {
@@ -488,7 +500,7 @@ export const databaseService = {
               message: 'Đăng nhập thành công qua Supabase Cloud!'
             };
           } else {
-            return { success: false, message: 'Bạn đã nhập sai tài khoản mật khẩu.' };
+            return { success: false, message: wrongCredMessage() };
           }
         }
       } catch (err) {
@@ -637,10 +649,10 @@ export const databaseService = {
         localStorage.setItem(LOCAL_SESSION_KEY, Date.now().toString());
         return { success: true, user: authedUser, message: 'Đăng nhập thành công (chế độ dự phòng offline).' };
       } else {
-        return { success: false, message: 'Bạn đã nhập sai tài khoản mật khẩu.' };
+        return { success: false, message: wrongCredMessage() };
       }
     }
-    return { success: false, message: 'Bạn đã nhập sai tài khoản mật khẩu.' };
+    return { success: false, message: wrongCredMessage() };
   },
 
   isSessionValid(): boolean {
