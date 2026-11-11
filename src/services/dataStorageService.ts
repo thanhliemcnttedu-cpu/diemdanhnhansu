@@ -9,7 +9,67 @@
  * Khuyến nghị lưu trên Ổ D:\ hoặc E:\ hoặc F:\ để chống mất mát dữ liệu và tự động ghi đè 1 file duy nhất.
  */
 
+import { isViewOnly } from '../utils/viewOnlyMode';
+
 export const STORAGE_LOCATION_KEY = 'lhhp_data_storage_path_config_v2';
+/** Bản web (không có máy chủ / Electron): trình duyệt chỉ ghi được vào thư mục người dùng TỰ CHỌN qua hộp chọn thư mục */
+const FS_DB = 'lhhp_local_folder';
+const FS_STORE = 'handles';
+const FS_KEY = 'role_data_folder';
+export const LOCAL_FOLDER_EVENT = 'lhhp:local-folder-status';
+
+export interface LocalFolderStatus {
+  supported: boolean;
+  /** Đã chọn thư mục */
+  picked: boolean;
+  folderName: string;
+  /** Trình duyệt đã quên quyền ghi (sau khi mở lại) → cần bấm cho phép */
+  needsPermission: boolean;
+  fileName?: string;
+  sizeKb?: number;
+  savedAt?: string;
+  error?: string;
+}
+
+function fsOpenDb(): Promise<IDBDatabase | null> {
+  return new Promise(resolve => {
+    try {
+      const req = indexedDB.open(FS_DB, 1);
+      req.onupgradeneeded = () => { req.result.createObjectStore(FS_STORE); };
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => resolve(null);
+    } catch (_) { resolve(null); }
+  });
+}
+async function fsGetHandle(): Promise<any> {
+  const db = await fsOpenDb();
+  if (!db) return null;
+  return new Promise(resolve => {
+    try {
+      const r = db.transaction(FS_STORE, 'readonly').objectStore(FS_STORE).get(FS_KEY);
+      r.onsuccess = () => resolve(r.result || null);
+      r.onerror = () => resolve(null);
+    } catch (_) { resolve(null); }
+  });
+}
+async function fsSetHandle(handle: any): Promise<void> {
+  const db = await fsOpenDb();
+  if (!db) return;
+  await new Promise<void>(resolve => {
+    try {
+      const tx = db.transaction(FS_STORE, 'readwrite');
+      if (handle) tx.objectStore(FS_STORE).put(handle, FS_KEY); else tx.objectStore(FS_STORE).delete(FS_KEY);
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => resolve();
+    } catch (_) { resolve(); }
+  });
+}
+/** Có máy chủ Express hoặc Electron ghi tệp theo đường dẫn không (bản web tĩnh thì không) */
+function hasNativeWriter(): boolean {
+  if (typeof window === 'undefined') return false;
+  if ((window as any).electronAPI?.saveRoleFile) return true;
+  return (window as any).__lhhpApiAvailable === true;
+}
 export const STANDARD_DATA_FILENAME = 'du_lieu_lop_hoc_hanh_phuc.json';
 
 export interface StorageConfig {
@@ -21,6 +81,8 @@ export interface StorageConfig {
   lastCheckedTime?: string;
   lastSavedFileName?: string;
   lastSavedAt?: string;
+  /** Bản web: tên thư mục đã chọn bằng hộp chọn thư mục của trình duyệt */
+  browserFolderName?: string;
 }
 
 export function sanitizeSlug(input: string): string {
@@ -148,7 +210,8 @@ class DataStorageService {
           currentFileSizeKb: parsed.currentFileSizeKb || 58.7,
           lastCheckedTime: parsed.lastCheckedTime,
           lastSavedFileName: parsed.lastSavedFileName,
-          lastSavedAt: parsed.lastSavedAt
+          lastSavedAt: parsed.lastSavedAt,
+          browserFolderName: parsed.browserFolderName
         };
       }
     } catch (_) {}
@@ -181,8 +244,8 @@ class DataStorageService {
       localStorage.setItem(STORAGE_LOCATION_KEY, JSON.stringify(this.config));
     } catch (_) {}
 
-    // Đồng bộ lên server
-    try {
+    // Đồng bộ lên server (bản web tĩnh không có /api → bỏ qua)
+    if (typeof window !== 'undefined' && (window as any).__lhhpApiAvailable === true) try {
       fetch('/api/storage/save-location', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -191,6 +254,104 @@ class DataStorageService {
     } catch (_) {}
 
     return this.getConfig();
+  }
+
+  // ───────────── BẢN WEB: ghi tệp THẬT vào thư mục người dùng chọn (File System Access API — Chrome / Edge) ─────────────
+  private localStatus: LocalFolderStatus = { supported: false, picked: false, folderName: '', needsPermission: false };
+
+  /** Bản web tĩnh (không máy chủ, không Electron): chỉ ghi được qua thư mục đã chọn trong trình duyệt */
+  public isBrowserFolderMode(): boolean { return !hasNativeWriter(); }
+  public isFolderPickerSupported(): boolean { return typeof window !== 'undefined' && 'showDirectoryPicker' in window; }
+  public getLocalFolderStatus(): LocalFolderStatus { return { ...this.localStatus }; }
+
+  private setLocalStatus(patch: Partial<LocalFolderStatus>) {
+    this.localStatus = { ...this.localStatus, ...patch, supported: this.isFolderPickerSupported() };
+    try { window.dispatchEvent(new CustomEvent(LOCAL_FOLDER_EVENT, { detail: this.getLocalFolderStatus() })); } catch (_) { /* ignore */ }
+  }
+
+  /** Đọc trạng thái thư mục đã chọn (không hỏi quyền) */
+  public async refreshLocalFolderStatus(fileName?: string): Promise<LocalFolderStatus> {
+    if (!this.isFolderPickerSupported()) { this.setLocalStatus({ picked: false, folderName: '', needsPermission: false }); return this.getLocalFolderStatus(); }
+    const handle = await fsGetHandle();
+    if (!handle) { this.setLocalStatus({ picked: false, folderName: '', needsPermission: false, sizeKb: undefined }); return this.getLocalFolderStatus(); }
+    let perm = 'granted';
+    try { if (handle.queryPermission) perm = await handle.queryPermission({ mode: 'readwrite' }); } catch (_) { perm = 'prompt'; }
+    const patch: Partial<LocalFolderStatus> = { picked: true, folderName: handle.name || '', needsPermission: perm !== 'granted' };
+    if (perm === 'granted' && fileName) {
+      try {
+        const fh = await handle.getFileHandle(fileName);
+        const f = await fh.getFile();
+        patch.fileName = fileName;
+        patch.sizeKb = Math.round(f.size / 102.4) / 10;
+        patch.savedAt = new Date(f.lastModified).toLocaleString('vi-VN');
+      } catch (_) { patch.fileName = fileName; patch.sizeKb = undefined; patch.savedAt = undefined; }
+    }
+    this.setLocalStatus(patch);
+    return this.getLocalFolderStatus();
+  }
+
+  /** Mở hộp chọn thư mục của trình duyệt (phải gọi từ thao tác bấm nút) */
+  public async pickLocalFolder(): Promise<{ ok: boolean; message: string }> {
+    if (!this.isFolderPickerSupported()) {
+      return { ok: false, message: 'Trình duyệt này không cho phần mềm ghi tệp vào thư mục máy tính. Hãy dùng Chrome hoặc Edge trên máy tính, hoặc bấm "Tải tệp về máy".' };
+    }
+    try {
+      const handle = await (window as any).showDirectoryPicker({ mode: 'readwrite', id: 'lhhp-data' });
+      if (handle.requestPermission && (await handle.requestPermission({ mode: 'readwrite' })) !== 'granted') {
+        return { ok: false, message: 'Chưa được phép ghi vào thư mục này. Hãy bấm "Cho phép" khi trình duyệt hỏi.' };
+      }
+      await fsSetHandle(handle);
+      this.saveConfig({ browserFolderName: handle.name || '' });
+      this.setLocalStatus({ picked: true, folderName: handle.name || '', needsPermission: false, fileName: undefined, sizeKb: undefined, savedAt: undefined, error: undefined });
+      return { ok: true, message: `Đã chọn thư mục "${handle.name}".` };
+    } catch (err: any) {
+      if (err?.name === 'AbortError') return { ok: false, message: '' };
+      return { ok: false, message: 'Không mở được thư mục này (trình duyệt chặn thư mục hệ thống và thư mục gốc của ổ đĩa). Hãy tạo / chọn một thư mục thường ở ổ D hoặc E.' };
+    }
+  }
+
+  /** Xin lại quyền ghi (trình duyệt quên quyền sau khi mở lại) — gọi từ thao tác bấm nút */
+  public async requestLocalPermission(): Promise<boolean> {
+    const handle = await fsGetHandle();
+    if (!handle) return false;
+    try {
+      const perm = handle.requestPermission ? await handle.requestPermission({ mode: 'readwrite' }) : 'granted';
+      this.setLocalStatus({ needsPermission: perm !== 'granted' });
+      return perm === 'granted';
+    } catch (_) { return false; }
+  }
+
+  public async forgetLocalFolder(): Promise<void> {
+    await fsSetHandle(null);
+    this.saveConfig({ browserFolderName: '' });
+    this.setLocalStatus({ picked: false, folderName: '', needsPermission: false, fileName: undefined, sizeKb: undefined, savedAt: undefined, error: undefined });
+  }
+
+  /** Ghi tệp thật vào thư mục đã chọn. Không hỏi quyền (để dùng được trong tự động lưu). */
+  private async writeToLocalFolder(fileName: string, data: any): Promise<{ success: boolean; message: string; sizeKb?: number; folderName?: string; code?: 'UNSUPPORTED' | 'NO_FOLDER' | 'NEED_PERMISSION' | 'WRITE_ERROR' }> {
+    if (!this.isFolderPickerSupported()) return { success: false, code: 'UNSUPPORTED', message: 'Trình duyệt này không ghi được tệp vào thư mục máy tính (cần Chrome hoặc Edge trên máy tính).' };
+    const handle = await fsGetHandle();
+    if (!handle) return { success: false, code: 'NO_FOLDER', message: 'Chưa chọn thư mục trên máy tính.' };
+    try {
+      const perm = handle.queryPermission ? await handle.queryPermission({ mode: 'readwrite' }) : 'granted';
+      if (perm !== 'granted') {
+        this.setLocalStatus({ picked: true, folderName: handle.name || '', needsPermission: true });
+        return { success: false, code: 'NEED_PERMISSION', folderName: handle.name, message: 'Trình duyệt cần được cho phép ghi lại vào thư mục (bấm "Cho phép ghi vào thư mục").' };
+      }
+      const text = JSON.stringify(data, null, 2);
+      const fh = await handle.getFileHandle(fileName, { create: true });
+      const w = await fh.createWritable();
+      await w.write(text);
+      await w.close();
+      const sizeKb = Math.round(new Blob([text]).size / 102.4) / 10;
+      const savedAt = new Date().toLocaleString('vi-VN');
+      this.setLocalStatus({ picked: true, folderName: handle.name || '', needsPermission: false, fileName, sizeKb, savedAt, error: undefined });
+      return { success: true, sizeKb, folderName: handle.name, message: `Đã ghi tệp ${fileName} vào thư mục "${handle.name}".` };
+    } catch (err: any) {
+      const message = `Không ghi được tệp vào thư mục "${handle.name || ''}": ${err?.message || 'lỗi không rõ'}. Hãy chọn lại thư mục.`;
+      this.setLocalStatus({ error: message });
+      return { success: false, code: 'WRITE_ERROR', message };
+    }
   }
 
   /**
@@ -202,11 +363,24 @@ class DataStorageService {
     teacherRole?: 'homeroom' | 'subject',
     activeClassName?: string,
     targetFolderOverride?: string
-  ): Promise<{ success: boolean; message: string; fileName: string; filePath?: string; sizeKb?: number }> {
+  ): Promise<{ success: boolean; message: string; fileName: string; filePath?: string; sizeKb?: number; code?: string }> {
     // 🛡️ Luôn nạp cấu hình mới nhất từ bộ nhớ để đảm bảo lưu đúng thư mục ổ D/E/F người dùng đã chọn
     this.config = this.loadConfig();
     const fileName = getRoleScopedDataFileName(currentUser, teacherRole, activeClassName);
     const targetFolder = targetFolderOverride || this.config.customPath || `${this.config.selectedDrive}\\DuLieu_LopHocHanhPhuc`;
+
+    // 👁️ Chế độ chỉ xem: không ghi tệp của giáo viên đang xem ra máy Quản trị
+    if (isViewOnly()) return { success: false, message: 'Đang ở chế độ chỉ xem — không ghi tệp.', fileName, code: 'VIEW_ONLY' };
+
+    // 🌐 BẢN WEB (Vercel — không máy chủ, không Electron): trình duyệt KHÔNG ghi được theo đường dẫn kiểu "D:\…".
+    // Chỉ ghi được vào thư mục người dùng đã chọn bằng hộp chọn thư mục → ghi THẬT, không báo thành công giả.
+    if (!hasNativeWriter()) {
+      const r = await this.writeToLocalFolder(fileName, data);
+      if (r.success) {
+        this.saveConfig({ lastSavedFileName: fileName, lastSavedAt: new Date().toLocaleString('vi-VN'), currentFileSizeKb: r.sizeKb, browserFolderName: r.folderName });
+      }
+      return { success: r.success, message: r.message, fileName, filePath: r.folderName ? `${r.folderName}\\${fileName}` : undefined, sizeKb: r.sizeKb, code: r.code };
+    }
 
     // ⚡ 0. IPC NỘI BỘ ELECTRON: Ghi thẳng tệp vào thư mục máy tính độc lập (không cần server)
     if (typeof window !== 'undefined' && (window as any).electronAPI?.saveRoleFile) {
@@ -297,7 +471,7 @@ class DataStorageService {
 
     this.autoSaveDebounceTimer = setTimeout(() => {
       this.writeRoleDataToFile(data, currentUser, teacherRole, activeClassName).catch(() => {});
-    }, 600);
+    }, hasNativeWriter() ? 600 : 3000); // bản web ghi cả tệp vào thư mục máy → gom 3 giây
   }
 
   /**
@@ -362,17 +536,9 @@ class DataStorageService {
     } catch (_) {}
 
     return {
-      success: true,
-      foundLocations: [
-        {
-          drive: 'D:',
-          path: 'D:\\DuLieu_LopHocHanhPhuc',
-          fileName: STANDARD_DATA_FILENAME,
-          sizeKb: 58.7,
-          modifiedAt: new Date().toLocaleDateString('vi-VN')
-        }
-      ],
-      message: 'Đã tìm thấy tệp dữ liệu an toàn trên Ổ D:!'
+      success: false,
+      foundLocations: [],
+      message: 'Bản web không tự quét được ổ đĩa. Hãy bấm "Chọn tệp .json" và trỏ tới tệp dữ liệu.'
     };
   }
 }

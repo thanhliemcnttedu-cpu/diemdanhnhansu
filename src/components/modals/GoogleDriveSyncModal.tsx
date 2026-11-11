@@ -4,10 +4,10 @@ import {
   DownloadCloud, ShieldAlert, CheckCircle2, AlertTriangle, 
   HelpCircle, ExternalLink, School, Settings, Database, ArrowRight,
   Clock, X, Sparkles, Play, HardDrive, History, CheckCheck, Users,
-  Code2, Eye, EyeOff
+  Code2, Eye, EyeOff, Loader2, Wand2
 } from 'lucide-react';
 import { googleDriveService } from '../../services/googleDriveService';
-import { appsScriptSetupService } from '../../services/appsScriptSetupService';
+import { appsScriptSetupService, versionLabel, DRIVE_CONNECTION_EVENT, type DriveConnection } from '../../services/appsScriptSetupService';
 import { schoolDriveDbService } from '../../services/schoolDriveDbService';
 import { GoogleDriveConfig, DriveFolderHistoryItem, SchoolWideAggregationReport } from '../../types/driveSync';
 import { useClassroom } from '../../context/ClassroomContext';
@@ -53,6 +53,16 @@ export const GoogleDriveSyncModal: React.FC<GoogleDriveSyncModalProps> = ({ isOp
   const [bghReport, setBghReport] = useState<SchoolWideAggregationReport | null>(null);
   const [connectionTextInput, setConnectionTextInput] = useState('');
   const [isConnectionCopied, setIsConnectionCopied] = useState(false);
+  // Bố cục 2 cột + thẻ (vừa một màn hình, không phải cuộn)
+  const [tab, setTab] = useState<'connect' | 'sync' | 'advanced' | 'report'>('connect');
+  // 🔌 Trạng thái kết nối CSDL nhà trường + phiên bản Apps Script (kiểm tra mỗi lần mở hộp)
+  const [conn, setConn] = useState<DriveConnection | null>(appsScriptSetupService.getLastConnection());
+  useEffect(() => {
+    const h = (e: Event) => setConn((e as CustomEvent).detail as DriveConnection);
+    window.addEventListener(DRIVE_CONNECTION_EVENT, h);
+    return () => window.removeEventListener(DRIVE_CONNECTION_EVENT, h);
+  }, []);
+  const recheckConnection = () => { appsScriptSetupService.checkConnection(true).then(setConn).catch(() => { /* ignore */ }); };
 
   const isExecutive = isAdmin || isBgh || isSchoolAdmin;
   const activeClass = classes.find(c => c.id === activeClassId) || classes[0];
@@ -72,6 +82,8 @@ export const GoogleDriveSyncModal: React.FC<GoogleDriveSyncModalProps> = ({ isOp
       setActionMessage(null);
       setTestResult(null);
       setIsEditingFolder(!cfg.folderId);
+      setTab('connect');
+      recheckConnection();
 
       // Nếu là BGH/Admin, tự động tải báo cáo tổng hợp
       if (isExecutive && cfg.scriptUrl) {
@@ -316,713 +328,355 @@ export const GoogleDriveSyncModal: React.FC<GoogleDriveSyncModalProps> = ({ isOp
     }
   };
 
-  const currentDateStr = new Date().toLocaleDateString('vi-VN');
+  const isSetupAdmin = isAdmin || isSchoolAdmin;
+  // Lưu / kiểm tra / dán thông tin kết nối xong → kiểm tra lại trạng thái kết nối ngay
+  const saveAndRecheck = () => { handleSaveConfig(); setTimeout(recheckConnection, 300); };
+  const testAndRecheck = async () => { await handleTestConnection(); recheckConnection(); };
+  const applyTextAndRecheck = async () => { await handleApplyConnectionText(); recheckConnection(); };
+
+  const cardCls = 'rounded-2xl border border-slate-200 bg-white p-3 space-y-2';
+  const titleCls = 'text-sm font-black text-slate-900 flex items-center gap-2';
+  const inputCls = 'w-full h-10 px-3 rounded-xl border border-slate-300 bg-white font-mono text-sm text-slate-800 focus:outline-none focus:border-emerald-600';
+  const btnGreen = 'no-hover-fx h-10 px-4 rounded-xl bg-emerald-700 hover:bg-emerald-800 disabled:opacity-60 text-white text-sm font-black inline-flex items-center justify-center gap-2 whitespace-nowrap cursor-pointer';
+  const btnIndigo = 'no-hover-fx h-10 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white text-sm font-black inline-flex items-center justify-center gap-2 whitespace-nowrap cursor-pointer';
+  const btnLight = 'no-hover-fx h-10 px-3.5 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 disabled:opacity-60 text-slate-800 text-sm font-bold inline-flex items-center justify-center gap-2 whitespace-nowrap cursor-pointer';
+
+  const connState = conn?.state || 'none';
+  const connTone = connState === 'connected' ? 'bg-emerald-50 border-emerald-300 text-emerald-950'
+    : connState === 'unreachable' ? 'bg-rose-50 border-rose-300 text-rose-950'
+      : connState === 'no_db' ? 'bg-amber-50 border-amber-300 text-amber-950'
+        : 'bg-slate-100 border-slate-200 text-slate-800';
+  const oldFolders = Array.isArray(config.folderHistory) ? config.folderHistory.filter(h => h.id !== config.folderId) : [];
+  const tabs: Array<{ id: 'connect' | 'sync' | 'advanced' | 'report'; label: string }> = [
+    { id: 'connect', label: 'Kết nối' },
+    { id: 'sync', label: 'Đồng bộ dữ liệu' },
+    { id: 'advanced', label: 'Nâng cao' },
+    ...(isExecutive ? [{ id: 'report' as const, label: 'Tổng hợp toàn trường' }] : []),
+  ];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-sky-900/20 backdrop-blur-xs animate-in fade-in duration-200">
-      <div className="relative w-full max-w-2xl bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[92vh]">
-        
-        {/* Header chuẩn Ảnh 6 & 7 */}
-        <div className="bg-gradient-to-r from-teal-700 via-emerald-700 to-teal-700 text-white px-5 py-3.5 flex items-center justify-between shrink-0 shadow-sm">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-white/20 text-white flex items-center justify-center shadow-md shrink-0">
-              <Cloud className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="px-2 py-0.2 rounded bg-white text-emerald-900 text-[12px] font-black uppercase tracking-wider">
-                  GOOGLE DRIVE CLOUD
-                </span>
-                <span className="text-[12px] text-white font-medium">
-                  {isExecutive ? 'Quản trị / Ban Giám Hiệu' : `Giáo viên: ${currentUser?.fullName || 'Giáo viên Chủ nhiệm'}`}
-                </span>
-              </div>
-              <h2 className="text-sm sm:text-base font-black tracking-wide uppercase mt-0.5">
-                KẾT NỐI & ĐỒNG BỘ GOOGLE DRIVE {isExecutive ? 'DÙNG CHUNG NHÀ TRƯỜNG' : 'CÁ NHÂN'}
-              </h2>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-sky-900/20 backdrop-blur-xs animate-in fade-in duration-200" role="dialog" aria-modal="true" aria-labelledby="drive-modal-title">
+      <div className="relative w-full max-w-6xl bg-slate-50 rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[96vh]">
+        {/* Đầu hộp: tên + thẻ + đóng (1 dòng) */}
+        <div className="bg-white border-b border-slate-200 px-4 py-2.5 flex flex-wrap items-center gap-x-3 gap-y-2 shrink-0">
+          <div className="flex items-center gap-2.5 min-w-0 flex-1">
+            <span className="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center shrink-0"><Cloud className="w-5 h-5" /></span>
+            <div className="min-w-0">
+              <h2 id="drive-modal-title" className="text-base font-black text-slate-900 truncate">Google Drive của nhà trường</h2>
+              <p className="text-xs text-slate-600 truncate">
+                {isExecutive ? 'Quản trị / Ban giám hiệu' : (currentUser?.fullName || 'Chưa đăng nhập')} • tệp <strong className="font-mono text-indigo-700">{classSpecificFileName}</strong>
+              </p>
             </div>
           </div>
-          <div className="flex items-center gap-3">
-            <span className="text-[12px] font-mono font-bold text-white bg-white/10 px-2.5 py-1 rounded-lg hidden sm:inline">
-              {currentDateStr}
-            </span>
-            <button 
-              onClick={onClose}
-              className="p-1.5 rounded-lg text-white hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
-              title="Đóng modal"
-            >
-              <X className="w-5 h-5" />
-            </button>
+          <div className="flex gap-1 bg-slate-200/70 p-1 rounded-xl order-3 w-full lg:order-none lg:w-auto overflow-x-auto" role="tablist" aria-label="Nội dung">
+            {tabs.map(t => (
+              <button key={t.id} type="button" role="tab" aria-selected={tab === t.id} onClick={() => setTab(t.id)}
+                className={`no-hover-fx flex-1 px-3.5 py-1.5 rounded-lg text-sm font-black whitespace-nowrap cursor-pointer ${tab === t.id ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600 hover:text-slate-900'}`}>{t.label}</button>
+            ))}
           </div>
+          <button type="button" onClick={onClose} className="no-hover-fx w-9 h-9 rounded-xl hover:bg-slate-100 flex items-center justify-center shrink-0 cursor-pointer" aria-label="Đóng" title="Đóng">
+            <X className="w-5 h-5 text-slate-700" />
+          </button>
         </div>
 
-        {/* Modal Scrollable Body */}
-        <div className="p-4 sm:p-5 overflow-y-auto space-y-4 text-slate-700 text-xs sm:text-sm">
-          
-          {/* Thông báo kết quả */}
+        <div className="p-3 sm:p-4 overflow-y-auto space-y-3 text-sm text-slate-700">
+          {/* 🔌 TRẠNG THÁI KẾT NỐI + PHIÊN BẢN (luôn hiện, tự kiểm tra mỗi lần mở) */}
+          <div className={`rounded-2xl border px-3 py-2.5 flex flex-wrap items-center gap-x-3 gap-y-2 ${connTone}`} role="status" aria-live="polite">
+            <span className="shrink-0">
+              {connState === 'checking' ? <Loader2 className="w-6 h-6 animate-spin text-slate-600" />
+                : connState === 'connected' ? <CheckCircle2 className="w-6 h-6 text-emerald-700" />
+                  : connState === 'none' ? <Cloud className="w-6 h-6 text-slate-500" />
+                    : <AlertTriangle className={`w-6 h-6 ${connState === 'unreachable' ? 'text-rose-700' : 'text-amber-700'}`} />}
+            </span>
+            <div className="min-w-0 flex-1 basis-64">
+              <p className="font-black">
+                {connState === 'checking' ? 'Đang kiểm tra kết nối với Google Drive…'
+                  : connState === 'connected' ? 'Cơ sở dữ liệu của nhà trường đã được kết nối với thư mục Google Drive'
+                    : connState === 'no_db' ? 'Đã mở được thư mục Google Drive nhưng chưa có cơ sở dữ liệu nhà trường'
+                      : connState === 'unreachable' ? 'Chưa kết nối được với thư mục Google Drive của trường'
+                        : 'Máy này chưa kết nối thư mục Google Drive của trường'}
+              </p>
+              {connState !== 'checking' && connState !== 'connected' && <p className="text-xs mt-0.5">{conn?.detail || 'Dán link thư mục và link Apps Script ở thẻ Kết nối rồi bấm Lưu kết nối.'}</p>}
+            </div>
+            {conn?.version && connState !== 'checking' && (
+              <span className={`px-2.5 py-1 rounded-full border text-xs font-black whitespace-nowrap ${conn.outdated ? 'bg-amber-100 border-amber-300 text-amber-950' : 'bg-white border-emerald-300 text-emerald-900'}`}>
+                {versionLabel(conn.version)}{conn.outdated ? ` • cần cập nhật lên ${conn.latest}` : ' • mới nhất'}
+              </span>
+            )}
+            {connState === 'connected' && <span className="px-2.5 py-1 rounded-full bg-white border border-emerald-300 text-xs font-black text-emerald-900 whitespace-nowrap">{conn?.schools || 0} trường</span>}
+            {conn?.outdated && isSetupAdmin && (
+              <button type="button" onClick={() => appsScriptSetupService.open('update')} className="no-hover-fx h-9 px-3 rounded-xl bg-amber-700 hover:bg-amber-800 text-white text-sm font-black inline-flex items-center gap-1.5 whitespace-nowrap cursor-pointer">
+                <Wand2 className="w-4 h-4" /> Cập nhật Apps Script
+              </button>
+            )}
+            <button type="button" onClick={recheckConnection} disabled={connState === 'checking'} className="no-hover-fx h-9 px-3 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-800 text-sm font-bold inline-flex items-center gap-1.5 whitespace-nowrap cursor-pointer disabled:opacity-60">
+              <RefreshCw className={`w-4 h-4 ${connState === 'checking' ? 'animate-spin' : ''}`} /> Kiểm tra lại
+            </button>
+          </div>
+
           {actionMessage && (
-            <div className={`p-2.5 rounded-xl text-xs font-bold flex items-center justify-between ${
-              actionMessage.type === 'success' ? 'bg-emerald-50 text-emerald-800 border border-emerald-300' : 'bg-rose-50 text-rose-800 border border-rose-300'
+            <div className={`px-3 py-2 rounded-xl text-sm font-bold flex items-start justify-between gap-2 border ${
+              actionMessage.type === 'success' ? 'bg-emerald-50 text-emerald-900 border-emerald-300' : 'bg-rose-50 text-rose-900 border-rose-300'
             }`}>
-              <div className="flex items-center gap-2">
-                {actionMessage.type === 'success' ? <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" /> : <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0" />}
+              <div className="flex items-start gap-2">
+                {actionMessage.type === 'success' ? <CheckCircle2 className="w-4 h-4 text-emerald-700 shrink-0 mt-0.5" /> : <AlertTriangle className="w-4 h-4 text-rose-700 shrink-0 mt-0.5" />}
                 <span>{actionMessage.text}</span>
               </div>
-              <button onClick={() => setActionMessage(null)} className="text-slate-400 hover:text-slate-600">
-                <X className="w-3.5 h-3.5" />
-              </button>
+              <button type="button" onClick={() => setActionMessage(null)} className="no-hover-fx text-slate-500 hover:text-slate-800 shrink-0 cursor-pointer" aria-label="Ẩn thông báo"><X className="w-4 h-4" /></button>
             </div>
           )}
 
-          {/* Banner Lưu trữ tệp trên Google Drive (Ảnh 7 & Bổ sung BGH/Admin) */}
-          <div className="p-3.5 rounded-xl bg-gradient-to-r from-emerald-700 to-teal-700 text-white shadow-xs space-y-1">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-black uppercase flex items-center gap-1.5 tracking-wide">
-                <Sparkles className="w-3.5 h-3.5 text-yellow-300" />
-                LƯU TRỮ TRÊN THƯ MỤC GOOGLE DRIVE DÙNG CHUNG
-              </span>
-              <span className="font-mono text-[12px] bg-black/25 px-2.5 py-0.5 rounded font-bold text-white">
-                {classSpecificFileName}
-              </span>
-            </div>
-            <p className="text-[12px] text-white leading-relaxed pt-0.5">
-              {(isSchoolAdmin && currentUser?.role !== 'bgh') ? (
-                <>Tài khoản Quản trị Nhà Trường lưu trữ toàn diện vào file <strong className="text-white font-mono">quantrinhatruong.json</strong> trong thư mục dùng chung, liên thông đồng bộ toàn bộ cơ sở dữ liệu trường học.</>
-              ) : isBgh ? (
-                <>Tài khoản Ban Giám Hiệu lưu dữ liệu riêng vào file <strong className="text-white font-mono">bgh.json</strong> trong thư mục dùng chung và tự động quét tổng hợp tỷ lệ chuyên cần, học sinh bán trú từ toàn bộ các lớp của trường.</>
-              ) : (
-                <>Cả 3 cấp độ cùng dùng chung <strong>01 Thư mục Google Drive</strong>. Mỗi Giáo viên Chủ nhiệm tự động lưu file riêng theo tên lớp (ví dụ: <strong className="text-white font-mono">{classSpecificFileName}</strong>). Ban Giám Hiệu và Quản Trị Nhà Trường sẽ tự động tổng hợp tỷ lệ chuyên cần và ăn bán trú của toàn bộ các lớp trong thư mục này!</>
-              )}
-            </p>
-          </div>
-
-          {/* 3 BƯỚC KẾT NỐI TỰ ĐỘNG (Ảnh 7) */}
-          <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-2.5">
-            <div className="flex items-center justify-between border-b border-slate-200 pb-2">
-              <span className="font-black text-slate-800 text-xs uppercase flex items-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
-                3 BƯỚC KẾT NỐI TỰ ĐỘNG - KHÔNG CẦN CÀI ĐẶT PHỨC TẠP
-              </span>
-              {(isAdmin || isSchoolAdmin) && (
-                <button
-                  type="button"
-                  onClick={() => appsScriptSetupService.open()}
-                  className="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer whitespace-nowrap"
-                  title="Hướng dẫn từng bước cài / cập nhật Apps Script, tự kiểm tra link /exec"
-                >
-                  <Sparkles className="w-3.5 h-3.5" /> Trình cài đặt Apps Script
-                </button>
-              )}
-              <a
-                href="https://drive.google.com"
-                target="_blank"
-                rel="noreferrer"
-                className="text-xs font-bold text-teal-700 hover:text-teal-900 flex items-center gap-1 hover:underline"
-              >
-                <span>Mở Google Drive</span>
-                <ExternalLink className="w-3 h-3" />
-              </a>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-              {/* Bước 1 */}
-              <div className="p-2.5 rounded-xl bg-white border border-emerald-200 space-y-1">
-                <div className="flex items-center gap-2">
-                  <div className="w-5 h-5 rounded-full bg-emerald-700 text-white font-black text-xs flex items-center justify-center">
-                    1
+          {/* ───────────────── THẺ: KẾT NỐI ───────────────── */}
+          {tab === 'connect' && (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 items-start">
+              <section className={cardCls}>
+                <h3 className={titleCls}><Folder className="w-4 h-4 text-emerald-700" /> Thư mục và Apps Script đang dùng</h3>
+                <div>
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-xs font-bold text-slate-700">Link thư mục Google Drive dùng chung</span>
+                    {!isEditingFolder && config.folderId && (
+                      <span className="flex items-center gap-1.5">
+                        <a href={config.folderUrl || `https://drive.google.com/drive/folders/${config.folderId}`} target="_blank" rel="noreferrer" className="text-xs font-bold text-emerald-800 hover:underline inline-flex items-center gap-1">Mở Drive <ExternalLink className="w-3 h-3" /></a>
+                        <button type="button" onClick={() => setIsEditingFolder(true)} className="no-hover-fx text-xs font-bold text-indigo-700 hover:underline cursor-pointer">Đổi thư mục</button>
+                      </span>
+                    )}
                   </div>
-                  <strong className="text-xs font-black text-slate-800">Tạo thư mục Drive</strong>
-                </div>
-                <p className="text-[12px] text-slate-600 leading-relaxed">
-                  Mở Google Drive, tạo thư mục ví dụ: <code className="text-emerald-800 font-bold bg-slate-50 px-1 py-0.2 rounded">DuLieu_LopHocHanhPhuc</code>
-                </p>
-              </div>
-
-              {/* Bước 2 */}
-              <div className="p-2.5 rounded-xl bg-white border border-orange-200 space-y-1">
-                <div className="flex items-center gap-2">
-                  <div className="w-5 h-5 rounded-full bg-orange-700 text-white font-black text-xs flex items-center justify-center">
-                    2
-                  </div>
-                  <strong className="text-xs font-black text-slate-800">Chia sẻ quyền "Can Edit"</strong>
-                </div>
-                <p className="text-[12px] text-slate-600 leading-relaxed">
-                  Chuột phải thư mục ➡️ Chia sẻ ➡️ Chọn: "Bất kỳ ai có đường liên kết" ➡️ Chọn vai trò: <strong>Người chỉnh sửa (Can edit)</strong>.
-                </p>
-              </div>
-
-              {/* Bước 3 */}
-              <div className="p-2.5 rounded-xl bg-white border border-pink-200 space-y-1">
-                <div className="flex items-center gap-2">
-                  <div className="w-5 h-5 rounded-full bg-pink-600 text-white font-black text-xs flex items-center justify-center">
-                    3
-                  </div>
-                  <strong className="text-xs font-black text-slate-800">Dán link (Tự động lưu)</strong>
-                </div>
-                <p className="text-[12px] text-slate-600 leading-relaxed">
-                  Chỉ cần dán link vào ô bên dưới, hệ thống sẽ tự động lưu và kích hoạt Cầu nối Apps Script (1-Click) luôn!
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* 📣 QUY TRÌNH 1 THƯ MỤC DÙNG CHUNG: Quản trị gửi thông tin kết nối → BGH & GVCN dán vào */}
-          {(isAdmin || isSchoolAdmin) && (
-            <div className="p-3.5 rounded-xl bg-indigo-50/70 border border-indigo-300 space-y-2">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <span className="text-xs font-black text-indigo-950 uppercase flex items-center gap-1.5">
-                  <Users className="w-4 h-4 text-indigo-700" />
-                  GỬI THÔNG TIN KẾT NỐI CHO TOÀN TRƯỜNG (BGH & GVCN)
-                </span>
-                <button
-                  type="button"
-                  onClick={handleCopyConnectionInfo}
-                  disabled={!config.scriptUrl || !config.folderId}
-                  className="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer"
-                >
-                  {isConnectionCopied ? <CheckCheck className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-                  {isConnectionCopied ? 'ĐÃ SAO CHÉP' : 'SAO CHÉP ĐỂ GỬI'}
-                </button>
-              </div>
-              {config.scriptUrl && config.folderId ? (
-                <pre className="whitespace-pre-wrap break-all bg-white p-2.5 rounded-lg border border-indigo-200 font-mono text-[12px] text-slate-700 select-all">
-                  {googleDriveService.buildConnectionShareText(currentUser?.schoolName)}
-                </pre>
-              ) : (
-                <p className="text-[12px] font-semibold text-indigo-900">
-                  Bước 1: tạo thư mục Drive, chia sẻ "Bất kỳ ai có liên kết – Người chỉnh sửa". Bước 2: triển khai mã Apps Script (mục bên dưới). Bước 3: lưu link thư mục + URL Apps Script → khung tin nhắn gửi toàn trường sẽ hiện ở đây.
-                </p>
-              )}
-            </div>
-          )}
-
-          <div className="p-3.5 rounded-xl bg-sky-50/70 border border-sky-300 space-y-2">
-            <span className="text-xs font-black text-sky-950 uppercase flex items-center gap-1.5">
-              <Link2 className="w-4 h-4 text-sky-700" />
-              DÁN THÔNG TIN KẾT NỐI TỪ QUẢN TRỊ NHÀ TRƯỜNG
-            </span>
-            <p className="text-[12px] font-semibold text-slate-600">
-              BGH và GVCN dán nguyên tin nhắn kết nối (gồm link thư mục dùng chung và mã kết nối Apps Script) rồi bấm Áp dụng. Cả trường cùng làm việc trên một thư mục Google Drive.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-2">
-              <textarea
-                value={connectionTextInput}
-                onChange={(e) => setConnectionTextInput(e.target.value)}
-                rows={2}
-                placeholder="Dán tin nhắn kết nối hoặc link thư mục / link Apps Script vào đây..."
-                className="flex-1 px-3 py-2 rounded-xl border border-sky-300 bg-white font-mono text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-sky-500"
-              />
-              <button
-                type="button"
-                onClick={handleApplyConnectionText}
-                disabled={!connectionTextInput.trim() || isTesting}
-                className="px-4 py-2 rounded-xl bg-sky-700 hover:bg-sky-800 disabled:opacity-50 text-white font-bold text-xs uppercase cursor-pointer shrink-0"
-              >
-                {isTesting ? 'ĐANG KIỂM TRA...' : 'ÁP DỤNG'}
-              </button>
-            </div>
-          </div>
-
-          {/* Khối Thư mục Google Drive Đang Kết Nối (Ảnh 7) */}
-          <div className="p-3.5 rounded-xl bg-emerald-50/70 border border-emerald-300 space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-black text-emerald-950 uppercase flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-full bg-emerald-600 animate-pulse"></span>
-                THƯ MỤC GOOGLE DRIVE ĐANG KẾT NỐI:
-              </span>
-              {config.folderId && (
-                <span className="px-2 py-0.5 rounded bg-emerald-700 text-white font-mono text-[12px] font-bold">
-                  ID: {config.folderId}
-                </span>
-              )}
-            </div>
-
-            {isEditingFolder ? (
-              <div className="space-y-2">
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={folderUrlInput}
-                    onChange={(e) => setFolderUrlInput(e.target.value)}
-                    placeholder="Dán link thư mục Google Drive (https://drive.google.com/drive/folders/...)"
-                    className="flex-1 px-3 py-2 rounded-xl border border-emerald-300 bg-white font-mono text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                  />
-                  <button
-                    type="button"
-                    onClick={handleSaveConfig}
-                    className="px-4 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs uppercase transition-colors cursor-pointer"
-                  >
-                    LƯU
-                  </button>
-                </div>
-                <div className="space-y-1">
-                  <label className="text-[12px] font-bold text-slate-600">URL Cầu nối Apps Script (Tùy chọn nâng cao):</label>
-                  <input
-                    type="text"
-                    value={scriptUrlInput}
-                    onChange={(e) => setScriptUrlInput(e.target.value)}
-                    placeholder="https://script.google.com/macros/s/.../exec"
-                    className="w-full px-3 py-1.5 rounded-lg border border-slate-300 bg-white font-mono text-xs text-slate-700"
-                  />
-                </div>
-              </div>
-            ) : (
-              <div className="flex items-center justify-between gap-2 bg-white p-2.5 rounded-xl border border-emerald-200">
-                <div className="font-mono text-xs text-slate-800 truncate max-w-md">
-                  {config.folderUrl || `https://drive.google.com/drive/folders/${config.folderId}`}
-                </div>
-                <div className="flex items-center gap-1.5 shrink-0">
-                  {config.folderUrl && (
-                    <a
-                      href={config.folderUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="px-2.5 py-1 rounded-lg bg-emerald-100 hover:bg-emerald-200 text-emerald-800 font-bold text-xs flex items-center gap-1"
-                    >
-                      <span>Mở Drive</span>
-                      <ExternalLink className="w-3 h-3" />
-                    </a>
-                  )}
-                  <button
-                    type="button"
-                    onClick={() => setIsEditingFolder(true)}
-                    className="px-2.5 py-1 rounded-lg bg-teal-700 hover:bg-teal-800 text-white font-bold text-xs flex items-center gap-1 cursor-pointer"
-                  >
-                    <span>ĐỔI THƯ MỤC KHÁC</span>
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Lịch Sử Các Thư Mục Google Drive Thầy/Cô Đã Từng Dùng (Ảnh 6) */}
-          {Array.isArray(config.folderHistory) && config.folderHistory.some(h => h.id !== config.folderId) && (
-            <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 space-y-1.5">
-              <span className="text-[12px] font-black text-slate-700 uppercase flex items-center gap-1.5">
-                <History className="w-3.5 h-3.5 text-slate-500" />
-                <span className="flex-1">LỊCH SỬ CÁC THƯ MỤC GOOGLE DRIVE THẦY/CÔ ĐÃ TỪNG DÙNG:</span>
-                <button
-                  type="button"
-                  onClick={() => { setConfig(googleDriveService.clearFolderHistory()); setActionMessage({ type: 'success', text: 'Đã xóa lịch sử các thư mục cũ trên máy này.' }); }}
-                  className="px-2 py-0.5 rounded-md border border-rose-200 bg-white hover:bg-rose-50 text-rose-700 font-bold text-[12px] normal-case cursor-pointer shrink-0"
-                  title="Xóa mọi thư mục cũ khỏi danh sách (giữ thư mục đang kết nối)"
-                >
-                  Xóa lịch sử
-                </button>
-              </span>
-              <div className="space-y-1">
-                {config.folderHistory.filter(h => h.id !== config.folderId).map((item, idx) => (
-                  <div key={idx} className="flex items-center justify-between p-2 rounded-lg bg-white border border-slate-200 text-xs">
-                    <div className="flex items-center gap-2 truncate">
-                      <Folder className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-                      <span className="font-mono font-bold text-slate-800">ID: {item.id}</span>
-                      <span className="text-[12px] text-slate-400">[{item.date}]</span>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => handleSelectHistoryFolder(item)}
-                      className="px-2.5 py-0.5 rounded-md bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-[12px] border border-indigo-200 transition-colors cursor-pointer shrink-0"
-                    >
-                      Chọn lại
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setConfig(googleDriveService.removeFolderHistory(item.id))}
-                      className="ml-1 w-6 h-6 rounded-md text-rose-600 hover:bg-rose-50 flex items-center justify-center cursor-pointer shrink-0"
-                      title="Xóa thư mục này khỏi lịch sử"
-                      aria-label="Xóa thư mục này khỏi lịch sử"
-                    >
-                      <X className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* 2 NÚT HÀNH ĐỘNG CHÍNH (Ảnh 6) */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-            <button
-              type="button"
-              onClick={handleManualPush}
-              disabled={isPushing || !currentUser}
-              className={`py-3 px-4 rounded-xl font-black text-xs uppercase tracking-wide flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer active:scale-[0.99] ${
-                !currentUser 
-                  ? 'bg-slate-300 text-slate-500 cursor-not-allowed opacity-60' 
-                  : 'bg-gradient-to-r from-emerald-700 to-teal-700 hover:from-emerald-800 hover:to-teal-800 text-white'
-              }`}
-              title={!currentUser ? 'Vui lòng đăng nhập trước khi đẩy dữ liệu lớp lên Drive' : 'Đồng bộ dữ liệu lớp hiện tại lên Google Drive'}
-            >
-              <UploadCloud className={`w-4 h-4 ${isPushing ? 'animate-bounce' : ''}`} />
-              <span>{isPushing ? 'ĐANG ĐỒNG BỘ...' : (!currentUser ? 'CẦN ĐĂNG NHẬP ĐỂ ĐẨY' : 'ĐỒNG BỘ LÊN GOOGLE DRIVE NGAY')}</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => handleManualPull()}
-              disabled={isPulling}
-              className="py-3 px-4 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 hover:from-blue-800 hover:to-indigo-700 text-white font-black text-xs uppercase tracking-wide flex items-center justify-center gap-2 shadow-md transition-all cursor-pointer active:scale-[0.99]"
-            >
-              <DownloadCloud className={`w-4 h-4 ${isPulling ? 'animate-bounce' : ''}`} />
-              <span>
-                {isPulling ? 'ĐANG TẢI DỮ LIỆU...' : (!currentUser ? 'NẠP CSDL TRƯỜNG & TÀI KHOẢN TỪ DRIVE' : 'NẠP KHÔI PHỤC TỪ GOOGLE DRIVE')}
-              </span>
-            </button>
-          </div>
-
-          {/* Ghi chú Tự Động Đồng Bộ Ngầm 5 Giây Toàn Hệ Thống */}
-          <div className="p-3 rounded-xl bg-gradient-to-r from-teal-50 to-emerald-50 border border-teal-200 text-teal-950 text-xs leading-relaxed flex items-start gap-2.5">
-            <span className="text-base leading-none">⚡</span>
-            <div>
-              <strong className="text-teal-800 uppercase font-black tracking-wide block text-[12px] pb-0.5">
-                Cơ chế ngầm tự động đồng bộ Google Drive mỗi 5 giây (Toàn hệ thống):
-              </strong>
-              <span>
-                Hệ thống <strong>tự động bấm lệnh đồng bộ ngầm sau mỗi 5 giây</strong> để cập nhật dữ liệu mới nhất từ toàn hệ thống áp dụng cho tất cả các tài khoản (Quản trị tối cao, Quản trị nhà trường, Ban giám hiệu, Giáo viên chủ nhiệm & bộ môn). Thầy/Cô chỉ cần cấu hình Cầu nối 1 lần ban đầu, dữ liệu sẽ liên tục được bảo toàn và cập nhật xuyên suốt đa máy tính!
-              </span>
-            </div>
-          </div>
-
-          {/* Tabs Phương Thức Cầu Nối (Ảnh 6) */}
-          <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-2.5">
-            <div className="flex items-center justify-between">
-              <span className="font-black text-slate-800 text-xs uppercase flex items-center gap-1.5">
-                <Settings className="w-3.5 h-3.5 text-slate-600" />
-                PHƯƠNG THỨC CẦU NỐI GOOGLE DRIVE:
-              </span>
-              <div className="flex items-center gap-1 bg-white p-0.5 rounded-lg border border-slate-200">
-                <button
-                  type="button"
-                  onClick={() => setSyncMethod('appscript')}
-                  className={`px-2.5 py-1 rounded-md text-[12px] font-bold transition-colors cursor-pointer ${
-                    syncMethod === 'appscript' ? 'bg-emerald-700 text-white' : 'text-slate-600 hover:text-slate-900'
-                  }`}
-                >
-                  Cầu nối Apps Script (1-Click)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setSyncMethod('desktop')}
-                  className={`px-2.5 py-1 rounded-md text-[12px] font-bold transition-colors cursor-pointer ${
-                    syncMethod === 'desktop' ? 'bg-emerald-700 text-white' : 'text-slate-600 hover:text-slate-900'
-                  }`}
-                >
-                  Ổ Drive trên máy (Desktop)
-                </button>
-              </div>
-            </div>
-
-            {syncMethod === 'desktop' ? (
-              <div className="space-y-2">
-                <p className="text-[12px] text-slate-600 leading-relaxed">
-                  Nếu máy tính Thầy/Cô có cài ứng dụng Google Drive cho máy tính (Google Drive for Desktop), hãy nhập đường dẫn thư mục Google Drive tại đây:
-                </p>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={desktopPathInput}
-                    onChange={(e) => setDesktopPathInput(e.target.value)}
-                    placeholder="Ví dụ: G:\My Drive\DuLieu_LopHocHanhPhuc hoặc D:\Google Drive\DuLieu_LopHocHanhPhuc"
-                    className="flex-1 px-3 py-2 rounded-xl border border-slate-300 font-mono text-xs bg-white text-slate-800"
-                  />
-                  <button
-                    type="button"
-                    onClick={handleSaveConfig}
-                    className="px-4 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs uppercase cursor-pointer"
-                  >
-                    LƯU
-                  </button>
-                </div>
-                <div className="text-[12px] text-emerald-700 font-medium">
-                  ✓ Khi lưu tại đây, Google Drive trên máy tính sẽ tự động đồng bộ thời gian thực 2 chiều lên đám mây 24/7!
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {/* Thanh trạng thái Cầu nối Apps Script (Ảnh 1 & 2) */}
-                <div className="flex items-center justify-between flex-wrap gap-2 pt-1">
-                  <div className="flex items-center gap-1.5 text-xs font-bold text-slate-800">
-                    <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
-                    <span>Cầu nối Apps Script đã sẵn sàng cho Thư mục ID:</span>
-                    <strong className="font-mono text-emerald-800 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
-                      {config.folderId || 'Chưa nhận diện'}
-                    </strong>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <a
-                      href="https://script.google.com/"
-                      target="_blank"
-                      rel="noreferrer"
-                      className="px-2.5 py-1 rounded-lg bg-teal-50 hover:bg-teal-100 text-teal-800 font-bold text-xs flex items-center gap-1 border border-teal-200 transition-colors cursor-pointer"
-                      title="Mở Google Apps Script để tạo script mới hoặc ủy quyền"
-                    >
-                      <span>Mở script.google.com</span>
-                      <ExternalLink className="w-3 h-3 text-teal-600" />
-                    </a>
-
-                    <button
-                      type="button"
-                      onClick={() => setShowScriptCode(!showScriptCode)}
-                      className="px-2.5 py-1 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 font-bold text-xs flex items-center gap-1 border border-amber-300 transition-colors cursor-pointer shadow-2xs"
-                    >
-                      {showScriptCode ? (
-                        <>
-                          <EyeOff className="w-3.5 h-3.5 text-amber-700" />
-                          <span>Ẩn mã</span>
-                        </>
-                      ) : (
-                        <>
-                          <Code2 className="w-3.5 h-3.5 text-amber-700" />
-                          <span>Xem & Sao chép mã</span>
-                        </>
-                      )}
-                    </button>
-                  </div>
-                </div>
-
-                {/* Hộp thông báo và hướng dẫn quan trọng (Ảnh 1) */}
-                <div className="p-3 rounded-xl bg-emerald-50/80 border border-emerald-200 space-y-1.5">
-                  <div className="text-xs text-slate-700 leading-relaxed">
-                    <span className="font-black text-emerald-900 mr-1">💡 Tự động 1-Click:</span>
-                    Thầy Cô chỉ cần dán link thư mục Google Drive (đã bật quyền <em>"Người chỉnh sửa"</em>) vào phần mềm. Hệ thống sẽ tự động ghi đè duy nhất 01 tệp dữ liệu mà không cần cài đặt Apps Script phức tạp, không tạo file rác giúp thư mục Drive luôn gọn gàng!
-                  </div>
-                  <div className="text-[12px] text-slate-500 italic">
-                    (Tùy chọn nâng cao: Thầy Cô cũng có thể tự dán URL Web App riêng của mình vào ô bên dưới nếu muốn)
-                  </div>
-                </div>
-
-                {/* Hộp cảnh báo quan trọng khi triển khai Apps Script */}
-                <div className="p-2.5 rounded-xl bg-amber-50 border border-amber-300 text-amber-900 text-xs space-y-1">
-                  <div className="flex items-center gap-1.5 font-bold text-amber-950">
-                    <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
-                    <span>Lưu ý quan trọng khi Triển khai (Deploy) Google Apps Script:</span>
-                  </div>
-                  <ul className="list-disc list-inside text-[12px] space-y-0.5 text-amber-900 pl-1 leading-relaxed">
-                    <li>Thực thi dưới dạng (Execute as): <strong>Tôi - Tài khoản của bạn (Me)</strong></li>
-                    <li>Ai có quyền truy cập (Who has access): <strong className="text-rose-700 underline">Bất kỳ ai (Anyone)</strong> <em>(Không để mặc định "Only myself" vì sẽ bị chặn)</em></li>
-                  </ul>
-                </div>
-
-                {/* Ô dán URL Web App triển khai (Ảnh 1 & 2) */}
-                <div className="space-y-1.5">
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      value={scriptUrlInput}
-                      onChange={(e) => {
-                        setScriptUrlInput(e.target.value);
-                        setTestResult(null);
-                      }}
-                      onBlur={() => {
-                        if (scriptUrlInput.trim()) {
-                          handleSaveConfig();
-                        }
-                      }}
-                      placeholder="Dán URL Web App triển khai (https://script.google.com/macros/s/AKfycb.../exec)"
-                      className="flex-1 px-3 py-2 rounded-xl border border-slate-300 font-mono text-xs bg-white text-slate-800 focus:outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-200"
-                    />
-                    
-                    {/* Nút Kiểm tra kết nối */}
-                    <button
-                      type="button"
-                      onClick={handleTestConnection}
-                      disabled={isTesting || !scriptUrlInput.trim()}
-                      className="px-3 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-bold text-xs uppercase transition-colors cursor-pointer shrink-0 shadow-xs flex items-center gap-1.5"
-                      title="Kiểm tra xem Cầu nối Apps Script đã hoạt động và được cấp quyền Anyone chưa"
-                    >
-                      <RefreshCw className={`w-3.5 h-3.5 ${isTesting ? 'animate-spin' : ''}`} />
-                      <span>{isTesting ? 'Đang test...' : 'Kiểm tra'}</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={handleSaveConfig}
-                      className="px-4 py-2 rounded-xl bg-teal-700 hover:bg-teal-800 text-white font-bold text-xs uppercase transition-colors cursor-pointer shrink-0 shadow-xs"
-                    >
-                      LƯU
-                    </button>
-                  </div>
-
-                  {/* Khung hiển thị kết quả kiểm tra Ping Test */}
-                  {testResult && (
-                    <div className={`p-2.5 rounded-xl text-xs font-medium border animate-in fade-in duration-150 ${
-                      testResult.success 
-                        ? 'bg-emerald-50 text-emerald-900 border-emerald-300' 
-                        : 'bg-rose-50 text-rose-950 border-rose-300'
-                    }`}>
-                      <div className="flex items-start gap-2">
-                        {testResult.success ? (
-                          <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                        ) : (
-                          <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
-                        )}
-                        <div className="space-y-1">
-                          <strong className="block font-bold">
-                            {testResult.success ? '✅ Kết nối Google Apps Script thành công!' : '⚠️ Kết nối Cầu nối chưa thành công:'}
-                          </strong>
-                          <p className="text-[12px] leading-relaxed">{testResult.message}</p>
-                          {testResult.isAuthError && (
-                            <div className="mt-1 p-2 rounded-lg bg-white/80 border border-rose-200 text-[12px] text-rose-900 leading-relaxed font-normal">
-                              <strong>Cách khắc phục 30 giây:</strong> Mở trang Apps Script ➡️ Bấm nút <strong>Triển khai (Deploy)</strong> ở góc trên bên phải ➡️ Chọn <strong>Quản lý bản triển khai (Manage deployments)</strong> ➡️ Bấm biểu tượng chiếc bút (Edit) ➡️ Đổi mục <strong>"Ai có quyền truy cập"</strong> thành <strong>"Bất kỳ ai (Anyone)"</strong> ➡️ Bấm Triển khai và sao chép lại link!
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
+                  {isEditingFolder || !config.folderId ? (
+                    <input type="text" value={folderUrlInput} onChange={(e) => setFolderUrlInput(e.target.value)} placeholder="https://drive.google.com/drive/folders/…" aria-label="Link thư mục Google Drive" className={`mt-1 ${inputCls}`} />
+                  ) : (
+                    <p className="mt-1 h-10 px-3 rounded-xl border border-emerald-200 bg-emerald-50/50 font-mono text-sm text-slate-800 flex items-center truncate" title={config.folderUrl || config.folderId}>
+                      <span className="truncate">{config.folderUrl || `https://drive.google.com/drive/folders/${config.folderId}`}</span>
+                    </p>
                   )}
                 </div>
-
-                {/* Khối hiển thị mã nguồn Google Apps Script (Ảnh 2) */}
-                {showScriptCode && (
-                  <div className="rounded-xl border border-slate-700 overflow-hidden shadow-md animate-in fade-in duration-200">
-                    <div className="bg-white text-slate-700 px-3.5 py-2.5 flex items-center justify-between flex-wrap gap-2 border-b border-slate-200">
-                      <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-700">
-                        <Code2 className="w-4 h-4 text-emerald-600" />
-                        <span>Mã nguồn Google Apps Script (Đã tự động điền Folder ID của Thầy Cô)</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <a
-                          href="https://script.google.com/"
-                          target="_blank"
-                          rel="noreferrer"
-                          className="px-2.5 py-1 rounded-lg bg-teal-700 hover:bg-teal-800 text-white font-bold text-xs flex items-center gap-1 transition-colors"
-                        >
-                          <span>Mở script.google.com</span>
-                          <ExternalLink className="w-3 h-3" />
-                        </a>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const code = googleDriveService.generateAppsScriptCode(config.folderId);
-                            navigator.clipboard.writeText(code).then(() => {
-                              setIsCopiedCode(true);
-                              setTimeout(() => setIsCopiedCode(false), 2500);
-                              setActionMessage({ type: 'success', text: 'Đã sao chép toàn bộ mã nguồn Google Apps Script vào clipboard!' });
-                            });
-                          }}
-                          className={`px-3 py-1 rounded-lg font-bold text-xs flex items-center gap-1.5 transition-colors cursor-pointer ${
-                            isCopiedCode ? 'bg-emerald-700 text-white' : 'bg-amber-500 hover:bg-amber-600 text-slate-950'
-                          }`}
-                        >
-                          {isCopiedCode ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-                          <span>{isCopiedCode ? 'Đã sao chép!' : 'Sao chép mã'}</span>
-                        </button>
-                      </div>
-                    </div>
-                    <pre className="p-3.5 bg-white text-emerald-700 font-mono text-[12px] leading-relaxed max-h-64 overflow-x-auto overflow-y-auto whitespace-pre select-all border-none">
-                      {googleDriveService.generateAppsScriptCode(config.folderId)}
-                    </pre>
+                <label className="block text-xs font-bold text-slate-700">Link Apps Script (đuôi /exec)
+                  <input type="text" value={scriptUrlInput} onChange={(e) => { setScriptUrlInput(e.target.value); setTestResult(null); }} placeholder="https://script.google.com/macros/s/…/exec" className={`mt-1 ${inputCls}`} />
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  <button type="button" onClick={saveAndRecheck} className={btnGreen}><Check className="w-4 h-4" /> Lưu kết nối</button>
+                  <button type="button" onClick={testAndRecheck} disabled={isTesting || !scriptUrlInput.trim()} className={btnIndigo}>
+                    <RefreshCw className={`w-4 h-4 ${isTesting ? 'animate-spin' : ''}`} /> {isTesting ? 'Đang kiểm tra…' : 'Kiểm tra link'}
+                  </button>
+                  {isSetupAdmin && (
+                    <button type="button" onClick={() => appsScriptSetupService.open()} className={btnLight} title="Hướng dẫn từng bước cài / cập nhật Apps Script, tự kiểm tra link /exec">
+                      <Wand2 className="w-4 h-4 text-indigo-600" /> Trình cài đặt Apps Script
+                    </button>
+                  )}
+                </div>
+                {testResult && (
+                  <div className={`px-3 py-2 rounded-xl text-xs border ${testResult.success ? 'bg-emerald-50 text-emerald-900 border-emerald-300' : 'bg-rose-50 text-rose-950 border-rose-300'}`}>
+                    <strong className="block">{testResult.success ? 'Link Apps Script hoạt động.' : 'Link Apps Script chưa dùng được:'}</strong>
+                    <span>{testResult.message}</span>
+                    {testResult.isAuthError && (
+                      <span className="block mt-1">Cách sửa: mở dự án Apps Script → <strong>Triển khai</strong> → <strong>Quản lý các tùy chọn triển khai</strong> → bút chì → "Người có quyền truy cập" chọn <strong>Bất kỳ ai</strong> → Triển khai.</span>
+                    )}
                   </div>
                 )}
-              </div>
-            )}
+              </section>
 
-            {/* Checkbox tự động đồng bộ */}
-            <div className="flex items-center justify-between pt-2 border-t border-slate-200">
-              <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  id="autoSyncToggle"
-                  checked={autoSync}
-                  onChange={(e) => setAutoSync(e.target.checked)}
-                  className="w-4 h-4 text-emerald-700 rounded border-slate-300 focus:ring-emerald-500"
-                />
-                <label htmlFor="autoSyncToggle" className="text-xs font-semibold text-slate-700 cursor-pointer">
-                  Tự động đồng bộ lên Google Drive sau mỗi buổi dạy (khi có thay đổi điểm, điểm danh)
-                </label>
+              <div className="space-y-3">
+                {isSetupAdmin && config.scriptUrl && config.folderId && (
+                  <section className={cardCls}>
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <h3 className={titleCls}><Users className="w-4 h-4 text-indigo-700" /> Gửi thông tin kết nối cho toàn trường</h3>
+                      <button type="button" onClick={handleCopyConnectionInfo} className={btnIndigo}>
+                        {isConnectionCopied ? <CheckCheck className="w-4 h-4" /> : <Copy className="w-4 h-4" />} {isConnectionCopied ? 'Đã sao chép' : 'Sao chép để gửi'}
+                      </button>
+                    </div>
+                    <pre className="whitespace-pre-wrap break-all bg-slate-50 px-2.5 py-2 rounded-xl border border-slate-200 font-mono text-xs text-slate-700 select-all max-h-24 overflow-y-auto">
+                      {googleDriveService.buildConnectionShareText(currentUser?.schoolName)}
+                    </pre>
+                    <p className="text-xs text-slate-600">Gửi tin nhắn này qua Zalo / email. BGH và giáo viên dán vào màn đăng nhập là kết nối xong.</p>
+                  </section>
+                )}
+                {(!isSetupAdmin || !config.scriptUrl || !config.folderId) && (
+                  <section className={cardCls}>
+                    <h3 className={titleCls}><Link2 className="w-4 h-4 text-sky-700" /> Dán thông tin kết nối nhận từ Quản trị</h3>
+                    <div className="flex flex-col sm:flex-row gap-2">
+                      <textarea value={connectionTextInput} onChange={(e) => setConnectionTextInput(e.target.value)} rows={2}
+                        placeholder="Dán nguyên tin nhắn kết nối (link thư mục + link Apps Script)…" aria-label="Tin nhắn kết nối"
+                        className="flex-1 px-3 py-2 rounded-xl border border-slate-300 bg-white font-mono text-sm text-slate-800 focus:outline-none focus:border-sky-600" />
+                      <button type="button" onClick={applyTextAndRecheck} disabled={!connectionTextInput.trim() || isTesting} className="no-hover-fx h-10 px-4 rounded-xl bg-sky-700 hover:bg-sky-800 disabled:opacity-60 text-white text-sm font-black whitespace-nowrap cursor-pointer self-start">
+                        {isTesting ? 'Đang kiểm tra…' : 'Áp dụng'}
+                      </button>
+                    </div>
+                    {isSetupAdmin && <p className="text-xs text-slate-600">Quản trị cài lần đầu: bấm <strong>Trình cài đặt Apps Script</strong> ở khung bên để được hướng dẫn 5 bước.</p>}
+                  </section>
+                )}
+                {oldFolders.length > 0 && (
+                  <section className={cardCls}>
+                    <div className="flex items-center justify-between gap-2">
+                      <h3 className={titleCls}><History className="w-4 h-4 text-slate-500" /> Thư mục đã từng dùng trên máy này</h3>
+                      <button type="button"
+                        onClick={() => { setConfig(googleDriveService.clearFolderHistory()); setActionMessage({ type: 'success', text: 'Đã xóa lịch sử các thư mục cũ trên máy này.' }); }}
+                        className="no-hover-fx h-8 px-2.5 rounded-lg border border-rose-200 bg-white hover:bg-rose-50 text-rose-700 font-bold text-xs whitespace-nowrap cursor-pointer"
+                        title="Xóa mọi thư mục cũ khỏi danh sách (giữ thư mục đang kết nối)">Xóa lịch sử</button>
+                    </div>
+                    <div className="space-y-1 max-h-24 overflow-y-auto">
+                      {oldFolders.map((item) => (
+                        <div key={item.id} className="flex items-center gap-2 px-2 py-1 rounded-lg bg-slate-50 border border-slate-200 text-xs">
+                          <Folder className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                          <span className="font-mono font-bold text-slate-800 truncate flex-1" title={item.id}>ID: {item.id}</span>
+                          <span className="text-slate-500 whitespace-nowrap max-sm:hidden">{item.date}</span>
+                          <button type="button" onClick={() => { handleSelectHistoryFolder(item); setTimeout(recheckConnection, 300); }} className="no-hover-fx px-2 py-0.5 rounded-md bg-white hover:bg-indigo-50 text-indigo-700 font-bold border border-indigo-200 whitespace-nowrap cursor-pointer">Chọn lại</button>
+                          <button type="button" onClick={() => setConfig(googleDriveService.removeFolderHistory(item.id))} className="no-hover-fx w-6 h-6 rounded-md text-rose-600 hover:bg-rose-50 flex items-center justify-center cursor-pointer shrink-0" title="Xóa thư mục này khỏi lịch sử" aria-label="Xóa thư mục này khỏi lịch sử"><X className="w-3.5 h-3.5" /></button>
+                        </div>
+                      ))}
+                    </div>
+                  </section>
+                )}
               </div>
-              <button
-                type="button"
-                onClick={handleSaveConfig}
-                className="text-[12px] font-bold text-emerald-700 hover:underline cursor-pointer"
-              >
-                Lưu thiết lập
-              </button>
             </div>
-          </div>
+          )}
 
-          {/* Dành Cho Cấp 1 & Cấp 2: Báo Cáo Tổng Hợp BGH & Quản Trị Từ Thư Mục Dùng Chung */}
-          {isExecutive && (
-            <div className="p-3.5 rounded-xl bg-amber-50/80 border border-amber-300 space-y-3">
-              <div className="flex items-center justify-between border-b border-amber-200 pb-2">
-                <div className="flex items-center gap-2">
-                  <School className="w-4 h-4 text-amber-700" />
-                  <strong className="text-xs font-black text-amber-950 uppercase">
-                    LIÊN THÔNG BAN GIÁM HIỆU & QUẢN TRỊ (TỪ THƯ MỤC DÙNG CHUNG)
-                  </strong>
+          {/* ───────────────── THẺ: ĐỒNG BỘ ───────────────── */}
+          {tab === 'sync' && (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 items-start">
+              <section className={cardCls}>
+                <h3 className={titleCls}><UploadCloud className="w-4 h-4 text-emerald-700" /> Đồng bộ thủ công</h3>
+                <p className="text-xs text-slate-600">
+                  Tệp của tài khoản này trên thư mục dùng chung: <strong className="font-mono text-slate-800">{classSpecificFileName}</strong>
+                  {config.lastSyncTime ? <> • đồng bộ gần nhất: <strong>{config.lastSyncTime}</strong></> : null}
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  <button type="button" onClick={handleManualPush} disabled={isPushing || !currentUser} className={btnGreen}
+                    title={!currentUser ? 'Đăng nhập trước khi đẩy dữ liệu lên Drive' : 'Gửi dữ liệu hiện tại lên Google Drive'}>
+                    <UploadCloud className={`w-4 h-4 ${isPushing ? 'animate-bounce' : ''}`} /> {isPushing ? 'Đang gửi…' : (!currentUser ? 'Cần đăng nhập để gửi' : 'Gửi lên Google Drive ngay')}
+                  </button>
+                  <button type="button" onClick={() => handleManualPull()} disabled={isPulling} className={btnIndigo}>
+                    <DownloadCloud className={`w-4 h-4 ${isPulling ? 'animate-bounce' : ''}`} /> {isPulling ? 'Đang tải…' : (!currentUser ? 'Nạp CSDL trường & tài khoản từ Drive' : 'Nạp lại từ Google Drive')}
+                  </button>
                 </div>
-                <button
-                  type="button"
-                  onClick={loadBghSummary}
-                  disabled={isAggregating}
-                  className="px-2.5 py-1 rounded-lg bg-amber-700 hover:bg-amber-800 text-white font-bold text-xs flex items-center gap-1 transition-colors cursor-pointer"
-                >
-                  <RefreshCw className={`w-3 h-3 ${isAggregating ? 'animate-spin' : ''}`} />
-                  <span>{isAggregating ? 'Đang quét...' : 'Cập nhật số liệu'}</span>
+                <p className="text-xs text-slate-600">Nạp lại = gộp thông minh với dữ liệu trên máy (không xóa dữ liệu đang có).</p>
+              </section>
+              <section className={cardCls}>
+                <h3 className={titleCls}><Clock className="w-4 h-4 text-teal-700" /> Tự động đồng bộ</h3>
+                <label className="flex items-start gap-2 text-sm text-slate-800 cursor-pointer">
+                  <input type="checkbox" checked={autoSync} onChange={(e) => setAutoSync(e.target.checked)} className="mt-0.5 w-4 h-4 rounded border-slate-300" />
+                  <span>Tự gửi lên Google Drive khi dữ liệu thay đổi (điểm, điểm danh, bán trú…)</span>
+                </label>
+                <button type="button" onClick={handleSaveConfig} className={btnLight}><Check className="w-4 h-4" /> Lưu thiết lập</button>
+                <ul className="text-xs text-slate-600 list-disc pl-4 space-y-0.5">
+                  <li>Thay đổi được gom khoảng 15 giây rồi gửi một lần; bấm <strong>Xác nhận</strong> điểm danh / bán trú thì gửi ngay.</li>
+                  <li>Máy khác của cùng tài khoản và màn tổng hợp của BGH tự nhận dữ liệu mới trong khoảng 1 phút.</li>
+                </ul>
+              </section>
+            </div>
+          )}
+
+          {/* ───────────────── THẺ: NÂNG CAO ───────────────── */}
+          {tab === 'advanced' && (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 items-start">
+              <section className={cardCls}>
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <h3 className={titleCls}><Settings className="w-4 h-4 text-slate-600" /> Cách kết nối</h3>
+                  <div className="flex items-center gap-1 bg-slate-100 p-0.5 rounded-lg border border-slate-200">
+                    {([['appscript', 'Apps Script'], ['desktop', 'Ổ Drive trên máy']] as const).map(([id, label]) => (
+                      <button key={id} type="button" onClick={() => setSyncMethod(id)} aria-pressed={syncMethod === id}
+                        className={`no-hover-fx px-2.5 py-1 rounded-md text-xs font-bold whitespace-nowrap cursor-pointer ${syncMethod === id ? 'bg-emerald-700 text-white' : 'text-slate-700 hover:text-slate-900'}`}>{label}</button>
+                    ))}
+                  </div>
+                </div>
+                {syncMethod === 'desktop' ? (
+                  <>
+                    <p className="text-xs text-slate-600">Máy có cài Google Drive cho máy tính: nhập đường dẫn thư mục Drive trên máy (chỉ dùng với bản cài trên máy tính).</p>
+                    <div className="flex gap-2">
+                      <input type="text" value={desktopPathInput} onChange={(e) => setDesktopPathInput(e.target.value)} placeholder="G:\My Drive\DuLieu_LopHocHanhPhuc" aria-label="Đường dẫn thư mục Drive trên máy" className={inputCls} />
+                      <button type="button" onClick={handleSaveConfig} className={btnGreen}>Lưu</button>
+                    </div>
+                  </>
+                ) : (
+                  <ul className="text-xs text-slate-700 list-disc pl-4 space-y-1">
+                    <li>Cả trường dùng chung <strong>1 thư mục</strong> + <strong>1 Apps Script</strong>; mỗi tài khoản một tệp riêng.</li>
+                    <li>Khi triển khai Apps Script: Thực thi với tư cách <strong>Tôi</strong>, Người có quyền truy cập <strong>Bất kỳ ai</strong>.</li>
+                    <li>Sửa mã xong phải <strong>Triển khai → Quản lý các tùy chọn triển khai → Phiên bản mới</strong> (giữ nguyên link).</li>
+                  </ul>
+                )}
+                <button type="button" onClick={handleSaveConfig} className={btnLight}><Check className="w-4 h-4" /> Lưu thiết lập</button>
+              </section>
+              <section className={cardCls}>
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <h3 className={titleCls}><Code2 className="w-4 h-4 text-amber-700" /> Mã Apps Script ({versionLabel(conn?.latest || appsScriptSetupService.getBundledVersion()).toLowerCase()})</h3>
+                  <div className="flex items-center gap-2">
+                    <a href="https://script.google.com/" target="_blank" rel="noreferrer" className={btnLight}>Mở script.google.com <ExternalLink className="w-3.5 h-3.5" /></a>
+                    <button type="button"
+                      onClick={() => {
+                        navigator.clipboard.writeText(googleDriveService.generateAppsScriptCode(config.folderId)).then(() => {
+                          setIsCopiedCode(true);
+                          setTimeout(() => setIsCopiedCode(false), 2500);
+                          setActionMessage({ type: 'success', text: 'Đã sao chép toàn bộ mã Apps Script (đã điền sẵn mã thư mục).' });
+                        }).catch(() => setActionMessage({ type: 'error', text: 'Trình duyệt không cho sao chép tự động. Bấm "Xem mã" rồi bôi đen để sao chép.' }));
+                      }}
+                      className={btnIndigo}>
+                      {isCopiedCode ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />} {isCopiedCode ? 'Đã sao chép' : 'Sao chép mã'}
+                    </button>
+                  </div>
+                </div>
+                <button type="button" onClick={() => setShowScriptCode(!showScriptCode)} className="no-hover-fx text-xs font-bold text-indigo-700 hover:underline inline-flex items-center gap-1 cursor-pointer">
+                  {showScriptCode ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />} {showScriptCode ? 'Ẩn mã' : 'Xem mã'}
+                </button>
+                {showScriptCode && (
+                  <pre className="p-2.5 bg-slate-50 text-slate-800 font-mono text-xs leading-relaxed max-h-44 overflow-auto whitespace-pre select-all rounded-xl border border-slate-200">
+                    {googleDriveService.generateAppsScriptCode(config.folderId)}
+                  </pre>
+                )}
+              </section>
+            </div>
+          )}
+
+          {/* ───────────────── THẺ: TỔNG HỢP TOÀN TRƯỜNG (Quản trị / BGH) ───────────────── */}
+          {tab === 'report' && isExecutive && (
+            <section className={cardCls}>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <h3 className={titleCls}><School className="w-4 h-4 text-amber-700" /> Số liệu các lớp trong thư mục dùng chung</h3>
+                <button type="button" onClick={loadBghSummary} disabled={isAggregating} className={btnLight}>
+                  <RefreshCw className={`w-4 h-4 ${isAggregating ? 'animate-spin' : ''}`} /> {isAggregating ? 'Đang quét…' : 'Cập nhật số liệu'}
                 </button>
               </div>
-
               {bghReport ? (
-                <div className="space-y-2.5">
+                <>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">
-                    <div className="p-2 rounded-lg bg-white border border-amber-200">
-                      <div className="text-[12px] text-slate-500 font-bold uppercase">Tổng số lớp</div>
-                      <div className="text-sm font-black text-indigo-950">{bghReport.summary.totalClasses}</div>
-                    </div>
-                    <div className="p-2 rounded-lg bg-white border border-amber-200">
-                      <div className="text-[12px] text-slate-500 font-bold uppercase">Tổng học sinh</div>
-                      <div className="text-sm font-black text-indigo-950">{bghReport.summary.totalStudents}</div>
-                    </div>
-                    <div className="p-2 rounded-lg bg-white border border-amber-200">
-                      <div className="text-[12px] text-emerald-700 font-bold uppercase">Tỉ lệ chuyên cần</div>
-                      <div className="text-sm font-black text-emerald-800">{bghReport.summary.attendanceRate}</div>
-                    </div>
-                    <div className="p-2 rounded-lg bg-white border border-amber-200">
-                      <div className="text-[12px] text-orange-700 font-bold uppercase">Tỉ lệ bán trú</div>
-                      <div className="text-sm font-black text-orange-800">{bghReport.summary.boardingRate}</div>
-                    </div>
+                    {([
+                      ['Tổng số lớp', bghReport.summary.totalClasses, 'text-indigo-950'],
+                      ['Tổng học sinh', bghReport.summary.totalStudents, 'text-indigo-950'],
+                      ['Tỉ lệ chuyên cần', bghReport.summary.attendanceRate, 'text-emerald-800'],
+                      ['Tỉ lệ bán trú', bghReport.summary.boardingRate, 'text-orange-800'],
+                    ] as const).map(([label, value, cls]) => (
+                      <div key={label} className="px-2 py-1.5 rounded-xl bg-slate-50 border border-slate-200">
+                        <div className="text-xs text-slate-600 font-bold">{label}</div>
+                        <div className={`text-base font-black ${cls}`}>{value}</div>
+                      </div>
+                    ))}
                   </div>
-
-                  {/* Chi tiết từng lớp */}
                   {Array.isArray(bghReport.classesDetail) && bghReport.classesDetail.length > 0 && (
-                    <div className="overflow-x-auto max-h-44 border border-amber-200 rounded-lg">
-                      <table className="w-full text-[12px] text-left">
-                        <thead className="bg-amber-100/70 text-amber-950 font-black uppercase text-[12px]">
+                    <div className="overflow-auto max-h-52 border border-slate-200 rounded-xl">
+                      <table className="w-full text-xs text-left">
+                        <thead className="bg-slate-50 text-slate-700 font-black uppercase sticky top-0">
                           <tr>
-                            <th className="p-1.5">Lớp</th>
-                            <th className="p-1.5">Tệp lưu</th>
-                            <th className="p-1.5">Sĩ số</th>
-                            <th className="p-1.5">Có mặt</th>
-                            <th className="p-1.5">Ăn bán trú</th>
-                            <th className="p-1.5">Trạng thái</th>
-                            <th className="p-1.5 text-center">Thao tác</th>
+                            <th className="px-2 py-1.5 whitespace-nowrap">Lớp</th>
+                            <th className="px-2 py-1.5 whitespace-nowrap">Tệp lưu</th>
+                            <th className="px-2 py-1.5 whitespace-nowrap">Sĩ số</th>
+                            <th className="px-2 py-1.5 whitespace-nowrap">Có mặt</th>
+                            <th className="px-2 py-1.5 whitespace-nowrap">Bán trú</th>
+                            <th className="px-2 py-1.5 whitespace-nowrap">Trạng thái</th>
+                            <th className="px-2 py-1.5 whitespace-nowrap text-center">Thao tác</th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-amber-100 bg-white">
+                        <tbody className="divide-y divide-slate-100 bg-white">
                           {bghReport.classesDetail.map((c, i) => (
-                            <tr key={i} className="hover:bg-amber-50/50">
-                              <td className="p-1.5 font-bold text-slate-900">{c.className}</td>
-                              <td className="p-1.5 font-mono text-[12px] text-slate-500">{c.fileName}</td>
-                              <td className="p-1.5">{c.total}</td>
-                              <td className="p-1.5 font-medium text-emerald-700">{c.present} ({c.attendanceRate})</td>
-                              <td className="p-1.5 font-medium text-orange-700">{c.boardingActual}/{c.boardingRegistered}</td>
-                              <td className="p-1.5">
-                                <span className={`px-1.5 py-0.2 rounded text-[12px] font-bold ${
-                                  c.status === 'reported' ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-600'
-                                }`}>
+                            <tr key={i}>
+                              <td className="px-2 py-1.5 font-bold text-slate-900 whitespace-nowrap">{c.className}</td>
+                              <td className="px-2 py-1.5 font-mono text-slate-600 whitespace-nowrap">{c.fileName}</td>
+                              <td className="px-2 py-1.5">{c.total}</td>
+                              <td className="px-2 py-1.5 font-medium text-emerald-700 whitespace-nowrap">{c.present} ({c.attendanceRate})</td>
+                              <td className="px-2 py-1.5 font-medium text-orange-700 whitespace-nowrap">{c.boardingActual}/{c.boardingRegistered}</td>
+                              <td className="px-2 py-1.5">
+                                <span className={`px-1.5 py-0.5 rounded font-bold whitespace-nowrap ${c.status === 'reported' ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-700'}`}>
                                   {c.status === 'reported' ? 'Đã báo cáo' : 'Chưa điểm danh'}
                                 </span>
                               </td>
-                              <td className="p-1.5 text-center">
-                                <button
-                                  type="button"
-                                  onClick={() => handleManualPull(c.fileName)}
-                                  className="px-2 py-0.5 rounded bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-[12px] border border-indigo-200 transition-colors cursor-pointer"
-                                  title={`Tải dữ liệu của ${c.className}`}
-                                >
-                                  Nạp dữ liệu
-                                </button>
+                              <td className="px-2 py-1.5 text-center">
+                                <button type="button" onClick={() => handleManualPull(c.fileName)} className="no-hover-fx px-2 py-0.5 rounded bg-white hover:bg-indigo-50 text-indigo-700 font-bold border border-indigo-200 whitespace-nowrap cursor-pointer" title={`Tải dữ liệu của ${c.className}`}>Nạp dữ liệu</button>
                               </td>
                             </tr>
                           ))}
@@ -1030,31 +684,15 @@ export const GoogleDriveSyncModal: React.FC<GoogleDriveSyncModalProps> = ({ isOp
                       </table>
                     </div>
                   )}
-                </div>
+                </>
               ) : (
-                <p className="text-[12px] text-slate-600">
-                  Nhấn "Cập nhật số liệu" để tự động quét toàn bộ các tệp <code className="font-mono text-amber-900 font-bold">gvcn_*.json</code> mà các giáo viên chủ nhiệm đã đẩy lên thư mục Google Drive dùng chung.
+                <p className="text-xs text-slate-600">
+                  Bấm "Cập nhật số liệu" để quét các tệp <code className="font-mono font-bold text-amber-900">gvcn_*.json</code> giáo viên chủ nhiệm đã lưu trong thư mục dùng chung.
                 </p>
               )}
-            </div>
+            </section>
           )}
-
         </div>
-
-        {/* Footer chuẩn Ảnh 6 */}
-        <div className="px-5 py-3 bg-slate-50 border-t border-slate-200 flex items-center justify-between shrink-0">
-          <div className="text-[12px] text-slate-500 font-medium truncate max-w-sm">
-            Google Drive Cloud Sync v2.5 • Tự động kích hoạt Cầu nối Apps Script (1-Click) & Đổi thư mục linh hoạt
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="px-5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-100 text-slate-800 text-xs font-bold uppercase transition-colors cursor-pointer"
-          >
-            ĐÓNG
-          </button>
-        </div>
-
       </div>
     </div>
   );

@@ -9,6 +9,26 @@ import { googleDriveService } from './googleDriveService';
 export const OPEN_APPS_SCRIPT_WIZARD_EVENT = 'lhhp:open-apps-script-wizard';
 const UPDATE_CHECK_KEY = 'lhhp_gas_version_check';
 
+/** Phát mỗi khi có kết quả kiểm tra kết nối mới (detail = DriveConnection) */
+export const DRIVE_CONNECTION_EVENT = 'lhhp:drive-connection';
+/**
+ * Trạng thái kết nối của máy này với thư mục CSDL nhà trường trên Google Drive:
+ * none = chưa khai báo link · connected = Apps Script trả lời + thư mục đã có CSDL trường ·
+ * no_db = mở được thư mục nhưng chưa có CSDL · unreachable = Apps Script không trả lời / không mở được thư mục
+ */
+export interface DriveConnection {
+  state: 'none' | 'checking' | 'connected' | 'no_db' | 'unreachable';
+  version: string;
+  latest: string;
+  outdated: boolean;
+  schools: number;
+  folderId: string;
+  detail: string;
+  checkedAt: number;
+}
+let lastConnection: DriveConnection | null = null;
+let connectionInFlight: Promise<DriveConnection> | null = null;
+
 export type CheckState = 'ok' | 'fail' | 'warn' | 'skip';
 export interface SetupCheck { key: 'url' | 'access' | 'version' | 'folder'; label: string; state: CheckState; detail: string }
 
@@ -142,6 +162,58 @@ export const appsScriptSetupService = {
     const version = String(ping.data.version || '');
     try { sessionStorage.setItem(UPDATE_CHECK_KEY, JSON.stringify({ url, version, at: Date.now() })); } catch (_) { /* ignore */ }
     return { current: version, latest, outdated: Boolean(version) && compareVersions(version, latest) < 0 };
+  },
+
+  /** Kết quả kiểm tra kết nối gần nhất (chưa kiểm tra → null) */
+  getLastConnection(): DriveConnection | null { return lastConnection; },
+
+  /**
+   * 🔌 Kiểm tra máy này đã kết nối với thư mục CSDL nhà trường trên Google Drive chưa + phiên bản Apps Script.
+   * Gọi khi đăng nhập / mở phần mềm / mở hộp Google Drive. Không ép (`force = false`) thì dùng lại kết quả trong 60 giây.
+   */
+  async checkConnection(force = false): Promise<DriveConnection> {
+    const cfg = googleDriveService.getConfig();
+    const latest = this.getBundledVersion();
+    const folderId = (cfg.folderId || '').trim();
+    const { url, problem } = this.classifyUrl(cfg.scriptUrl || '');
+    const emit = (c: DriveConnection) => {
+      lastConnection = c;
+      try { window.dispatchEvent(new CustomEvent(DRIVE_CONNECTION_EVENT, { detail: c })); } catch (_) { /* ignore */ }
+      return c;
+    };
+    const base = { version: '', latest, outdated: false, schools: 0, folderId, checkedAt: Date.now() };
+    if (problem || !folderId) {
+      return emit({ ...base, state: 'none', detail: 'Máy này chưa khai báo link thư mục Google Drive và link Apps Script của trường.' });
+    }
+    if (!force && lastConnection && lastConnection.folderId === folderId && lastConnection.state !== 'checking' && lastConnection.state !== 'none' && Date.now() - lastConnection.checkedAt < 60000) {
+      return lastConnection;
+    }
+    if (connectionInFlight) return connectionInFlight;
+    emit({ ...(lastConnection && lastConnection.folderId === folderId ? lastConnection : base), state: 'checking', detail: 'Đang kiểm tra kết nối với Google Drive…', checkedAt: Date.now() });
+    connectionInFlight = (async () => {
+      const [ping, ls] = await Promise.all([
+        fetchJson(`${url}?action=ping`, 15000),
+        fetchJson(`${url}?action=listSchools&folderId=${encodeURIComponent(folderId)}`, 20000),
+      ]);
+      const now = { ...base, checkedAt: Date.now() };
+      if (!ping.ok || !ping.data?.success) {
+        return emit({ ...now, state: 'unreachable', detail: ping.error === 'timeout'
+          ? 'Google phản hồi quá lâu. Kiểm tra mạng rồi bấm Kiểm tra lại.'
+          : 'Apps Script của trường không trả lời (link /exec sai, dự án đã bị xóa, hoặc chưa mở quyền "Bất kỳ ai").' });
+      }
+      const version = String(ping.data.version || '');
+      this.rememberVersion(url, version);
+      const outdated = Boolean(version) && compareVersions(version, latest) < 0;
+      if (!ls.ok || !ls.data?.success) {
+        return emit({ ...now, version, outdated, state: 'unreachable', detail: `Apps Script trả lời nhưng không mở được thư mục Google Drive${ls.data?.message ? ` (${ls.data.message})` : ''}. Kiểm tra lại link thư mục.` });
+      }
+      const schools = Array.isArray(ls.data.schools) ? ls.data.schools.length : 0;
+      if (!ls.data.initialized) {
+        return emit({ ...now, version, outdated, schools, state: 'no_db', detail: 'Đã mở được thư mục Google Drive nhưng chưa có cơ sở dữ liệu nhà trường. Quản trị đăng nhập để khởi tạo trường và tài khoản.' });
+      }
+      return emit({ ...now, version, outdated, schools, state: 'connected', detail: 'Cơ sở dữ liệu của nhà trường đã được kết nối với thư mục Google Drive.' });
+    })();
+    try { return await connectionInFlight; } finally { connectionInFlight = null; }
   },
 
   rememberVersion(url: string, version: string) {

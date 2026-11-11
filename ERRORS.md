@@ -265,3 +265,16 @@
 - **Fix Applied**: `utils/sampleData.ts` (`stripSampleData`) lọc học sinh / lớp mẫu khi nạp dữ liệu (bản Drive) và ở chế độ chỉ xem; `initSubjectClasses` và `switchUserAccount` không sinh/lưu học sinh mẫu khi đã kết nối Drive; dải chỉ xem ghi chú khi giáo viên chưa có dữ liệu.
 - **Prevention**: Bản web dùng chung Drive không bao giờ sinh dữ liệu mẫu; mọi luồng "xem thay" phải chỉ đọc (xem `utils/viewOnlyMode.ts`).
 - **Status**: Fixed
+
+---
+
+## [2026-11-11 18:30] - Bản web báo "đã lưu nơi lưu trữ" nhưng không có tệp nào trên ổ đĩa
+
+- **Type**: Data
+- **Severity**: High
+- **File**: `src/services/dataStorageService.ts` (`writeRoleDataToFile`, `checkStorageInfo`, `scanUsbAndDrives`), `src/components/modals/DataStorageLocationModal.tsx`
+- **Agent**: Claude Code
+- **Root Cause**: Ghi tệp theo đường dẫn `D:\…` chỉ làm được qua máy chủ Express (`/api/storage/write-role-file`) hoặc Electron. Trên bản web (Vercel) cả hai đều không có, nhưng nhánh dự phòng vẫn trả `success: true` + dung lượng giả 58.7 KB → người dùng tưởng đã lưu, thư mục trên máy trống. Nút "Duyệt thư mục" chỉ lấy TÊN thư mục ghép với chữ ổ đĩa đang chọn (không phải thư mục thật).
+- **Fix Applied**: Bản web (`isBrowserFolderMode`) dùng File System Access API: `pickLocalFolder` (thẻ thư mục lưu IndexedDB `lhhp_local_folder`), `writeToLocalFolder` ghi tệp THẬT, trả lỗi rõ (`NO_FOLDER`, `NEED_PERMISSION`, `UNSUPPORTED`) thay cho thành công giả; tự động lưu gom 3 giây; chế độ chỉ xem không ghi. Hộp Nơi lưu dữ liệu hiện trạng thái thật (tên thư mục, dung lượng, giờ ghi).
+- **Prevention**: Nhánh dự phòng không được trả `success: true` khi chưa làm được việc; không hiển thị số liệu mặc định giả. Tính năng phụ thuộc máy chủ phải có đường riêng cho bản web hoặc báo rõ là không dùng được.
+- **Status**: Fixed

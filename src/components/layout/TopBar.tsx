@@ -13,7 +13,7 @@ import { adminEditsService } from '../../services/adminEditsService';
 import { playNoiseAlertSound } from '../../utils/audio';
 import { NavigationMenuId } from './Sidebar';
 import { getOfficialDisplayName, getOfficialRoleTitle } from '../../utils/accountIdentity';
-import { appsScriptSetupService, versionLabel } from '../../services/appsScriptSetupService';
+import { appsScriptSetupService, versionLabel, DRIVE_CONNECTION_EVENT, type DriveConnection } from '../../services/appsScriptSetupService';
 
 interface TopBarProps {
   currentView: NavigationMenuId;
@@ -183,6 +183,17 @@ export const TopBar: React.FC<TopBarProps> = ({
 
   // 🔄 Quản trị tối cao / Quản trị nhà trường / BGH: cập nhật ngay dữ liệu mới nhất của mọi GVCN
   // 🧭 Apps Script của trường cũ hơn mã trong phần mềm → nhắc cập nhật (chỉ tài khoản quản lý)
+  // 🔌 Mỗi lần đăng nhập / mở phần mềm: kiểm tra đã kết nối thư mục CSDL trường trên Google Drive chưa + phiên bản (mọi vai trò)
+  const [driveConn, setDriveConn] = useState<DriveConnection | null>(appsScriptSetupService.getLastConnection());
+  useEffect(() => {
+    const onConn = (e: Event) => setDriveConn((e as CustomEvent).detail as DriveConnection);
+    const recheck = () => { appsScriptSetupService.checkConnection(true).catch(() => { /* ignore */ }); };
+    window.addEventListener(DRIVE_CONNECTION_EVENT, onConn);
+    window.addEventListener('lhhp:apps-script-updated', recheck);
+    if (currentUser) recheck();
+    return () => { window.removeEventListener(DRIVE_CONNECTION_EVENT, onConn); window.removeEventListener('lhhp:apps-script-updated', recheck); };
+  }, [currentUser?.username]);
+
   const [gasUpdate, setGasUpdate] = useState<{ current: string; latest: string; outdated: boolean } | null>(null);
   useEffect(() => {
     if (!isManagerUser) { setGasUpdate(null); return; }
@@ -407,19 +418,33 @@ export const TopBar: React.FC<TopBarProps> = ({
           <span className="hidden 2xl:inline">{driveLabel}</span>
         </button>
 
-        {/* 🧭 Nhắc cập nhật Apps Script */}
-        {gasUpdate && !gasUpdate.outdated && (
+        {/* 🔌 Kết nối CSDL nhà trường trên Google Drive + phiên bản (mọi vai trò) */}
+        {driveConn && driveConn.state === 'connected' && (
           <button
             type="button"
-            onClick={() => appsScriptSetupService.open('update')}
+            onClick={() => setIsGoogleDriveModalOpen(true)}
             className={`${chipBase} max-md:hidden bg-emerald-50 text-emerald-800 border-emerald-200 hover:bg-emerald-100`}
-            title={`Apps Script của trường đang chạy ${versionLabel(gasUpdate.current)} — đã là bản mới nhất. Bấm để mở trình cài đặt / kiểm tra.`}
-            aria-label={`Apps Script ${versionLabel(gasUpdate.current)}, đã cập nhật mới nhất`}
+            title={`Cơ sở dữ liệu của nhà trường đã được kết nối với thư mục Google Drive • ${versionLabel(driveConn.version)}`}
+            aria-label={`Cơ sở dữ liệu của nhà trường đã được kết nối với thư mục Google Drive, ${versionLabel(driveConn.version)}`}
           >
             <CheckCircle2 className="w-4 h-4 text-emerald-700" />
-            <span className="max-xl:hidden">Apps Script</span> {gasUpdate.current}
+            <span className="max-xl:hidden">Đã kết nối Drive •</span> {driveConn.version || 'OK'}
           </button>
         )}
+        {driveConn && (driveConn.state === 'unreachable' || driveConn.state === 'no_db') && (
+          <button
+            type="button"
+            onClick={() => setIsGoogleDriveModalOpen(true)}
+            className={`${chipBase} ${driveConn.state === 'unreachable' ? 'bg-rose-50 text-rose-800 border-rose-300 hover:bg-rose-100' : 'bg-amber-100 text-amber-950 border-amber-300 hover:bg-amber-200'}`}
+            title={driveConn.detail}
+            aria-label={driveConn.detail}
+          >
+            <AlertTriangle className="w-4 h-4" />
+            <span className="max-sm:hidden">{driveConn.state === 'unreachable' ? 'Mất kết nối Drive' : 'Drive chưa có CSDL'}</span>
+          </button>
+        )}
+
+        {/* 🧭 Nhắc cập nhật Apps Script (tài khoản quản lý) */}
         {gasUpdate && gasUpdate.outdated && (
           <button
             type="button"
