@@ -10,6 +10,7 @@ import { useState } from 'react';
 import { appsScriptSetupService } from '../../services/appsScriptSetupService';
 import { useClassroom } from '../../context/ClassroomContext';
 import { OPEN_CHANGE_PASSWORD_EVENT } from '../modals/ChangePasswordModal';
+import { OPEN_QUIZ_STORAGE_EVENT } from '../modals/QuizStorageModal';
 import { APP_AUTHOR_INFO } from '../../data/initialData';
 import { OPEN_ZALO_QR_EVENT } from '../modals/ZaloQrModal';
 import { getOfficialDisplayName, getOfficialRoleTitle } from '../../utils/accountIdentity';
@@ -350,6 +351,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               { key: 'drive', label: 'Google Drive', icon: Cloud, onClick: () => setIsGoogleDriveModalOpen(true) },
               ...(canManageAccounts ? [{ key: 'gas', label: 'Cài đặt Apps Script', icon: Settings2, onClick: () => appsScriptSetupService.open() }] : []),
               { key: 'storage', label: 'Nơi lưu dữ liệu', icon: HardDrive, onClick: () => setIsDataStorageModalOpen(true) },
+              ...(!isMacroAdmin ? [{ key: 'quiz', label: 'Nơi lưu câu hỏi', icon: BookOpen, onClick: () => window.dispatchEvent(new Event(OPEN_QUIZ_STORAGE_EVENT)) }] : []),
               { key: 'password', label: 'Đổi mật khẩu', icon: Lock, onClick: () => window.dispatchEvent(new Event(OPEN_CHANGE_PASSWORD_EVENT)) },
               { key: 'cdkey', label: isCdKeyActivated ? 'Bản quyền PRO' : 'Kích hoạt CDKEY', icon: KeyRound, onClick: () => setIsCdKeyModalOpen(true) },
               { key: 'register', label: 'Đăng ký sử dụng', icon: Sparkles, onClick: () => setIsRegistrationModalOpen(true) },

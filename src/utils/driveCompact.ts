@@ -4,6 +4,7 @@
  * - bỏ ảnh gốc `originalAvatar` (chỉ để cắt lại ảnh — máy giáo viên vẫn giữ; bước gộp dữ liệu giữ bản trên máy);
  * - nén lại ảnh JPEG quá lớn: ảnh lớp / ảnh khác ≤ 1280px, ảnh học sinh & giáo viên ≤ 360px, chất lượng ~80%;
  * - chỉ thay khi bản nén THỰC SỰ nhỏ hơn; ảnh PNG giữ nguyên (tránh mất nền trong suốt).
+ * - bỏ bộ câu hỏi trò chơi `quizBank` (lưu ở kho cá nhân của giáo viên, xem services/quizBankStore.ts);
  * KHÔNG đổi dữ liệu trên máy (chỉ tạo bản sao để gửi). Có bộ nhớ đệm để không nén lại ảnh đã nén ở các lần lưu sau.
  */
 const cache = new Map<string, string>();
@@ -13,6 +14,11 @@ const isJpeg = (v: unknown): v is string => typeof v === 'string' && /^data:imag
 // Ngưỡng (số ký tự base64 ≈ byte × 1.37)
 const LIMIT_PORTRAIT = 45_000;   // ảnh học sinh / giáo viên > ~33 KB thì nén
 const LIMIT_LARGE = 220_000;     // ảnh lớp / phần thưởng > ~160 KB thì nén
+
+/** Nén ảnh dataURL về cạnh dài ≤ maxSide (JPEG, nền trắng); chỉ trả bản nén khi nhỏ hơn thật. Dùng chung (kho câu hỏi). */
+export function shrinkImageDataUrl(dataUrl: string, maxSide: number, quality: number): Promise<string> {
+  return shrinkDataUrl(dataUrl, maxSide, quality);
+}
 
 function shrinkDataUrl(dataUrl: string, maxSide: number, quality: number): Promise<string> {
   if (typeof document === 'undefined' || typeof Image === 'undefined') return Promise.resolve(dataUrl);
@@ -54,6 +60,9 @@ const large = async (v: unknown) => (isJpeg(v) && v.length > LIMIT_LARGE ? shrin
 export async function compactClassroomDataForDrive<T extends Record<string, any>>(full: T): Promise<T> {
   try {
     const out: any = { ...full };
+    // Bộ câu hỏi trò chơi là dữ liệu CÁ NHÂN của giáo viên (kho trên máy / Drive cá nhân — services/quizBankStore):
+    // không đưa vào tệp lớp trên Drive dùng chung của trường (tránh phình tệp, nhiều ảnh)
+    delete out.quizBank;
     if (Array.isArray(full.classes)) {
       out.classes = await Promise.all(full.classes.map(async (c: any) => {
         if (!c || typeof c !== 'object') return c;

@@ -1,3 +1,4 @@
+import { quizBankStore } from '../services/quizBankStore';
 import { stripSampleData } from '../utils/sampleData';
 import { isViewOnly, getViewAs, setViewAs, subscribeViewAs, ViewAsInfo } from '../utils/viewOnlyMode';
 import { saveTeacherAuth, clearTeacherAuth } from '../utils/teacherAuth';
@@ -640,6 +641,12 @@ export const ClassroomProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   const [subjectTimetable, setSubjectTimetable] = useState<SubjectTimetableSlot[]>(INITIAL_SUBJECT_TIMETABLE);
   const [quizBank, setQuizBank] = useState<QuestionItem[]>(() => loadQuizBank());
+  const quizBankRef = useRef<QuestionItem[]>(quizBank);
+  quizBankRef.current = quizBank;
+  // 📚 Kho câu hỏi CÁ NHÂN (services/quizBankStore): chỉ tài khoản giáo viên, không ở chế độ chỉ xem
+  const isPersonalQuizUser = (u: UserAccount | null | undefined) => Boolean(
+    u && !isViewOnly() && !(u.role === 'admin' || u.role === 'school_admin' || u.role === 'bgh' || u.isBgh || u.isSchoolAdmin || u.role === 'guest_admin' || u.isGuestAdmin)
+  );
   const updateQuizBank = (questions: QuestionItem[]) => {
     const merged = smartMergeQuizBank(questions);
     setQuizBank(merged);
@@ -663,8 +670,32 @@ export const ClassroomProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         };
         databaseService.saveUserData(user.username, payload).catch(() => {});
       }
+      // Lưu thêm vào kho câu hỏi cá nhân trên máy (+ Drive cá nhân nếu đã cấu hình)
+      if (isPersonalQuizUser(user)) quizBankStore.save(user.username, merged).catch(() => {});
     }
   };
+
+  // Đăng nhập / đổi tài khoản giáo viên: nạp kho câu hỏi cá nhân (gộp CỘNG THÊM với bộ đang có, không mất câu nào),
+  // rồi lấy bản mới hơn từ Google Drive cá nhân (nếu đã cấu hình)
+  useEffect(() => {
+    const user = currentUserRef.current;
+    if (!user || !isPersonalQuizUser(user)) return;
+    let alive = true;
+    (async () => {
+      try {
+        const merged = await quizBankStore.adopt(user.username, quizBankRef.current);
+        if (!alive) return;
+        if (merged.length !== quizBankRef.current.length) setQuizBank(merged);
+        const remote = await quizBankStore.pullDrive(user.username);
+        if (alive && remote) {
+          setQuizBank(remote);
+          saveQuizBank(remote);
+        }
+      } catch (_) { /* giữ bộ câu hỏi đang có */ }
+    })();
+    return () => { alive = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentUser?.username]);
 
   const [infographicConfig, setInfographicConfig] = useState<any>(null);
   const updateInfographicConfig = (cfg: any) => {
@@ -882,6 +913,13 @@ export const ClassroomProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }
     if (data.quizBank && Array.isArray(data.quizBank)) {
       setQuizBank(smartMergeQuizBank(data.quizBank));
+      // Chuyển dữ liệu cũ: câu hỏi nằm trong tệp lớp / bộ nhớ → cộng thêm vào kho cá nhân (không xóa câu nào)
+      const qUser = currentUserRef.current;
+      if (isPersonalQuizUser(qUser)) {
+        quizBankStore.adopt(qUser!.username, data.quizBank).then(all => {
+          if (all.length !== quizBankRef.current.length) setQuizBank(all);
+        }).catch(() => {});
+      }
     }
     if (data.infographicConfig) {
       setInfographicConfig(data.infographicConfig);
