@@ -18,8 +18,13 @@ const DEFAULT_SEL: QuizSelection = { source: 'all', subjects: [] };
 const subjectOf = (q: QuestionItem) => q.subject || 'Tổng hợp';
 const inSource = (q: QuestionItem, source: QuizSource) => source === 'all' || (source === 'sample' ? isSampleQuestion(q) : !isSampleQuestion(q));
 
+/** Mục chọn là MÔN ("Toán học") hoặc BÀI trong môn ("Toán học › Bài 12") */
+export const LESSON_SEP = ' › ';
+const lessonKey = (sub: string, les: string) => `${sub}${LESSON_SEP}${les}`;
 export function filterQuizPool(bank: QuestionItem[], sel: QuizSelection): QuestionItem[] {
-  return (bank || []).filter(q => q && inSource(q, sel.source) && (sel.subjects.length === 0 || sel.subjects.includes(subjectOf(q))));
+  return (bank || []).filter(q => q && inSource(q, sel.source) && (
+    sel.subjects.length === 0 || sel.subjects.includes(subjectOf(q)) || (!!q.lesson && sel.subjects.includes(lessonKey(subjectOf(q), q.lesson)))
+  ));
 }
 
 const SOURCE_META: Record<QuizSource, { label: string; desc: string; icon: React.ElementType }> = {
@@ -53,8 +58,18 @@ export const QuizSetPickerModal: React.FC<PickerProps> = ({ bank, initial, onCon
     bank.forEach(q => { if (q && inSource(q, source)) m.set(subjectOf(q), (m.get(subjectOf(q)) || 0) + 1); });
     return Array.from(m.entries()).sort((a, b) => a[0].localeCompare(b[0], 'vi'));
   }, [bank, source]);
-  // Bỏ môn không còn trong kho đã chọn
-  const validSubjects = subjects.filter(s => subjectCounts.some(([n]) => n === s));
+  const lessonCounts = useMemo(() => {
+    const m = new Map<string, Map<string, number>>();
+    bank.forEach(q => {
+      if (!q || !q.lesson || !inSource(q, source)) return;
+      const sub = subjectOf(q); const inner = m.get(sub) || new Map<string, number>();
+      inner.set(q.lesson, (inner.get(q.lesson) || 0) + 1); m.set(sub, inner);
+    });
+    return m;
+  }, [bank, source]);
+  const isValidKey = (k: string) => subjectCounts.some(([n]) => n === k) || Array.from(lessonCounts.entries()).some(([sub, ls]) => Array.from(ls.keys()).some(l => lessonKey(sub, l) === k));
+  // Bỏ môn / bài không còn trong kho đã chọn
+  const validSubjects = subjects.filter(isValidKey);
   const total = filterQuizPool(bank, { source, subjects: validSubjects }).length;
 
   useEffect(() => {
@@ -64,8 +79,13 @@ export const QuizSetPickerModal: React.FC<PickerProps> = ({ bank, initial, onCon
   }, [onCancel]);
 
   const toggle = (s: string) => setSubjects(prev => {
-    const base = prev.filter(x => subjectCounts.some(([n]) => n === x));
+    const base = prev.filter(isValidKey).filter(x => !x.startsWith(s + LESSON_SEP)); // chọn cả môn → bỏ các bài lẻ của môn
     return base.includes(s) ? base.filter(x => x !== s) : [...base, s];
+  });
+  const toggleLesson = (sub: string, les: string) => setSubjects(prev => {
+    const k = lessonKey(sub, les);
+    const base = prev.filter(isValidKey).filter(x => x !== sub); // chọn bài lẻ → bỏ chọn cả môn
+    return base.includes(k) ? base.filter(x => x !== k) : [...base, k];
   });
 
   return (
@@ -110,7 +130,7 @@ export const QuizSetPickerModal: React.FC<PickerProps> = ({ bank, initial, onCon
 
           <section className="space-y-2">
             <div className="flex flex-wrap items-center gap-2">
-              <h4 className="text-sm font-black text-slate-900 mr-auto flex items-center gap-2"><Layers className="w-4 h-4 text-purple-700" /> 2. Bộ câu hỏi (môn học)</h4>
+              <h4 className="text-sm font-black text-slate-900 mr-auto flex items-center gap-2"><Layers className="w-4 h-4 text-purple-700" /> 2. Môn học / bài học</h4>
               {subjectCounts.length > 0 && (
                 <button type="button" onClick={() => setSubjects([])} className="no-hover-fx text-sm font-bold text-purple-700 hover:underline">
                   {validSubjects.length === 0 ? 'Đang dùng mọi môn' : 'Dùng mọi môn'}
@@ -120,22 +140,40 @@ export const QuizSetPickerModal: React.FC<PickerProps> = ({ bank, initial, onCon
             {subjectCounts.length === 0 ? (
               <p className="text-sm text-slate-600">Kho này chưa có câu hỏi.</p>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 items-start">
                 {subjectCounts.map(([name, n]) => {
-                  const on = validSubjects.length === 0 || validSubjects.includes(name);
                   const explicit = validSubjects.includes(name);
+                  const lessons = Array.from((lessonCounts.get(name) || new Map<string, number>()).entries()).sort((a, b) => a[0].localeCompare(b[0], 'vi', { numeric: true }));
+                  const someLesson = lessons.some(([l]) => validSubjects.includes(lessonKey(name, l)));
                   return (
-                    <button key={name} type="button" onClick={() => toggle(name)} aria-pressed={explicit}
-                      className={`no-hover-fx flex items-center gap-2 rounded-xl border px-3 py-2 text-left ${explicit ? 'border-purple-600 bg-purple-50' : 'border-slate-200 bg-white hover:border-purple-300'}`}>
-                      {explicit ? <CheckSquare className="w-4 h-4 text-purple-700 shrink-0" /> : <Square className={`w-4 h-4 shrink-0 ${on ? 'text-slate-400' : 'text-slate-300'}`} />}
-                      <span className="text-sm font-bold text-slate-900 flex-1 truncate" title={name}>{name}</span>
-                      <span className="text-xs font-bold text-slate-600 tabular-nums whitespace-nowrap">{n} câu</span>
-                    </button>
+                    <div key={name} className={`rounded-xl border ${explicit || someLesson ? 'border-purple-400 bg-purple-50/40' : 'border-slate-200 bg-white'}`}>
+                      <button type="button" onClick={() => toggle(name)} aria-pressed={explicit}
+                        className="no-hover-fx w-full flex items-center gap-2 px-3 py-2 text-left">
+                        {explicit ? <CheckSquare className="w-4 h-4 text-purple-700 shrink-0" /> : <Square className="w-4 h-4 shrink-0 text-slate-400" />}
+                        <span className="text-sm font-black text-slate-900 flex-1 truncate" title={name}>{name}</span>
+                        <span className="text-xs font-bold text-slate-600 tabular-nums whitespace-nowrap">{n} câu</span>
+                      </button>
+                      {lessons.length > 0 && (
+                        <div className="px-2 pb-2 space-y-1">
+                          {lessons.map(([les, c]) => {
+                            const on = explicit || validSubjects.includes(lessonKey(name, les));
+                            return (
+                              <button key={les} type="button" onClick={() => toggleLesson(name, les)} aria-pressed={on}
+                                className={`no-hover-fx w-full flex items-center gap-2 pl-6 pr-2 h-8 rounded-lg text-left text-sm ${on ? 'bg-purple-100 text-purple-900' : 'hover:bg-slate-50 text-slate-700'}`}>
+                                {on ? <CheckSquare className="w-3.5 h-3.5 text-purple-700 shrink-0" /> : <Square className="w-3.5 h-3.5 text-slate-400 shrink-0" />}
+                                <span className="flex-1 truncate font-bold" title={les}>{les}</span>
+                                <span className="text-xs tabular-nums text-slate-600">{c}</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
                   );
                 })}
               </div>
             )}
-            <p className="text-xs text-slate-600">Không tích môn nào = dùng mọi môn trong kho. Tích một hoặc nhiều môn để chỉ hỏi các môn đó.</p>
+            <p className="text-xs text-slate-600">Không tích gì = dùng mọi môn trong kho. Tích cả môn, hoặc tích từng bài học trong môn.</p>
           </section>
         </div>
 

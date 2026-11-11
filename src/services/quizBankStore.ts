@@ -27,7 +27,11 @@ const DB_NAME = 'lhhp_personal';
 const STORE = 'quiz_bank';
 const LS_FALLBACK = 'lhhp_quiz_personal:';
 const CFG_KEY = 'lhhp_quiz_drive:';
-const SUBJ_KEY = 'lhhp_quiz_subjects:';
+const SUBJ_KEY = 'lhhp_quiz_subjects_v2:';
+const OLD_SUBJ_KEY = 'lhhp_quiz_subjects:'; // bản trước: chỉ chứa "bộ câu hỏi" tự tạo
+const LESSON_KEY = 'lhhp_quiz_lessons:';
+/** Danh sách môn mặc định của giáo viên (giáo viên tự thêm / xóa) */
+export const DEFAULT_TEACHER_SUBJECTS = ['Toán học', 'Tiếng Việt', 'Tiếng Anh', 'Khoa học', 'Lịch sử & Địa lý', 'Tin học', 'Đạo đức & Kỹ năng sống', 'Âm nhạc', 'Mỹ thuật', 'Hoạt động trải nghiệm', 'Giáo dục thể chất'];
 const LOCAL_KEY = 'lhhp_quiz_local:';
 const HANDLE_KEY = '__folder_handle__:';
 /** Nơi lưu trên máy: 'folder' = thư mục máy tính đã chọn; 'browser' = chỉ bộ nhớ phần mềm (trình duyệt không hỗ trợ chọn thư mục) */
@@ -162,18 +166,48 @@ export const quizBankStore = {
     if (this.getLocalInfo(u)?.mode === 'folder') this.scheduleLocalWrite(u);
   },
 
-  // ---------- Môn / bộ câu hỏi giáo viên tự tạo (kể cả khi chưa có câu nào)
+  // ---------- Danh sách MÔN HỌC và BÀI HỌC của giáo viên (giáo viên thêm / xóa; giữ cả môn, bài chưa có câu)
   getSubjects(username: string): string[] {
-    try { const v = JSON.parse(localStorage.getItem(SUBJ_KEY + norm(username)) || '[]'); return Array.isArray(v) ? v.map(String).filter(Boolean) : []; } catch (_) { return []; }
+    try {
+      const raw = localStorage.getItem(SUBJ_KEY + norm(username));
+      if (raw === null) {
+        // Lần đầu: môn mặc định + các bộ đã tạo ở bản trước
+        let old: string[] = [];
+        try { const v = JSON.parse(localStorage.getItem(OLD_SUBJ_KEY + norm(username)) || '[]'); old = Array.isArray(v) ? v.map(String) : []; } catch (_) { old = []; }
+        return Array.from(new Set([...DEFAULT_TEACHER_SUBJECTS, ...old])).filter(Boolean);
+      }
+      const v = JSON.parse(raw); return Array.isArray(v) ? v.map(String).filter(Boolean) : [...DEFAULT_TEACHER_SUBJECTS];
+    } catch (_) { return [...DEFAULT_TEACHER_SUBJECTS]; }
+  },
+  setSubjects(username: string, list: string[]) {
+    try { localStorage.setItem(SUBJ_KEY + norm(username), JSON.stringify(Array.from(new Set(list.map(x => x.trim()).filter(Boolean))))); } catch (_) { /* ignore */ }
+    emit();
   },
   addSubject(username: string, name: string) {
     const n = name.trim(); if (!n) return;
     const cur = this.getSubjects(username);
-    if (!cur.includes(n)) { try { localStorage.setItem(SUBJ_KEY + norm(username), JSON.stringify([...cur, n])); } catch (_) { /* ignore */ } emit(); }
+    if (!cur.includes(n)) this.setSubjects(username, [...cur, n]);
   },
   removeSubject(username: string, name: string) {
-    const cur = this.getSubjects(username);
-    if (cur.includes(name)) { try { localStorage.setItem(SUBJ_KEY + norm(username), JSON.stringify(cur.filter(x => x !== name))); } catch (_) { /* ignore */ } emit(); }
+    this.setSubjects(username, this.getSubjects(username).filter(x => x !== name));
+    const les = this.getLessons(username); if (les[name]) { delete les[name]; this.setLessons(username, les); }
+  },
+  getLessons(username: string): Record<string, string[]> {
+    try { const v = JSON.parse(localStorage.getItem(LESSON_KEY + norm(username)) || '{}'); return v && typeof v === 'object' ? v : {}; } catch (_) { return {}; }
+  },
+  setLessons(username: string, map: Record<string, string[]>) {
+    try { localStorage.setItem(LESSON_KEY + norm(username), JSON.stringify(map)); } catch (_) { /* ignore */ }
+    emit();
+  },
+  addLesson(username: string, subject: string, name: string) {
+    const n = name.trim(); if (!n || !subject) return;
+    const m = this.getLessons(username); const cur = m[subject] || [];
+    if (!cur.includes(n)) { m[subject] = [...cur, n]; this.setLessons(username, m); }
+    this.addSubject(username, subject);
+  },
+  removeLesson(username: string, subject: string, name: string) {
+    const m = this.getLessons(username);
+    if (m[subject]) { m[subject] = m[subject].filter(x => x !== name); this.setLessons(username, m); }
   },
 
   // ---------- Nơi lưu bắt buộc trước khi thêm câu hỏi

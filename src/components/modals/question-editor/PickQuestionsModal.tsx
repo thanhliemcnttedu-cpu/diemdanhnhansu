@@ -11,21 +11,24 @@ import { typeLabel } from './QuestionEditor';
  */
 interface Props {
   bank: QuestionItem[];
-  targets: string[];              // các môn / bộ của giáo viên
+  targets: string[];              // các môn của giáo viên
+  lessonsBySubject?: Record<string, string[]>;
   defaultTarget?: string;
+  defaultLesson?: string;
   onClose: () => void;
-  onConfirm: (target: string, picked: QuestionItem[]) => void;
+  onConfirm: (target: string, lesson: string, picked: QuestionItem[]) => void;
 }
 
 const subjectOf = (q: QuestionItem) => q.subject || 'Tổng hợp';
 
-export const PickQuestionsModal: React.FC<Props> = ({ bank, targets, defaultTarget, onClose, onConfirm }) => {
+export const PickQuestionsModal: React.FC<Props> = ({ bank, targets, lessonsBySubject = {}, defaultTarget, defaultLesson, onClose, onConfirm }) => {
   const [source, setSource] = useState<'all' | 'mine' | 'sample'>('all');
   const [subject, setSubject] = useState('all');
   const [type, setType] = useState('all');
   const [term, setTerm] = useState('');
   const [picked, setPicked] = useState<string[]>([]);
-  const [target, setTarget] = useState(defaultTarget || '');
+  const [target, setTarget] = useState(defaultTarget || targets[0] || '');
+  const [lesson, setLesson] = useState(defaultLesson || '');
 
   const subjects = useMemo(() => Array.from(new Set(bank.map(subjectOf))).sort((a, b) => a.localeCompare(b, 'vi')), [bank]);
   const list = useMemo(() => bank.filter(q => {
@@ -48,7 +51,7 @@ export const PickQuestionsModal: React.FC<Props> = ({ bank, targets, defaultTarg
         <div className="px-4 sm:px-5 py-3 border-b border-slate-100 flex items-center gap-3">
           <div className="w-10 h-10 rounded-2xl bg-emerald-50 border border-emerald-100 text-emerald-700 flex items-center justify-center shrink-0"><ListPlus className="w-5 h-5" /></div>
           <div className="flex-1 min-w-0">
-            <h2 id="pick-title" className="text-base font-black text-slate-900">Nhặt câu hỏi có sẵn vào bộ câu hỏi</h2>
+            <h2 id="pick-title" className="text-base font-black text-slate-900">Nhặt câu hỏi có sẵn vào môn / bài học</h2>
             <p className="text-sm text-slate-600 truncate">Chọn câu từ toàn bộ kho (của bạn + câu mẫu). Câu được nhặt là bản sao, câu gốc giữ nguyên.</p>
           </div>
           <button type="button" onClick={onClose} aria-label="Đóng" className="no-hover-fx w-9 h-9 rounded-xl hover:bg-slate-100 text-slate-600 inline-flex items-center justify-center"><X className="w-5 h-5" /></button>
@@ -101,16 +104,21 @@ export const PickQuestionsModal: React.FC<Props> = ({ bank, targets, defaultTarg
         </div>
 
         <div className="px-4 sm:px-5 py-3 border-t border-slate-100 bg-slate-50 flex flex-wrap items-center gap-2">
-          <label htmlFor="pick-target" className="text-sm font-bold text-slate-700 whitespace-nowrap">Thêm vào bộ:</label>
-          <input id="pick-target" list="pick-targets" value={target} onChange={(e) => setTarget(e.target.value)} placeholder="Tên môn / bài học, VD: Toán 3 – Bài 12"
-            className="h-10 px-3 rounded-xl border border-slate-300 bg-white text-sm font-bold text-slate-900 flex-1 min-w-[200px]" />
-          <datalist id="pick-targets">{targets.map(t => <option key={t} value={t} />)}</datalist>
+          <label htmlFor="pick-target" className="text-sm font-bold text-slate-700 whitespace-nowrap">Thêm vào môn:</label>
+          <select id="pick-target" value={target} onChange={(e) => { setTarget(e.target.value); setLesson(''); }}
+            className="h-10 px-2.5 rounded-xl border border-slate-300 bg-white text-sm font-bold text-slate-900 min-w-[150px]">
+            {Array.from(new Set([...(target ? [target] : []), ...targets])).map(t => <option key={t} value={t}>{t}</option>)}
+          </select>
+          <label htmlFor="pick-lesson" className="text-sm font-bold text-slate-700 whitespace-nowrap">Bài:</label>
+          <input id="pick-lesson" list="pick-lessons" value={lesson} onChange={(e) => setLesson(e.target.value)} placeholder="Không xếp bài / gõ tên bài mới"
+            className="h-10 px-3 rounded-xl border border-slate-300 bg-white text-sm font-bold text-slate-900 flex-1 min-w-[160px]" />
+          <datalist id="pick-lessons">{(lessonsBySubject[target] || []).map(l => <option key={l} value={l} />)}</datalist>
           <span className="text-sm text-slate-700 tabular-nums whitespace-nowrap">Đã chọn <strong>{picked.length}</strong> câu</span>
           <button type="button" onClick={onClose} className="no-hover-fx h-10 px-4 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-sm font-bold text-slate-700">Hủy</button>
           <button type="button" disabled={!tgt || picked.length === 0}
-            onClick={() => onConfirm(tgt, bank.filter(q => picked.includes(q.id)))}
+            onClick={() => onConfirm(tgt, lesson, bank.filter(q => picked.includes(q.id)))}
             className="no-hover-fx h-10 px-5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-sm font-black inline-flex items-center gap-2 disabled:opacity-40">
-            <ListPlus className="w-4 h-4" /> Thêm {picked.length || ''} câu vào bộ
+            <ListPlus className="w-4 h-4" /> Thêm {picked.length || ''} câu
           </button>
         </div>
       </div>

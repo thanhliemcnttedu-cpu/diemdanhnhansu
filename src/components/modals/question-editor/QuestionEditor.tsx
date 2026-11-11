@@ -103,6 +103,8 @@ function finalize(q: QuestionItem): { error?: string; section?: string; question
     out.matchingPairs = full;
   }
   out.teacherAnswerKey = (q.teacherAnswerKey || '').trim();
+  const les = (q.lesson || '').trim();
+  if (les) out.lesson = les; else delete out.lesson;
   if (!out.image) delete out.image;
   if (!out.answerImage) delete out.answerImage;
   if (!out.audio) delete out.audio;
@@ -113,11 +115,12 @@ interface Props {
   question: QuestionItem;
   isNew: boolean;
   subjects: string[];
+  lessonsBySubject?: Record<string, string[]>;
   onCancel: () => void;
   onSave: (q: QuestionItem, addAnother: boolean) => void;
 }
 
-export const QuestionEditor: React.FC<Props> = ({ question, isNew, subjects, onCancel, onSave }) => {
+export const QuestionEditor: React.FC<Props> = ({ question, isNew, subjects, lessonsBySubject = {}, onCancel, onSave }) => {
   const [q, setQ] = useState<QuestionItem>(() => shapeFor(question, question.type || 'multiple_choice'));
   const [active, setActive] = useState<string>('image');
   const [error, setError] = useState<{ text: string; section?: string } | null>(null);
@@ -468,9 +471,15 @@ export const QuestionEditor: React.FC<Props> = ({ question, isNew, subjects, onC
             {/* Môn + xu */}
             <section className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label htmlFor="qe-subject" className={label}>Môn học / bộ câu hỏi</label>
-                <input id="qe-subject" list="qe-subjects" value={q.subject || ''} onChange={(e) => patch({ subject: e.target.value })} placeholder="Ví dụ: Toán học" className={input} />
-                <datalist id="qe-subjects">{subjects.map(s => <option key={s} value={s} />)}</datalist>
+                <label htmlFor="qe-subject" className={label}>Môn học</label>
+                <select id="qe-subject" value={q.subject || ''} onChange={(e) => patch({ subject: e.target.value, lesson: undefined })} className={input}>
+                  {Array.from(new Set([...(q.subject ? [q.subject] : []), ...subjects])).filter(Boolean).map(s => <option key={s} value={s}>{s}</option>)}
+                </select>
+              </div>
+              <div>
+                <label htmlFor="qe-lesson" className={label}>Bài học (không bắt buộc)</label>
+                <input id="qe-lesson" list="qe-lessons" value={q.lesson || ''} onChange={(e) => patch({ lesson: e.target.value })} placeholder="Chọn bài hoặc gõ tên bài mới" className={input} />
+                <datalist id="qe-lessons">{(lessonsBySubject[q.subject || ''] || []).map(l => <option key={l} value={l} />)}</datalist>
               </div>
               <div>
                 <span className={label}>Xu thưởng khi trả lời đúng</span>
@@ -501,7 +510,7 @@ export const QuestionEditor: React.FC<Props> = ({ question, isNew, subjects, onC
             ) : note ? (
               <p role="status" className="text-sm font-bold text-emerald-800 flex items-center gap-1.5"><Check className="w-4 h-4 shrink-0" /> {note}</p>
             ) : (
-              <p className="text-sm text-slate-600 truncate">{typeLabel(q.type)} · {q.subject || 'Chưa có môn'} · {q.pointsReward || 2} xu</p>
+              <p className="text-sm text-slate-600 truncate">{typeLabel(q.type)} · {q.subject || 'Chưa có môn'}{q.lesson ? ` › ${q.lesson}` : ''} · {q.pointsReward || 2} xu</p>
             )}
           </div>
           <button type="button" onClick={cancel} className={`${smallBtn} h-10 border border-slate-300 bg-white hover:bg-slate-50 text-slate-700`}>Hủy</button>
@@ -522,7 +531,7 @@ const QuestionPreview: React.FC<{ q: QuestionItem }> = ({ q }) => {
     <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 space-y-3">
       <div className="flex flex-wrap items-center gap-1.5 text-xs font-bold">
         <span className="px-2 py-0.5 rounded-full bg-purple-50 text-purple-800 border border-purple-200">{typeLabel(q.type)}</span>
-        <span className="px-2 py-0.5 rounded-full bg-slate-100 text-slate-700">{q.subject || 'Chưa có môn'}</span>
+        <span className="px-2 py-0.5 rounded-full bg-slate-100 text-slate-700">{q.subject || 'Chưa có môn'}{q.lesson ? ` › ${q.lesson}` : ''}</span>
         <span className="px-2 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200 inline-flex items-center gap-1"><Coins className="w-3.5 h-3.5" /> +{q.pointsReward || 2} xu</span>
       </div>
       {q.questionText ? (

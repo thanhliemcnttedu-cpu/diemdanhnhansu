@@ -154,6 +154,7 @@ export interface QuestionItem {
   teacherAnswerKey?: string; // Đáp án/hướng dẫn của giáo viên hoặc giải thích
   pointsReward?: number; // Số xu thưởng khi trả lời đúng (mặc định 2 xu)
   subject?: string; // Môn học (Toán, Tiếng Việt, Tiếng Anh, Đố vui, v.v.)
+  lesson?: string;  // Bài học trong môn (giáo viên tự đặt tên), tùy chọn
 }
 
 export interface QuestionBank {
