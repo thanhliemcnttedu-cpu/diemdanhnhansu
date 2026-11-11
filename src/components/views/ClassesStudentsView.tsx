@@ -223,7 +223,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
   // Compact class toolbar: detailed filter panel is collapsed by default
   const [showClassFilterPanel, setShowClassFilterPanel] = useState(false);
   const [isClassMoreMenuOpen, setIsClassMoreMenuOpen] = useState(false);
-  const [classSortBy, setClassSortBy] = useState<'grade' | 'branch' | 'campus' | 'name'>('grade');
+  const [classSortBy, setClassSortBy] = useState<'grade' | 'branch' | 'campus' | 'name'>('name'); // default: class name A–Z (1A1, 1A2 … 5A15), per user request 11/2026
   const [classSortOrder, setClassSortOrder] = useState<'asc' | 'desc'>('asc');
 
   // 🛡️ Bản dùng thử (chưa nhập CDKEY): tối đa 01 lớp, 10 học sinh/lớp
@@ -2284,14 +2284,14 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                 </div>
 
                 {/* Các nút thao tác reset */}
-                {(selectedBranchFilter !== 'all' || selectedCampusFilter !== 'all' || selectedGradeFilter !== 'all' || classSortBy !== 'grade' || classSortOrder !== 'asc') && (
+                {(selectedBranchFilter !== 'all' || selectedCampusFilter !== 'all' || selectedGradeFilter !== 'all' || classSortBy !== 'name' || classSortOrder !== 'asc') && (
                   <button
                     type="button"
                     onClick={() => {
                       setSelectedBranchFilter('all');
                       setSelectedCampusFilter('all');
                       setSelectedGradeFilter('all');
-                      setClassSortBy('grade');
+                      setClassSortBy('name');
                       setClassSortOrder('asc');
                     }}
                     className="text-xs font-bold text-teal-800 hover:text-teal-950 bg-white px-3 py-1 rounded-xl border border-teal-300 shadow-2xs hover:bg-teal-50 transition-all flex items-center gap-1.5"
