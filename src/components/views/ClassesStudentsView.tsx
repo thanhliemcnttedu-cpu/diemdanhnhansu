@@ -2613,11 +2613,19 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
               .map(t => {
                 const uname = (t.username || '').toLowerCase();
                 const fname = (t.fullName || '').toLowerCase();
-                const count = classes.filter(c =>
-                  (c.teacherUsername && c.teacherUsername.toLowerCase() === uname) ||
-                  (fname && c.teacherName && c.teacherName.toLowerCase() === fname)
-                ).length;
-                return { username: t.username, label: t.fullName || t.username, count };
+                // Match by account first. The name is only a fallback for classes that have no teacher account,
+                // otherwise two different teachers sharing one full name would each be counted with both classes.
+                const own = classes.filter(c =>
+                  c.teacherUsername
+                    ? c.teacherUsername.toLowerCase() === uname
+                    : Boolean(fname && c.teacherName && c.teacherName.toLowerCase() === fname)
+                );
+                const classNames = own.map(c => (c.name || '').trim()).filter(Boolean)
+                  .sort((x, y) => x.localeCompare(y, 'vi', { numeric: true }));
+                const detail = own.length === 0
+                  ? 'chưa có lớp'
+                  : own.length <= 3 ? `lớp ${classNames.join(', ')}` : `${own.length} lớp`;
+                return { username: t.username, label: t.fullName || t.username, detail };
               })
               .sort((x, y) => x.label.localeCompare(y.label, 'vi', { sensitivity: 'base' }));
             return (
@@ -2634,7 +2642,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                 >
                   <option value="all">Tất cả giáo viên ({teacherOptions.length})</option>
                   {teacherOptions.map(t => (
-                    <option key={t.username} value={t.username}>{t.label} — {t.count} lớp</option>
+                    <option key={t.username} value={t.username}>{t.label} — {t.detail}</option>
                   ))}
                 </select>
                 {adminTeacherFilter !== 'all' && (
