@@ -3,7 +3,7 @@ import { deriveVaultKey, sealJSON, openJSON, fingerprint } from '../utils/person
 import type { PersonalQuizVault } from '../types';
 import { stripSampleData } from '../utils/sampleData';
 import { isViewOnly, getViewAs, setViewAs, subscribeViewAs, ViewAsInfo } from '../utils/viewOnlyMode';
-import { saveTeacherAuth, clearTeacherAuth } from '../utils/teacherAuth';
+import { saveTeacherAuth, clearTeacherAuth, readTeacherAuth } from '../utils/teacherAuth';
 import React, { createContext, useContext, useState, useEffect, useRef, useMemo } from 'react';
 import { AlertCircle, X } from 'lucide-react';
 import JSZip from 'jszip';
@@ -151,6 +151,12 @@ interface ClassroomContextType {
   quizBank: QuestionItem[];
   setQuizBank: React.Dispatch<React.SetStateAction<QuestionItem[]>>;
   updateQuizBank: (questions: QuestionItem[]) => void;
+  /** Két cá nhân: trạng thái ghi nhớ link Drive cá nhân theo tài khoản */
+  quizVaultStatus: { hasVault: boolean; cleared: boolean; keyReady: boolean; stale: boolean };
+  /** Nhập mật khẩu tài khoản để ghi nhớ link (máy này chưa có khóa két) / mở link đã lưu từ máy khác */
+  unlockQuizVault: (password: string) => Promise<{ ok: boolean; message: string }>;
+  /** Tải lại két từ dữ liệu tài khoản trên Drive trường (máy khác vừa lưu) */
+  refreshQuizVault: () => Promise<boolean>;
   infographicConfig: any;
   updateInfographicConfig: (cfg: any) => void;
 
@@ -710,6 +716,21 @@ export const ClassroomProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentUser?.username]);
 
+  // Khóa két của tài khoản: IndexedDB; chưa có → sinh từ mật khẩu đã nhớ trên máy (tài khoản dùng chung chấm công)
+  const [vaultKeyReady, setVaultKeyReady] = useState(false);
+  const getOrMakeVaultKey = async (username: string): Promise<CryptoKey | null> => {
+    let key = await quizBankStore.getVaultKey(username);
+    if (!key) {
+      const remembered = readTeacherAuth();
+      if (remembered && remembered.username === username.trim().toLowerCase()) {
+        key = await deriveVaultKey(username, remembered.password);
+        if (key) await quizBankStore.setVaultKey(username, key);
+      }
+    }
+    if (currentUserRef.current?.username === username) setVaultKeyReady(Boolean(key));
+    return key;
+  };
+
   // 🔐 Khóa (mã hóa) link Drive cá nhân vào két khi giáo viên kết nối / đổi link
   const sealPersonalVault = async () => {
     const user = currentUserRef.current;
@@ -717,7 +738,7 @@ export const ClassroomProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     const u = user.username;
     const cfg = quizBankStore.getDriveConfig(u);
     if (!cfg) return;
-    const key = await quizBankStore.getVaultKey(u);
+    const key = await getOrMakeVaultKey(u);
     if (!key) return;
     const owner = u.toLowerCase();
     const cur = vaultStateRef.current.owner === owner ? vaultStateRef.current.vault : undefined;
@@ -753,6 +774,54 @@ export const ClassroomProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [vaultState, currentUser?.username]);
+  const ownVault = vaultState.owner && vaultState.owner === (currentUser?.username || '').toLowerCase() ? vaultState.vault : undefined;
+  const quizVaultStatus = {
+    hasVault: Boolean(ownVault?.c && !ownVault.cleared),
+    cleared: Boolean(ownVault?.cleared),
+    keyReady: vaultKeyReady,
+    stale: vaultStaleRef.current,
+  };
+  const unlockQuizVault = async (password: string): Promise<{ ok: boolean; message: string }> => {
+    const user = currentUserRef.current;
+    if (!user || !isPersonalQuizUser(user)) return { ok: false, message: 'Chỉ tài khoản giáo viên dùng được chức năng này.' };
+    if (!password) return { ok: false, message: 'Hãy nhập mật khẩu tài khoản.' };
+    const key = await deriveVaultKey(user.username, password);
+    if (!key) return { ok: false, message: 'Trình duyệt này không hỗ trợ mã hóa (cần trang https).' };
+    const vault = vaultStateRef.current.owner === user.username.toLowerCase() ? vaultStateRef.current.vault : undefined;
+    if (vault?.c && !vault.cleared) {
+      const opened = await openJSON(key, { i: vault.i || '', c: vault.c });
+      if (!opened) {
+        // Không mở được: sai mật khẩu, hoặc két khóa bằng mật khẩu cũ → kiểm tra mật khẩu với CSDL trường
+        if (schoolDriveDbService.isConfigured()) {
+          const r = await schoolDriveDbService.login(user.username, password).catch(() => null);
+          if (!r || r.status !== 'ok') return { ok: false, message: 'Mật khẩu chưa đúng.' };
+        }
+        vaultStaleRef.current = true; // mật khẩu đúng nhưng két cũ → khóa lại bằng mật khẩu này
+      }
+    } else if (schoolDriveDbService.isConfigured()) {
+      const r = await schoolDriveDbService.login(user.username, password).catch(() => null);
+      if (!r || r.status !== 'ok') return { ok: false, message: 'Mật khẩu chưa đúng.' };
+    }
+    await quizBankStore.setVaultKey(user.username, key);
+    setVaultKeyReady(true);
+    setVaultKeyTick(t => t + 1); // chạy lại mở két / khóa két
+    return { ok: true, message: vault?.c && !vault.cleared && !vaultStaleRef.current ? 'Đã mở link Drive cá nhân đã lưu theo tài khoản.' : 'Đã ghi nhớ link Drive cá nhân theo tài khoản.' };
+  };
+  const refreshQuizVault = async (): Promise<boolean> => {
+    const user = currentUserRef.current;
+    if (!user || !isPersonalQuizUser(user) || !schoolDriveDbService.isConfigured()) return false;
+    try {
+      const base = getCurrentUserData();
+      const fileName = googleDriveService.getFileNameForUser(user, user.assignedClassName, base.teacherRole);
+      const pulled = await googleDriveService.pullClassData(base, fileName, user);
+      const v = (pulled.success && pulled.mergedData) ? (pulled.mergedData as UserClassroomData).personalQuizVault : undefined;
+      const owner = user.username.toLowerCase();
+      const cur = vaultStateRef.current.owner === owner ? vaultStateRef.current.vault : undefined;
+      if (v && (!cur || (v.at || 0) > (cur.at || 0))) { setVaultState({ owner, vault: v }); return true; }
+    } catch (_) { /* ignore */ }
+    return false;
+  };
+
   // 🔓 Mở két: máy này chưa có link Drive cá nhân (máy mới / mượn máy) → tự kết nối + lấy bộ câu hỏi
   useEffect(() => {
     const user = currentUserRef.current;
@@ -761,7 +830,7 @@ export const ClassroomProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     const vault = vaultState.owner === owner ? vaultState.vault : undefined;
     let alive = true;
     (async () => {
-      const key = await quizBankStore.getVaultKey(user.username);
+      const key = await getOrMakeVaultKey(user.username);
       if (!key || !alive) return;
       if (vault?.c && !vault.cleared) {
         const cfg = await openJSON<{ scriptUrl: string; folderId: string; folderUrl?: string }>(key, { i: vault.i || '', c: vault.c });
@@ -2121,6 +2190,7 @@ export const ClassroomProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     databaseService.logout();
     if (currentUser) quizBankStore.setVaultKey(currentUser.username, null).catch(() => {});
     setVaultState({ owner: '' });
+    setVaultKeyReady(false);
     // Không để bộ câu hỏi của tài khoản vừa đăng xuất nằm lại trong bộ nhớ chung của trình duyệt
     // (kho riêng của tài khoản vẫn còn nguyên trong IndexedDB / Drive cá nhân)
     setQuizBank(DEFAULT_QUESTIONS);
@@ -4773,6 +4843,9 @@ export const ClassroomProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       quizBank,
       setQuizBank,
       updateQuizBank,
+      quizVaultStatus,
+      unlockQuizVault,
+      refreshQuizVault,
       infographicConfig,
       updateInfographicConfig,
 

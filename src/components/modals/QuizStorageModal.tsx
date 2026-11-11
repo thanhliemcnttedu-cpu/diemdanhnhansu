@@ -31,7 +31,10 @@ export function requireQuizStorage(user: UserAccount | null | undefined): Promis
  * Trên máy (IndexedDB, luôn bật) · Xuất / Nhập tệp .json · Google Drive cá nhân (tùy chọn, Apps Script cá nhân).
  */
 export const QuizStorageModal: React.FC = () => {
-  const { currentUser, quizBank, updateQuizBank } = useClassroom();
+  const { currentUser, quizBank, updateQuizBank, quizVaultStatus, unlockQuizVault, refreshQuizVault } = useClassroom();
+  const [vaultPw, setVaultPw] = useState('');
+  const [vaultMsg, setVaultMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null);
+  const [vaultBusy, setVaultBusy] = useState(false);
   const [open, setOpen] = useState(false);
   const [msg, setMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null);
   // Kết quả "Kiểm tra & kết nối": từng bước Đạt / Không đạt + việc cần làm tiếp
@@ -76,6 +79,9 @@ export const QuizStorageModal: React.FC = () => {
     try { draft = JSON.parse(localStorage.getItem(DRAFT_KEY + username.toLowerCase()) || '{}') || {}; } catch (_) { draft = {}; }
     setFolderUrl(cfg?.folderUrl || draft.folderUrl || '');
     setScriptUrl(cfg?.scriptUrl || draft.scriptUrl || '');
+    setVaultPw(''); setVaultMsg(null);
+    // Máy này chưa có link → xem tài khoản đã lưu link từ máy khác chưa (tải lại dữ liệu tài khoản trên Drive trường)
+    if (!cfg && username) refreshQuizVault().catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
@@ -325,6 +331,44 @@ export const QuizStorageModal: React.FC = () => {
               {cfg && <span className="text-xs font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 rounded-full px-2 py-0.5">Đã kết nối{cfg.lastSyncAt ? ` • đồng bộ ${new Date(cfg.lastSyncAt).toLocaleString('vi-VN')}` : ''}</span>}
             </div>
             {cfg?.lastError && <p className="text-sm text-rose-700 font-bold">⚠ {cfg.lastError}</p>}
+            {/* Ghi nhớ link theo TÀI KHOẢN (két mã hóa bằng mật khẩu) → máy / trình duyệt khác tự kết nối */}
+            {(() => {
+              const remembered = quizVaultStatus.hasVault && quizVaultStatus.keyReady && !quizVaultStatus.stale && !!cfg;
+              const needUnlock = quizVaultStatus.hasVault && !cfg && !quizVaultStatus.keyReady;
+              const needRemember = !!cfg && (!quizVaultStatus.keyReady || quizVaultStatus.stale || !quizVaultStatus.hasVault);
+              if (remembered) return (
+                <p className="text-sm font-bold text-emerald-900 bg-emerald-50 border border-emerald-200 rounded-xl px-3 py-2 flex items-start gap-2">
+                  <ShieldCheck className="w-4 h-4 mt-0.5 shrink-0" /> Đã ghi nhớ theo tài khoản: đăng nhập tài khoản này ở máy / trình duyệt khác là tự kết nối Drive cá nhân (link được mã hóa bằng mật khẩu của bạn).
+                </p>
+              );
+              if (!needUnlock && !needRemember) return null;
+              const submit = async () => {
+                setVaultBusy(true); setVaultMsg(null);
+                try {
+                  const r = await unlockQuizVault(vaultPw);
+                  setVaultMsg({ type: r.ok ? 'ok' : 'err', text: r.message });
+                  if (r.ok) setVaultPw('');
+                } finally { setVaultBusy(false); }
+              };
+              return (
+                <div className="rounded-xl border border-amber-300 bg-amber-50 p-3 space-y-2">
+                  <p className="text-sm text-amber-950">
+                    {needUnlock
+                      ? <><strong>Tài khoản của bạn đã có link Drive cá nhân lưu từ máy khác.</strong> Nhập mật khẩu tài khoản để dùng trên máy này.</>
+                      : <><strong>Chưa ghi nhớ link theo tài khoản</strong> (máy / trình duyệt khác sẽ chưa tự kết nối). Nhập mật khẩu đăng nhập phần mềm để ghi nhớ.</>}
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    <input type="password" value={vaultPw} onChange={(e) => setVaultPw(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter' && vaultPw) submit(); }}
+                      placeholder="Mật khẩu đăng nhập phần mềm" autoComplete="current-password" aria-label="Mật khẩu tài khoản"
+                      className="flex-1 min-w-[180px] h-10 px-3 rounded-xl border border-amber-300 bg-white text-sm" />
+                    <button type="button" onClick={submit} disabled={vaultBusy || !vaultPw} className={`${btn} bg-amber-700 hover:bg-amber-800 text-white`}>
+                      {vaultBusy ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShieldCheck className="w-4 h-4" />} {needUnlock ? 'Mở link đã lưu' : 'Ghi nhớ theo tài khoản'}
+                    </button>
+                  </div>
+                  {vaultMsg && <p role="status" className={`text-sm font-bold ${vaultMsg.type === 'ok' ? 'text-emerald-800' : 'text-rose-700'}`}>{vaultMsg.text}</p>}
+                </div>
+              );
+            })()}
             <ol className="text-sm text-slate-700 space-y-2 list-decimal pl-5">
               <li>
                 Trên <strong>tài khoản Google của bạn</strong> (không dùng thư mục của trường), tạo một thư mục, ví dụ "Câu hỏi lớp học", rồi dán link thư mục:
