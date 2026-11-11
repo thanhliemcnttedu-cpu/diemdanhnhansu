@@ -16,9 +16,18 @@ import { dataAdapter } from '../../services/dataAdapter';
 interface GoogleDriveSyncModalProps {
   isOpen: boolean;
   onClose: () => void;
+  /** Render inside a page (no overlay, no header); `sections` picks which blocks to show */
+  embedded?: boolean;
+  sections?: Array<'connect' | 'sync' | 'advanced' | 'report'>;
+  /** When set, the "Apps Script wizard" buttons call this instead of opening the dialog */
+  onOpenWizard?: (mode?: 'install' | 'update') => void;
 }
 
-export const GoogleDriveSyncModal: React.FC<GoogleDriveSyncModalProps> = ({ isOpen, onClose }) => {
+export const GoogleDriveSyncModal: React.FC<GoogleDriveSyncModalProps> = ({ isOpen: isOpenProp, onClose, embedded = false, sections, onOpenWizard }) => {
+  const isOpen = isOpenProp || embedded;
+  const openWizard = (m?: 'install' | 'update') => (onOpenWizard ? onOpenWizard(m) : appsScriptSetupService.open(m));
+  // "Ổ Drive trên máy" only exists with the Express server or the Desktop build
+  const hasDesktopDrive = typeof window !== 'undefined' && ((window as any).__lhhpApiAvailable === true || Boolean((window as any).electronAPI));
   const { 
     currentUser, 
     getCurrentUserData, 
@@ -55,6 +64,7 @@ export const GoogleDriveSyncModal: React.FC<GoogleDriveSyncModalProps> = ({ isOp
   const [isConnectionCopied, setIsConnectionCopied] = useState(false);
   // Bố cục 2 cột + thẻ (vừa một màn hình, không phải cuộn)
   const [tab, setTab] = useState<'connect' | 'sync' | 'advanced' | 'report'>('connect');
+  const show = (id: 'connect' | 'sync' | 'advanced' | 'report') => (embedded && sections ? sections.includes(id) : tab === id);
   // 🔌 Trạng thái kết nối CSDL nhà trường + phiên bản Apps Script (kiểm tra mỗi lần mở hộp)
   const [conn, setConn] = useState<DriveConnection | null>(appsScriptSetupService.getLastConnection());
   useEffect(() => {
@@ -355,10 +365,10 @@ export const GoogleDriveSyncModal: React.FC<GoogleDriveSyncModalProps> = ({ isOp
   ];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-sky-900/20 backdrop-blur-xs animate-in fade-in duration-200" role="dialog" aria-modal="true" aria-labelledby="drive-modal-title">
-      <div className="relative w-full max-w-6xl bg-slate-50 rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[96vh]">
-        {/* Đầu hộp: tên + thẻ + đóng (1 dòng) */}
-        <div className="bg-white border-b border-slate-200 px-4 py-2.5 flex flex-wrap items-center gap-x-3 gap-y-2 shrink-0">
+    <div {...(embedded ? {} : { role: 'dialog', 'aria-modal': true, 'aria-labelledby': 'drive-modal-title' })} className={embedded ? '' : 'fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-sky-900/20 backdrop-blur-xs animate-in fade-in duration-200'}>
+      <div className={embedded ? '' : 'relative w-full max-w-6xl bg-slate-50 rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[96vh]'}>
+        {/* Đầu hộp: tên + thẻ + đóng (1 dòng) — ẩn khi nhúng trong trang Dữ liệu */}
+        <div style={embedded ? { display: 'none' } : undefined} className="bg-white border-b border-slate-200 px-4 py-2.5 flex flex-wrap items-center gap-x-3 gap-y-2 shrink-0">
           <div className="flex items-center gap-2.5 min-w-0 flex-1">
             <span className="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center shrink-0"><Cloud className="w-5 h-5" /></span>
             <div className="min-w-0">
@@ -379,7 +389,7 @@ export const GoogleDriveSyncModal: React.FC<GoogleDriveSyncModalProps> = ({ isOp
           </button>
         </div>
 
-        <div className="p-3 sm:p-4 overflow-y-auto space-y-3 text-sm text-slate-700">
+        <div className={embedded ? 'space-y-3 text-sm text-slate-700' : 'p-3 sm:p-4 overflow-y-auto space-y-3 text-sm text-slate-700'}>
           {/* 🔌 TRẠNG THÁI KẾT NỐI + PHIÊN BẢN (luôn hiện, tự kiểm tra mỗi lần mở) */}
           <div className={`rounded-2xl border px-3 py-2.5 flex flex-wrap items-center gap-x-3 gap-y-2 ${connTone}`} role="status" aria-live="polite">
             <span className="shrink-0">
@@ -405,7 +415,7 @@ export const GoogleDriveSyncModal: React.FC<GoogleDriveSyncModalProps> = ({ isOp
             )}
             {connState === 'connected' && <span className="px-2.5 py-1 rounded-full bg-white border border-emerald-300 text-xs font-black text-emerald-900 whitespace-nowrap">{conn?.schools || 0} trường</span>}
             {conn?.outdated && isSetupAdmin && (
-              <button type="button" onClick={() => appsScriptSetupService.open('update')} className="no-hover-fx h-9 px-3 rounded-xl bg-amber-700 hover:bg-amber-800 text-white text-sm font-black inline-flex items-center gap-1.5 whitespace-nowrap cursor-pointer">
+              <button type="button" onClick={() => openWizard('update')} className="no-hover-fx h-9 px-3 rounded-xl bg-amber-700 hover:bg-amber-800 text-white text-sm font-black inline-flex items-center gap-1.5 whitespace-nowrap cursor-pointer">
                 <Wand2 className="w-4 h-4" /> Cập nhật Apps Script
               </button>
             )}
@@ -427,7 +437,7 @@ export const GoogleDriveSyncModal: React.FC<GoogleDriveSyncModalProps> = ({ isOp
           )}
 
           {/* ───────────────── THẺ: KẾT NỐI ───────────────── */}
-          {tab === 'connect' && (
+          {show('connect') && (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 items-start">
               <section className={cardCls}>
                 <h3 className={titleCls}><Folder className="w-4 h-4 text-emerald-700" /> Thư mục và Apps Script đang dùng</h3>
@@ -458,7 +468,7 @@ export const GoogleDriveSyncModal: React.FC<GoogleDriveSyncModalProps> = ({ isOp
                     <RefreshCw className={`w-4 h-4 ${isTesting ? 'animate-spin' : ''}`} /> {isTesting ? 'Đang kiểm tra…' : 'Kiểm tra link'}
                   </button>
                   {isSetupAdmin && (
-                    <button type="button" onClick={() => appsScriptSetupService.open()} className={btnLight} title="Hướng dẫn từng bước cài / cập nhật Apps Script, tự kiểm tra link /exec">
+                    <button type="button" onClick={() => openWizard()} className={btnLight} title="Hướng dẫn từng bước cài / cập nhật Apps Script, tự kiểm tra link /exec">
                       <Wand2 className="w-4 h-4 text-indigo-600" /> Trình cài đặt Apps Script
                     </button>
                   )}
@@ -530,7 +540,7 @@ export const GoogleDriveSyncModal: React.FC<GoogleDriveSyncModalProps> = ({ isOp
           )}
 
           {/* ───────────────── THẺ: ĐỒNG BỘ ───────────────── */}
-          {tab === 'sync' && (
+          {show('sync') && (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 items-start">
               <section className={cardCls}>
                 <h3 className={titleCls}><UploadCloud className="w-4 h-4 text-emerald-700" /> Đồng bộ thủ công</h3>
@@ -565,13 +575,13 @@ export const GoogleDriveSyncModal: React.FC<GoogleDriveSyncModalProps> = ({ isOp
           )}
 
           {/* ───────────────── THẺ: NÂNG CAO ───────────────── */}
-          {tab === 'advanced' && (
+          {show('advanced') && (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 items-start">
               <section className={cardCls}>
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <h3 className={titleCls}><Settings className="w-4 h-4 text-slate-600" /> Cách kết nối</h3>
                   <div className="flex items-center gap-1 bg-slate-100 p-0.5 rounded-lg border border-slate-200">
-                    {([['appscript', 'Apps Script'], ['desktop', 'Ổ Drive trên máy']] as const).map(([id, label]) => (
+                    {([['appscript', 'Apps Script'], ['desktop', 'Ổ Drive trên máy']] as const).filter(([id]) => id === 'appscript' || hasDesktopDrive).map(([id, label]) => (
                       <button key={id} type="button" onClick={() => setSyncMethod(id)} aria-pressed={syncMethod === id}
                         className={`no-hover-fx px-2.5 py-1 rounded-md text-xs font-bold whitespace-nowrap cursor-pointer ${syncMethod === id ? 'bg-emerald-700 text-white' : 'text-slate-700 hover:text-slate-900'}`}>{label}</button>
                     ))}
@@ -625,7 +635,7 @@ export const GoogleDriveSyncModal: React.FC<GoogleDriveSyncModalProps> = ({ isOp
           )}
 
           {/* ───────────────── THẺ: TỔNG HỢP TOÀN TRƯỜNG (Quản trị / BGH) ───────────────── */}
-          {tab === 'report' && isExecutive && (
+          {show('report') && isExecutive && (
             <section className={cardCls}>
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <h3 className={titleCls}><School className="w-4 h-4 text-amber-700" /> Số liệu các lớp trong thư mục dùng chung</h3>

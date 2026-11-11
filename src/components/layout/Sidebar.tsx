@@ -348,9 +348,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
           {(() => {
             const systemActions: Array<{ key: string; label: string; icon: React.ComponentType<{ className?: string }>; badge?: string; onClick: () => void }> = [
               { key: 'accounts', label: canManageAccounts ? 'Tài khoản & CSDL' : 'Đăng nhập quản trị', icon: ShieldCheck, onClick: () => (canManageAccounts ? setIsAccountManagerOpen(true) : setIsAuthModalOpen(true)) },
-              { key: 'drive', label: 'Google Drive', icon: Cloud, onClick: () => setIsGoogleDriveModalOpen(true) },
-              ...(canManageAccounts ? [{ key: 'gas', label: 'Cài đặt Apps Script', icon: Settings2, onClick: () => appsScriptSetupService.open() }] : []),
-              { key: 'storage', label: 'Nơi lưu dữ liệu', icon: HardDrive, onClick: () => setIsDataStorageModalOpen(true) },
               ...(!isMacroAdmin ? [{ key: 'quiz', label: 'Nơi lưu câu hỏi', icon: BookOpen, onClick: () => window.dispatchEvent(new Event(OPEN_QUIZ_STORAGE_EVENT)) }] : []),
               { key: 'password', label: 'Đổi mật khẩu', icon: Lock, onClick: () => window.dispatchEvent(new Event(OPEN_CHANGE_PASSWORD_EVENT)) },
               { key: 'cdkey', label: isCdKeyActivated ? 'Bản quyền PRO' : 'Kích hoạt CDKEY', icon: KeyRound, onClick: () => setIsCdKeyModalOpen(true) },

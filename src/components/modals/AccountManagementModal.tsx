@@ -26,18 +26,24 @@ interface AccountManagementModalProps {
   allUsers: UserAccount[];
   onRefreshUsers: () => void;
   onSwitchToUser: (username: string) => Promise<boolean>;
+  /** Render only the data tab (storage usage, backup, restore) inside the Data page — no dialog chrome */
+  embeddedDatabase?: boolean;
 }
 
 export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
-  isOpen,
+  isOpen: isOpenProp,
   onClose,
   currentUser,
   allUsers,
   onRefreshUsers,
-  onSwitchToUser
+  onSwitchToUser,
+  embeddedDatabase = false
 }) => {
   const { setIsGithubModalOpen } = useClassroom();
-  const [activeTab, setActiveTab] = useState<'accounts' | 'schools' | 'add' | 'import' | 'real_data' | 'logs' | 'database' | 'registrations'>('accounts');
+  const isOpen = isOpenProp || embeddedDatabase;
+  // Express server present (localhost / Railway / Desktop). The static web build has no /api.
+  const apiAvailable = typeof window !== 'undefined' && (window as any).__lhhpApiAvailable === true;
+  const [activeTab, setActiveTab] = useState<'accounts' | 'schools' | 'add' | 'import' | 'real_data' | 'logs' | 'database' | 'registrations'>(embeddedDatabase ? 'database' : 'accounts');
   const [searchTerm, setSearchTerm] = useState('');
   const [editingUser, setEditingUser] = useState<UserAccount | null>(null);
   const [stats, setStats] = useState<DatabaseStats | null>(null);
@@ -1126,6 +1132,11 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
       }
       return;
     }
+    if (!apiAvailable) {
+      // Static web build without a connected Drive: there is nothing to export from (do not navigate to a 404 page)
+      showNotify('error', 'Chưa kết nối thư mục Google Drive của trường nên chưa có dữ liệu để sao lưu. Hãy kết nối ở thẻ Kết nối Drive trước.');
+      return;
+    }
     databaseService.downloadDatabaseExport();
     showNotify('success', 'Đã tải xuống file cơ sở dữ liệu classroom_database.json thành công!');
   };
@@ -1626,13 +1637,13 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
   });
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-sky-900/20 backdrop-blur-xs animate-in fade-in duration-200">
+    <div className={embeddedDatabase ? '' : 'fixed inset-0 z-50 flex items-center justify-center bg-sky-900/20 backdrop-blur-xs animate-in fade-in duration-200'}>
       <div 
-        className="relative bg-white shadow-2xl w-full h-full max-w-none max-h-none overflow-hidden flex flex-col"
+        className={embeddedDatabase ? 'relative space-y-3' : 'relative bg-white shadow-2xl w-full h-full max-w-none max-h-none overflow-hidden flex flex-col'}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header: 1 dòng mỏng (mô tả chi tiết nằm trong title) */}
-        <div className="bg-gradient-to-r from-sky-700 via-indigo-600 to-indigo-600 px-4 md:px-6 py-2 text-white flex items-center justify-between gap-3 shrink-0"
+        <div style={embeddedDatabase ? { display: 'none' } : undefined} className="bg-gradient-to-r from-sky-700 via-indigo-600 to-indigo-600 px-4 md:px-6 py-2 text-white flex items-center justify-between gap-3 shrink-0"
           title={isSuperAdmin
             ? 'Quản trị cây thư mục CSDL Trường học & Tài khoản toàn diện'
             : (isSchoolAdmin ? 'Quản lý mô hình lớp, giáo viên, học sinh nhà trường • Tải/Nạp Data JSON • Dọn dẹp năm học' : 'Quản lý giáo viên tự do các tỉnh thành lẻ • Tải/Nạp Data JSON • Dọn dẹp năm học')}>
@@ -1657,7 +1668,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
         </div>
 
         {/* Tab navigation & quick action */}
-        <div className="bg-slate-100/80 border-b border-slate-200 px-4 md:px-6 py-1.5 flex items-center gap-2 shrink-0">
+        <div style={embeddedDatabase ? { display: 'none' } : undefined} className="bg-slate-100/80 border-b border-slate-200 px-4 md:px-6 py-1.5 flex items-center gap-2 shrink-0">
           <div className="flex flex-nowrap items-center gap-1 p-1 bg-white rounded-2xl border border-slate-200 shadow-2xs overflow-x-auto no-scrollbar min-w-0 flex-1" role="tablist" aria-label="Chức năng quản trị">
             {/* Tab CSDL Trường học dành cho Super Admin (Yêu cầu e) */}
             {isSuperAdmin && (
@@ -1710,17 +1721,6 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
               <span>Thêm Mới</span>
             </button>
 
-            <button
-              onClick={() => setActiveTab('database')}
-              className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 uppercase whitespace-nowrap shrink-0 ${
-                activeTab === 'database'
-                  ? 'bg-slate-100 text-slate-800 shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-              }`}
-            >
-              <Database className="w-3.5 h-3.5" />
-              <span>Data JSON & Năm Học</span>
-            </button>
 
             {isSuperAdmin && (
               <button
@@ -3431,7 +3431,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
 
         {/* Tab: Database & GitHub Sync */}
         {activeTab === 'database' && (
-          <div className="flex-1 overflow-y-auto p-5 md:p-8 space-y-6">
+          <div className={embeddedDatabase ? 'flex flex-col gap-4' : 'flex-1 overflow-y-auto p-5 md:p-8 space-y-6'}>
             {/* Thống kê dung lượng dữ liệu (tông sáng; bản web đọc từ Google Drive dùng chung) */}
             <section className="bg-white border border-slate-200 rounded-3xl p-5 md:p-6 shadow-xs space-y-5">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -3661,8 +3661,8 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
               );
             })()}
 
-            {/* Storage & Backup / Restore Actions */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            {/* Storage & Backup / Restore Actions (shown first inside the Data page) */}
+            <div className={`grid grid-cols-1 md:grid-cols-2 gap-5 ${embeddedDatabase ? 'order-first' : ''}`}>
               {/* Box 1: Export DB */}
               <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-2xs flex flex-col justify-between">
                 <div>
@@ -3725,6 +3725,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
               </div>
             </div>
 
+            {apiAvailable && (<>
             {/* KHU VỰC QUẢN LÝ DỮ LIỆU & CHUẨN BỊ NĂM HỌC MỚI (Yêu cầu c, d, e) */}
             <div className="bg-gradient-to-br from-indigo-600 via-blue-600 to-indigo-600 border-2 border-indigo-500/30 rounded-3xl p-6 text-white shadow-xl space-y-4">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -3876,6 +3877,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                 <li>Tài khoản giáo viên vãng lai được phân vùng lưu trữ độc lập, không bị ảnh hưởng khi nhà trường dọn dẹp dữ liệu năm học mới.</li>
               </ul>
             </div>
+            </>)}
           </div>
         )}
 

@@ -21,6 +21,25 @@ import { SubjectTeacherReportsView } from './reports/SubjectTeacherReportsView';
 import { AdminRealtimeDashboardView } from './reports/AdminRealtimeDashboardView';
 import { databaseService } from '../../services/databaseService';
 import { multiTierBackupService } from '../../services/multiTierBackupService';
+import { GoogleDriveSyncModal } from '../modals/GoogleDriveSyncModal';
+import { DataStorageLocationModal } from '../modals/DataStorageLocationModal';
+import { AppsScriptSetupWizard } from '../modals/AppsScriptSetupWizard';
+import { Cloud as HubCloud, RefreshCw as HubSync, HardDrive as HubDisk, FileArchive as HubArchive, Calendar as HubYear, Wand2 as HubWand, ChevronDown as HubDown } from 'lucide-react';
+
+// Storage usage + system backup / restore (heavy) — loaded only when the Backup section is opened
+const HubAccountData = React.lazy(() => import('../modals/AccountManagementModal').then(m => ({ default: m.AccountManagementModal })));
+
+/** Sections of the unified Data page. Other screens jump to one with DATA_HUB_EVENT (see App.tsx). */
+export type DataHubSection = 'connect' | 'sync' | 'local' | 'backup' | 'newyear';
+export const DATA_HUB_EVENT = 'lhhp:data-hub-section';
+export const DATA_HUB_KEY = 'lhhp_data_hub_section';
+const DATA_HUB_SECTIONS: Array<{ id: DataHubSection; label: string; hint: string; icon: React.ComponentType<{ className?: string }> }> = [
+  { id: 'connect', label: 'Kết nối Drive', hint: 'Thư mục Google Drive dùng chung và Apps Script của trường', icon: HubCloud },
+  { id: 'sync', label: 'Đồng bộ', hint: 'Gửi lên / nạp lại từ Google Drive, tự động đồng bộ', icon: HubSync },
+  { id: 'local', label: 'Lưu trên máy', hint: 'Thư mục lưu tệp dữ liệu trên máy tính này, USB', icon: HubDisk },
+  { id: 'backup', label: 'Sao lưu & khôi phục', hint: 'Tải bản sao lưu về máy và khôi phục từ tệp', icon: HubArchive },
+  { id: 'newyear', label: 'Năm học mới', hint: 'Làm mới dữ liệu của tài khoản để bắt đầu năm học mới', icon: HubYear },
+];
 
 interface ReportsDataViewProps {
   defaultTab?: 'stats' | 'data' | 'profile';
@@ -47,8 +66,31 @@ export const ReportsDataView: React.FC<ReportsDataViewProps> = ({ defaultTab = '
     teacherRole, setTeacherRole, subjectTeacherConfig, updateSubjectTeacherConfig,
     currentUser, allUsers, getCurrentUserData, students,
     canEditParentCommittee, canEditClassSlogan,
-    setIsGoogleDriveModalOpen, setIsDataStorageModalOpen, setIsCdKeyModalOpen, isCdKeyActivated
+    setIsGoogleDriveModalOpen, setIsDataStorageModalOpen, setIsCdKeyModalOpen, isCdKeyActivated,
+    canManageAccounts, refreshUsersList, switchUserAccount, viewAsTeacher
   } = useClassroom();
+
+  // Unified Data page: current section (other screens can jump straight to one)
+  const [dataHub, setDataHub] = useState<DataHubSection>(() => {
+    try {
+      const v = sessionStorage.getItem(DATA_HUB_KEY) as DataHubSection | null;
+      if (v) { sessionStorage.removeItem(DATA_HUB_KEY); if (DATA_HUB_SECTIONS.some(x => x.id === v)) return v; }
+    } catch (_) { /* ignore */ }
+    return 'connect';
+  });
+  const [showHubWizard, setShowHubWizard] = useState(false);
+  const hubWizardRef = useRef<HTMLElement | null>(null);
+  const openHubWizard = () => {
+    setDataHub('connect');
+    setShowHubWizard(true);
+    setTimeout(() => hubWizardRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80);
+  };
+  // "Xem" a teacher from the storage table: view-only for teacher accounts, as in the account manager
+  const hubSwitchToUser = async (username: string): Promise<boolean> => {
+    const target = (allUsers || []).find(u => u.username.toLowerCase() === username.toLowerCase());
+    if (target && (target.role === 'homeroom' || target.role === 'subject')) return viewAsTeacher(username);
+    return switchUserAccount(username);
+  };
 
   const isCurrentUserSuperAdmin = currentUser?.username?.toLowerCase() === 'adminquantri' || currentUser?.role === 'admin';
   const isSchoolAdminAccount = !isCurrentUserSuperAdmin && Boolean(
@@ -78,6 +120,17 @@ export const ReportsDataView: React.FC<ReportsDataViewProps> = ({ defaultTab = '
   React.useEffect(() => {
     if (defaultTab) setActiveTab(defaultTab);
   }, [defaultTab]);
+  React.useEffect(() => {
+    const onHub = (e: Event) => {
+      const sec = (e as CustomEvent).detail as DataHubSection;
+      if (!DATA_HUB_SECTIONS.some(x => x.id === sec)) return;
+      try { sessionStorage.removeItem(DATA_HUB_KEY); } catch (_) { /* ignore */ }
+      setActiveTab('data');
+      setDataHub(sec);
+    };
+    window.addEventListener(DATA_HUB_EVENT, onHub);
+    return () => window.removeEventListener(DATA_HUB_EVENT, onHub);
+  }, []);
 
   // Multi-tier backup & restore states
   const [schoolsList, setSchoolsList] = useState<SchoolEntity[]>([]);
@@ -687,25 +740,11 @@ export const ReportsDataView: React.FC<ReportsDataViewProps> = ({ defaultTab = '
             </div>
             <div>
               <h2 className="text-base md:text-lg font-black text-slate-900 tracking-tight">
-                {activeTab === 'data' && (
-                  isCurrentUserSuperAdmin
-                    ? 'Quản Lý Sao Lưu & Phục Hồi Dữ Liệu Đa Tầng (Admin Toàn Hệ Thống)'
-                    : (isSchoolAdminAccount
-                        ? `Quản Lý Sao Lưu & Phục Hồi Dữ Liệu Toàn Trường (${currentUser?.schoolName || 'TRƯỜNG HỌC'})`
-                        : 'Quản Lý Sao Lưu & Phục Hồi Dữ Liệu Tài Khoản Cá Nhân'
-                      )
-                )}
+                {activeTab === 'data' && `Dữ Liệu${isSchoolAdminAccount && currentUser?.schoolName ? ` • ${currentUser.schoolName}` : ''}`}
                 {activeTab === 'profile' && 'Cài Đặt Hồ Sơ Giáo Viên & Thông Tin Hệ Thống'}
               </h2>
               <p className="text-xs text-slate-500">
-                {activeTab === 'data' && (
-                  isCurrentUserSuperAdmin
-                    ? 'Tùy chọn sao lưu & phục hồi toàn bộ hệ thống hoặc sao lưu & phục hồi độc lập theo từng trường trong CSDL.'
-                    : (isSchoolAdminAccount
-                        ? 'Sao lưu & phục hồi toàn bộ dữ liệu 66 lớp GVCN, 103 học sinh và điểm số của nhà trường an toàn tuyệt đối.'
-                        : 'Sao lưu & phục hồi độc lập dữ liệu lớp học và học sinh bạn phụ trách, an toàn và bảo mật 100%.'
-                      )
-                )}
+                {activeTab === 'data' && 'Kết nối Google Drive, đồng bộ, lưu trên máy, sao lưu & khôi phục, năm học mới — tất cả ở một trang.'}
                 {activeTab === 'profile' && 'Cập nhật tên giáo viên, đơn vị công tác, năm học, số điện thoại và Zalo hỗ trợ.'}
               </p>
             </div>
@@ -1243,7 +1282,7 @@ export const ReportsDataView: React.FC<ReportsDataViewProps> = ({ defaultTab = '
         {/* TAB 2: DỮ LIỆU PHÂN CẤP ĐA TẦNG (GIÁO VIÊN • NHÀ TRƯỜNG • TOÀN HỆ THỐNG) */}
         {/* ========================================================================= */}
         {activeTab === 'data' && (
-          <div className="space-y-6">
+          <div className="space-y-3">
             {/* THÔNG BÁO TOAST KHI SAO LƯU HOẶC KHÔI PHỤC THÀNH CÔNG / THẤT BẠI */}
             {dataExportToast && (
               <div className="p-4 rounded-2xl bg-emerald-50 border-2 border-emerald-300 text-emerald-900 font-bold text-xs flex items-center justify-between shadow-md animate-fadeIn">
@@ -1302,252 +1341,73 @@ export const ReportsDataView: React.FC<ReportsDataViewProps> = ({ defaultTab = '
               </div>
             )}
 
-            {/* 1. BANNER PHÂN CẤP DANH TÍNH & PHẠM VI QUYỀN HẠN SAO LƯU */}
-            {isCurrentUserSuperAdmin ? (
-              /* CẤP 1: QUẢN TRỊ VIÊN HỆ THỐNG CẤP CAO (ADMIN TỐI CAO) */
-              <div className="p-5 md:p-6 rounded-3xl bg-gradient-to-br from-indigo-600 via-indigo-600 to-purple-600 text-white shadow-lg space-y-4 border border-indigo-700/50">
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <div className="flex items-center gap-3">
-                    <div className="w-11 h-11 rounded-2xl bg-amber-400 text-indigo-950 flex items-center justify-center font-black shadow-md shrink-0">
-                      <Trophy className="w-6 h-6" />
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="px-2.5 py-0.5 rounded-full bg-amber-400 text-indigo-950 font-black text-[12px] uppercase tracking-wider">
-                          👑 ADMIN TỐI CAO
-                        </span>
-                        <span className="text-[12px] font-bold text-white">
-                          QUẢN TRỊ VIÊN HỆ THỐNG CẤP CAO
-                        </span>
-                      </div>
-                      <h2 className="text-base md:text-lg font-black tracking-tight text-white mt-0.5">
-                        QUẢN LÝ SAO LƯU & PHỤC HỒI DỮ LIỆU ĐA TẦNG TOÀN HỆ THỐNG
-                      </h2>
-                    </div>
-                  </div>
+            {/* TRANG DỮ LIỆU THỐNG NHẤT: 5 phần — kết nối Drive, đồng bộ, lưu trên máy, sao lưu & khôi phục, năm học mới */}
+            <div className="bg-white rounded-2xl border border-slate-200 p-1.5 flex gap-1 overflow-x-auto" role="tablist" aria-label="Các phần của trang Dữ liệu">
+              {DATA_HUB_SECTIONS.map(sec => {
+                const Icon = sec.icon;
+                return (
+                  <button
+                    key={sec.id}
+                    type="button"
+                    role="tab"
+                    aria-selected={dataHub === sec.id}
+                    onClick={() => setDataHub(sec.id)}
+                    title={sec.hint}
+                    className={`no-hover-fx flex-1 min-w-fit px-3 py-2 rounded-xl text-sm font-black whitespace-nowrap inline-flex items-center justify-center gap-1.5 cursor-pointer ${dataHub === sec.id ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-700 hover:bg-slate-100'}`}
+                  >
+                    <Icon className="w-4 h-4" />
+                    <span>{sec.label}</span>
+                  </button>
+                );
+              })}
+            </div>
 
-                  <div className="px-3.5 py-1.5 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 text-xs font-mono font-bold text-amber-300 flex items-center gap-2">
-                    <Database className="w-4 h-4 text-amber-400" />
-                    <span>Toàn quyền Master Database</span>
-                  </div>
-                </div>
-
-                <p className="text-xs text-white leading-relaxed max-w-4xl">
-                  Theo phân cấp đa tầng: Tài khoản của bạn được phép sao lưu và phục hồi dữ liệu của <strong className="text-white">TOÀN BỘ HỆ THỐNG</strong> hoặc lựa chọn sao lưu & phục hồi độc lập theo <strong className="text-amber-300">TỪNG TRƯỜNG HỌC</strong> cụ thể trong cơ sở dữ liệu.
-                </p>
-
-                {/* BỘ CHỌN PHẠM VI (SCOPE SWITCHER) CHO ADMIN */}
-                <div className="pt-2 border-t border-indigo-700/60 flex flex-col md:flex-row md:items-center justify-between gap-3">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-black uppercase text-amber-300 flex items-center gap-1.5">
-                      <Layers className="w-4 h-4" />
-                      <span>Chọn Phạm Vi:</span>
-                    </span>
-                    <div className="inline-flex p-1 rounded-2xl bg-indigo-600/60 border border-indigo-600/60">
-                      <button
-                        type="button"
-                        onClick={() => setSelectedAdminScope('system')}
-                        className={`px-3.5 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 uppercase ${
-                          selectedAdminScope === 'system'
-                            ? 'bg-amber-400 text-indigo-950 shadow-md'
-                            : 'text-white hover:text-white'
-                        }`}
-                      >
-                        <Globe className="w-3.5 h-3.5" />
-                        <span>1. Toàn Bộ Hệ Thống</span>
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => setSelectedAdminScope('school')}
-                        className={`px-3.5 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 uppercase ${
-                          selectedAdminScope === 'school'
-                            ? 'bg-emerald-400 text-slate-950 shadow-md'
-                            : 'text-white hover:text-white'
-                        }`}
-                      >
-                        <Building2 className="w-3.5 h-3.5" />
-                        <span>2. Theo Từng Trường</span>
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Khi chọn 'Theo Từng Trường' -> Hiện Select Box chọn trường */}
-                  {selectedAdminScope === 'school' && (
-                    <div className="flex items-center gap-2 min-w-[280px]">
-                      <span className="text-xs font-bold text-white whitespace-nowrap">Trường học:</span>
-                      <select
-                        value={selectedAdminSchool}
-                        onChange={(e) => setSelectedAdminSchool(e.target.value)}
-                        className="w-full px-3 py-1.5 rounded-xl bg-white text-slate-900 font-bold text-xs border border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-400"
-                      >
-                        {schoolsList.map((s) => (
-                          <option key={s.id} value={s.name}>
-                            🏫 {s.name} ({s.code || 'Mã: TỰ ĐỘNG'})
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  )}
-                </div>
-
-                {/* THẺ THỐNG KÊ NHANH CHO PHẠM VI ĐANG CHỌN */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-1">
-                  <div className="p-2.5 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/10">
-                    <div className="text-[12px] font-bold text-white/90 uppercase">
-                      {selectedAdminScope === 'system' ? 'Tổng số trường' : 'Trường đang chọn'}
-                    </div>
-                    <div className="text-sm font-black text-amber-300 truncate">
-                      {selectedAdminScope === 'system' ? `${Math.max(1, schoolsList.length)} Trường học` : selectedAdminSchool}
-                    </div>
-                  </div>
-
-                  <div className="p-2.5 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/10">
-                    <div className="text-[12px] font-bold text-white/90 uppercase">
-                      {selectedAdminScope === 'system' ? 'Tổng số tài khoản' : 'Tài khoản trường'}
-                    </div>
-                    <div className="text-sm font-black text-white font-mono">
-                      {selectedAdminScope === 'system'
-                        ? `${allUsers.length} Users`
-                        : `${allUsers.filter(u => (u.schoolName || '').trim().toLowerCase() === selectedAdminSchool.trim().toLowerCase()).length} Users`
-                      }
-                    </div>
-                  </div>
-
-                  <div className="p-2.5 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/10">
-                    <div className="text-[12px] font-bold text-white/90 uppercase">
-                      {selectedAdminScope === 'system' ? 'Tổng số lớp (GVCN)' : 'Lớp thuộc trường'}
-                    </div>
-                    <div className="text-sm font-black text-white font-mono">
-                      66 Lớp GVCN
-                    </div>
-                  </div>
-
-                  <div className="p-2.5 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/10">
-                    <div className="text-[12px] font-bold text-white/90 uppercase">
-                      {selectedAdminScope === 'system' ? 'Tổng số học sinh' : 'Học sinh trường'}
-                    </div>
-                    <div className="text-sm font-black text-sky-300 font-mono">
-                      103 Học sinh
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ) : isSchoolAdminAccount ? (
-              /* CẤP 2: TÀI KHOẢN QUẢN TRỊ NHÀ TRƯỜNG (BGH / ADMIN TRƯỜNG) */
-              <div className="p-5 md:p-6 rounded-3xl bg-gradient-to-br from-emerald-700 via-teal-700 to-indigo-600 text-white shadow-lg space-y-3.5 border border-emerald-600/50">
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <div className="flex items-center gap-3">
-                    <div className="w-11 h-11 rounded-2xl bg-amber-400 text-emerald-950 flex items-center justify-center font-black shadow-md shrink-0">
-                      <School className="w-6 h-6" />
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="px-2.5 py-0.5 rounded-full bg-amber-400 text-emerald-950 font-black text-[12px] uppercase tracking-wider">
-                          🏫 BẢO VỆ DỮ LIỆU TOÀN TRƯỜNG
-                        </span>
-                        <span className="text-[12px] font-bold text-white">
-                          QUẢN TRỊ VIÊN NHÀ TRƯỜNG
-                        </span>
-                      </div>
-                      <h2 className="text-base md:text-lg font-black tracking-tight text-white mt-0.5">
-                        QUẢN LÝ SAO LƯU & PHỤC HỒI TOÀN BỘ DỮ LIỆU NHÀ TRƯỜNG
-                      </h2>
-                    </div>
-                  </div>
-
-                  <div className="px-3.5 py-1.5 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 text-xs font-mono font-bold text-amber-300 flex items-center gap-2">
-                    <Building2 className="w-4 h-4 text-amber-400" />
-                    <span>{currentUser?.schoolName || 'TRƯỜNG HỌC'}</span>
-                  </div>
-                </div>
-
-                <p className="text-xs text-white leading-relaxed max-w-4xl">
-                  Theo phân cấp đa tầng: Tài khoản Quản trị nhà trường được phép sao lưu và phục hồi <strong className="text-amber-300">TOÀN BỘ CƠ SỞ DỮ LIỆU CỦA TRƯỜNG</strong> bao gồm tất cả các lớp GVCN, danh sách học sinh, điểm thi đua, chuyên cần, bán trú và tài khoản giáo viên trong trường.
-                </p>
-
-                {/* THỐNG KÊ DỮ LIỆU TOÀN TRƯỜNG */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-1">
-                  <div className="p-2.5 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/10">
-                    <div className="text-[12px] font-bold text-white uppercase">Đơn vị trường</div>
-                    <div className="text-xs font-black text-amber-300 truncate">
-                      {currentUser?.schoolName || 'TRƯỜNG HỌC'}
-                    </div>
-                  </div>
-                  <div className="p-2.5 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/10">
-                    <div className="text-[12px] font-bold text-white uppercase">Sĩ số toàn trường</div>
-                    <div className="text-sm font-black text-white font-mono">103 Học sinh</div>
-                  </div>
-                  <div className="p-2.5 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/10">
-                    <div className="text-[12px] font-bold text-white uppercase">Quy mô lớp học</div>
-                    <div className="text-sm font-black text-amber-300 font-mono">66 Lớp GVCN</div>
-                  </div>
-                  <div className="p-2.5 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/10">
-                    <div className="text-[12px] font-bold text-white uppercase">Tài khoản GV trường</div>
-                    <div className="text-sm font-black text-white font-mono">
-                      {allUsers.filter(u => (u.schoolName || '').trim().toLowerCase() === (currentUser?.schoolName || 'TRƯỜNG HỌC').trim().toLowerCase()).length} Giáo viên
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              /* CẤP 3: TÀI KHOẢN GIÁO VIÊN PHỤ TRÁCH */
-              <div className="p-5 md:p-6 rounded-3xl bg-gradient-to-br from-blue-700 via-indigo-700 to-indigo-600 text-white shadow-lg space-y-3.5 border border-blue-500/50">
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <div className="flex items-center gap-3">
-                    <div className="w-11 h-11 rounded-2xl bg-white text-indigo-700 flex items-center justify-center font-black shadow-md shrink-0">
-                      <User className="w-6 h-6" />
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="px-2.5 py-0.5 rounded-full bg-white text-indigo-900 font-black text-[12px] uppercase tracking-wider">
-                          👤 TÀI KHOẢN GIÁO VIÊN PHỤ TRÁCH
-                        </span>
-                        <span className="text-[12px] font-bold text-white">
-                          {currentUser?.role === 'homeroom' ? 'Giáo viên Chủ nhiệm' : 'Giáo viên Bộ môn'}
-                        </span>
-                      </div>
-                      <h2 className="text-base md:text-lg font-black tracking-tight text-white mt-0.5">
-                        QUẢN LÝ SAO LƯU & PHỤC HỒI DỮ LIỆU TÀI KHOẢN CÁ NHÂN
-                      </h2>
-                    </div>
-                  </div>
-
-                  <div className="px-3.5 py-1.5 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 text-xs font-mono font-bold text-amber-300 flex items-center gap-2">
-                    <UserCheck className="w-4 h-4 text-amber-400" />
-                    <span>{currentUser?.fullName || teacherProfile.name}</span>
-                  </div>
-                </div>
-
-                <p className="text-xs text-white leading-relaxed max-w-4xl">
-                  Theo phân cấp đa tầng: Bạn được phép sao lưu và phục hồi <strong className="text-amber-300">ĐỘC LẬP</strong> cho tài khoản và các lớp bạn phụ trách. Tuyệt đối không làm thay đổi hoặc ảnh hưởng tới dữ liệu của giáo viên khác hay toàn trường.
-                </p>
-
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 pt-1">
-                  <div className="p-2.5 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/10">
-                    <div className="text-[12px] font-bold text-white uppercase">Giáo viên phụ trách</div>
-                    <div className="text-xs font-black text-amber-300 truncate">
-                      {currentUser?.fullName || teacherProfile.name}
-                    </div>
-                  </div>
-                  <div className="p-2.5 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/10">
-                    <div className="text-[12px] font-bold text-white uppercase">Lớp phụ trách</div>
-                    <div className="text-sm font-black text-white font-mono">
-                      {classes.length} Lớp học
-                    </div>
-                  </div>
-                  <div className="p-2.5 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/10">
-                    <div className="text-[12px] font-bold text-white uppercase">Học sinh lớp</div>
-                    <div className="text-sm font-black text-white font-mono">
-                      {currentClassStudents.length} Học sinh
-                    </div>
-                  </div>
-                </div>
+            {dataHub === 'connect' && (
+              <div className="space-y-3">
+                <GoogleDriveSyncModal embedded isOpen onClose={() => {}} sections={['connect', 'advanced']} onOpenWizard={openHubWizard} />
+                {canManageAccounts && (
+                  <section ref={hubWizardRef} className="space-y-2">
+                    <button
+                      type="button"
+                      onClick={() => setShowHubWizard(v => !v)}
+                      aria-expanded={showHubWizard}
+                      className="no-hover-fx w-full px-3 py-2.5 rounded-2xl bg-white border border-slate-200 hover:bg-slate-50 text-left flex items-center gap-2 cursor-pointer"
+                    >
+                      <HubWand className="w-5 h-5 text-indigo-600 shrink-0" />
+                      <span className="flex-1 min-w-0">
+                        <span className="block text-sm font-black text-slate-900">Cài đặt / cập nhật Apps Script</span>
+                        <span className="block text-xs text-slate-600">Hướng dẫn 5 bước, bước cuối phần mềm tự kiểm tra link /exec. Chỉ quản trị cần làm.</span>
+                      </span>
+                      <HubDown className={`w-5 h-5 text-slate-600 shrink-0 transition-transform ${showHubWizard ? 'rotate-180' : ''}`} />
+                    </button>
+                    {showHubWizard && <AppsScriptSetupWizard embedded />}
+                  </section>
+                )}
               </div>
             )}
 
-            {/* 2. CỤM 3 THẺ CHỨC NĂNG HÀNH ĐỘNG THÍCH ỨNG (TẢI VỀ • NẠP VÀO • LÀM MỚI NĂM HỌC) */}
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 sm:gap-5">
+            {dataHub === 'sync' && (
+              <GoogleDriveSyncModal embedded isOpen onClose={() => {}} sections={['sync', 'report']} onOpenWizard={openHubWizard} />
+            )}
+
+            {dataHub === 'local' && (
+              <DataStorageLocationModal embedded isOpen onClose={() => {}} />
+            )}
+
+            {dataHub === 'backup' && (canManageAccounts ? (
+              <React.Suspense fallback={<p className="text-sm font-semibold text-slate-600 px-1">Đang mở phần sao lưu…</p>}>
+                <HubAccountData
+                  embeddedDatabase
+                  isOpen
+                  onClose={() => {}}
+                  currentUser={currentUser}
+                  allUsers={allUsers}
+                  onRefreshUsers={refreshUsersList}
+                  onSwitchToUser={hubSwitchToUser}
+                />
+              </React.Suspense>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
               {/* Card 1: Backup Download (.JSON & .ZIP) theo phân cấp */}
               <div className="bg-white rounded-3xl border border-slate-200/90 p-4 sm:p-6 shadow-xs flex flex-col justify-between space-y-4 sm:space-y-5 hover-zoom-card">
                 <div className="space-y-2">
@@ -1596,7 +1456,6 @@ export const ReportsDataView: React.FC<ReportsDataViewProps> = ({ defaultTab = '
                   </button>
                 </div>
               </div>
-
               {/* Card 2: Restore Upload (.JSON & .ZIP) với Modal Xem Trước Khôi Phục */}
               <div className="bg-white rounded-3xl border border-slate-200/90 p-4 sm:p-6 shadow-xs flex flex-col justify-between space-y-4 sm:space-y-5 hover-zoom-card">
                 <div className="space-y-2">
@@ -1633,7 +1492,11 @@ export const ReportsDataView: React.FC<ReportsDataViewProps> = ({ defaultTab = '
                   </button>
                 </div>
               </div>
+              </div>
+            ))}
 
+            {dataHub === 'newyear' && (
+              <div className="max-w-xl">
               {/* Card 4: Làm Mới Năm Học / Xóa Sạch */}
               <div className="bg-white rounded-3xl border border-slate-200/90 p-4 sm:p-6 shadow-xs flex flex-col justify-between space-y-4 sm:space-y-5 hover-zoom-card">
                 <div className="space-y-2">
@@ -1641,16 +1504,11 @@ export const ReportsDataView: React.FC<ReportsDataViewProps> = ({ defaultTab = '
                     <Trash2 className="w-5 h-5 sm:w-6 sm:h-6" />
                   </div>
                   <h3 className="text-xs sm:text-sm font-black text-slate-900 uppercase">
-                    LÀM MỚI NĂM HỌC / XÓA SẠCH
+                    LÀM MỚI NĂM HỌC (DỮ LIỆU CỦA TÀI KHOẢN NÀY)
                   </h3>
-                  <p className="text-xs text-slate-500 leading-relaxed">
-                    {isCurrentUserSuperAdmin
-                      ? 'Làm mới dữ liệu để chuẩn bị cho năm học mới. Thao tác được bảo vệ bằng mã xác nhận an toàn tuyệt đối.'
-                      : (isSchoolAdminAccount
-                          ? 'Làm mới năm học cho toàn trường. Dữ liệu cũ được sao lưu tự động trước khi thao tác.'
-                          : 'Xóa sạch danh sách học sinh và điểm số cũ của tài khoản để chuẩn bị bắt đầu năm học mới.'
-                        )
-                    }
+                  <p className="text-xs text-slate-600 leading-relaxed">
+                    Xóa danh sách lớp, học sinh, điểm và điểm danh đang lưu dưới <strong>tài khoản đang đăng nhập</strong> để bắt đầu năm học mới.
+                    Không xóa tài khoản và không đụng tới dữ liệu của giáo viên khác. Nên tải một bản sao lưu ở thẻ Sao lưu & khôi phục trước.
                   </p>
                 </div>
 
@@ -1663,68 +1521,8 @@ export const ReportsDataView: React.FC<ReportsDataViewProps> = ({ defaultTab = '
                   <span>LÀM MỚI NĂM HỌC</span>
                 </button>
               </div>
-            </div>
-
-            {/* 2.5. CỤM 2 THẺ ĐỒNG BỘ GOOGLE DRIVE VÀ NƠI LƯU DATA (Ổ D/E) - CHUẨN ẢNH 8 */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5 pt-1">
-              {/* Card 1: Đồng Bộ Google Drive Cá Nhân / Nhà Trường */}
-              <div className="bg-white rounded-3xl border-2 border-emerald-300/80 p-4 sm:p-5 shadow-xs flex flex-col justify-between space-y-3 hover-zoom-card">
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <div className="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-700 flex items-center justify-center shadow-2xs">
-                      <Cloud className="w-5 h-5 text-emerald-600" />
-                    </div>
-                    <span className="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[12px] font-black uppercase tracking-wider">
-                      ĐÁM MÂY GOOGLE
-                    </span>
-                  </div>
-                  <h3 className="text-xs sm:text-sm font-black text-slate-900 uppercase">
-                    ĐỒNG BỘ GOOGLE DRIVE {isSchoolAdminAccount ? 'DÙNG CHUNG NHÀ TRƯỜNG' : 'CÁ NHÂN'}
-                  </h3>
-                  <p className="text-xs text-slate-500 leading-relaxed">
-                    Dán đường link thư mục Google Drive (chế độ "Bất kỳ ai có liên kết - Người chỉnh sửa") để tự động sao lưu dữ liệu lớp học, điểm số và học sinh lên Drive cá nhân. Về nhà mở máy tính khác, dán đúng link là nạp khôi phục ngay!
-                  </p>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => setIsGoogleDriveModalOpen(true)}
-                  className="w-full py-2.5 sm:py-3 px-4 rounded-2xl text-xs font-black text-white bg-gradient-to-r from-teal-700 to-emerald-700 hover:from-teal-800 hover:to-emerald-800 shadow-md shadow-emerald-600/20 transition-all hover-zoom-btn flex items-center justify-center gap-2 uppercase cursor-pointer"
-                >
-                  <Cloud className="w-4 h-4" />
-                  <span>CẤU HÌNH & ĐỒNG BỘ GOOGLE DRIVE</span>
-                </button>
               </div>
-
-              {/* Card 2: Nơi Lưu Data Lớp Học (Ổ D/E) An Toàn */}
-              <div className="bg-white rounded-3xl border-2 border-orange-300/80 p-4 sm:p-5 shadow-xs flex flex-col justify-between space-y-3 hover-zoom-card">
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <div className="w-10 h-10 rounded-2xl bg-orange-50 text-orange-700 flex items-center justify-center shadow-2xs">
-                      <HardDrive className="w-5 h-5 text-orange-600" />
-                    </div>
-                    <span className="px-2.5 py-0.5 rounded-full bg-orange-100 text-orange-800 text-[12px] font-black uppercase tracking-wider">
-                      Ổ D / E AN TOÀN
-                    </span>
-                  </div>
-                  <h3 className="text-xs sm:text-sm font-black text-slate-900 uppercase">
-                    NƠI LƯU DATA LỚP HỌC (Ổ D/E)
-                  </h3>
-                  <p className="text-xs text-slate-500 leading-relaxed">
-                    Chọn lưu trữ dữ liệu lớp học trên Ổ D: HOẶC E: (không chọn ổ C: chứa Windows) để tránh mất mát khi máy tính bị lỗi Win. Hỗ trợ nạp khôi phục tài khoản từ USB hoặc thư mục máy tính cũ.
-                  </p>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => setIsDataStorageModalOpen(true)}
-                  className="w-full py-2.5 sm:py-3 px-4 rounded-2xl text-xs font-black text-white bg-gradient-to-r from-amber-700 via-orange-700 to-amber-700 hover:from-amber-800 hover:to-orange-800 shadow-md shadow-orange-500/20 transition-all hover-zoom-btn flex items-center justify-center gap-2 uppercase cursor-pointer"
-                >
-                  <HardDrive className="w-4 h-4" />
-                  <span>CHỌN NƠI LƯU DATA / NẠP TỪ THƯ MỤC CŨ</span>
-                </button>
-              </div>
-            </div>
+            )}
 
             {/* 3. MODAL XEM TRƯỚC & KIỂM TRA PHÂN QUYỀN KHI KHÔI PHỤC DỮ LIỆU */}
             {restorePreview && (

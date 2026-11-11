@@ -70,6 +70,19 @@ function ClassroomApp() {
   } = useClassroom();
   const [currentView, setCurrentView] = useState<NavigationMenuId>('dashboard');
 
+  // One Data page instead of separate Drive / storage dialogs: any "open Google Drive" or "open storage location"
+  // request made while logged in jumps to the matching section. Before login (auth screen) the dialogs still open.
+  useEffect(() => {
+    if (!currentUser || isAuthModalOpen) return;
+    const section = isGoogleDriveModalOpen ? 'connect' : isDataStorageModalOpen ? 'local' : '';
+    if (!section) return;
+    if (isGoogleDriveModalOpen) setIsGoogleDriveModalOpen(false);
+    if (isDataStorageModalOpen) setIsDataStorageModalOpen(false);
+    try { sessionStorage.setItem('lhhp_data_hub_section', section); } catch (_) { /* ignore */ }
+    setCurrentView('data');
+    window.dispatchEvent(new CustomEvent('lhhp:data-hub-section', { detail: section }));
+  }, [isGoogleDriveModalOpen, isDataStorageModalOpen, currentUser, isAuthModalOpen]);
+
   // 🏫 Quản trị đăng nhập mà máy chưa cấu hình thư mục dùng chung → bắt buộc cấu hình ngay
   useEffect(() => {
     if (!currentUser) return;

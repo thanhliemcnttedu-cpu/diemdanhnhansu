@@ -10,6 +10,8 @@ import { useClassroom } from '../../context/ClassroomContext';
 
 interface DataStorageLocationModalProps {
   isOpen: boolean;
+  /** Render inside a page (no overlay, no header) */
+  embedded?: boolean;
   onClose: () => void;
 }
 
@@ -18,7 +20,8 @@ interface DataStorageLocationModalProps {
  * - Bản web (Vercel): trình duyệt chỉ ghi được vào thư mục người dùng TỰ CHỌN (hộp chọn thư mục) → ghi tệp thật.
  * - Bản có máy chủ / Desktop: ghi theo đường dẫn ổ đĩa (D:\…) qua máy chủ / Electron.
  */
-export const DataStorageLocationModal: React.FC<DataStorageLocationModalProps> = ({ isOpen, onClose }) => {
+export const DataStorageLocationModal: React.FC<DataStorageLocationModalProps> = ({ isOpen: isOpenProp, onClose, embedded = false }) => {
+  const isOpen = isOpenProp || embedded;
   const {
     exportBackupJson, importBackupJson, currentUser, teacherRole, classes, activeClassId,
     isBgh, isSchoolAdmin, isAdmin, getCurrentUserData
@@ -147,6 +150,22 @@ export const DataStorageLocationModal: React.FC<DataStorageLocationModalProps> =
     e.target.value = '';
     if (!file) return;
     try {
+      // Only a single-account data file belongs here. System-wide backups carry accounts / other people's
+      // files and would be written into this account's own data.
+      if (file.name.toLowerCase().endsWith('.json')) {
+        let parsed: any = null;
+        try { parsed = JSON.parse(await file.text()); } catch (_) { parsed = null; }
+        if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) { notify('error', 'Tệp JSON không đúng định dạng hoặc bị lỗi.'); return; }
+        if (parsed.format === 'lhhp_drive_backup' || parsed.format === 'lop_hoc_hanh_phuc_backup') {
+          notify('error', 'Đây là tệp sao lưu của mục "Sao lưu & khôi phục", không phải tệp dữ liệu của một tài khoản. Hãy nạp tệp này ở thẻ Sao lưu & khôi phục.');
+          return;
+        }
+        if (!Array.isArray(parsed.classes) && !Array.isArray(parsed.students)) {
+          notify('error', 'Tệp này không chứa dữ liệu lớp học (không có danh sách lớp, học sinh).');
+          return;
+        }
+      }
+      if (!window.confirm(`Nạp tệp "${file.name}" sẽ THAY dữ liệu lớp học hiện tại của tài khoản này bằng dữ liệu trong tệp.\n\nNên bấm "Tải tệp về máy" để giữ một bản trước khi nạp. Tiếp tục?`)) return;
       const ok = await importBackupJson(file);
       notify(ok ? 'success' : 'error', ok ? `Đã nạp dữ liệu từ ${file.name}.` : 'Tệp JSON không đúng định dạng hoặc bị lỗi.');
     } catch (_) {
@@ -178,10 +197,10 @@ export const DataStorageLocationModal: React.FC<DataStorageLocationModalProps> =
   const btnLight = 'no-hover-fx h-10 px-3.5 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 disabled:opacity-60 text-slate-800 text-sm font-bold inline-flex items-center justify-center gap-2 whitespace-nowrap cursor-pointer';
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-sky-900/20 backdrop-blur-xs animate-in fade-in duration-200" role="dialog" aria-modal="true" aria-labelledby="storage-title">
-      <div className="relative w-full max-w-5xl bg-slate-50 rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[96vh]">
-        {/* Đầu hộp (gọn 1 dòng) */}
-        <div className="bg-white border-b border-slate-200 px-4 py-2.5 flex items-center justify-between gap-3 shrink-0">
+    <div {...(embedded ? {} : { role: 'dialog', 'aria-modal': true, 'aria-labelledby': 'storage-title' })} className={embedded ? '' : 'fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-sky-900/20 backdrop-blur-xs animate-in fade-in duration-200'}>
+      <div className={embedded ? '' : 'relative w-full max-w-5xl bg-slate-50 rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[96vh]'}>
+        {/* Đầu hộp (gọn 1 dòng) — ẩn khi nhúng trong trang Dữ liệu */}
+        <div style={embedded ? { display: 'none' } : undefined} className="bg-white border-b border-slate-200 px-4 py-2.5 flex items-center justify-between gap-3 shrink-0">
           <div className="flex items-center gap-2.5 min-w-0">
             <span className="w-9 h-9 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center shrink-0"><HardDrive className="w-5 h-5" /></span>
             <div className="min-w-0">
@@ -196,7 +215,10 @@ export const DataStorageLocationModal: React.FC<DataStorageLocationModalProps> =
           </button>
         </div>
 
-        <div className="p-3 sm:p-4 overflow-y-auto space-y-3 text-sm text-slate-700">
+        <div className={embedded ? 'space-y-3 text-sm text-slate-700' : 'p-3 sm:p-4 overflow-y-auto space-y-3 text-sm text-slate-700'}>
+          {embedded && (
+            <p className="text-xs text-slate-600">{roleTitleDisplay} • tệp <strong className="font-mono text-indigo-700">{roleFileName}</strong> — 1 tệp JSON của tài khoản này, dễ chép sang USB và nạp lại.</p>
+          )}
           {toastMessage && (
             <div role="status" className={`px-3 py-2 rounded-xl text-sm font-bold flex items-start gap-2 border ${
               toastMessage.type === 'success' ? 'bg-emerald-50 text-emerald-900 border-emerald-300' : 'bg-rose-50 text-rose-900 border-rose-300'

@@ -31,7 +31,7 @@ const StepCard: React.FC<{ n: number; title: string; done?: boolean; icon: React
   </section>
 );
 
-export const AppsScriptSetupWizard: React.FC = () => {
+export const AppsScriptSetupWizard: React.FC<{ embedded?: boolean }> = ({ embedded = false }) => {
   const { currentUser } = useClassroom();
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState<'install' | 'update'>('install');
@@ -45,7 +45,17 @@ export const AppsScriptSetupWizard: React.FC = () => {
   const [shareCopied, setShareCopied] = useState(false);
   const latest = useMemo(() => appsScriptSetupService.getBundledVersion(), []);
 
+  // Embedded in the Data page: no dialog, fields are filled once from the saved connection
   useEffect(() => {
+    if (!embedded) return;
+    const cfg = googleDriveService.getConfig();
+    setMode(cfg.scriptUrl ? 'update' : 'install');
+    setFolderInput(cfg.folderUrl || cfg.folderId || '');
+    setUrlInput(cfg.scriptUrl || '');
+  }, [embedded]);
+
+  useEffect(() => {
+    if (embedded) return;
     const handler = (e: Event) => {
       const cfg = googleDriveService.getConfig();
       const wanted = (e as CustomEvent).detail?.mode as 'install' | 'update' | undefined;
@@ -57,9 +67,9 @@ export const AppsScriptSetupWizard: React.FC = () => {
     };
     window.addEventListener(OPEN_APPS_SCRIPT_WIZARD_EVENT, handler);
     return () => window.removeEventListener(OPEN_APPS_SCRIPT_WIZARD_EVENT, handler);
-  }, []);
+  }, [embedded]);
 
-  if (!open) return null;
+  if (!open && !embedded) return null;
 
   const folderId = googleDriveService.extractFolderIdFromUrl(folderInput) || '';
   const isUpdate = mode === 'update';
@@ -96,8 +106,8 @@ export const AppsScriptSetupWizard: React.FC = () => {
     : <MinusCircle className="w-5 h-5 text-slate-400 shrink-0" />;
 
   return (
-    <div className="fixed inset-0 z-[90] flex items-center justify-center bg-sky-900/20 backdrop-blur-xs p-2 sm:p-4" role="dialog" aria-modal="true" aria-label="Trình cài đặt Apps Script">
-      <div className="bg-slate-50 rounded-2xl shadow-2xl border border-slate-200 w-full max-w-6xl max-h-[96vh] flex flex-col overflow-hidden">
+    <div {...(embedded ? {} : { role: 'dialog', 'aria-modal': true, 'aria-label': 'Trình cài đặt Apps Script' })} className={embedded ? '' : 'fixed inset-0 z-[90] flex items-center justify-center bg-sky-900/20 backdrop-blur-xs p-2 sm:p-4'}>
+      <div className={embedded ? 'bg-slate-50 rounded-2xl border border-slate-200 overflow-hidden' : 'bg-slate-50 rounded-2xl shadow-2xl border border-slate-200 w-full max-w-6xl max-h-[96vh] flex flex-col overflow-hidden'}>
         <div className="px-4 py-2.5 bg-white border-b border-slate-200 flex flex-wrap items-center gap-x-3 gap-y-2 shrink-0">
           <div className="min-w-0 flex-1">
             <p className="text-base font-black text-slate-900 inline-flex items-center gap-2 whitespace-nowrap"><Wand2 className="w-5 h-5 text-indigo-600" /> Trình cài đặt Apps Script</p>
@@ -109,7 +119,7 @@ export const AppsScriptSetupWizard: React.FC = () => {
                 className={`no-hover-fx flex-1 px-4 py-1.5 rounded-lg text-sm font-black whitespace-nowrap ${mode === id ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600 hover:text-slate-900'}`}>{label}</button>
             ))}
           </div>
-          <button type="button" onClick={() => setOpen(false)} className="no-hover-fx w-9 h-9 rounded-xl hover:bg-slate-100 flex items-center justify-center shrink-0" aria-label="Đóng"><X className="w-5 h-5" /></button>
+          <button type="button" style={embedded ? { display: 'none' } : undefined} onClick={() => setOpen(false)} className="no-hover-fx w-9 h-9 rounded-xl hover:bg-slate-100 flex items-center justify-center shrink-0" aria-label="Đóng"><X className="w-5 h-5" /></button>
         </div>
 
         <div className="p-3 sm:p-4 overflow-y-auto grid grid-cols-1 lg:grid-cols-2 gap-3 items-start">
