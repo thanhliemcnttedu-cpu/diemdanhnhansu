@@ -1,3 +1,4 @@
+import { ACCOUNT_LIST_MS, startJitteredLoop } from '../../utils/liveSync';
 import { StaffToAccountsPanel } from './StaffToAccountsPanel';
 import React, { useState, useEffect } from 'react';
 import * as XLSX from 'xlsx';
@@ -799,8 +800,9 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
       }
     };
     pull();
-    const timer = setInterval(pull, 30000);
-    return () => { cancelled = true; clearInterval(timer); };
+    // Đọc mật khẩu xem được từ Script Properties (giới hạn đọc / ngày) → 90 s, tab ẩn thì nghỉ
+    const stop = startJitteredLoop(pull, ACCOUNT_LIST_MS);
+    return () => { cancelled = true; stop(); };
   }, [isOpen]);
 
   // Cho phép Quản trị tối cao, Quản trị nhà trường và Ban giám hiệu mở bảng điều khiển

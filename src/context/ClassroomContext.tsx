@@ -1,4 +1,5 @@
 import { quizBankStore } from '../services/quizBankStore';
+import { MANAGER_DATA_MS, TEACHER_SYNC_MS, ADMIN_EDITS_MS, LOCAL_EDIT_QUIET_MS, startJitteredLoop } from '../utils/liveSync';
 import { deriveVaultKey, sealJSON, openJSON, fingerprint } from '../utils/personalVault';
 import type { PersonalQuizVault } from '../types';
 import { stripSampleData } from '../utils/sampleData';
@@ -660,6 +661,10 @@ export const ClassroomProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   vaultStateRef.current = vaultState;
   const vaultStaleRef = useRef(false);          // két hiện có không mở được bằng mật khẩu hiện tại (đã đổi mật khẩu)
   const [vaultKeyTick, setVaultKeyTick] = useState(0);
+  // Vòng cập nhật 15 giây: lần chỉnh sửa gần nhất trên máy, hàm lấy dữ liệu hiện tại (luôn mới), hàm đồng bộ kho câu hỏi
+  const lastLocalChangeAtRef = useRef(0);
+  const currentDataGetterRef = useRef<() => UserClassroomData>(() => ({} as UserClassroomData));
+  const syncPersonalQuizRef = useRef<() => Promise<boolean>>(async () => false);
   // 📚 Kho câu hỏi CÁ NHÂN (services/quizBankStore): chỉ tài khoản giáo viên, không ở chế độ chỉ xem
   const isPersonalQuizUser = (u: UserAccount | null | undefined) => Boolean(
     u && !isViewOnly() && !(u.role === 'admin' || u.role === 'school_admin' || u.role === 'bgh' || u.isBgh || u.isSchoolAdmin || u.role === 'guest_admin' || u.isGuestAdmin)
@@ -816,6 +821,7 @@ export const ClassroomProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     if (remote && currentUserRef.current?.username === user.username) { setQuizBank(remote); saveQuizBank(remote); return true; }
     return false;
   };
+  syncPersonalQuizRef.current = syncPersonalQuiz;
   const refreshQuizVault = async (): Promise<boolean> => {
     const user = currentUserRef.current;
     if (!user || !isPersonalQuizUser(user) || !schoolDriveDbService.isConfigured()) return false;
@@ -899,6 +905,8 @@ export const ClassroomProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     infographicConfig,
     ...(vaultState.owner && vaultState.owner === (currentUser?.username || '').toLowerCase() && vaultState.vault ? { personalQuizVault: vaultState.vault } : {})
   });
+
+  currentDataGetterRef.current = getCurrentUserData;
 
   // Helper to apply dataset snapshot into state hooks
   const applyUserClassroomData = (data: Partial<UserClassroomData>) => {
@@ -1758,9 +1766,10 @@ export const ClassroomProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     return () => unsubscribe();
   }, [currentUser?.username, currentUser?.role, currentUser?.schoolName]);
 
-  // Real-time Multi-browser & Multi-tab sync polling (Fallback layer)
+  // Real-time Multi-browser & Multi-tab sync polling (Fallback layer) — vòng cập nhật 15 giây cho MỌI vai trò (utils/liveSync)
   useEffect(() => {
     if (!currentUser) return;
+    let ownFileStamp = '';
 
     let isChecking = false;
     let lastScopedSignature = '';
@@ -1812,6 +1821,39 @@ export const ClassroomProvider: React.FC<{ children: React.ReactNode }> = ({ chi
             const now = new Date();
             setLastDbSyncTime(`${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`);
           }
+          // ☁️ Bản web (Drive dùng chung): tệp lớp của chính giáo viên đổi trên Drive (máy / trình duyệt khác vừa lưu) → gộp về.
+          // Bỏ qua khi máy còn thay đổi chưa đẩy hoặc vừa sửa < 20 giây (không ghi đè chỉnh sửa đang làm).
+          const quiet = Date.now() - lastLocalChangeAtRef.current > LOCAL_EDIT_QUIET_MS && !googleDriveService.isPushPending(currentUser.username);
+          if ((window as any).__lhhpApiAvailable !== true && schoolDriveDbService.isConfigured() && quiet && !isViewOnly()) {
+            const files = await googleDriveService.listClassFilesMeta();
+            const cur = currentDataGetterRef.current();
+            // Tên tệp đặt GIỐNG lúc đẩy lên (theo lớp đang mở), dự phòng theo lớp được giao của tài khoản
+            const activeCls = (cur.classes || []).find(c => c && c.id === cur.activeClassId) || (cur.classes || [])[0];
+            const names = Array.from(new Set([
+              googleDriveService.getFileNameForUser(currentUser, activeCls?.name, cur.teacherRole),
+              googleDriveService.getFileNameForUser(currentUser, currentUser.assignedClassName, cur.teacherRole),
+            ].map(n => n.toLowerCase())));
+            const f = files?.find(x => names.includes(String(x.name).toLowerCase()));
+            const fileName = f?.name || names[0];
+            if (f?.updatedAt && f.updatedAt !== ownFileStamp) {
+              const firstSeen = !ownFileStamp;
+              ownFileStamp = f.updatedAt;
+              if (!firstSeen && Date.now() - lastLocalChangeAtRef.current > LOCAL_EDIT_QUIET_MS) {
+                const pulled = await googleDriveService.pullClassData(currentDataGetterRef.current(), fileName, currentUser);
+                if (pulled.success && pulled.mergedData && Date.now() - lastLocalChangeAtRef.current > LOCAL_EDIT_QUIET_MS) {
+                  markRemoteUpdateActive(1200);
+                  applyUserClassroomData(pulled.mergedData);
+                  setDbSyncStatus('synced');
+                  const now = new Date();
+                  setLastDbSyncTime(`${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`);
+                }
+              }
+            }
+          }
+          // 📚 Kho câu hỏi cá nhân: gộp hai chiều với Drive cá nhân (nếu đã kết nối)
+          if (isPersonalQuizUser(currentUser) && quizBankStore.getDriveConfig(currentUser.username)) {
+            await syncPersonalQuizRef.current().catch(() => false);
+          }
         }
       } catch (_) {
         // silent
@@ -1820,18 +1862,25 @@ export const ClassroomProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       }
     };
 
-    // Chu kỳ Polling thông minh 12 giây (được bảo vệ bởi WebSocket/Broadcast 0ms tức thì)
-    const pollInterval = setInterval(checkRemoteChanges, 12000);
+    // Chu kỳ cập nhật theo vai trò (utils/liveSync): Quản trị / BGH dữ liệu chi tiết lớp 60 s, giáo viên 60 s;
+    // lệch giờ ngẫu nhiên ±15%, tab ẩn thì nghỉ. (Báo cáo số liệu BGH làm mới 15 s ở DriveAttendanceStatsPanel.)
+    const isManagerRole = Boolean(currentUser.role === 'admin' || currentUser.role === 'school_admin' || currentUser.role === 'bgh'
+      || currentUser.isBgh || currentUser.isSchoolAdmin || currentUser.role === 'guest_admin' || currentUser.isGuestAdmin);
+    let lastCheckAt = Date.now();
+    const runCheck = async () => { lastCheckAt = Date.now(); await checkRemoteChanges(); };
+    const stopLoop = startJitteredLoop(runCheck, isManagerRole ? MANAGER_DATA_MS : TEACHER_SYNC_MS);
 
-    // Sync immediately when tab gains focus
+    // Quay lại tab / cửa sổ → cập nhật ngay (nhưng không quá 1 lần / 20 giây)
     const onFocus = () => {
-      checkRemoteChanges();
+      if (typeof document !== 'undefined' && document.hidden) return;
+      if (Date.now() - lastCheckAt < 20000) return;
+      runCheck();
     };
     window.addEventListener('focus', onFocus);
     document.addEventListener('visibilitychange', onFocus);
 
     return () => {
-      clearInterval(pollInterval);
+      stopLoop();
       window.removeEventListener('focus', onFocus);
       document.removeEventListener('visibilitychange', onFocus);
     };
@@ -1859,6 +1908,9 @@ export const ClassroomProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     if (isInitialMount.current) {
       isInitialMount.current = false;
       return;
+    }
+    if (isRemoteDataLoadedRef.current && currentUser && Date.now() >= remoteUpdateLockUntilRef.current && !isApplyingRemoteUpdateRef.current) {
+      lastLocalChangeAtRef.current = Date.now(); // chỉnh sửa trên máy (không phải dữ liệu vừa nhận) → vòng 15 giây tạm không kéo về
     }
 
     // Do NOT auto-save if remote data is still loading
@@ -2000,11 +2052,11 @@ export const ClassroomProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       }
     };
     const first = setTimeout(run, 4000);
-    const timer = setInterval(run, 60000);
+    const stopEdits = startJitteredLoop(run, ADMIN_EDITS_MS); // điều chỉnh của Quản trị: 60 s (utils/liveSync)
     return () => {
       cancelled = true;
       clearTimeout(first);
-      clearInterval(timer);
+      stopEdits();
     };
   }, [currentUser?.username, currentUser?.role]);
 

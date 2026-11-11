@@ -1,3 +1,4 @@
+import { STAFF_SYNC_MS, startJitteredLoop } from '../../../utils/liveSync';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import * as XLSX from 'xlsx';
 import {
@@ -164,8 +165,9 @@ export const StaffAttendanceView: React.FC = () => {
   // tự làm mới mỗi 60 giây khi đang xem số liệu có hôm nay
   useEffect(() => {
     if (tab !== 'summary' || range.to < today) return;
-    const t = setInterval(() => { if (!document.hidden) load(true); }, 60000);
-    return () => clearInterval(t);
+    // Đọc số CCCD xem được từ Script Properties (giới hạn đọc / ngày) → 90 s, tab ẩn thì nghỉ
+    const stopStaff = startJitteredLoop(() => load(true), STAFF_SYNC_MS);
+    return () => stopStaff();
   }, [tab, range.to, today, load]);
 
   const dd = detailDate && detailDate < today ? detailDate : today;

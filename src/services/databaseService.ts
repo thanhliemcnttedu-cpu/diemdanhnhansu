@@ -1,3 +1,4 @@
+import { MANAGER_DATA_MS, cacheFor } from '../utils/liveSync';
 import { createClient, SupabaseClient, RealtimeChannel } from '@supabase/supabase-js';
 import { UserAccount, UserClassroomData, Classroom, Student, UserRole, SchoolEntity, LoginRoleScope, DailyAttendance, DailyBoardingMeal, PointTransaction, SchoolBranch, SchoolCampus } from '../types';
 import { generateStudentsForClass } from '../utils/studentGenerator';
@@ -263,7 +264,7 @@ type DriveClassFilesData = {
   boardingRecords: DailyBoardingMeal[];
   appliedByClass?: Record<string, Record<string, number>>;
 };
-const DRIVE_CLASS_FILES_TTL_MS = 60000;
+const DRIVE_CLASS_FILES_TTL_MS = cacheFor(MANAGER_DATA_MS); // chu kỳ 60 s (utils/liveSync) — chỉ tải tệp lớp đã đổi
 let driveClassFilesCache: { key: string; at: number; data: DriveClassFilesData } | null = null;
 let driveClassFilesInflight: { key: string; promise: Promise<DriveClassFilesData | null> } | null = null;
 

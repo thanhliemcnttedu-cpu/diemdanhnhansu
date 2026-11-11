@@ -11,6 +11,7 @@
  *    metadata.appliedAdminEdits để màn tổng hợp biết điều chỉnh đã nằm trong dữ liệu GVCN.
  *  - Chỉ lưu các trường THỰC SỰ thay đổi (trừ khi thêm mới / chuyển lớp → lưu đủ), để không đè thay đổi khác của GVCN.
  */
+import { ADMIN_EDITS_MS, cacheFor } from '../utils/liveSync';
 import type { Classroom, Student } from '../types';
 import { googleDriveService } from './googleDriveService';
 import { isViewOnly } from '../utils/viewOnlyMode';
@@ -19,7 +20,7 @@ import type { AppliedAdminEdits } from './adminEditsStore';
 export const ADMIN_EDITS_FILE = 'dieuchinh_quantri.json';
 const SESSION_KEY = 'lop_hoc_current_user_v2'; // = LOCAL_AUTH_KEY (không import databaseService để tránh vòng phụ thuộc)
 const RETENTION_MS = 180 * 24 * 3600 * 1000;
-const CACHE_MS = 20000;
+const CACHE_MS = cacheFor(ADMIN_EDITS_MS); // chu kỳ 60 s (utils/liveSync)
 
 export interface AdminEditEntry {
   kind: 'class' | 'student';

@@ -5,6 +5,7 @@
  * - Đọc tệp lớp gvcn_*.json / gvbm_*.json (metadata: giáo viên, lớp, sĩ số) và tệp tài khoản quản lý.
  * Chỉ đọc, không ghi gì lên Drive. Bộ nhớ đệm 60 giây.
  */
+import { MANAGER_DATA_MS, cacheFor } from '../utils/liveSync';
 import { googleDriveService } from './googleDriveService';
 import type { UserAccount } from '../types';
 
@@ -32,7 +33,7 @@ export interface DriveOverview {
 // ───────────────────────────── Đọc tổng quan Drive
 let cache: { key: string; data: DriveOverview } | null = null;
 let inflight: Promise<DriveOverview | null> | null = null;
-const TTL = 60000;
+const TTL = cacheFor(MANAGER_DATA_MS); // chu kỳ 60 s (utils/liveSync)
 
 const kindOf = (name: string): DriveFileInfo['kind'] => {
   const n = name.toLowerCase();

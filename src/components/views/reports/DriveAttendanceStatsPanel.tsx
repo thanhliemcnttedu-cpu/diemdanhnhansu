@@ -1,3 +1,4 @@
+import { MANAGER_REPORT_MS } from '../../../utils/liveSync';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Cloud, RefreshCw, CheckSquare, Utensils, AlertCircle, CheckCircle2, Clock } from 'lucide-react';
 import { useClassroom } from '../../../context/ClassroomContext';
@@ -15,7 +16,7 @@ import {
  * Apps Script V3 tổng hợp (aggregateRange). Tự làm mới mỗi 15 giây và ngay khi GVCN xác nhận.
  */
 
-const REFRESH_MS = 15000;
+const REFRESH_MS = MANAGER_REPORT_MS; // báo cáo số liệu BGH / Quản trị: 15 s (utils/liveSync)
 // Drive write by the GVCN takes a few seconds after the realtime "confirmed" event
 const AFTER_CONFIRM_DELAY_MS = 4000;
 

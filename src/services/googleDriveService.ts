@@ -89,6 +89,8 @@ const clearPendingPush = (username?: string) => {
     if (cur && (!username || cur === username.toLowerCase())) localStorage.removeItem(PENDING_PUSH_KEY);
   } catch (_) { /* ignore */ }
 };
+// Tổng hợp tệp lớp: nhớ kết quả từng tệp theo giờ sửa trên Drive → vòng sau chỉ tải tệp đã đổi
+const classFilePullCache = new Map<string, { updatedAt: string; res: any }>();
 const hasPendingPushFor = (username?: string) => { try { return !!username && localStorage.getItem(PENDING_PUSH_KEY) === username.toLowerCase(); } catch (_) { return false; } };
 
 export const googleDriveService = {
@@ -787,6 +789,23 @@ export const googleDriveService = {
    * 🌟 KÉO VÀ ĐỒNG BỘ TOÀN BỘ FILE LỚP HỌC (GVCN_*.JSON) TỪ GOOGLE DRIVE VỀ MÁY
    * Giúp tài khoản Quản trị & BGH tự động cập nhật số liệu mới nhất của tất cả giáo viên
    */
+  /** Danh sách tệp trong thư mục dùng chung kèm giờ sửa (1 lệnh) — dùng cho vòng cập nhật 15 giây */
+  async listClassFilesMeta(): Promise<Array<{ name: string; updatedAt?: string }> | null> {
+    const config = this.getConfig();
+    const scriptUrl = this.normalizeScriptUrl(config.scriptUrl);
+    if (!scriptUrl) return null;
+    try {
+      const res = await fetch(`${scriptUrl}${scriptUrl.includes('?') ? '&' : '?'}action=listClassFiles&folderId=${encodeURIComponent(config.folderId?.trim() || '')}`);
+      const data = await res.json();
+      return data && Array.isArray(data.files) ? data.files : null;
+    } catch (_) { return null; }
+  },
+
+  /** Máy còn thay đổi chưa đẩy lên Drive (đang gom 15 giây / lần trước đóng trang khi chưa đẩy) */
+  isPushPending(username?: string): boolean {
+    return Boolean(debounceTimer) || hasPendingPushFor(username);
+  },
+
   async pullAllClassFilesFromDrive(
     currentUser?: UserAccount | null
   ): Promise<{
@@ -816,7 +835,7 @@ export const googleDriveService = {
     }
 
     try {
-      let filesList: Array<{ id: string; name: string }> = [];
+      let filesList: Array<{ id: string; name: string; updatedAt?: string }> = [];
       let listOk = false;
 
       try {
@@ -855,14 +874,19 @@ export const googleDriveService = {
       const worker = async () => {
         while (cursor < gvcnFiles.length) {
           const idx = cursor++;
+          const file = gvcnFiles[idx];
+          const cached = file.updatedAt ? classFilePullCache.get(file.name) : undefined;
+          if (cached && cached.updatedAt === file.updatedAt) { pulled[idx] = cached.res; continue; } // tệp không đổi → dùng lại
           try {
-            pulled[idx] = await this.pullClassData({ classes: [], students: [] } as any, gvcnFiles[idx].name, currentUser);
+            pulled[idx] = await this.pullClassData({ classes: [], students: [] } as any, file.name, currentUser);
+            if (pulled[idx]?.success && file.updatedAt) classFilePullCache.set(file.name, { updatedAt: file.updatedAt, res: pulled[idx] });
           } catch (_) {
             pulled[idx] = { success: false };
           }
         }
       };
-      await Promise.all(Array.from({ length: Math.min(5, gvcnFiles.length) }, worker));
+      // Tối đa 3 tệp cùng lúc: tránh dồn lệnh vào Apps Script (giới hạn ~30 lệnh xử lý đồng thời cho cả trường)
+      await Promise.all(Array.from({ length: Math.min(3, gvcnFiles.length) }, worker));
 
       for (const pullRes of pulled) {
         try {
