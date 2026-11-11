@@ -53,6 +53,8 @@ export const QuestionBankModal: React.FC<QuestionBankModalProps> = ({
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [isLoadingFile, setIsLoadingFile] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  // Menu thả xuống: Nhập câu hỏi (tệp / dán văn bản) và Thêm (khôi phục mẫu)
+  const [menu, setMenu] = useState<'' | 'import' | 'more'>('');
 
   // Subject selector for uploading question sets
   const [uploadSubject, setUploadSubject] = useState<string>('Toán học');
@@ -368,284 +370,156 @@ export const QuestionBankModal: React.FC<QuestionBankModalProps> = ({
     setEditingQuestion(nextQ);
   };
 
-  return (
-    <div className={`fixed inset-0 z-50 bg-sky-900/20 backdrop-blur-xs flex items-center justify-center p-2 sm:p-4 select-none overflow-y-auto ${
-      isFullscreen ? 'p-0' : ''
-    }`}>
-      <div className={`bg-white rounded-3xl w-full shadow-2xl border border-slate-200 overflow-hidden flex flex-col transition-all duration-200 animate-in fade-in ${
-        isFullscreen ? 'h-full max-h-full rounded-none max-w-full' : 'max-w-5xl max-h-[92vh]'
-      }`}>
-        
-        {/* Header */}
-        <div className="px-5 py-3.5 bg-gradient-to-r from-indigo-700 via-indigo-600 to-purple-700 text-white flex items-center justify-between shadow-sm">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-white/15 backdrop-blur-md flex items-center justify-center font-black shrink-0">
-              <BookOpen className="w-5 h-5 text-amber-300" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h2 className="text-sm sm:text-base md:text-lg font-black uppercase tracking-wide">
-                  QUẢN LÝ BỘ CÂU HỎI & KHO ĐỀ THEO MÔN HỌC
-                </h2>
-                <span className="px-2.5 py-0.5 rounded-full bg-amber-400 text-amber-950 text-[12px] font-black uppercase">
-                  {bank.length} Câu hỏi
-                </span>
-              </div>
-              <p className="text-xs text-white font-medium hidden sm:block">
-                Hỗ trợ 7 dạng câu hỏi phong phú • Tùy biến số lượng đáp án • Chèn ảnh riêng cho từng phương án
-              </p>
-            </div>
-          </div>
+  const TYPE_FILTERS: Array<[string, string]> = [
+    ['all', 'Tất cả dạng câu'], ['multiple_choice', 'Một đáp án'], ['multi_select', 'Nhiều đáp án'], ['true_false', 'Đúng / Sai'],
+    ['fill_blank', 'Điền chỗ trống'], ['sequence_order', 'Sắp xếp thứ tự'], ['matching', 'Nối cột'], ['oral', 'Trả lời miệng'],
+  ];
+  const pickSubject = (sub: string) => {
+    setSelectedSubject(sub);
+    if (sub !== 'all') { setUploadSubject(sub); setIsCustomSubject(false); }
+  };
+  const subjectCount = (sub: string) => bank.filter(q => (q.subject || 'Tổng hợp') === sub).length;
+  const menuItem = 'no-hover-fx w-full text-left px-3 py-2.5 rounded-xl hover:bg-slate-100 flex items-start gap-2.5 text-sm text-slate-800';
 
-          <div className="flex items-center gap-1.5">
-            {/* Toggle Fullscreen button */}
-            <button
-              type="button"
-              onClick={() => setIsFullscreen(!isFullscreen)}
-              className="p-2 text-white/90 hover:text-white hover:bg-white/20 rounded-xl cursor-pointer transition-colors"
-              title={isFullscreen ? 'Thu nhỏ giao diện' : 'Phóng to toàn màn hình'}
-            >
-              {isFullscreen ? <Minimize2 className="w-5 h-5" /> : <Maximize2 className="w-5 h-5" />}
-            </button>
-            <button
-              type="button"
-              onClick={onClose}
-              className="p-2 text-white/90 hover:text-white hover:bg-white/20 rounded-xl cursor-pointer transition-colors"
-              title="Đóng cửa sổ"
-            >
-              <X className="w-5 h-5" />
-            </button>
+  return (
+    <div className={`fixed inset-0 z-50 bg-sky-900/20 backdrop-blur-xs flex items-center justify-center select-none ${isFullscreen ? 'p-0' : 'p-2 sm:p-4'}`}>
+      <div className={`bg-white w-full shadow-2xl border border-slate-200 overflow-hidden flex flex-col animate-in fade-in ${
+        isFullscreen ? 'h-full rounded-none' : 'max-w-6xl h-[94vh] rounded-3xl'
+      }`}>
+        {/* Đầu: tên kho + nơi lưu + phóng to / đóng */}
+        <div className="px-4 sm:px-5 py-3 border-b border-slate-200 flex items-center gap-3">
+          <div className="w-10 h-10 rounded-2xl bg-indigo-50 border border-indigo-100 text-indigo-700 flex items-center justify-center shrink-0">
+            <BookOpen className="w-5 h-5" />
           </div>
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h2 className="text-base font-black text-slate-900">Kho câu hỏi</h2>
+              <span className="px-2 py-0.5 rounded-full bg-indigo-50 border border-indigo-200 text-indigo-800 text-xs font-black tabular-nums">{bank.length} câu</span>
+            </div>
+            <p className="text-sm text-slate-600 hidden sm:block truncate">7 dạng câu hỏi · ảnh, âm thanh · dùng cho các trò chơi gọi tên</p>
+          </div>
+          <QuizStorageButton compact className="max-sm:hidden" />
+          <button type="button" onClick={() => setIsFullscreen(!isFullscreen)} className="no-hover-fx w-9 h-9 rounded-xl hover:bg-slate-100 text-slate-600 inline-flex items-center justify-center" title={isFullscreen ? 'Thu nhỏ' : 'Phóng to toàn màn hình'} aria-label={isFullscreen ? 'Thu nhỏ' : 'Phóng to toàn màn hình'}>
+            {isFullscreen ? <Minimize2 className="w-5 h-5" /> : <Maximize2 className="w-5 h-5" />}
+          </button>
+          <button type="button" onClick={onClose} className="no-hover-fx w-9 h-9 rounded-xl hover:bg-slate-100 text-slate-600 inline-flex items-center justify-center" title="Đóng cửa sổ" aria-label="Đóng">
+            <X className="w-5 h-5" />
+          </button>
         </div>
 
         {toastMessage && (
-          <div className="bg-emerald-700 text-white text-xs font-bold px-4 py-2 text-center animate-in fade-in duration-150">
-            {toastMessage}
-          </div>
+          <div role="status" className="bg-emerald-700 text-white text-sm font-bold px-4 py-2 text-center">{toastMessage}</div>
         )}
 
-        {/* 1. MỤC ĐƯA LÊN BỘ ĐỀ THEO MÔN */}
-        <div className="px-4 py-2.5 bg-amber-50/70 border-b border-amber-200/80 flex flex-wrap items-center justify-between gap-3 text-xs">
-          <div className="flex flex-wrap items-center gap-2">
-            <div className="flex items-center gap-1.5 bg-amber-100/80 px-2.5 py-1 rounded-xl text-amber-950 font-black uppercase text-[12px]">
-              <Layers className="w-3.5 h-3.5 text-amber-700" />
-              <span>BỘ ĐỀ THEO MÔN:</span>
-            </div>
+        <input type="file" ref={fileInputRef} onChange={handleFileUpload} accept=".docx,.doc,.pdf,image/*" className="hidden" />
+        <input type="file" ref={questionImageInputRef} onChange={(e) => handleImageFileChange(e, 'image')} accept="image/*" className="hidden" />
+        <input type="file" ref={answerImageInputRef} onChange={(e) => handleImageFileChange(e, 'answerImage')} accept="image/*" className="hidden" />
+        <input type="file" ref={optionImageInputRef} onChange={handleOptionImageFileChange} accept="image/*" className="hidden" />
 
-            <select
-              value={isCustomSubject ? '__custom__' : uploadSubject}
-              onChange={(e) => {
-                if (e.target.value === '__custom__') {
-                  setIsCustomSubject(true);
-                } else {
-                  setIsCustomSubject(false);
-                  setUploadSubject(e.target.value);
-                }
-              }}
-              className="px-2.5 py-1.5 bg-white border border-amber-300 rounded-xl font-bold text-slate-800 cursor-pointer text-xs focus:outline-none focus:border-amber-500 shadow-2xs"
-            >
-              {PRESET_SUBJECTS.map(s => (
-                <option key={s} value={s}>{s}</option>
-              ))}
-              {allSubjects.filter(s => !PRESET_SUBJECTS.includes(s) && s !== 'Tổng hợp').map(s => (
-                <option key={s} value={s}>📂 {s}</option>
-              ))}
-              <option value="__custom__">➕ Tự nhập môn học khác...</option>
-            </select>
-
-            {isCustomSubject && (
-              <input
-                type="text"
-                value={customSubjectName}
-                onChange={(e) => setCustomSubjectName(e.target.value)}
-                placeholder="Nhập tên môn mới..."
-                className="px-2.5 py-1.5 bg-white border border-amber-400 rounded-xl text-xs font-bold text-slate-800 w-48 shadow-2xs focus:outline-none"
-                autoFocus
-              />
+        <div className="flex-1 min-h-0 grid grid-cols-1 md:grid-cols-[230px_minmax(0,1fr)]">
+          {/* Cột môn học (bộ câu hỏi) */}
+          <aside className="border-b md:border-b-0 md:border-r border-slate-200 bg-slate-50 md:overflow-y-auto">
+            <div className="px-3 pt-3 pb-1 text-xs font-black uppercase tracking-wide text-slate-600 hidden md:block">Bộ câu hỏi theo môn</div>
+            <nav className="flex md:flex-col gap-1 p-2 md:p-2 overflow-x-auto" aria-label="Môn học">
+              {[['all', 'Tất cả câu hỏi', bank.length] as [string, string, number], ...allSubjects.map(sub => [sub, sub, subjectCount(sub)] as [string, string, number])].map(([key, name, count]) => {
+                const on = selectedSubject === key;
+                return (
+                  <button key={key} type="button" onClick={() => pickSubject(key)} aria-current={on ? 'true' : undefined} title={name}
+                    className={`no-hover-fx shrink-0 md:w-full flex items-center gap-2 px-3 h-10 rounded-xl text-sm text-left transition-colors ${on ? 'bg-indigo-600 text-white font-black' : 'text-slate-800 font-bold hover:bg-white'}`}>
+                    <span className="truncate flex-1 whitespace-nowrap">{name}</span>
+                    <span className={`text-xs font-black tabular-nums px-1.5 rounded-md ${on ? 'bg-white/25 text-white' : 'bg-white text-slate-600 border border-slate-200'}`}>{count}</span>
+                  </button>
+                );
+              })}
+            </nav>
+            {selectedSubject !== 'all' && (
+              <div className="hidden md:flex flex-col gap-1 px-2 pb-3 pt-1 border-t border-slate-200 mx-2">
+                <span className="text-xs font-bold text-slate-600 px-1 pt-2 truncate" title={selectedSubject}>Môn: {selectedSubject}</span>
+                <button type="button" onClick={handleExportSubjectJson} className="no-hover-fx h-9 px-2.5 rounded-lg text-sm font-bold text-indigo-700 hover:bg-white inline-flex items-center gap-2"><Upload className="w-4 h-4 rotate-180" /> Xuất tệp môn này</button>
+                <button type="button" onClick={handleClearSubjectQuestions} className="no-hover-fx h-9 px-2.5 rounded-lg text-sm font-bold text-rose-700 hover:bg-rose-50 inline-flex items-center gap-2"><Trash2 className="w-4 h-4" /> Xóa cả môn này</button>
+              </div>
             )}
+          </aside>
 
-            <span className="text-[12px] text-amber-900 font-semibold hidden md:inline">
-              👉 Tải file Word/PDF/Ảnh sẽ tự gắn vào môn <strong className="text-indigo-700 underline font-black">{effectiveTargetSubject}</strong>
-            </span>
-          </div>
+          {/* Khu chính: thanh công cụ + danh sách */}
+          <div className="min-h-0 flex flex-col">
+            <div className="px-3 sm:px-4 py-2.5 border-b border-slate-200 flex flex-wrap lg:flex-nowrap items-center gap-2 relative">
+              <button type="button" onClick={() => withStorage(handleStartCreateNew)}
+                className="no-hover-fx h-10 px-4 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-sm font-black inline-flex items-center gap-2 whitespace-nowrap">
+                <Plus className="w-4 h-4" /> Thêm câu mới
+              </button>
+              <div className="relative">
+                <button type="button" onClick={() => setMenu(menu === 'import' ? '' : 'import')} aria-expanded={menu === 'import'} aria-haspopup="menu"
+                  className="no-hover-fx h-10 px-3.5 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-800 text-sm font-bold inline-flex items-center gap-2 whitespace-nowrap">
+                  <Upload className="w-4 h-4 text-indigo-700" /> {isLoadingFile ? 'Đang đọc tệp…' : 'Nhập nhiều câu'} <span aria-hidden className="text-slate-500">▾</span>
+                </button>
+                {menu === 'import' && (
+                  <>
+                    <div className="fixed inset-0 z-10" onClick={() => setMenu('')} />
+                    <div role="menu" className="absolute left-0 top-12 z-20 w-80 bg-white rounded-2xl border border-slate-200 shadow-xl p-2 space-y-1">
+                      <div className="px-2 pt-1 pb-2 space-y-1.5">
+                        <label className="block text-xs font-black uppercase tracking-wide text-slate-600">Nhập vào môn</label>
+                        <select
+                          value={isCustomSubject ? '__custom__' : uploadSubject}
+                          onChange={(e) => { if (e.target.value === '__custom__') setIsCustomSubject(true); else { setIsCustomSubject(false); setUploadSubject(e.target.value); } }}
+                          className="w-full h-10 px-2.5 rounded-xl border border-slate-300 bg-white text-sm font-bold text-slate-800">
+                          {PRESET_SUBJECTS.map(sub => <option key={sub} value={sub}>{sub}</option>)}
+                          {allSubjects.filter(sub => !PRESET_SUBJECTS.includes(sub) && sub !== 'Tổng hợp').map(sub => <option key={sub} value={sub}>{sub}</option>)}
+                          <option value="__custom__">+ Môn khác (tự nhập)…</option>
+                        </select>
+                        {isCustomSubject && (
+                          <input value={customSubjectName} onChange={(e) => setCustomSubjectName(e.target.value)} placeholder="Tên môn mới" autoFocus
+                            className="w-full h-10 px-2.5 rounded-xl border border-slate-300 text-sm font-bold text-slate-800" />
+                        )}
+                      </div>
+                      <button type="button" role="menuitem" className={menuItem} onClick={() => { setMenu(''); withStorage(() => fileInputRef.current?.click()); }}>
+                        <FileType className="w-4 h-4 mt-0.5 text-indigo-700 shrink-0" />
+                        <span><strong className="block">Tải tệp Word / PDF / ảnh</strong><span className="text-xs text-slate-600">Tự nhận diện câu hỏi và phương án A, B, C, D</span></span>
+                      </button>
+                      <button type="button" role="menuitem" className={menuItem} onClick={() => { setMenu(''); withStorage(() => setIsPastingText(true)); }}>
+                        <Edit3 className="w-4 h-4 mt-0.5 text-purple-700 shrink-0" />
+                        <span><strong className="block">Dán văn bản</strong><span className="text-xs text-slate-600">Dán nhiều câu từ Word / trang web</span></span>
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
 
-          <div className="text-[12px] text-slate-500 font-bold ml-auto flex items-center gap-1">
-            <Tag className="w-3 h-3 text-indigo-500" />
-            <span>Môn đang chọn: </span>
-            <span className="px-2 py-0.5 rounded-md bg-indigo-100 text-indigo-800 font-black">
-              {effectiveTargetSubject}
-            </span>
-          </div>
-        </div>
-
-        {/* 2. Action Toolbar: Upload Buttons, Paste & Search */}
-        <div className="p-3 sm:p-4 bg-slate-50 border-b border-slate-200 flex flex-wrap items-center justify-between gap-3">
-          {/* Left Actions: Upload files & add manually */}
-          <div className="flex flex-wrap items-center gap-2">
-            <input
-              type="file"
-              ref={fileInputRef}
-              onChange={handleFileUpload}
-              accept=".docx,.doc,.pdf,image/*"
-              className="hidden"
-            />
-            <input
-              type="file"
-              ref={questionImageInputRef}
-              onChange={(e) => handleImageFileChange(e, 'image')}
-              accept="image/*"
-              className="hidden"
-            />
-            <input
-              type="file"
-              ref={answerImageInputRef}
-              onChange={(e) => handleImageFileChange(e, 'answerImage')}
-              accept="image/*"
-              className="hidden"
-            />
-            <input
-              type="file"
-              ref={optionImageInputRef}
-              onChange={handleOptionImageFileChange}
-              accept="image/*"
-              className="hidden"
-            />
-
-            {/* Upload Button */}
-            <button
-              onClick={() => withStorage(() => fileInputRef.current?.click())}
-              disabled={isLoadingFile}
-              className="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white rounded-xl text-xs font-black flex items-center gap-1.5 shadow-sm transition-all hover-zoom-btn uppercase cursor-pointer"
-              title={`Tải file Word (.docx), PDF hoặc Hình ảnh bài tập vào môn [${effectiveTargetSubject}]`}
-            >
-              <Upload className="w-4 h-4" />
-              <span>{isLoadingFile ? 'Đang đọc file...' : `Tải Bộ Đề Môn ${effectiveTargetSubject}`}</span>
-            </button>
-
-            {/* Paste Text Button */}
-            <button
-              onClick={() => withStorage(() => setIsPastingText(true))}
-              className="px-3.5 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-black flex items-center gap-1.5 shadow-sm transition-all hover-zoom-btn uppercase cursor-pointer"
-              title="Dán văn bản câu hỏi trực tiếp"
-            >
-              <FileType className="w-4 h-4" />
-              <span>Dán Văn Bản</span>
-            </button>
-
-            {/* Add Manually */}
-            <button
-              onClick={() => withStorage(handleStartCreateNew)}
-              className="px-3.5 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-black flex items-center gap-1.5 shadow-sm transition-all hover-zoom-btn uppercase cursor-pointer"
-            >
-              <Plus className="w-4 h-4" />
-              <span>Thêm Câu Mới</span>
-            </button>
-
-            {/* Restore Default */}
-            <button
-              onClick={handleResetDefaults}
-              className="px-3 py-2 bg-white hover:bg-slate-200 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
-              title="Nạp lại bộ câu hỏi mẫu chuẩn"
-            >
-              <RotateCcw className="w-3.5 h-3.5 text-slate-500" />
-              <span className="hidden sm:inline">Khôi Phục Mẫu</span>
-            </button>
-
-            {/* Nơi lưu câu hỏi cá nhân: đổi thư mục, kết nối Drive cá nhân, xuất / nhập tệp, đọc lại từ thư mục */}
-            <QuizStorageButton compact />
-          </div>
-
-          {/* Right Search & Filter */}
-          <div className="flex items-center gap-2 flex-wrap">
-            <div className="relative">
-              <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
-              <input
-                type="text"
-                placeholder="Tìm câu hỏi..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-8 pr-2.5 py-1.5 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500 w-32 sm:w-44"
-              />
+              <div className="relative flex-1 min-w-[140px]">
+                <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+                <input type="text" placeholder="Tìm câu hỏi…" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} aria-label="Tìm câu hỏi"
+                  className="w-full h-10 pl-9 pr-3 rounded-xl border border-slate-300 bg-white text-sm focus:outline-none focus:border-indigo-500" />
+              </div>
+              <select value={selectedType} onChange={(e) => setSelectedType(e.target.value)} aria-label="Lọc dạng câu"
+                className="h-10 px-2.5 rounded-xl border border-slate-300 bg-white text-sm font-bold text-slate-800">
+                {TYPE_FILTERS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+              </select>
+              <div className="relative">
+                <button type="button" onClick={() => setMenu(menu === 'more' ? '' : 'more')} aria-expanded={menu === 'more'} aria-haspopup="menu" title="Thêm thao tác" aria-label="Thêm thao tác"
+                  className="no-hover-fx w-10 h-10 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-lg font-black inline-flex items-center justify-center">⋯</button>
+                {menu === 'more' && (
+                  <>
+                    <div className="fixed inset-0 z-10" onClick={() => setMenu('')} />
+                    <div role="menu" className="absolute right-0 top-12 z-20 w-72 bg-white rounded-2xl border border-slate-200 shadow-xl p-2">
+                      <div className="sm:hidden px-1 pb-1"><QuizStorageButton compact className="w-full justify-center" /></div>
+                      {selectedSubject !== 'all' && (
+                        <>
+                          <button type="button" role="menuitem" className={`${menuItem} md:hidden`} onClick={() => { setMenu(''); handleExportSubjectJson(); }}><Upload className="w-4 h-4 mt-0.5 rotate-180 shrink-0" /> Xuất tệp môn {selectedSubject}</button>
+                          <button type="button" role="menuitem" className={`${menuItem} md:hidden text-rose-700`} onClick={() => { setMenu(''); handleClearSubjectQuestions(); }}><Trash2 className="w-4 h-4 mt-0.5 shrink-0" /> Xóa cả môn {selectedSubject}</button>
+                        </>
+                      )}
+                      <button type="button" role="menuitem" className={menuItem} onClick={() => { setMenu(''); handleResetDefaults(); }}>
+                        <RotateCcw className="w-4 h-4 mt-0.5 text-slate-600 shrink-0" />
+                        <span><strong className="block">Khôi phục bộ câu hỏi mẫu</strong><span className="text-xs text-slate-600">Đưa kho về bộ câu hỏi mẫu ban đầu</span></span>
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
-
-            <select
-              value={selectedType}
-              onChange={(e) => setSelectedType(e.target.value)}
-              className="text-xs bg-white border border-slate-200 rounded-xl px-2.5 py-1.5 font-bold text-slate-700 cursor-pointer shadow-2xs"
-            >
-              <option value="all">🎯 Tất cả dạng câu</option>
-              <option value="multiple_choice">📝 Trắc nghiệm 1 đáp án</option>
-              <option value="multi_select">☑️ Trắc nghiệm nhiều đáp án</option>
-              <option value="true_false">⚖️ Đúng / Sai</option>
-              <option value="fill_blank">🧩 Điền vào chỗ trống</option>
-              <option value="sequence_order">🔢 Sắp xếp thứ tự các bước</option>
-              <option value="matching">🔗 Nối cột A với cột B</option>
-              <option value="oral">🗣️ Trả lời bằng lời / Tự luận</option>
-            </select>
-          </div>
-        </div>
-
-        {/* 3. Subject Filter Navigation Pills */}
-        <div className="px-4 py-2 bg-slate-100/90 border-b border-slate-200 flex flex-wrap items-center gap-1.5 overflow-x-auto">
-          <span className="text-[12px] font-black uppercase text-slate-600 mr-1 shrink-0">LỌC MÔN HỌC:</span>
-          <button
-            onClick={() => setSelectedSubject('all')}
-            className={`px-2.5 py-1 rounded-lg text-[12px] font-black transition-all shrink-0 cursor-pointer ${
-              selectedSubject === 'all'
-                ? 'bg-indigo-600 text-white shadow-xs'
-                : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-200'
-            }`}
-          >
-            Tất cả ({bank.length})
-          </button>
-          {allSubjects.map(sub => {
-            const count = bank.filter(q => (q.subject || 'Tổng hợp') === sub).length;
-            const isCurrent = selectedSubject === sub;
-            return (
-              <button
-                key={sub}
-                onClick={() => setSelectedSubject(sub)}
-                className={`px-2.5 py-1 rounded-lg text-[12px] font-black transition-all shrink-0 cursor-pointer flex items-center gap-1 ${
-                  isCurrent
-                    ? 'bg-indigo-600 text-white shadow-xs'
-                    : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-200'
-                }`}
-              >
-                <span>{sub}</span>
-                <span className={`px-1.5 py-0.2 rounded-full text-[12px] font-bold ${
-                  isCurrent ? 'bg-white/25 text-white' : 'bg-slate-100 text-slate-600'
-                }`}>
-                  {count}
-                </span>
-              </button>
-            );
-          })}
-
-          {selectedSubject !== 'all' && (
-            <div className="ml-auto flex items-center gap-1.5 shrink-0">
-              <button
-                type="button"
-                onClick={handleExportSubjectJson}
-                className="px-2 py-1 bg-white hover:bg-slate-50 text-indigo-700 border border-indigo-200 rounded-lg text-[12px] font-bold flex items-center gap-1 cursor-pointer shadow-2xs"
-                title={`Tải xuống file đề môn ${selectedSubject}`}
-              >
-                <span>📥 Xuất file môn</span>
-              </button>
-              <button
-                type="button"
-                onClick={handleClearSubjectQuestions}
-                className="px-2 py-1 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-lg text-[12px] font-bold flex items-center gap-1 cursor-pointer"
-                title={`Xóa tất cả câu hỏi của môn ${selectedSubject}`}
-              >
-                <Trash2 className="w-3 h-3" />
-                <span>Xóa bộ đề môn này</span>
-              </button>
-            </div>
-          )}
-        </div>
 
         {/* 4. Content Body: Question List or Editor Modal */}
-        <div className="p-4 md:p-6 overflow-y-auto flex-1 space-y-4">
+        <div className="p-3 sm:p-4 overflow-y-auto flex-1 min-h-0 space-y-3">
           {editingQuestion ? (
             /* TRÌNH SOẠN CÂU HỎI (mở lớn, có xem trước) */
             <QuestionEditor
@@ -729,12 +603,11 @@ export const QuestionBankModal: React.FC<QuestionBankModalProps> = ({
                     )}
                     <button
                       type="button"
-                      onClick={() => {
-                        handleStartCreateNew();
-                        if (selectedType !== 'all') {
-                          handleTypeChange(selectedType as QuestionType);
-                        }
-                      }}
+                      onClick={() => withStorage(() => {
+                        const sub = selectedSubject !== 'all' ? selectedSubject : effectiveTargetSubject;
+                        setEditingQuestion(blankQuestion(selectedType !== 'all' ? (selectedType as QuestionType) : 'multiple_choice', sub));
+                        setIsCreatingNew(true);
+                      })}
                       className="px-3.5 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-black transition-all cursor-pointer shadow-xs"
                     >
                       + Thêm câu hỏi mới vào môn này
@@ -961,6 +834,9 @@ export const QuestionBankModal: React.FC<QuestionBankModalProps> = ({
               )}
             </div>
           )}
+        </div>
+
+          </div>
         </div>
 
         {/* Footer */}
