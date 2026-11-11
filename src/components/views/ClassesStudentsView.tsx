@@ -584,6 +584,22 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
   const [bulkEditTeacher, setBulkEditTeacher] = useState<string>('');
   const [bulkEditColor, setBulkEditColor] = useState<string>('keep');
   const [bulkEditSlogan, setBulkEditSlogan] = useState<string>('');
+  // Bulk branch / campus: 'keep' = unchanged, BULK_NONE = clear, otherwise the chosen name
+  const BULK_NONE = '__none__';
+  const [bulkEditBranch, setBulkEditBranch] = useState<string>('keep');
+  const [bulkEditCampus, setBulkEditCampus] = useState<string>('keep');
+  const [bulkEditBranchOnly, setBulkEditBranchOnly] = useState(false);
+  const openBulkClassEdit = (branchOnly: boolean) => {
+    setBulkEditGrade('keep');
+    setBulkEditYear('keep');
+    setBulkEditTeacher('');
+    setBulkEditColor('keep');
+    setBulkEditSlogan('');
+    setBulkEditBranch('keep');
+    setBulkEditCampus('keep');
+    setBulkEditBranchOnly(branchOnly);
+    setIsBulkClassEditOpen(true);
+  };
 
   // Danh sách môn học được áp dụng cho lớp hiện tại (enabled !== false)
   const appliedSubjects = React.useMemo(() => {
@@ -1654,7 +1670,28 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
     if (bulkEditColor !== 'keep') updates.color = bulkEditColor;
     if (canEditClassSlogan && bulkEditSlogan.trim() !== '') updates.slogan = bulkEditSlogan.trim();
 
-    bulkUpdateClasses(selectedClassIds, updates);
+    // Branch / campus: classes moved to another branch never inherit a campus by default
+    let branchIds: string[] = [];
+    let branchUpdates: Partial<Classroom> = {};
+    if (bulkEditBranch === BULK_NONE) {
+      branchIds = selectedClassIds;
+      branchUpdates = { branch: null, campus: null };
+    } else if (bulkEditBranch !== 'keep') {
+      if (bulkEditCampus === 'keep') {
+        branchIds = classes.filter(c => selectedClassIds.includes(c.id) && (c.branch || '').trim() !== bulkEditBranch).map(c => c.id);
+        branchUpdates = { branch: bulkEditBranch, campus: null };
+      } else {
+        branchIds = selectedClassIds;
+        branchUpdates = { branch: bulkEditBranch, campus: bulkEditCampus === BULK_NONE ? null : bulkEditCampus };
+      }
+    }
+    const hasCommon = !bulkEditBranchOnly && Object.keys(updates).length > 0;
+    if (!hasCommon && bulkEditBranch === 'keep') {
+      setIsBulkClassEditOpen(false);
+      return;
+    }
+    if (hasCommon) bulkUpdateClasses(selectedClassIds, updates);
+    if (branchIds.length > 0) bulkUpdateClasses(branchIds, branchUpdates);
     playFanfareSound();
     confetti({ particleCount: 50, spread: 60 });
     setSelectedClassIds([]);
@@ -2675,16 +2712,19 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
               {selectedClassIds.length > 0 ? (
                 <div className="flex flex-wrap items-center gap-2">
                   <button
+                    type="button"
+                    onClick={() => openBulkClassEdit(true)}
+                    className="px-4 py-2.5 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white rounded-2xl font-black text-xs md:text-sm flex items-center gap-2 transition-all hover-zoom-btn shadow-md shadow-teal-600/25 uppercase"
+                    title="Gán phân hiệu, điểm trường cho các lớp đã tích chọn cùng lúc"
+                  >
+                    <Building2 className="w-4 h-4" />
+                    <span>GÁN PHÂN HIỆU, ĐIỂM TRƯỜNG ({selectedClassIds.length} LỚP)</span>
+                  </button>
+
+                  <button
                     {...(isSchoolAdminOrBgh ? { style: { display: 'none' } } : {})}
                     type="button"
-                    onClick={() => {
-                      setBulkEditGrade('keep');
-                      setBulkEditYear('keep');
-                      setBulkEditTeacher('');
-                      setBulkEditColor('keep');
-                      setBulkEditSlogan('');
-                      setIsBulkClassEditOpen(true);
-                    }}
+                    onClick={() => openBulkClassEdit(false)}
                     className="px-4 py-2.5 bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 hover:from-blue-700 hover:to-violet-700 text-white rounded-2xl font-black text-xs md:text-sm flex items-center gap-2 transition-all hover-zoom-btn shadow-md shadow-indigo-600/25 uppercase"
                     title="Sửa thông tin các lớp đã chọn cùng lúc (Năm học, Khối, Giáo viên, Màu, Khẩu hiệu)"
                   >
@@ -6158,15 +6198,15 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
       {/* MODAL: SỬA THÔNG TIN ĐỒNG LOẠT CÁC LỚP ĐÃ CHỌN (Yêu cầu 1) */}
       {isBulkClassEditOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-sky-900/20 backdrop-blur-xs p-4">
-          <div className="bg-white rounded-3xl shadow-2xl border border-indigo-200 max-w-lg w-full p-6 space-y-4 animate-in fade-in zoom-in-95 duration-150 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+          <div role="dialog" aria-modal="true" aria-labelledby="bulk-class-edit-title" className={`bg-white rounded-3xl shadow-2xl border border-indigo-200 ${bulkEditBranchOnly ? 'max-w-xl' : 'max-w-4xl'} w-full p-4 sm:p-5 space-y-3 animate-in fade-in zoom-in-95 duration-150 max-h-[96vh] overflow-y-auto`}>
+            <div className="flex items-center justify-between pb-2.5 border-b border-slate-100">
               <div className="flex items-center gap-2.5">
                 <div className="w-10 h-10 rounded-2xl bg-indigo-100 text-indigo-700 flex items-center justify-center font-black">
-                  <Edit3 className="w-5 h-5" />
+                  {bulkEditBranchOnly ? <Building2 className="w-5 h-5" /> : <Edit3 className="w-5 h-5" />}
                 </div>
                 <div>
-                  <h3 className="text-base font-black text-indigo-950 uppercase">
-                    Sửa Thông Tin Đồng Loạt ({selectedClassIds.length} Lớp)
+                  <h3 id="bulk-class-edit-title" className="text-base font-black text-indigo-950 uppercase">
+                    {bulkEditBranchOnly ? 'Gán Phân Hiệu, Điểm Trường' : 'Sửa Thông Tin Đồng Loạt'} ({selectedClassIds.length} Lớp)
                   </h3>
                   <p className="text-[12px] text-slate-500 font-medium">
                     Áp dụng thay đổi cho tất cả các lớp đang được tích chọn
@@ -6175,7 +6215,8 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
               </div>
               <button
                 onClick={() => setIsBulkClassEditOpen(false)}
-                className="p-1.5 rounded-xl hover:bg-slate-100 text-slate-400 hover:text-slate-700"
+                className="p-1.5 rounded-xl hover:bg-slate-100 text-slate-600 hover:text-slate-900"
+                aria-label="Đóng"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -6195,7 +6236,59 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
               </div>
             </div>
 
-            <div className="space-y-3.5 text-xs font-bold text-slate-700">
+            <div className={`grid grid-cols-1 ${bulkEditBranchOnly ? '' : 'md:grid-cols-2'} gap-x-4 gap-y-3 text-xs font-bold text-slate-700`}>
+              {/* Phân hiệu & Điểm trường */}
+              <div className={`${bulkEditBranchOnly ? '' : 'md:col-span-2'} p-3 rounded-2xl border border-teal-200 bg-teal-50/60 grid grid-cols-1 sm:grid-cols-2 gap-3`}>
+                <div>
+                  <label htmlFor="bulk-branch" className="block text-[12px] font-black uppercase text-teal-900 mb-1">
+                    🏛️ Phân hiệu:
+                  </label>
+                  <select
+                    id="bulk-branch"
+                    value={bulkEditBranch}
+                    onChange={(e) => { setBulkEditBranch(e.target.value); setBulkEditCampus('keep'); }}
+                    className="w-full px-3 py-2.5 rounded-2xl border border-slate-300 focus:border-teal-600 font-bold bg-white text-slate-800"
+                  >
+                    <option value="keep">— Giữ nguyên phân hiệu của từng lớp —</option>
+                    {effectiveSchoolBranches.map(b => (
+                      <option key={b.id || b.name} value={b.name}>{b.name} ({b.campuses?.length || 0} điểm trường)</option>
+                    ))}
+                    <option value={BULK_NONE}>Bỏ gán phân hiệu (để trống)</option>
+                  </select>
+                </div>
+                <div>
+                  <label htmlFor="bulk-campus" className="block text-[12px] font-black uppercase text-teal-900 mb-1">
+                    📍 Điểm trường:
+                  </label>
+                  {bulkEditBranch === 'keep' || bulkEditBranch === BULK_NONE ? (
+                    <select id="bulk-campus" disabled value="" className="w-full px-3 py-2.5 rounded-2xl border border-slate-200 font-bold bg-slate-100 text-slate-600 cursor-not-allowed">
+                      <option value="">{bulkEditBranch === 'keep' ? '— Chọn phân hiệu trước —' : '— Bỏ gán cùng phân hiệu —'}</option>
+                    </select>
+                  ) : (
+                    <select
+                      id="bulk-campus"
+                      value={bulkEditCampus}
+                      onChange={(e) => setBulkEditCampus(e.target.value)}
+                      className="w-full px-3 py-2.5 rounded-2xl border border-slate-300 focus:border-teal-600 font-bold bg-white text-slate-800"
+                    >
+                      <option value="keep">— Giữ nguyên điểm trường —</option>
+                      {(effectiveSchoolBranches.find(b => b.name === bulkEditBranch)?.campuses || []).map(cp => (
+                        <option key={cp.id || cp.name} value={cp.name}>{cp.name}</option>
+                      ))}
+                      <option value={BULK_NONE}>Bỏ gán điểm trường (để trống)</option>
+                    </select>
+                  )}
+                </div>
+                <p className="sm:col-span-2 text-[12px] font-medium text-slate-700">
+                  {effectiveSchoolBranches.length === 0
+                    ? 'Trường chưa khai báo phân hiệu, điểm trường. Hãy khai báo danh mục phân hiệu – điểm trường trước.'
+                    : bulkEditBranch !== 'keep' && bulkEditBranch !== BULK_NONE && bulkEditCampus === 'keep'
+                      ? 'Lớp đang thuộc phân hiệu này giữ nguyên điểm trường; lớp chuyển từ phân hiệu khác sang sẽ để trống điểm trường.'
+                      : 'Chọn phân hiệu rồi chọn điểm trường để gán cho tất cả các lớp đang tích chọn.'}
+                </p>
+              </div>
+
+              {!bulkEditBranchOnly && (<>
               {/* Khối Lớp */}
               <div>
                 <label className="block text-[12px] font-black uppercase text-indigo-900 mb-1">
@@ -6290,6 +6383,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                   />
                 </div>
               )}
+              </>)}
             </div>
 
             <div className="flex items-center gap-2.5 pt-3 border-t border-slate-100">

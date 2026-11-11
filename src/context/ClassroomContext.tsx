@@ -3015,7 +3015,9 @@ export const ClassroomProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }
     if (!ids || ids.length === 0) return;
     const targetSet = new Set(ids);
-    const next = classes.map(c => targetSet.has(c.id) ? { ...c, ...updates } : c);
+    // Base on the ref so two consecutive calls in one handler do not overwrite each other
+    const baseClasses = classesRef.current.length > 0 ? classesRef.current : classes;
+    const next = baseClasses.map(c => targetSet.has(c.id) ? { ...c, ...updates } : c);
     setClasses(next);
     classesRef.current = next;
     logUserActivity('UPDATE_CLASS', `Cập nhật thông tin đồng loạt cho ${ids.length} lớp học`, { classIds: ids, updates });
