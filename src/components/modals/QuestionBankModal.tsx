@@ -15,7 +15,9 @@ import { useClassroom } from '../../context/ClassroomContext';
 import { requireQuizStorage, QuizStorageButton } from './QuizStorageModal';
 import { QuestionEditor } from './question-editor/QuestionEditor';
 import { QuestionPlayer } from './question-editor/QuestionPlayer';
-import { isSampleQuestion } from '../../services/quizBankStore';
+import { isSampleQuestion, quizBankStore } from '../../services/quizBankStore';
+import { PickQuestionsModal } from './question-editor/PickQuestionsModal';
+import { ListPlus, FolderPlus } from 'lucide-react';
 import { UserRound, Sparkles as SparklesIcon, Library } from 'lucide-react';
 import { Play } from 'lucide-react';
 
@@ -60,6 +62,12 @@ export const QuestionBankModal: React.FC<QuestionBankModalProps> = ({
   // Menu thả xuống: Nhập câu hỏi (tệp / dán văn bản) và Thêm (khôi phục mẫu)
   const [menu, setMenu] = useState<'' | 'import' | 'more'>('');
   // Tách nguồn câu hỏi: 'mine' = giáo viên tự soạn / đã sửa · 'sample' = câu mẫu có sẵn của phần mềm
+  // Môn / bộ câu hỏi theo bài học do giáo viên tạo (giữ cả khi chưa có câu) + hộp Nhặt câu hỏi có sẵn
+  const quizUser = currentUser?.username || 'guest';
+  const [customSubjects, setCustomSubjects] = useState<string[]>(() => quizBankStore.getSubjects(quizUser));
+  useEffect(() => { setCustomSubjects(quizBankStore.getSubjects(quizUser)); return quizBankStore.subscribe(() => setCustomSubjects(quizBankStore.getSubjects(quizUser))); }, [quizUser]);
+  const [newSubj, setNewSubj] = useState<string | null>(null);
+  const [pickOpen, setPickOpen] = useState(false);
   const [source, setSource] = useState<'mine' | 'sample' | 'all'>(() => (questions.some(q => q && !isSampleQuestion(q)) ? 'mine' : 'all'));
   // Chơi thử (vai trò học sinh): danh sách câu + câu bắt đầu
   const [play, setPlay] = useState<{ list: QuestionItem[]; start: number; title: string } | null>(null);
@@ -121,7 +129,29 @@ export const QuestionBankModal: React.FC<QuestionBankModalProps> = ({
   const sourceBank = bank.filter(q => source === 'all' || (source === 'sample' ? isSampleQuestion(q) : !isSampleQuestion(q)));
   const mineCount = bank.filter(q => !isSampleQuestion(q)).length;
   const sampleCount = bank.length - mineCount;
-  const sideSubjects = Array.from(new Set(sourceBank.map(q => q.subject || 'Tổng hợp'))).filter(Boolean);
+  const sideSubjects = Array.from(new Set([...sourceBank.map(q => q.subject || 'Tổng hợp'), ...(source !== 'sample' ? customSubjects : [])])).filter(Boolean);
+  const mySubjects = Array.from(new Set([...customSubjects, ...bank.filter(q => !isSampleQuestion(q)).map(q => q.subject || 'Tổng hợp')])).filter(Boolean);
+  const createSubject = () => {
+    const n = (newSubj || '').trim();
+    if (!n) return;
+    quizBankStore.addSubject(quizUser, n);
+    setNewSubj(null);
+    if (source === 'sample') setSource('mine');
+    setSelectedSubject(n); setUploadSubject(n); setIsCustomSubject(false);
+    showToast(`Đã tạo bộ câu hỏi [${n}]. Thêm câu mới hoặc nhặt câu hỏi có sẵn vào bộ này.`);
+  };
+  const handlePickConfirm = (target: string, picked: QuestionItem[]) => {
+    const stamp = Date.now();
+    const copies: QuestionItem[] = picked.map((q, i) => ({ ...JSON.parse(JSON.stringify(q)), id: `q-custom-${stamp}-${i}-${Math.random().toString(36).slice(2, 5)}`, subject: target }));
+    const updated = [...copies, ...bank];
+    setBank(updated);
+    onSaveQuestions(updated, target);
+    saveQuizBank(updated);
+    quizBankStore.addSubject(quizUser, target);
+    setPickOpen(false);
+    setSource('mine'); setSelectedSubject(target); setSelectedType('all');
+    showToast(`Đã thêm ${copies.length} câu vào bộ [${target}].`);
+  };
 
   const allSubjects = Array.from(new Set(bank.map(q => q.subject || 'Tổng hợp'))).filter(Boolean);
 
@@ -199,7 +229,14 @@ export const QuestionBankModal: React.FC<QuestionBankModalProps> = ({
   // Delete all questions of selected subject
   const handleClearSubjectQuestions = () => {
     if (selectedSubject === 'all') return;
+    if (!bank.some(q => (q.subject || 'Tổng hợp') === selectedSubject)) {
+      quizBankStore.removeSubject(quizUser, selectedSubject);
+      setSelectedSubject('all');
+      showToast(`Đã xóa bộ câu hỏi [${selectedSubject}].`);
+      return;
+    }
     if (window.confirm(`Bạn có chắc muốn xóa tất cả câu hỏi của môn [${selectedSubject}]?`)) {
+      quizBankStore.removeSubject(quizUser, selectedSubject);
       const updated = bank.filter(q => (q.subject || 'Tổng hợp') !== selectedSubject);
       setBank(updated);
       onSaveQuestions(updated);
@@ -457,7 +494,27 @@ export const QuestionBankModal: React.FC<QuestionBankModalProps> = ({
                 <p className="mt-2 text-xs text-slate-700 bg-white border border-dashed border-slate-300 rounded-xl p-2.5">Bạn chưa có câu hỏi riêng. Bấm <strong>Thêm câu mới</strong> hoặc <strong>Nhập nhiều câu</strong>. Sửa một câu mẫu cũng thành câu của bạn.</p>
               )}
             </div>
-            <div className="px-3 pt-2 pb-1 text-xs font-black uppercase tracking-wide text-slate-600 hidden md:block border-t border-slate-200 mx-2">Môn học</div>
+            <div className="px-2 pt-2 pb-1 border-t border-slate-200 mx-2 flex items-center gap-1">
+              <span className="text-xs font-black uppercase tracking-wide text-slate-600 hidden md:block px-1 flex-1 whitespace-nowrap">Môn / bộ</span>
+              {source !== 'sample' && newSubj === null && (
+                <button type="button" onClick={() => setNewSubj('')} title="Tạo môn học hoặc bộ câu hỏi theo bài học"
+                  className="no-hover-fx h-8 px-2 rounded-lg text-xs font-black text-emerald-800 hover:bg-emerald-50 border border-emerald-300 bg-white inline-flex items-center gap-1 whitespace-nowrap">
+                  <FolderPlus className="w-3.5 h-3.5" /> Thêm môn / bộ
+                </button>
+              )}
+            </div>
+            {newSubj !== null && (
+              <div className="px-2 pb-1 space-y-1.5">
+                <input autoFocus value={newSubj} onChange={(e) => setNewSubj(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') createSubject(); if (e.key === 'Escape') setNewSubj(null); }}
+                  placeholder="VD: Toán 3 – Bài 12: Phép nhân" aria-label="Tên môn / bộ câu hỏi mới"
+                  className="w-full h-10 px-3 rounded-xl border border-emerald-400 bg-white text-sm font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-100" />
+                <div className="flex gap-1.5">
+                  <button type="button" onClick={createSubject} disabled={!newSubj.trim()} className="no-hover-fx flex-1 h-9 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white text-sm font-black disabled:opacity-40">Tạo</button>
+                  <button type="button" onClick={() => setNewSubj(null)} className="no-hover-fx h-9 px-3 rounded-lg border border-slate-300 bg-white text-sm font-bold text-slate-700">Hủy</button>
+                </div>
+              </div>
+            )}
             <nav className="flex md:flex-col gap-1 p-2 md:p-2 overflow-x-auto" aria-label="Môn học">
               {[['all', 'Tất cả các môn', sourceBank.length] as [string, string, number], ...sideSubjects.map(sub => [sub, sub, subjectCount(sub)] as [string, string, number])].map(([key, name, count]) => {
                 const on = selectedSubject === key;
@@ -502,7 +559,7 @@ export const QuestionBankModal: React.FC<QuestionBankModalProps> = ({
                           onChange={(e) => { if (e.target.value === '__custom__') setIsCustomSubject(true); else { setIsCustomSubject(false); setUploadSubject(e.target.value); } }}
                           className="w-full h-10 px-2.5 rounded-xl border border-slate-300 bg-white text-sm font-bold text-slate-800">
                           {PRESET_SUBJECTS.map(sub => <option key={sub} value={sub}>{sub}</option>)}
-                          {allSubjects.filter(sub => !PRESET_SUBJECTS.includes(sub) && sub !== 'Tổng hợp').map(sub => <option key={sub} value={sub}>{sub}</option>)}
+                          {Array.from(new Set([...customSubjects, ...allSubjects])).filter(sub => !PRESET_SUBJECTS.includes(sub) && sub !== 'Tổng hợp').map(sub => <option key={sub} value={sub}>{sub}</option>)}
                           <option value="__custom__">+ Môn khác (tự nhập)…</option>
                         </select>
                         {isCustomSubject && (
@@ -523,12 +580,29 @@ export const QuestionBankModal: React.FC<QuestionBankModalProps> = ({
                 )}
               </div>
 
+              <button type="button" onClick={() => withStorage(() => setPickOpen(true))}
+                title="Nhặt câu hỏi có sẵn trong kho (của bạn + câu mẫu) để tạo bộ câu hỏi cho bài học"
+                className="no-hover-fx h-10 px-3.5 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-800 text-sm font-bold inline-flex items-center gap-2 whitespace-nowrap">
+                <ListPlus className="w-4 h-4 text-emerald-700" /> Nhặt câu có sẵn
+              </button>
               <button type="button" disabled={filteredList.length === 0}
                 onClick={() => setPlay({ list: filteredList, start: 0, title: selectedSubject === 'all' ? 'tất cả câu hỏi' : `môn ${selectedSubject}` })}
                 title="Làm thử các câu đang hiển thị như học sinh" className="no-hover-fx h-10 px-3.5 rounded-xl border border-emerald-300 bg-white hover:bg-emerald-50 text-emerald-800 text-sm font-bold inline-flex items-center gap-2 whitespace-nowrap disabled:opacity-40">
                 <Play className="w-4 h-4 fill-emerald-700" /> Chơi thử <span className="tabular-nums">({filteredList.length})</span>
               </button>
-              <span className="flex-1" />
+            </div>
+
+            <div className="px-3 sm:px-4 pb-2.5 border-b border-slate-200 flex flex-wrap items-center gap-2">
+              <div className="relative flex-1 min-w-[180px]">
+                <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+                <input type="text" placeholder="Tìm câu hỏi…" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} aria-label="Tìm câu hỏi"
+                  className="w-full h-10 pl-9 pr-3 rounded-xl border border-slate-300 bg-white text-sm focus:outline-none focus:border-indigo-500" />
+              </div>
+              <select value={selectedType} onChange={(e) => setSelectedType(e.target.value)} aria-label="Lọc dạng câu"
+                className="h-10 px-2.5 rounded-xl border border-slate-300 bg-white text-sm font-bold text-slate-800">
+                {TYPE_FILTERS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+              </select>
+              <span className="text-sm text-slate-600 whitespace-nowrap tabular-nums">{filteredList.length} câu</span>
               <div className="relative">
                 <button type="button" onClick={() => setMenu(menu === 'more' ? '' : 'more')} aria-expanded={menu === 'more'} aria-haspopup="menu" title="Thêm thao tác" aria-label="Thêm thao tác"
                   className="no-hover-fx w-10 h-10 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-lg font-black inline-flex items-center justify-center">⋯</button>
@@ -553,19 +627,6 @@ export const QuestionBankModal: React.FC<QuestionBankModalProps> = ({
               </div>
             </div>
 
-            <div className="px-3 sm:px-4 pb-2.5 border-b border-slate-200 flex flex-wrap items-center gap-2">
-              <div className="relative flex-1 min-w-[180px]">
-                <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
-                <input type="text" placeholder="Tìm câu hỏi…" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} aria-label="Tìm câu hỏi"
-                  className="w-full h-10 pl-9 pr-3 rounded-xl border border-slate-300 bg-white text-sm focus:outline-none focus:border-indigo-500" />
-              </div>
-              <select value={selectedType} onChange={(e) => setSelectedType(e.target.value)} aria-label="Lọc dạng câu"
-                className="h-10 px-2.5 rounded-xl border border-slate-300 bg-white text-sm font-bold text-slate-800">
-                {TYPE_FILTERS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
-              </select>
-              <span className="text-sm text-slate-600 whitespace-nowrap tabular-nums">{filteredList.length} câu</span>
-            </div>
-
         {/* 4. Content Body: Question List or Editor Modal */}
         <div className="p-3 sm:p-4 overflow-y-auto overflow-x-hidden flex-1 min-h-0 space-y-3">
           {editingQuestion ? (
@@ -573,7 +634,7 @@ export const QuestionBankModal: React.FC<QuestionBankModalProps> = ({
             <QuestionEditor
               question={editingQuestion}
               isNew={isCreatingNew}
-              subjects={Array.from(new Set([...PRESET_SUBJECTS, ...allSubjects]))}
+              subjects={Array.from(new Set([...customSubjects, ...PRESET_SUBJECTS, ...allSubjects]))}
               onCancel={() => { setEditingQuestion(null); setIsCreatingNew(false); }}
               onSave={handleSaveFromEditor}
             />
@@ -659,6 +720,13 @@ export const QuestionBankModal: React.FC<QuestionBankModalProps> = ({
                       className="px-3.5 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-black transition-all cursor-pointer shadow-xs"
                     >
                       + Thêm câu hỏi mới vào môn này
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => withStorage(() => setPickOpen(true))}
+                      className="px-3.5 py-1.5 bg-white hover:bg-emerald-50 text-emerald-800 border border-emerald-300 rounded-xl text-xs font-black transition-all cursor-pointer"
+                    >
+                      Nhặt câu hỏi có sẵn vào bộ này
                     </button>
                   </div>
                 </div>
@@ -899,6 +967,11 @@ export const QuestionBankModal: React.FC<QuestionBankModalProps> = ({
           </div>
         </div>
 
+        {pickOpen && (
+          <PickQuestionsModal bank={bank} targets={mySubjects}
+            defaultTarget={selectedSubject !== 'all' && (source !== 'sample') ? selectedSubject : ''}
+            onClose={() => setPickOpen(false)} onConfirm={handlePickConfirm} />
+        )}
         {play && <QuestionPlayer questions={play.list} startIndex={play.start} title={play.title} onClose={() => setPlay(null)} />}
 
         {/* Footer */}

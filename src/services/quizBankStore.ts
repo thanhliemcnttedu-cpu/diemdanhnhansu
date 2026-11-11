@@ -14,6 +14,7 @@
 import type { UserAccount } from '../types';
 import type { QuestionItem } from '../types';
 import { DEFAULT_QUESTIONS, smartMergeQuizBank } from '../utils/quizParser';
+import { isLegacySample } from '../utils/legacySampleQuestions';
 import { googleDriveService } from './googleDriveService';
 import { shrinkImageDataUrl } from '../utils/driveCompact';
 
@@ -26,6 +27,7 @@ const DB_NAME = 'lhhp_personal';
 const STORE = 'quiz_bank';
 const LS_FALLBACK = 'lhhp_quiz_personal:';
 const CFG_KEY = 'lhhp_quiz_drive:';
+const SUBJ_KEY = 'lhhp_quiz_subjects:';
 const LOCAL_KEY = 'lhhp_quiz_local:';
 const HANDLE_KEY = '__folder_handle__:';
 /** Nơi lưu trên máy: 'folder' = thư mục máy tính đã chọn; 'browser' = chỉ bộ nhớ phần mềm (trình duyệt không hỗ trợ chọn thư mục) */
@@ -108,7 +110,7 @@ async function shrinkQuestion(q: QuestionItem): Promise<QuestionItem> {
 }
 async function pack(questions: QuestionItem[]): Promise<StoredBank> {
   const list = (questions || []).filter(q => q && q.id);
-  const custom = list.filter(q => DEFAULT_JSON.get(q.id) !== JSON.stringify(q));
+  const custom = list.filter(q => DEFAULT_JSON.get(q.id) !== JSON.stringify(q) && !isLegacySample(q));
   return { order: list.map(q => q.id), items: await Promise.all(custom.map(shrinkQuestion)), updatedAt: Date.now() };
 }
 function unpack(rec: StoredBank | null): QuestionItem[] {
@@ -124,9 +126,9 @@ function union(base: QuestionItem[], extra: QuestionItem[]): QuestionItem[] {
   const ids = new Set(base.map(q => q.id));
   return [...base, ...extra.filter(q => q && q.id && !ids.has(q.id))];
 }
-export const countCustom = (questions: QuestionItem[]) => (questions || []).filter(q => q && DEFAULT_JSON.get(q.id) !== JSON.stringify(q)).length;
+export const countCustom = (questions: QuestionItem[]) => (questions || []).filter(q => q && DEFAULT_JSON.get(q.id) !== JSON.stringify(q) && !isLegacySample(q)).length;
 /** Câu mẫu nguyên bản của phần mềm (chưa sửa) */
-export const isSampleQuestion = (q: QuestionItem) => Boolean(q && DEFAULT_JSON.get(q.id) === JSON.stringify(q));
+export const isSampleQuestion = (q: QuestionItem) => Boolean(q && (DEFAULT_JSON.get(q.id) === JSON.stringify(q) || isLegacySample(q)));
 /** Tài khoản giáo viên (không phải Quản trị / BGH) — có kho câu hỏi cá nhân */
 export const isPersonalQuizAccount = (u: UserAccount | null | undefined) => Boolean(
   u && !(u.role === 'admin' || u.role === 'school_admin' || u.role === 'bgh' || u.role === 'guest_admin' || u.isBgh || u.isSchoolAdmin || u.isGuestAdmin)
@@ -158,6 +160,20 @@ export const quizBankStore = {
     emit();
     if (this.getDriveConfig(u)) this.schedulePush(u);
     if (this.getLocalInfo(u)?.mode === 'folder') this.scheduleLocalWrite(u);
+  },
+
+  // ---------- Môn / bộ câu hỏi giáo viên tự tạo (kể cả khi chưa có câu nào)
+  getSubjects(username: string): string[] {
+    try { const v = JSON.parse(localStorage.getItem(SUBJ_KEY + norm(username)) || '[]'); return Array.isArray(v) ? v.map(String).filter(Boolean) : []; } catch (_) { return []; }
+  },
+  addSubject(username: string, name: string) {
+    const n = name.trim(); if (!n) return;
+    const cur = this.getSubjects(username);
+    if (!cur.includes(n)) { try { localStorage.setItem(SUBJ_KEY + norm(username), JSON.stringify([...cur, n])); } catch (_) { /* ignore */ } emit(); }
+  },
+  removeSubject(username: string, name: string) {
+    const cur = this.getSubjects(username);
+    if (cur.includes(name)) { try { localStorage.setItem(SUBJ_KEY + norm(username), JSON.stringify(cur.filter(x => x !== name))); } catch (_) { /* ignore */ } emit(); }
   },
 
   // ---------- Nơi lưu bắt buộc trước khi thêm câu hỏi
@@ -276,7 +292,7 @@ export const quizBankStore = {
     const rec = await idbGet(u);
     if (!rec) { await idbPut(u, await pack(incoming)); emit(); return smartMergeQuizBank(incoming); }
     const current = unpack(rec);
-    const merged = union(current, (incoming || []).filter(q => DEFAULT_JSON.get(q.id) !== JSON.stringify(q)));
+    const merged = union(current, (incoming || []).filter(q => DEFAULT_JSON.get(q.id) !== JSON.stringify(q) && !isLegacySample(q)));
     if (merged.length !== current.length) { await idbPut(u, await pack(merged)); emit(); }
     return smartMergeQuizBank(merged);
   },
