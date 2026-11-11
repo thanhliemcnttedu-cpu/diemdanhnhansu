@@ -23,6 +23,7 @@ import {
   Building2, MapPin, ChevronDown, ChevronUp, Filter, Eye, BarChart3, Users2, User,
   ArrowUpDown
 } from 'lucide-react';
+import { ClassDefaultBanner } from '../common/ClassDefaultBanner';
 import { playCoinSound, playDeductSound, playFanfareSound } from '../../utils/audio';
 import confetti from 'canvas-confetti';
 
@@ -2925,17 +2926,13 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                         }
                       />
                     ) : (
-                      <div 
-                        className="w-full h-full flex flex-col items-center justify-center font-black text-slate-800 text-2xl shadow-xs"
-                        style={{ backgroundColor: cls.color || '#6366F1' }}
-                      >
-                        <span>{cls.name}</span>
-                        <span className="text-[12px] font-semibold text-slate-600 mt-0.5 uppercase">CHƯA CÀI ĐẶT ẢNH LỚP</span>
-                      </div>
+                      <ClassDefaultBanner name={cls.name} color={cls.color} />
                     )}
 
-                    {/* Gradient overlay for badges */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-indigo-600/70 via-transparent to-indigo-600/40 pointer-events-none" />
+                    {/* Gradient overlay for badges (only on real photos — the default banner stays bright) */}
+                    {cls.avatar && (
+                      <div className="absolute inset-0 bg-gradient-to-t from-indigo-600/70 via-transparent to-indigo-600/40 pointer-events-none" />
+                    )}
 
                     {/* Top Badges */}
                     <div className="absolute top-2 left-2 right-2 flex items-center justify-between gap-1.5">
