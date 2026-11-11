@@ -12,6 +12,9 @@ import { GameHomeView } from './picker/GameHomeView';
 import { HeadTiltGame } from './picker/headtilt/HeadTiltGame';
 import { LuckyLensGame } from './picker/LuckyLensGame';
 import { QuizStorageButton } from '../modals/QuizStorageModal';
+import { QuestionBankModal } from '../modals/QuestionBankModal';
+import { saveQuizBank } from '../../utils/quizParser';
+import { Library } from 'lucide-react';
 
 export type PickerGameMode = 'dashboard' | 'wheel' | 'reel' | 'rocket' | 'mystery_box' | 'duck_race' | 'head_tilt' | 'lucky_lens';
 
@@ -22,7 +25,9 @@ interface RandomStudentPickerViewProps {
 export const RandomStudentPickerView: React.FC<RandomStudentPickerViewProps> = ({ 
   initialGame = 'dashboard' 
 }) => {
-  const { currentClassStudents, classes, activeClassId } = useClassroom();
+  const { currentClassStudents, classes, activeClassId, quizBank, updateQuizBank } = useClassroom();
+  // Quản lý kho câu hỏi (mở từ thanh trò chơi)
+  const [isBankOpen, setIsBankOpen] = useState(false);
   const activeClass = classes.find(c => c.id === activeClassId) || classes[0];
   const [activeGame, setActiveGame] = useState<PickerGameMode>(
     (initialGame as string) === 'photo_cards' ? 'reel' : initialGame
@@ -165,6 +170,17 @@ export const RandomStudentPickerView: React.FC<RandomStudentPickerViewProps> = (
           </button>
 
           {/* Nơi lưu câu hỏi của tôi: cấu hình thư mục máy tính / Drive cá nhân cho bộ câu hỏi trò chơi */}
+          {/* Quản lý kho câu hỏi: soạn, nhập, chơi thử, xóa câu hỏi dùng cho các trò chơi */}
+          <button
+            type="button"
+            onClick={() => setIsBankOpen(true)}
+            className="px-3 py-2 rounded-xl text-xs font-black inline-flex items-center justify-center gap-1.5 uppercase cursor-pointer whitespace-nowrap border bg-white border-emerald-300 text-emerald-800 hover:bg-emerald-50"
+            title="Quản lý kho câu hỏi: soạn câu mới, nhập từ tệp, chơi thử, sửa / xóa"
+          >
+            <Library className="w-4 h-4 shrink-0" />
+            <span>Kho câu hỏi</span>
+            <span className="px-1.5 rounded-md bg-emerald-600 text-white text-[12px] font-black tabular-nums">{quizBank.length}</span>
+          </button>
           <QuizStorageButton variant="tab" />
         </div>
       </div>
@@ -299,6 +315,12 @@ export const RandomStudentPickerView: React.FC<RandomStudentPickerViewProps> = (
         </div>
       )}
 
+      <QuestionBankModal
+        isOpen={isBankOpen}
+        onClose={() => setIsBankOpen(false)}
+        questions={quizBank}
+        onSaveQuestions={(updated) => { updateQuizBank(updated); saveQuizBank(updated); }}
+      />
     </div>
   );
 };
