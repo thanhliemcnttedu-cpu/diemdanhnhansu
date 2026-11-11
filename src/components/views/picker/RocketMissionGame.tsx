@@ -19,6 +19,7 @@ import { loadQuizBank, saveQuizBank } from '../../../utils/quizParser';
 
 import { handleAvatarImgError } from '../../../utils/avatarConfig';
 import { CalledStudentModal } from './CalledStudentModal';
+import { useQuizSelection, QuizSelectionChip } from './QuizSetPicker';
 export const RocketMissionGame: React.FC = () => {
   const { currentClassStudents, awardPoints, quizBank, updateQuizBank } = useClassroom();
 
@@ -42,6 +43,9 @@ export const RocketMissionGame: React.FC = () => {
   const [isAnswerCorrect, setIsAnswerCorrect] = useState<boolean | null>(null);
   const [isQuestionBankOpen, setIsQuestionBankOpen] = useState(false);
   const [editTargetQuestion, setEditTargetQuestion] = useState<QuestionItem | null>(null);
+  // Chế độ câu hỏi: giáo viên chọn kho + bộ câu hỏi trước khi chơi; chỉ bốc câu trong phần đã chọn
+  const quizSel = useQuizSelection(() => { setEditTargetQuestion(null); setIsQuestionBankOpen(true); });
+  const quizPool = quizSel.pool;
 
   // Exclude option
   const [autoExclude, setAutoExclude] = useState(true);
@@ -162,8 +166,8 @@ export const RocketMissionGame: React.FC = () => {
         }
 
         // If mode is Quiz, draw random question
-        if (callMode === 'quiz' && quizBank.length > 0) {
-          const q = quizBank[Math.floor(Math.random() * quizBank.length)];
+        if (callMode === 'quiz' && quizPool.length > 0) {
+          const q = quizPool[Math.floor(Math.random() * quizPool.length)];
           setCurrentQuestion(q);
         }
       }
@@ -196,9 +200,9 @@ export const RocketMissionGame: React.FC = () => {
   };
 
   const handlePickAnotherQuestion = () => {
-    if (quizBank.length === 0) return;
-    const remaining = quizBank.filter(q => q.id !== currentQuestion?.id);
-    const poolQ = remaining.length > 0 ? remaining : quizBank;
+    if (quizPool.length === 0) return;
+    const remaining = quizPool.filter(q => q.id !== currentQuestion?.id);
+    const poolQ = remaining.length > 0 ? remaining : quizPool;
     const q = poolQ[Math.floor(Math.random() * poolQ.length)];
     setCurrentQuestion(q);
     setSelectedOption(null);
@@ -247,7 +251,7 @@ export const RocketMissionGame: React.FC = () => {
           </button>
           <button
             type="button"
-            onClick={() => setCallMode('quiz')}
+            onClick={() => quizSel.request(() => setCallMode('quiz'))}
             className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer uppercase ${
               callMode === 'quiz' ? 'bg-purple-600 text-white shadow-xs' : 'text-slate-400 hover:text-white'
             }`}
@@ -255,6 +259,10 @@ export const RocketMissionGame: React.FC = () => {
             3. Gọi + Trả Lời Câu Hỏi
           </button>
         </div>
+
+        {callMode === 'quiz' && (
+          <QuizSelectionChip label={quizSel.label} count={quizPool.length} onChange={() => quizSel.request()} />
+        )}
 
         {/* Duration selection (User request: lựa chọn 4 giây) */}
         <div className="flex items-center gap-2 bg-slate-100/80 px-3 py-1.5 rounded-2xl border border-slate-200">
@@ -592,6 +600,7 @@ export const RocketMissionGame: React.FC = () => {
         </div>
       )}
 
+      {quizSel.element}
       {/* QUESTION BANK MODAL */}
       <QuestionBankModal
         isOpen={isQuestionBankOpen}

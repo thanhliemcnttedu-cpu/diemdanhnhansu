@@ -21,6 +21,7 @@ import { loadQuizBank, saveQuizBank } from '../../utils/quizParser';
 
 import { handleAvatarImgError } from '../../utils/avatarConfig';
 import { CalledStudentModal } from './picker/CalledStudentModal';
+import { useQuizSelection } from './picker/QuizSetPicker';
 const FRAME_WIDTH = 155; // Width of each 35mm film frame
 const FRAME_GAP = 14; // Gap between frames
 const TOTAL_FRAME_SPACE = FRAME_WIDTH + FRAME_GAP; // 169px
@@ -61,6 +62,9 @@ export const FilmReelView: React.FC = () => {
   const [customOralPoints, setCustomOralPoints] = useState<number>(2);
   const [isQuestionBankOpen, setIsQuestionBankOpen] = useState(false);
   const [editTargetQuestion, setEditTargetQuestion] = useState<QuestionItem | null>(null);
+  // Chế độ câu hỏi: giáo viên chọn kho + bộ câu hỏi trước khi chơi; chỉ bốc câu trong phần đã chọn
+  const quizSel = useQuizSelection(() => { setEditTargetQuestion(null); setIsQuestionBankOpen(true); });
+  const quizPool = quizSel.pool;
   const [zoomedImage, setZoomedImage] = useState<{ url: string; title: string } | null>(null);
   const [isQuestionModalOpen, setIsQuestionModalOpen] = useState(false);
 
@@ -74,12 +78,12 @@ export const FilmReelView: React.FC = () => {
   const [userMatches, setUserMatches] = useState<Record<number, number>>({}); // leftIdx -> rightId
 
   // Available subjects in quizBank
-  const quizSubjects = Array.from(new Set(quizBank.map(q => q.subject || 'Tổng hợp'))).filter(Boolean);
+  const quizSubjects = Array.from(new Set(quizPool.map(q => q.subject || 'Tổng hợp'))).filter(Boolean);
 
   const getCandidateQuestions = (subject = selectedQuizSubject) => {
-    if (subject === 'all') return quizBank;
-    const filtered = quizBank.filter(q => (q.subject || 'Tổng hợp') === subject);
-    return filtered.length > 0 ? filtered : quizBank;
+    if (subject === 'all') return quizPool;
+    const filtered = quizPool.filter(q => (q.subject || 'Tổng hợp') === subject);
+    return filtered.length > 0 ? filtered : quizPool;
   };
 
   const containerRef = useRef<HTMLDivElement>(null);
@@ -507,7 +511,7 @@ export const FilmReelView: React.FC = () => {
           </button>
           <button
             type="button"
-            onClick={() => setCallMode('quiz')}
+            onClick={() => quizSel.request(() => { setSelectedQuizSubject('all'); setCallMode('quiz'); })}
             className={`px-2 sm:px-3.5 py-1.5 rounded-xl text-[12px] sm:text-xs font-black transition-all cursor-pointer uppercase text-center ${
               callMode === 'quiz' ? 'bg-purple-600 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'
             }`}
@@ -527,9 +531,9 @@ export const FilmReelView: React.FC = () => {
               onChange={(e) => handleChangeSubject(e.target.value)}
               className="bg-transparent text-xs font-black text-purple-900 focus:outline-none cursor-pointer"
             >
-              <option value="all">🎲 Ngẫu nhiên toàn kho ({quizBank.length} câu)</option>
+              <option value="all">🎲 Ngẫu nhiên cả bộ đã chọn ({quizPool.length} câu)</option>
               {quizSubjects.map(sub => {
-                const count = quizBank.filter(q => (q.subject || 'Tổng hợp') === sub).length;
+                const count = quizPool.filter(q => (q.subject || 'Tổng hợp') === sub).length;
                 return (
                   <option key={sub} value={sub}>
                     📖 Môn {sub} ({count} câu)
@@ -597,7 +601,7 @@ export const FilmReelView: React.FC = () => {
                   <BookOpen className="w-3.5 h-3.5 text-purple-400 shrink-0" />
                   <span>BỘ ĐỀ ĐANG DÙNG:</span>
                   <span className="px-2 py-0.5 rounded bg-purple-700 text-white font-black">
-                    {selectedQuizSubject === 'all' ? '🎲 Ngẫu nhiên toàn kho' : `📖 Môn ${selectedQuizSubject}`}
+                    {selectedQuizSubject === 'all' ? quizSel.label : `📖 Môn ${selectedQuizSubject}`}
                   </span>
                   <span className="text-purple-300">({getCandidateQuestions().length} câu hỏi sẵn sàng)</span>
                 </div>
@@ -610,6 +614,13 @@ export const FilmReelView: React.FC = () => {
                   className="text-purple-300 hover:text-white underline cursor-pointer text-[12px] font-bold shrink-0 ml-2"
                 >
                   + Nạp thêm câu hỏi
+                </button>
+                <button
+                  type="button"
+                  onClick={() => quizSel.request(() => setSelectedQuizSubject('all'))}
+                  className="no-hover-fx px-2 py-0.5 rounded-lg bg-white text-purple-800 hover:bg-purple-50 cursor-pointer text-[12px] font-black shrink-0 ml-2 whitespace-nowrap"
+                >
+                  Đổi bộ câu hỏi
                 </button>
               </div>
             )}
@@ -841,9 +852,9 @@ export const FilmReelView: React.FC = () => {
                           onChange={(e) => setSelectedQuizSubject(e.target.value)}
                           className="bg-transparent text-xs font-bold text-purple-900 focus:outline-none cursor-pointer"
                         >
-                          <option value="all">🎲 Ngẫu nhiên toàn kho ({quizBank.length} câu)</option>
+                          <option value="all">🎲 Ngẫu nhiên cả bộ đã chọn ({quizPool.length} câu)</option>
                           {quizSubjects.map(sub => {
-                            const count = quizBank.filter(q => (q.subject || 'Tổng hợp') === sub).length;
+                            const count = quizPool.filter(q => (q.subject || 'Tổng hợp') === sub).length;
                             return (
                               <option key={sub} value={sub}>
                                 📖 Môn {sub} ({count} câu)
@@ -1024,6 +1035,7 @@ export const FilmReelView: React.FC = () => {
       </div>
 
       {/* QUESTION BANK MODAL */}
+      {quizSel.element}
       <QuestionBankModal
         isOpen={isQuestionBankOpen}
         initialEditQuestion={editTargetQuestion}
@@ -1106,9 +1118,9 @@ export const FilmReelView: React.FC = () => {
                       onChange={(e) => handleChangeSubject(e.target.value)}
                       className="bg-transparent text-xs font-bold text-purple-700 focus:outline-none cursor-pointer"
                     >
-                      <option value="all" className="bg-white text-slate-800">🎲 Toàn bộ môn ({quizBank.length})</option>
+                      <option value="all" className="bg-white text-slate-800">🎲 Toàn bộ môn ({quizPool.length})</option>
                       {quizSubjects.map(sub => {
-                        const count = quizBank.filter(q => (q.subject || 'Tổng hợp') === sub).length;
+                        const count = quizPool.filter(q => (q.subject || 'Tổng hợp') === sub).length;
                         return (
                           <option key={sub} value={sub} className="bg-white text-slate-800">
                             📖 Môn {sub} ({count})

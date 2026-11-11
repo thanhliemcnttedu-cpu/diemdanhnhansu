@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { QuestionBankModal } from '../../../modals/QuestionBankModal';
 import { useClassroom } from '../../../../context/ClassroomContext';
+import { requireQuizStorage } from '../../../modals/QuizStorageModal';
 
 interface HeadTiltQuizManageViewProps {
   onPlayQuiz: (quiz: HeadTiltQuizConfig) => void;
@@ -20,7 +21,7 @@ export const HeadTiltQuizManageView: React.FC<HeadTiltQuizManageViewProps> = ({
   onEditQuiz,
   onBackToDashboard
 }) => {
-  const { quizBank, updateQuizBank } = useClassroom();
+  const { quizBank, updateQuizBank, currentUser } = useClassroom();
   // Saved quizzes in localStorage
   const [quizzes, setQuizzes] = useState<HeadTiltQuizConfig[]>(() => {
     try {
@@ -105,7 +106,7 @@ export const HeadTiltQuizManageView: React.FC<HeadTiltQuizManageViewProps> = ({
         <div className="flex items-center gap-2">
           <button
             type="button"
-            onClick={onCreateNewQuiz}
+            onClick={async () => { if (await requireQuizStorage(currentUser)) onCreateNewQuiz(); }}
             className="px-4 py-2.5 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black shadow-md shadow-indigo-600/20 transition-all flex items-center gap-1.5 cursor-pointer"
           >
             <Plus className="w-4 h-4" />

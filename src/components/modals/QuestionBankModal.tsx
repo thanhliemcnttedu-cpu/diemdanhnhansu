@@ -11,6 +11,8 @@ import {
   parseDocxFile, parsePdfFile, parseImageFileWithAi, 
   parseQuestionsFromRawText, DEFAULT_QUESTIONS, saveQuizBank 
 } from '../../utils/quizParser';
+import { useClassroom } from '../../context/ClassroomContext';
+import { requireQuizStorage } from './QuizStorageModal';
 
 interface QuestionBankModalProps {
   isOpen: boolean;
@@ -42,6 +44,7 @@ export const QuestionBankModal: React.FC<QuestionBankModalProps> = ({
   onSaveQuestions,
   initialEditQuestion
 }) => {
+  const { currentUser } = useClassroom();
   const [bank, setBank] = useState<QuestionItem[]>(questions);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedSubject, setSelectedSubject] = useState<string>('all');
@@ -231,6 +234,11 @@ export const QuestionBankModal: React.FC<QuestionBankModalProps> = ({
     setEditingQuestion(null);
     setIsCreatingNew(false);
     showToast('Đã lưu câu hỏi thành công!');
+  };
+
+  // Thêm câu hỏi (soạn mới / tải tệp / dán văn bản): giáo viên phải cấu hình nơi lưu bộ câu hỏi trước
+  const withStorage = async (action: () => void) => {
+    if (await requireQuizStorage(currentUser)) action();
   };
 
   const handleStartCreateNew = () => {
@@ -504,7 +512,7 @@ export const QuestionBankModal: React.FC<QuestionBankModalProps> = ({
 
             {/* Upload Button */}
             <button
-              onClick={() => fileInputRef.current?.click()}
+              onClick={() => withStorage(() => fileInputRef.current?.click())}
               disabled={isLoadingFile}
               className="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white rounded-xl text-xs font-black flex items-center gap-1.5 shadow-sm transition-all hover-zoom-btn uppercase cursor-pointer"
               title={`Tải file Word (.docx), PDF hoặc Hình ảnh bài tập vào môn [${effectiveTargetSubject}]`}
@@ -515,7 +523,7 @@ export const QuestionBankModal: React.FC<QuestionBankModalProps> = ({
 
             {/* Paste Text Button */}
             <button
-              onClick={() => setIsPastingText(true)}
+              onClick={() => withStorage(() => setIsPastingText(true))}
               className="px-3.5 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-black flex items-center gap-1.5 shadow-sm transition-all hover-zoom-btn uppercase cursor-pointer"
               title="Dán văn bản câu hỏi trực tiếp"
             >
@@ -525,7 +533,7 @@ export const QuestionBankModal: React.FC<QuestionBankModalProps> = ({
 
             {/* Add Manually */}
             <button
-              onClick={handleStartCreateNew}
+              onClick={() => withStorage(handleStartCreateNew)}
               className="px-3.5 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-black flex items-center gap-1.5 shadow-sm transition-all hover-zoom-btn uppercase cursor-pointer"
             >
               <Plus className="w-4 h-4" />

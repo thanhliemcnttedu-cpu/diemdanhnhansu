@@ -18,6 +18,7 @@ import { loadQuizBank, saveQuizBank } from '../../../utils/quizParser';
 
 import { handleAvatarImgError } from '../../../utils/avatarConfig';
 import { CalledStudentModal } from './CalledStudentModal';
+import { useQuizSelection, QuizSelectionChip } from './QuizSetPicker';
 interface GiftBoxItem {
   id: number;
   label: string;
@@ -62,6 +63,9 @@ export const MysteryGiftBoxGame: React.FC = () => {
   const [isAnswerCorrect, setIsAnswerCorrect] = useState<boolean | null>(null);
   const [isQuestionBankOpen, setIsQuestionBankOpen] = useState(false);
   const [editTargetQuestion, setEditTargetQuestion] = useState<QuestionItem | null>(null);
+  // Chế độ câu hỏi: giáo viên chọn kho + bộ câu hỏi trước khi chơi; chỉ bốc câu trong phần đã chọn
+  const quizSel = useQuizSelection(() => { setEditTargetQuestion(null); setIsQuestionBankOpen(true); });
+  const quizPool = quizSel.pool;
 
   // Exclude option
   const [autoExclude, setAutoExclude] = useState(true);
@@ -127,8 +131,8 @@ export const MysteryGiftBoxGame: React.FC = () => {
           }
 
           // If mode is Quiz, draw random question
-          if (callMode === 'quiz' && quizBank.length > 0) {
-            const q = quizBank[Math.floor(Math.random() * quizBank.length)];
+          if (callMode === 'quiz' && quizPool.length > 0) {
+            const q = quizPool[Math.floor(Math.random() * quizPool.length)];
             setCurrentQuestion(q);
           }
         }, 300);
@@ -162,9 +166,9 @@ export const MysteryGiftBoxGame: React.FC = () => {
   };
 
   const handlePickAnotherQuestion = () => {
-    if (quizBank.length === 0) return;
-    const remaining = quizBank.filter(q => q.id !== currentQuestion?.id);
-    const poolQ = remaining.length > 0 ? remaining : quizBank;
+    if (quizPool.length === 0) return;
+    const remaining = quizPool.filter(q => q.id !== currentQuestion?.id);
+    const poolQ = remaining.length > 0 ? remaining : quizPool;
     const q = poolQ[Math.floor(Math.random() * poolQ.length)];
     setCurrentQuestion(q);
     setSelectedOption(null);
@@ -215,7 +219,7 @@ export const MysteryGiftBoxGame: React.FC = () => {
           </button>
           <button
             type="button"
-            onClick={() => setCallMode('quiz')}
+            onClick={() => quizSel.request(() => setCallMode('quiz'))}
             className={`px-2 sm:px-3 py-1.5 rounded-xl text-[12px] sm:text-xs font-black transition-all cursor-pointer uppercase text-center ${
               callMode === 'quiz' ? 'bg-purple-600 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'
             }`}
@@ -224,6 +228,10 @@ export const MysteryGiftBoxGame: React.FC = () => {
             <span className="sm:hidden">3. CÂU HỎI</span>
           </button>
         </div>
+
+        {callMode === 'quiz' && (
+          <QuizSelectionChip label={quizSel.label} count={quizPool.length} onChange={() => quizSel.request()} />
+        )}
 
         {/* Duration selection (4s) */}
         <div className="flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-2xl border border-slate-200">
@@ -579,6 +587,7 @@ export const MysteryGiftBoxGame: React.FC = () => {
         </div>
       )}
 
+      {quizSel.element}
       {/* QUESTION BANK MODAL */}
       <QuestionBankModal
         isOpen={isQuestionBankOpen}

@@ -6,8 +6,12 @@
  *           TRONG BẢN LƯU (cạnh ≤ 800px). Xuất / Nhập tệp .json để lưu thư mục máy tính, USB, gửi đồng nghiệp.
  * - Bước 3: (tùy chọn) đồng bộ tệp `nganhang_cauhoi_<tài khoản>.json` lên Google Drive CÁ NHÂN của giáo viên qua
  *           Apps Script cá nhân (dùng lại đúng mã Apps Script của phần mềm, triển khai trên tài khoản Google của giáo viên).
+ * - Bước 4 (11/2026): THƯ MỤC TRÊN MÁY TÍNH do giáo viên chọn (File System Access API) — phần mềm tự ghi tệp
+ *           `nganhang_cauhoi_<tài khoản>.json` vào thư mục đó mỗi lần lưu. Giáo viên phải cấu hình nơi lưu (thư mục máy
+ *           tính hoặc Drive cá nhân) trước khi THÊM câu hỏi (`isConfigured`, xem modals/QuizStorageModal › requireQuizStorage).
  * Các trò chơi KHÔNG đổi: vẫn đọc `quizBank` và lưu bằng `updateQuizBank` của context.
  */
+import type { UserAccount } from '../types';
 import type { QuestionItem } from '../types';
 import { DEFAULT_QUESTIONS, smartMergeQuizBank } from '../utils/quizParser';
 import { googleDriveService } from './googleDriveService';
@@ -20,6 +24,10 @@ const DB_NAME = 'lhhp_personal';
 const STORE = 'quiz_bank';
 const LS_FALLBACK = 'lhhp_quiz_personal:';
 const CFG_KEY = 'lhhp_quiz_drive:';
+const LOCAL_KEY = 'lhhp_quiz_local:';
+const HANDLE_KEY = '__folder_handle__:';
+/** Nơi lưu trên máy: 'folder' = thư mục máy tính đã chọn; 'browser' = chỉ bộ nhớ phần mềm (trình duyệt không hỗ trợ chọn thư mục) */
+export interface LocalStorageInfo { mode: 'folder' | 'browser'; folderName?: string; setAt: number; lastWriteAt?: number; lastError?: string; needsPermission?: boolean }
 const DEFAULT_JSON = new Map(DEFAULT_QUESTIONS.map(q => [q.id, JSON.stringify(q)]));
 const DEFAULT_BY_ID = new Map(DEFAULT_QUESTIONS.map(q => [q.id, q]));
 const norm = (u: string) => String(u || '').trim().toLowerCase();
@@ -60,6 +68,31 @@ async function idbPut(key: string, val: StoredBank): Promise<void> {
   });
 }
 
+// Giá trị bất kỳ (thẻ thư mục FileSystemDirectoryHandle) trong cùng kho IndexedDB
+async function idbGetAny(key: string): Promise<any> {
+  const db = await openDb();
+  if (!db) return null;
+  return new Promise(resolve => {
+    try {
+      const r = db.transaction(STORE, 'readonly').objectStore(STORE).get(key);
+      r.onsuccess = () => resolve(r.result || null);
+      r.onerror = () => resolve(null);
+    } catch (_) { resolve(null); }
+  });
+}
+async function idbPutAny(key: string, val: any): Promise<boolean> {
+  const db = await openDb();
+  if (!db) return false;
+  return new Promise(resolve => {
+    try {
+      const tx = db.transaction(STORE, 'readwrite');
+      if (val === null) tx.objectStore(STORE).delete(key); else tx.objectStore(STORE).put(val, key);
+      tx.oncomplete = () => resolve(true);
+      tx.onerror = () => resolve(false);
+    } catch (_) { resolve(false); }
+  });
+}
+
 // ─────────────────────────────── đóng gói gọn
 const isImg = (v: unknown): v is string => typeof v === 'string' && /^data:image\//i.test(v);
 async function shrinkQuestion(q: QuestionItem): Promise<QuestionItem> {
@@ -90,10 +123,19 @@ function union(base: QuestionItem[], extra: QuestionItem[]): QuestionItem[] {
   return [...base, ...extra.filter(q => q && q.id && !ids.has(q.id))];
 }
 export const countCustom = (questions: QuestionItem[]) => (questions || []).filter(q => q && DEFAULT_JSON.get(q.id) !== JSON.stringify(q)).length;
+/** Câu mẫu nguyên bản của phần mềm (chưa sửa) */
+export const isSampleQuestion = (q: QuestionItem) => Boolean(q && DEFAULT_JSON.get(q.id) === JSON.stringify(q));
+/** Tài khoản giáo viên (không phải Quản trị / BGH) — có kho câu hỏi cá nhân */
+export const isPersonalQuizAccount = (u: UserAccount | null | undefined) => Boolean(
+  u && !(u.role === 'admin' || u.role === 'school_admin' || u.role === 'bgh' || u.role === 'guest_admin' || u.isBgh || u.isSchoolAdmin || u.isGuestAdmin)
+);
+/** Trình duyệt cho phép chọn thư mục trên máy tính (Chrome / Edge / bản cài đặt) */
+export const supportsLocalFolder = () => typeof window !== 'undefined' && typeof (window as any).showDirectoryPicker === 'function' && window.isSecureContext !== false;
 
 // ─────────────────────────────── Drive cá nhân
 const remoteFileName = (username: string) => `nganhang_cauhoi_${norm(username).replace(/[^a-z0-9_.-]/g, '_')}.json`;
 const pushTimers = new Map<string, ReturnType<typeof setTimeout>>();
+const localTimers = new Map<string, ReturnType<typeof setTimeout>>();
 const listeners = new Set<() => void>();
 const emit = () => listeners.forEach(fn => { try { fn(); } catch (_) { /* ignore */ } });
 
@@ -113,6 +155,116 @@ export const quizBankStore = {
     await idbPut(u, await pack(questions));
     emit();
     if (this.getDriveConfig(u)) this.schedulePush(u);
+    if (this.getLocalInfo(u)?.mode === 'folder') this.scheduleLocalWrite(u);
+  },
+
+  // ---------- Nơi lưu bắt buộc trước khi thêm câu hỏi
+  /** Đã cấu hình nơi lưu câu hỏi (thư mục máy tính / bộ nhớ máy / Drive cá nhân) */
+  isConfigured(username: string): boolean {
+    return Boolean(this.getDriveConfig(username) || this.getLocalInfo(username));
+  },
+
+  // ---------- Thư mục trên máy tính (File System Access API)
+  getLocalInfo(username: string): LocalStorageInfo | null {
+    try { const c = JSON.parse(localStorage.getItem(LOCAL_KEY + norm(username)) || 'null'); return c && (c.mode === 'folder' || c.mode === 'browser') ? c : null; } catch (_) { return null; }
+  },
+  setLocalInfo(username: string, info: LocalStorageInfo | null) {
+    try {
+      if (info) localStorage.setItem(LOCAL_KEY + norm(username), JSON.stringify(info));
+      else localStorage.removeItem(LOCAL_KEY + norm(username));
+    } catch (_) { /* ignore */ }
+    emit();
+  },
+  /** Chọn thư mục trên máy tính (phải gọi trong lúc bấm nút). Thư mục đã có tệp câu hỏi → trả về câu hỏi trong tệp để gộp. */
+  async pickLocalFolder(username: string): Promise<{ ok: boolean; message: string; existing?: QuestionItem[] }> {
+    const u = norm(username);
+    const picker = (window as any).showDirectoryPicker;
+    if (typeof picker !== 'function') return { ok: false, message: 'Trình duyệt này không cho chọn thư mục. Hãy dùng Chrome / Edge, hoặc dùng Google Drive cá nhân.' };
+    let handle: any;
+    try {
+      handle = await picker.call(window, { id: 'lhhp-quiz-bank', mode: 'readwrite', startIn: 'documents' });
+    } catch (e: any) {
+      return { ok: false, message: e?.name === 'AbortError' ? '' : 'Không mở được hộp chọn thư mục.' };
+    }
+    try {
+      if (handle.requestPermission && (await handle.requestPermission({ mode: 'readwrite' })) !== 'granted') {
+        return { ok: false, message: 'Bạn chưa cho phép phần mềm ghi vào thư mục này.' };
+      }
+    } catch (_) { /* trình duyệt cũ: bỏ qua */ }
+    if (!(await idbPutAny(HANDLE_KEY + u, handle))) return { ok: false, message: 'Không ghi nhớ được thư mục trên máy này.' };
+    this.setLocalInfo(u, { mode: 'folder', folderName: handle.name, setAt: Date.now() });
+    const existing = await this.readLocalFolder(u, false).catch(() => null);
+    if (!existing || !existing.length) await this.writeLocalFolder(u, false);
+    return { ok: true, message: `Đã chọn thư mục "${handle.name}". Bộ câu hỏi tự lưu vào tệp ${remoteFileName(u)} trong thư mục này.`, existing: existing || undefined };
+  },
+  /** Chỉ dùng bộ nhớ phần mềm trên máy (trình duyệt không hỗ trợ chọn thư mục) */
+  useBrowserOnly(username: string) {
+    this.setLocalInfo(username, { mode: 'browser', setAt: Date.now() });
+  },
+  async clearLocal(username: string) {
+    const u = norm(username);
+    await idbPutAny(HANDLE_KEY + u, null);
+    this.setLocalInfo(u, null);
+  },
+  async folderHandle(username: string, interactive: boolean): Promise<any | null> {
+    const u = norm(username);
+    const handle = await idbGetAny(HANDLE_KEY + u);
+    if (!handle) return null;
+    try {
+      let perm = handle.queryPermission ? await handle.queryPermission({ mode: 'readwrite' }) : 'granted';
+      if (perm !== 'granted' && interactive && handle.requestPermission) perm = await handle.requestPermission({ mode: 'readwrite' });
+      const info = this.getLocalInfo(u);
+      if (perm !== 'granted') {
+        if (info && !info.needsPermission) this.setLocalInfo(u, { ...info, needsPermission: true });
+        return null;
+      }
+      if (info?.needsPermission) this.setLocalInfo(u, { ...info, needsPermission: false });
+      return handle;
+    } catch (_) { return null; }
+  },
+  scheduleLocalWrite(username: string, delay = 1500) {
+    const u = norm(username);
+    const t = localTimers.get(u);
+    if (t) clearTimeout(t);
+    localTimers.set(u, setTimeout(() => { localTimers.delete(u); this.writeLocalFolder(u, false).catch(() => {}); }, delay));
+  },
+  /** Ghi kho câu hỏi trên máy ra tệp trong thư mục đã chọn. interactive = đang trong lúc bấm nút (được hỏi lại quyền). */
+  async writeLocalFolder(username: string, interactive: boolean): Promise<{ ok: boolean; message: string }> {
+    const u = norm(username);
+    const info = this.getLocalInfo(u);
+    if (info?.mode !== 'folder') return { ok: false, message: 'Chưa chọn thư mục trên máy tính.' };
+    const handle = await this.folderHandle(u, interactive);
+    if (!handle) return { ok: false, message: 'Cần cho phép lại quyền ghi vào thư mục (bấm "Cho phép ghi thư mục").' };
+    const rec = (await idbGet(u)) || { order: [], items: [], updatedAt: Date.now() };
+    try {
+      const fh = await handle.getFileHandle(remoteFileName(u), { create: true });
+      const w = await fh.createWritable();
+      await w.write(JSON.stringify({ format: 'lhhp_quiz_bank', version: 1, owner: u, ...rec }));
+      await w.close();
+      this.setLocalInfo(u, { ...(this.getLocalInfo(u) as LocalStorageInfo), lastWriteAt: Date.now(), lastError: undefined, needsPermission: false });
+      return { ok: true, message: `Đã lưu vào thư mục "${handle.name}".` };
+    } catch (_) {
+      this.setLocalInfo(u, { ...(this.getLocalInfo(u) as LocalStorageInfo), lastError: 'Không ghi được tệp vào thư mục (thư mục bị xóa / đổi tên / USB đã rút?).' });
+      return { ok: false, message: 'Không ghi được tệp vào thư mục đã chọn.' };
+    }
+  },
+  /** Đọc tệp câu hỏi trong thư mục đã chọn (null nếu chưa có tệp / không có quyền) */
+  async readLocalFolder(username: string, interactive: boolean): Promise<QuestionItem[] | null> {
+    const u = norm(username);
+    const handle = await this.folderHandle(u, interactive);
+    if (!handle) return null;
+    try {
+      const fh = await handle.getFileHandle(remoteFileName(u));
+      const text = await (await fh.getFile()).text();
+      return this.parseImport(text);
+    } catch (_) { return null; }
+  },
+  /** Gọi trong lúc giáo viên bấm nút: xin lại quyền ghi thư mục nếu trình duyệt đã quên (sau khi mở lại trình duyệt) */
+  async ensureLocalPermission(username: string): Promise<void> {
+    const info = this.getLocalInfo(username);
+    if (info?.mode !== 'folder') return;
+    const handle = await this.folderHandle(username, true);
+    if (handle && (info.needsPermission || !info.lastWriteAt)) await this.writeLocalFolder(username, false);
   },
 
   /** Nhận bộ câu hỏi từ dữ liệu cũ (tệp lớp / bộ nhớ trình duyệt): CỘNG THÊM câu chưa có vào kho, không xóa câu nào.
