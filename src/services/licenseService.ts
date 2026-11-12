@@ -7,12 +7,14 @@
  * - Mỗi lớp tối đa 10 học sinh
  * - Khóa: chấm công nhân sự, kê khai tiết dạy, thư khen, xuất báo cáo / Excel / PDF / ảnh thời khóa biểu
  *
- * BẢN QUYỀN THEO TỪNG TRƯỜNG (11/2026): mã do tác giả KÝ riêng cho thư mục Google Drive của một trường.
- *   LHHP2.<payload base64url>.<chữ ký ECDSA P-256 base64url>     payload = { f: mã thư mục, s: tên trường, i: ngày cấp, n: số cấp }
- * Phần mềm chỉ chứa KHÓA CÔNG KHAI → không ai tự tạo được mã, và mã của trường này không mở khóa cho trường khác.
+ * MÃ BẢN QUYỀN (người dùng chọn 11/2026): MỘT mã do tác giả cung cấp, dùng chung cho bản web và bản cài đặt, KHÔNG gắn với
+ * thư mục lưu trữ của trường (trường đổi thư mục, đổi mật khẩu quản trị… bản quyền vẫn giữ). Nhập đúng → mở đủ tính năng.
+ * 🔒 Mã KHÔNG lưu dạng chữ trong mã nguồn / tài liệu: chỉ so sánh mã băm (`ACTIVATION_KEY_HASHES`). Bản ghi kích hoạt có
+ *    chữ ký (`h` + `sig`). Mã cũ không còn kích hoạt MỚI; máy / trường đã kích hoạt bằng mã cũ vẫn giữ hiệu lực.
  *
- * 🔒 Mã CDKEY kiểu cũ (mã chung) KHÔNG lưu dạng chữ trong mã nguồn: chỉ so sánh mã băm. Mã cũ không còn kích hoạt MỚI;
- *    máy / trường đã kích hoạt trước đó vẫn giữ hiệu lực (bản ghi có chữ ký `h` + `sig`).
+ * Còn sẵn (không dùng trong luồng thường): mã KÝ RIÊNG cho thư mục của một trường
+ *   LHHP2.<payload base64url>.<chữ ký ECDSA P-256 base64url>     payload = { f: mã thư mục, s: tên trường, i: ngày cấp, n: số cấp }
+ * do `scripts/license-issue.cjs` cấp — chặt hơn (mã trường này không dùng được cho trường khác), cần Apps Script 1.1.11.
  */
 import { LICENSE_PUBLIC_JWK } from './licensePublicKey';
 
@@ -25,8 +27,11 @@ export const OFFICIAL_CDKEY = MASKED_CDKEY;
 export const TRIAL_MAX_CLASSES = 1;
 export const TRIAL_MAX_STUDENTS_PER_CLASS = 10;
 
-// Mã băm của CDKEY kiểu cũ (chuẩn hoá: viết hoa, bỏ khoảng trắng/gạch nối) — chỉ để nhận lại bản ghi đã kích hoạt trước đây
-const VALID_KEY_HASHES = new Set<string>(['wc5v9pbrz1']);
+// Mã băm của mã bản quyền đang cấp (chuẩn hoá: viết hoa, bỏ khoảng trắng/gạch nối). Nhập đúng mã này → kích hoạt.
+// Đổi / thêm mã: tính cyrb53('LHHP|' + mã đã chuẩn hoá) rồi thêm vào đây. KHÔNG ghi mã dạng chữ ở bất kỳ đâu.
+const ACTIVATION_KEY_HASHES = new Set<string>(['23m8l8v5mue']);
+// Mọi mã băm được nhận trong BẢN GHI đã kích hoạt: mã đang cấp + mã cũ (máy / trường đã kích hoạt bằng mã cũ giữ hiệu lực)
+const VALID_KEY_HASHES = new Set<string>([...ACTIVATION_KEY_HASHES, 'wc5v9pbrz1']);
 
 /** Băm nhanh đồng bộ (cyrb53) */
 function cyrb53(str: string, seed = 0x1a2b): string {
@@ -43,7 +48,7 @@ function cyrb53(str: string, seed = 0x1a2b): string {
   return (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(36);
 }
 
-const OLD_KEY_MESSAGE = 'Mã CDKEY kiểu cũ không còn dùng để kích hoạt mới. Bản quyền nay được cấp riêng cho từng trường: hãy gửi "Mã trường" ở hộp này cho Thầy Nguyễn Thanh Liêm (0888.358.363) để nhận mã bản quyền của trường mình.';
+const INVALID_KEY_MESSAGE = 'Mã bản quyền không đúng. Vui lòng liên hệ Thầy Nguyễn Thanh Liêm (0888.358.363) để nhận mã kích hoạt bản quyền chính thức.';
 
 const compactKey = (raw: string) => (raw || '').normalize('NFKC').toUpperCase().replace(/[^A-Z0-9]/g, '');
 const keyHash = (raw: string) => cyrb53(`LHHP|${compactKey(raw)}`);
@@ -216,21 +221,35 @@ class LicenseService {
   }
 
   /**
-   * Synchronous entry kept for old callers. New activations need a school licence code, whose signature can only be
-   * checked asynchronously → use activateAsync. The old shared key no longer activates anything (machines and schools
-   * activated before this change keep their activation).
+   * Kích hoạt bằng mã bản quyền do tác giả cung cấp (không phân biệt hoa/thường, khoảng trắng, gạch nối).
+   * Mã dùng chung cho bản web và bản cài đặt, KHÔNG gắn với thư mục lưu trữ của trường: trường đổi thư mục, đổi mật khẩu
+   * quản trị… bản quyền vẫn giữ. Mã cũ không còn kích hoạt mới (máy / trường đã kích hoạt bằng mã cũ giữ hiệu lực).
    */
-  public activate(inputKey: string, _licensedTo?: string, _schoolName?: string): { success: boolean; message: string } {
-    if (parseLicenseCode(inputKey)) {
-      return { success: false, message: 'Hãy dán mã bản quyền vào hộp "Bản quyền phần mềm" để kích hoạt.' };
-    }
-    return { success: false, message: OLD_KEY_MESSAGE };
+  public activate(inputKey: string, licensedTo?: string, schoolName?: string): { success: boolean; message: string } {
+    const h = keyHash(inputKey);
+    if (!compactKey(inputKey) || !ACTIVATION_KEY_HASHES.has(h)) return { success: false, message: INVALID_KEY_MESSAGE };
+    const activatedAt = new Date().toISOString();
+    const record = {
+      isActivated: true, h, sig: signLicense(h, activatedAt), activatedAt,
+      licensedTo: licensedTo || 'Bản quyền chính thức',
+      schoolName: schoolName || '',
+    };
+    try { localStorage.setItem(LOCAL_LICENSE_STORAGE_KEY, JSON.stringify(record)); } catch (_) { /* ignore */ }
+    this.currentDetails = { isActivated: true, key: MASKED_CDKEY, kind: 'legacy', activatedAt, licensedTo: record.licensedTo, schoolName: record.schoolName };
+    this.notifyListeners();
+    return { success: true, message: 'Kích hoạt thành công! Phần mềm Lớp Học Hạnh Phúc đã mở khóa đầy đủ tính năng.' };
   }
 
-  /** Activate with a licence code issued by the author for this school's Google Drive folder */
-  public async activateAsync(inputKey: string, licensedTo?: string): Promise<{ success: boolean; message: string }> {
+  /**
+   * Same as activate(), and additionally accepts a code signed for one school folder (LHHP2.…) — a stricter kind of
+   * licence the author can issue with scripts/license-issue.cjs; not used in the normal flow.
+   */
+  public async activateAsync(inputKey: string, licensedTo?: string, schoolName?: string): Promise<{ success: boolean; message: string }> {
     const parsed = parseLicenseCode(inputKey);
-    if (!parsed) return { success: false, message: compactKey(inputKey) ? OLD_KEY_MESSAGE : 'Vui lòng dán mã bản quyền.' };
+    if (!parsed) {
+      if (!compactKey(inputKey)) return { success: false, message: 'Vui lòng nhập mã bản quyền.' };
+      return this.activate(inputKey, licensedTo, schoolName);
+    }
     const folderId = currentLicenseFolderId();
     if (!folderId) {
       return { success: false, message: 'Máy này chưa kết nối thư mục Google Drive của trường. Hãy kết nối (Dữ liệu → Google Drive của trường) rồi nhập mã bản quyền.' };
@@ -243,7 +262,7 @@ class LicenseService {
       return { success: false, message: 'Mã bản quyền không hợp lệ (chữ ký không đúng). Hãy sao chép lại đầy đủ mã do tác giả gửi, hoặc liên hệ Thầy Nguyễn Thanh Liêm (0888.358.363).' };
     }
     if (payload.f !== folderId) {
-      return { success: false, message: `Mã bản quyền này được cấp cho trường khác${payload.s ? ` (${payload.s})` : ''}, không dùng được cho thư mục Google Drive đang kết nối. Hãy gửi "Mã trường" ở hộp này cho tác giả để nhận đúng mã.` };
+      return { success: false, message: `Mã bản quyền này được cấp riêng cho trường khác${payload.s ? ` (${payload.s})` : ''}, không dùng được cho thư mục Google Drive đang kết nối.` };
     }
     const activatedAt = new Date().toISOString();
     const record = { isActivated: true, v: 2, code: parsed.code, activatedAt, licensedTo: licensedTo || 'Bản quyền của trường', schoolName: payload.s || '' };

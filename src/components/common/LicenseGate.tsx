@@ -52,20 +52,16 @@ export const LicenseGate: React.FC<Props> = ({ feature, conn, standalone = false
     if (status === 'unknown' && currentLicenseFolderId()) return <>{children}</>;
   }
 
-  const schoolCode = standalone ? String(conn?.folderId || '') : currentLicenseFolderId();
   return (
     <div className="min-h-[50vh] flex items-center justify-center p-4">
       <div className="w-full max-w-lg rounded-2xl border border-amber-300 bg-white shadow-sm p-5 space-y-3 text-center">
         <div className="mx-auto w-12 h-12 rounded-2xl bg-amber-100 text-amber-800 flex items-center justify-center"><Lock className="w-6 h-6" /></div>
-        <h2 className="text-lg font-black text-slate-900">{feature} cần bản quyền của trường</h2>
+        <h2 className="text-lg font-black text-slate-900">{feature} cần kích hoạt bản quyền</h2>
         <p className="text-sm font-semibold text-slate-700">
           Phần mềm đang ở chế độ dùng thử nên mục này bị khóa. {standalone
             ? 'Quản trị nhà trường kích hoạt bản quyền trong phần mềm là trang này dùng được ngay.'
             : 'Quản trị nhà trường kích hoạt bản quyền một lần là mọi máy của trường dùng được.'}
         </p>
-        {schoolCode && (
-          <p className="text-xs text-slate-700">Mã trường: <span className="font-bold break-all select-all text-slate-900">{schoolCode}</span></p>
-        )}
         {!standalone && (
           <button type="button" onClick={() => window.dispatchEvent(new CustomEvent(LICENSE_REQUIRED_EVENT, { detail: { feature } }))}
             className="no-hover-fx h-11 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-black inline-flex items-center justify-center gap-2 cursor-pointer">
