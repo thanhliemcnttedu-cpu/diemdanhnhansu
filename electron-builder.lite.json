@@ -13,7 +13,6 @@
   "asar": true,
   "compression": "maximum",
   "electronLanguages": ["vi", "en-US"],
-  "electronDist": "node_modules/electron/dist",
   "npmRebuild": false,
   "nodeGypRebuild": false,
   "includePdb": false,

@@ -52,7 +52,11 @@ const sizeOf = (dir) => fs.readdirSync(dir, { withFileTypes: true })
 console.log(`  Ứng dụng: ${(sizeOf(stage) / 1048576).toFixed(1)} MB (Electron ${electronVersion})`);
 
 console.log('▶ Đóng gói setup.exe (electron-builder)…');
-run(`npx electron-builder --win --x64 --config electron-builder.lite.json -c.electronVersion=${electronVersion}`);
+// Reuse the Electron already unpacked in node_modules when it is there (no second download); on a fresh
+// machine (GitHub Actions) that folder may not exist yet → let electron-builder download Electron itself.
+const electronDist = path.join(root, 'node_modules', 'electron', 'dist');
+const distArg = fs.existsSync(path.join(electronDist, 'electron.exe')) ? ' -c.electronDist=node_modules/electron/dist' : '';
+run(`npx electron-builder --win --x64 --publish never --config electron-builder.lite.json -c.electronVersion=${electronVersion}${distArg}`);
 
 const out = path.join(root, 'release-lite');
 fs.readdirSync(out).filter(f => f.endsWith('.exe')).forEach(f => {
