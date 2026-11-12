@@ -1,11 +1,12 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   BookOpen, PlayCircle, FolderOpen, Link2, FileText, FileDown, QrCode, ExternalLink, Pencil, Trash2, Plus, Save, X,
-  Loader2, CheckCircle2, AlertTriangle, Copy, Check, RefreshCw, Phone, MessageCircle, Globe, Upload,
+  Loader2, CheckCircle2, AlertTriangle, Copy, Check, RefreshCw, Phone, MessageCircle, Globe, Upload, KeyRound, Sparkles,
 } from 'lucide-react';
 import { useClassroom } from '../../context/ClassroomContext';
 import { APP_AUTHOR_INFO } from '../../data/initialData';
 import { buildQrMatrix, QrSvg } from './staff/StaffCheckInQr';
+import { OPEN_ZALO_QR_EVENT } from '../modals/ZaloQrModal';
 import {
   userGuideService, normalizeGuideUrl, GUIDE_KIND_META, GUIDE_PDF_MAX_MB,
   type GuideItem, type GuideKind,
@@ -32,7 +33,7 @@ const emptyDraft = (kind: GuideKind = 'video'): Draft => ({ id: '', kind, title:
 const hostOf = (url?: string) => { try { return url ? new URL(url).host.replace(/^www\./, '') : ''; } catch (_) { return ''; } };
 
 export const UserGuideView: React.FC = () => {
-  const { currentUser, canManageAccounts } = useClassroom();
+  const { currentUser, canManageAccounts, setIsCdKeyModalOpen, setIsRegistrationModalOpen, isCdKeyActivated } = useClassroom();
   const canEdit = Boolean(canManageAccounts);
   const [items, setItems] = useState<GuideItem[]>(() => userGuideService.getCached().items);
   const [shared, setShared] = useState(userGuideService.isShared());
@@ -309,7 +310,37 @@ export const UserGuideView: React.FC = () => {
             empty={loading ? 'Đang tải…' : canEdit ? 'Chưa có tệp hướng dẫn. Bấm "Thêm tệp / PDF" để tải tệp PDF lên hoặc dán link tệp.' : 'Nhà trường chưa đưa tệp hướng dẫn nào.'} />
         </div>
 
-        <aside className="rounded-2xl border border-slate-200 bg-white p-4 space-y-3">
+        <aside className="space-y-3">
+          {/* Bản quyền • Đăng ký sử dụng • Hỗ trợ qua Zalo (chuyển từ thanh bên vào đây) */}
+          <div className="rounded-2xl border border-slate-200 bg-white p-4 space-y-2">
+            <h3 className="text-sm font-black text-slate-900 uppercase">Bản quyền & đăng ký</h3>
+            <button type="button" onClick={() => setIsCdKeyModalOpen(true)}
+              className={`no-hover-fx w-full px-3 py-2.5 rounded-xl border text-left flex items-center gap-2.5 cursor-pointer ${isCdKeyActivated ? 'border-emerald-300 bg-emerald-50 hover:bg-emerald-100' : 'border-amber-300 bg-amber-50 hover:bg-amber-100'}`}>
+              <KeyRound className={`w-5 h-5 shrink-0 ${isCdKeyActivated ? 'text-emerald-700' : 'text-amber-800'}`} />
+              <span className="min-w-0">
+                <span className="block text-sm font-black text-slate-900">{isCdKeyActivated ? 'Bản quyền PRO' : 'Kích hoạt CDKEY'}</span>
+                <span className="block text-xs text-slate-700">{isCdKeyActivated ? 'Đã kích hoạt — xem thông tin bản quyền' : 'Nhập CDKEY để mở đầy đủ tính năng'}</span>
+              </span>
+            </button>
+            <button type="button" onClick={() => setIsRegistrationModalOpen(true)}
+              className="no-hover-fx w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-left flex items-center gap-2.5 cursor-pointer">
+              <Sparkles className="w-5 h-5 shrink-0 text-indigo-700" />
+              <span className="min-w-0">
+                <span className="block text-sm font-black text-slate-900">Đăng ký sử dụng</span>
+                <span className="block text-xs text-slate-700">Gửi đơn đăng ký dùng phần mềm, bản quyền cho trường</span>
+              </span>
+            </button>
+            <button type="button" onClick={() => window.dispatchEvent(new Event(OPEN_ZALO_QR_EVENT))}
+              className="no-hover-fx w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-left flex items-center gap-2.5 cursor-pointer">
+              <MessageCircle className="w-5 h-5 shrink-0 text-sky-700" />
+              <span className="min-w-0">
+                <span className="block text-sm font-black text-slate-900">Hỗ trợ qua Zalo</span>
+                <span className="block text-xs text-slate-700">Mở mã QR Zalo để nhắn tin với tác giả</span>
+              </span>
+            </button>
+          </div>
+
+          <div className="rounded-2xl border border-slate-200 bg-white p-4 space-y-3">
           <h3 className="text-sm font-black text-slate-900 uppercase">Tác giả & hỗ trợ</h3>
           <div>
             <p className="text-xs font-bold text-slate-600">Tác giả phần mềm</p>
@@ -333,6 +364,7 @@ export const UserGuideView: React.FC = () => {
             <p className="text-xs text-slate-700">Quét mã bằng Zalo để nhắn tin hỗ trợ trực tiếp với tác giả.</p>
           </div>
           {!canEdit && <p className="text-xs text-slate-600">Cần thêm tài liệu hướng dẫn? Hãy báo quản trị nhà trường để đưa lên mục này.</p>}
+          </div>
         </aside>
       </div>
     </div>

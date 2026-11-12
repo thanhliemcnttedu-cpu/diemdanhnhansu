@@ -24,3 +24,4 @@
 - **Quản trị** (`canManageAccounts`): thêm / cập nhật / xóa 5 loại — video, thư mục, trang, tệp (link), tệp PDF tải lên. Link chỉ nhận http(s) (`normalizeGuideUrl`).
 - **Nơi lưu** (không sửa Apps Script): thư mục Drive dùng chung của trường — `huongdan_sudung.json` (danh mục) và `huongdan_tep_<id>.json` (PDF dạng base64, tối đa 8 MB/tệp). Chưa kết nối Drive → chỉ lưu trong trình duyệt máy đó và có cảnh báo. Apps Script không có lệnh xóa tệp → xóa mục thì ghi đè tệp PDF bằng tệp rỗng.
 - Các tệp này là `.json` trong thư mục dùng chung nên nằm trong bản sao lưu toàn hệ thống và được khôi phục cùng.
+- Ba mục **Bản quyền PRO / Kích hoạt CDKEY**, **Đăng ký sử dụng**, **Hỗ trợ qua Zalo** không còn ở nhóm Hệ thống của thanh bên; nay là 3 nút trong cột phải của màn Hướng dẫn sử dụng (khối "Bản quyền & đăng ký"), vẫn mở đúng các hộp cũ (`setIsCdKeyModalOpen`, `setIsRegistrationModalOpen`, `OPEN_ZALO_QR_EVENT`).

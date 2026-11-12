@@ -356,9 +356,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
               { key: 'accounts', label: canManageAccounts ? 'Tài khoản & CSDL' : 'Đăng nhập quản trị', icon: ShieldCheck, onClick: () => (canManageAccounts ? setIsAccountManagerOpen(true) : setIsAuthModalOpen(true)) },
               ...(!isMacroAdmin ? [{ key: 'quiz', label: 'Nơi lưu câu hỏi', icon: BookOpen, onClick: () => window.dispatchEvent(new Event(OPEN_QUIZ_STORAGE_EVENT)) }] : []),
               { key: 'password', label: 'Đổi mật khẩu', icon: Lock, onClick: () => window.dispatchEvent(new Event(OPEN_CHANGE_PASSWORD_EVENT)) },
-              { key: 'cdkey', label: isCdKeyActivated ? 'Bản quyền PRO' : 'Kích hoạt CDKEY', icon: KeyRound, onClick: () => setIsCdKeyModalOpen(true) },
-              { key: 'register', label: 'Đăng ký sử dụng', icon: Sparkles, onClick: () => setIsRegistrationModalOpen(true) },
-              { key: 'zalo', label: 'Hỗ trợ qua Zalo', icon: MessageCircle, onClick: () => window.dispatchEvent(new Event(OPEN_ZALO_QR_EVENT)) },
             ];
             type Row = { key: string; label: string; icon: React.ComponentType<{ className?: string }>; badge?: string; badgeType?: string; active: boolean; onClick: () => void };
             const groups: Array<{ key: string; label: string; icon: React.ComponentType<{ className?: string }>; tone: string; rows: Row[] }> = [
