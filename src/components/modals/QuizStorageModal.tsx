@@ -4,6 +4,7 @@ import { useClassroom } from '../../context/ClassroomContext';
 import { quizBankStore, countCustom, isPersonalQuizAccount, supportsLocalFolder, type DriveDiagnosis } from '../../services/quizBankStore';
 import { googleDriveService } from '../../services/googleDriveService';
 import { isViewOnly } from '../../utils/viewOnlyMode';
+import { FolderPathNote } from '../common/FolderPathNote';
 import type { UserAccount } from '../../types';
 
 /** Mở hộp "Nơi lưu câu hỏi": window.dispatchEvent(new Event(OPEN_QUIZ_STORAGE_EVENT)) */
@@ -305,6 +306,7 @@ export const QuizStorageModal: React.FC = () => {
             <p className="text-sm text-slate-600">
               Chọn một thư mục (ví dụ <em>Tài liệu › Câu hỏi lớp học</em>, hoặc thư mục OneDrive / USB). Mỗi lần lưu, phần mềm tự ghi tệp <code>{quizBankStore.remoteFileName(username)}</code> vào thư mục đó; trên máy mới, chọn lại đúng thư mục là có lại bộ câu hỏi.
             </p>
+            {local?.mode === 'folder' && local.folderName && <FolderPathNote storageKey={`quiz:${username}`} folderName={local.folderName} />}
             {local?.lastError && <p className="text-sm text-rose-700 font-bold">⚠ {local.lastError}</p>}
             {local?.mode === 'folder' && local.needsPermission && <p className="text-sm text-amber-800 font-bold">Trình duyệt cần bạn cho phép lại quyền ghi vào thư mục (sau khi mở lại trình duyệt).</p>}
             <div className="flex flex-wrap gap-2 pt-1">

@@ -671,7 +671,54 @@ Người bị khóa sẽ không điểm danh / sửa điểm danh được và n
   const norm = (t: string) => t.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/gi, 'd').toLowerCase();
   const rows = staff.filter(s => !s.disabled).map(s => ({ s, r: records[s.code] }))
     .filter(x => filter === 'all' || (filter === 'missing' ? !x.r : x.r?.status === filter))
-    .filter(x => !q || norm(`${x.s.name} ${x.s.code} ${x.s.position || ''} ${x.s.dept || ''} ${x.s.currentCccd || x.s.cccdLast4 || ''}`).includes(norm(q)));
+    .filter(x => !q || norm(`${x.s.name} ${x.s.code} ${x.s.position || ''} ${x.s.dept || ''} ${x.s.currentCccd || x.s.cccdLast4 || ''}`).includes(norm(q)))
+    // Tự sắp xếp A–Z theo TÊN (từ cuối của họ tên, kiểu danh sách Việt Nam), trùng tên thì theo cả họ tên
+    .sort((a, b) => {
+      const given = (n: string) => n.trim().split(/\s+/).pop() || '';
+      return given(a.s.name).localeCompare(given(b.s.name), 'vi', { sensitivity: 'base' })
+        || a.s.name.trim().localeCompare(b.s.name.trim(), 'vi', { sensitivity: 'base' });
+    });
+
+  /**
+   * 📤 Xuất danh sách trạng thái điểm danh của NGÀY ĐANG XEM: các dòng đã tích chọn (nếu có), không thì toàn bộ
+   * danh sách đang hiển thị theo bộ lọc / ô tìm. Giữ đúng thứ tự A–Z trên màn hình.
+   */
+  const exportDayList = () => {
+    const pickedRows = rows.filter(x => picked.includes(x.s.code));
+    const list = pickedRows.length ? pickedRows : rows;
+    if (!list.length) { setLockMsg({ type: 'err', text: 'Không có nhân sự nào trong danh sách để xuất.' }); return; }
+    const filterLabel = filter === 'all' ? 'Tất cả trạng thái' : STAFF_STATUS_META[filter].label;
+    const scope = pickedRows.length ? `${pickedRows.length} nhân sự đã chọn` : `${filterLabel}${q.trim() ? ` • tìm "${q.trim()}"` : ''}`;
+    const head = ['STT', 'Họ và tên', 'Chức vụ', 'Tổ / bộ phận', 'Số CCCD', 'Trạng thái', 'Giờ điểm danh', 'Lần', 'Ghi chú', 'Khóa'];
+    const body = list.map(({ s, r }, i) => [
+      i + 1,
+      s.name,
+      s.position || '',
+      s.dept || '',
+      s.currentCccd && showCccd ? s.currentCccd : (s.cccdLast4 ? `••••••••${s.cccdLast4}` : ''),
+      STAFF_STATUS_META[r ? r.status : 'missing'].label,
+      r?.at ? timeHMS(r.at) : '',
+      r ? attemptOf(r) : '',
+      [r?.note || '', systemNoteOf(r)].filter(Boolean).join(' • '),
+      isLockedFor(dayLock, s.code) ? 'Đã khóa' : '',
+    ]);
+    const count = (k: string) => list.filter(x => (x.r ? x.r.status : 'missing') === k).length;
+    const aoa: (string | number)[][] = [
+      ['DANH SÁCH TRẠNG THÁI ĐIỂM DANH GIÁO VIÊN – NHÂN VIÊN'],
+      [`${weekdayLabel(date)}, ngày ${shortDateLabel(date)}/${date.slice(0, 4)} • ${scope} • ${list.length} người`],
+      [STATUS_ORDER.map(k => `${STAFF_STATUS_META[k].label}: ${count(k)}`).join(' • ')],
+      [],
+      head,
+      ...body,
+    ];
+    const ws = XLSX.utils.aoa_to_sheet(aoa);
+    ws['!cols'] = [{ wch: 5 }, { wch: 28 }, { wch: 16 }, { wch: 18 }, { wch: 16 }, { wch: 30 }, { wch: 14 }, { wch: 6 }, { wch: 40 }, { wch: 10 }];
+    ws['!merges'] = [0, 1, 2].map(rr => ({ s: { r: rr, c: 0 }, e: { r: rr, c: head.length - 1 } }));
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Diem danh');
+    XLSX.writeFile(wb, `DiemDanh_NhanSu_${date}${pickedRows.length ? '_da_chon' : filter === 'all' ? '' : `_${filter}`}.xlsx`);
+    setLockMsg({ type: 'ok', text: `Đã xuất danh sách ${list.length} người (${scope}) của ${dayText}.` });
+  };
   return (
     <div className="rounded-3xl bg-white border border-slate-200 overflow-hidden">
       <div className="px-4 pt-4 flex flex-wrap items-center gap-2">
@@ -696,6 +743,11 @@ Người bị khóa sẽ không điểm danh / sửa điểm danh được và n
             {k === 'all' ? 'Tất cả' : STAFF_STATUS_META[k].short}
           </button>
         ))}
+        <button type="button" onClick={exportDayList} disabled={rows.length === 0}
+          className="no-hover-fx h-8 px-3 rounded-lg text-sm font-black bg-emerald-700 hover:bg-emerald-800 text-white inline-flex items-center gap-1.5 whitespace-nowrap disabled:opacity-50"
+          title={picked.length ? 'Xuất Excel các nhân sự đang tích chọn của ngày đang xem' : 'Xuất Excel danh sách đang hiển thị (theo bộ lọc và ô tìm) của ngày đang xem'}>
+          <Download className="w-4 h-4" /> {rows.some(x => picked.includes(x.s.code)) ? `Xuất danh sách (${rows.filter(x => picked.includes(x.s.code)).length} đã chọn)` : `Xuất danh sách (${rows.length})`}
+        </button>
       </div>
       {isPast && (
         <p className="mx-4 mt-3 rounded-2xl border border-amber-300 bg-amber-50 px-3 py-2.5 text-sm text-amber-950" role="status">

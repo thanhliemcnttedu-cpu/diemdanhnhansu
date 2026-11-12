@@ -10,6 +10,7 @@ import { useClassroom } from '../../context/ClassroomContext';
 import { localSystemMirrorService, SYSTEM_ONE_FILE_DIR, SYSTEM_ONE_FILE_NAME, SYSTEM_MIRROR_DIR, type LocalMirrorSummary } from '../../services/localSystemMirrorService';
 import { driveBackupService } from '../../services/driveBackupService';
 import { schoolDriveDbService } from '../../services/schoolDriveDbService';
+import { FolderPathNote } from '../common/FolderPathNote';
 
 interface DataStorageLocationModalProps {
   isOpen: boolean;
@@ -288,6 +289,10 @@ export const DataStorageLocationModal: React.FC<DataStorageLocationModalProps> =
                         <p className="font-bold text-slate-800">Chưa chọn thư mục — phần mềm chưa ghi tệp nào ra ổ đĩa của máy.</p>
                       )}
                     </div>
+
+                    {local.picked && local.folderName && (
+                      <FolderPathNote storageKey={`data:${currentUser?.username || 'guest'}`} folderName={local.folderName} />
+                    )}
 
                     <div className="flex flex-wrap gap-2">
                       {local.picked && local.needsPermission && (
