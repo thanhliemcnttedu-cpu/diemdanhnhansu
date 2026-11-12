@@ -1,0 +1,98 @@
+# Dựng BỘ CÀI ĐẶT GỌN cho Windows trên máy chủ sạch của GitHub rồi đưa lên mục Releases.
+# Bộ cài không đi qua máy tính cá nhân nào → người dùng tải thẳng từ link của bản phát hành.
+#
+# Cách chạy: tăng "version" trong package.json, commit, rồi đẩy thẻ  desktop-v<version>
+#   (ví dụ: git tag desktop-v1.1.0 && git push lhhp desktop-v1.1.0)
+# hoặc bấm "Run workflow" trong tab Actions.
+name: Bo cai dat Desktop
+
+on:
+  push:
+    tags:
+      - 'desktop-v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: desktop-installer
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Doc phien ban
+        id: ver
+        shell: bash
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "tag=desktop-v$VERSION" >> "$GITHUB_OUTPUT"
+          if [ "$GITHUB_REF_TYPE" = "tag" ] && [ "$GITHUB_REF_NAME" != "desktop-v$VERSION" ]; then
+            echo "::error::The $GITHUB_REF_NAME khong khop version $VERSION trong package.json"
+            exit 1
+          fi
+
+      - name: Cai goi
+        run: npm ci
+
+      - name: Dung bo cai
+        run: npm run package:win:lite
+
+      - name: Ma bam SHA-256
+        id: hash
+        shell: bash
+        run: |
+          FILE="release-lite/QTCSDL_Truong_V${{ steps.ver.outputs.version }}.exe"
+          test -f "$FILE"
+          SHA=$(sha256sum "$FILE" | cut -d' ' -f1)
+          SIZE=$(stat -c %s "$FILE")
+          echo "file=$FILE" >> "$GITHUB_OUTPUT"
+          echo "sha=$SHA" >> "$GITHUB_OUTPUT"
+          echo "size=$SIZE" >> "$GITHUB_OUTPUT"
+          echo "$SHA  $(basename "$FILE")" > "release-lite/SHA256.txt"
+          echo "### $(basename "$FILE")" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Dung luong: $SIZE byte" >> "$GITHUB_STEP_SUMMARY"
+          echo "- SHA-256: \`$SHA\`" >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: QTCSDL_Truong_V${{ steps.ver.outputs.version }}
+          path: |
+            ${{ steps.hash.outputs.file }}
+            release-lite/SHA256.txt
+          retention-days: 30
+
+      - name: Dua len Releases
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="${{ steps.ver.outputs.tag }}"
+          VERSION="${{ steps.ver.outputs.version }}"
+          cat > notes.md <<EOF
+          Bộ cài đặt Windows (64-bit) của phần mềm Lớp Học Hạnh Phúc – bản $VERSION.
+
+          - Tải tệp **QTCSDL_Truong_V$VERSION.exe** bên dưới rồi chạy để cài. Cài đè lên bản cũ được, dữ liệu giữ nguyên.
+          - Từ bản 1.1.0, phần mềm tự cập nhật giao diện, không cần cài lại.
+          - Bộ cài được dựng tự động trên máy chủ GitHub từ mã nguồn của kho này.
+
+          SHA-256: \`${{ steps.hash.outputs.sha }}\`
+          EOF
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" "${{ steps.hash.outputs.file }}" release-lite/SHA256.txt --clobber
+          else
+            gh release create "$TAG" "${{ steps.hash.outputs.file }}" release-lite/SHA256.txt \
+              --title "Lớp Học Hạnh Phúc $VERSION – bộ cài đặt Windows" \
+              --notes-file notes.md --latest --target "$GITHUB_SHA"
+          fi

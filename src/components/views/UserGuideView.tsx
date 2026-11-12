@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { DesktopVersionPanel } from '../common/DesktopUpdate';
 import {
   BookOpen, PlayCircle, FolderOpen, Link2, FileText, FileDown, QrCode, ExternalLink, Pencil, Trash2, Plus, Save, X,
   Loader2, CheckCircle2, AlertTriangle, Copy, Check, RefreshCw, Phone, MessageCircle, Globe, Upload, KeyRound, Sparkles,
@@ -336,6 +337,7 @@ export const UserGuideView: React.FC = () => {
           </div>
           {!canEdit && <p className="text-xs text-slate-600">Cần thêm tài liệu hướng dẫn? Hãy báo quản trị nhà trường để đưa lên mục này.</p>}
           </div>
+          <DesktopVersionPanel />
           <div className="space-y-2 pt-4 border-t border-slate-200">
             <h3 className="text-sm font-black text-slate-900 uppercase">Bản quyền & đăng ký</h3>
             <button type="button" onClick={() => setIsCdKeyModalOpen(true)}

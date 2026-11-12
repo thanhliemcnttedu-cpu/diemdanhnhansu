@@ -20,7 +20,7 @@
   "win": {
     "target": [{ "target": "nsis", "arch": ["x64"] }],
     "icon": "desktop-lite/app/icon.ico",
-    "artifactName": "LopHocHanhPhuc_Setup_${version}.exe",
+    "artifactName": "QTCSDL_Truong_V${version}.exe",
     "signAndEditExecutable": true
   },
   "nsis": {

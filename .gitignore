@@ -31,7 +31,10 @@ data/database_local_supabase_sim/sim_config.json
 dist-server/
 release/
 release-lite/
+release-ui/
 desktop-lite/app/
+# Private key that signs desktop UI updates: NEVER commit
+desktop-lite/keys/
 
 # Local AI tooling state
 .claude-flow/

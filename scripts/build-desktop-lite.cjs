@@ -30,6 +30,13 @@ fs.cpSync(path.join(root, 'dist'), path.join(stage, 'dist'), { recursive: true }
 fs.copyFileSync(path.join(root, 'desktop-lite', 'main.cjs'), path.join(stage, 'main.cjs'));
 fs.copyFileSync(path.join(root, 'desktop-lite', 'preload.cjs'), path.join(stage, 'preload.cjs'));
 fs.copyFileSync(path.join(root, 'public', 'icon.ico'), path.join(stage, 'icon.ico'));
+// Hot update of the UI (desktop-lite/updater.cjs): updater + channel + author's public key + version of the bundled UI
+fs.copyFileSync(path.join(root, 'desktop-lite', 'updater.cjs'), path.join(stage, 'updater.cjs'));
+fs.copyFileSync(path.join(root, 'desktop-lite', 'update-config.json'), path.join(stage, 'update-config.json'));
+const updateKey = path.join(root, 'desktop-lite', 'update-public-key.pem');
+if (fs.existsSync(updateKey)) fs.copyFileSync(updateKey, path.join(stage, 'update-public-key.pem'));
+else console.warn('⚠ Chưa có desktop-lite/update-public-key.pem (chạy "npm run desktop:keygen") → bộ cài này KHÔNG tự cập nhật được.');
+fs.writeFileSync(path.join(stage, 'dist', 'ui-version.json'), JSON.stringify({ version: rootPkg.version, builtAt: new Date().toISOString() }));
 fs.writeFileSync(path.join(stage, 'package.json'), JSON.stringify({
   name: 'lop-hoc-hanh-phuc-desktop',
   productName: 'LopHocHanhPhuc',
