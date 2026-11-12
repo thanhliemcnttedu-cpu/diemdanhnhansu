@@ -56,6 +56,8 @@
 var FOLDER_ID = "__FOLDER_ID__";
 var TARGET_FILENAME = "du_lieu_lop_hoc_hanh_phuc.json";
 var REPORT_PREFIX = "bc_";
+// 1.1.10: hàm `capQuyenGuiThu` — chủ tài khoản Google chạy 1 lần trong trình soạn mã để Google hiện hộp xin quyền gửi email
+//         (chạy một hàm không dùng MailApp thì Google KHÔNG hỏi quyền này; triển khai lại cũng không hỏi).
 // 1.1.9: KHÔI PHỤC MẬT KHẨU QUA EMAIL — mỗi tài khoản khai báo email khôi phục (`setRecoveryEmail`, phải đúng mật khẩu);
 //        quên mật khẩu: `requestPasswordReset` gửi MÃ 6 SỐ (15 phút, tối đa 5 lần nhập sai, 5 lần gửi / ngày, cách nhau 1 phút)
 //        bằng MailApp của chính tài khoản Google chủ script; `confirmPasswordReset` đặt mật khẩu mới.
@@ -80,7 +82,7 @@ var REPORT_PREFIX = "bc_";
 //        rồi mã hóa lại (healStaffCccdHashes) — khi đăng nhập, khi Quản trị / BGH mở hoặc lưu danh sách nhân sự.
 // QUY TẮC ĐẶT TÊN PHIÊN BẢN (từ 11/2026): "Phiên bản A.B.C" — mỗi lần sửa mã tăng C thêm 1;
 // C tối đa 20: sau 1.1.20 là 1.2.1, sau 1.2.20 là 1.3.1… Các bản cũ dạng "4.x" (4.1 → 4.12) được coi là cũ hơn 1.1.2.
-var SCRIPT_VERSION = "1.1.9";
+var SCRIPT_VERSION = "1.1.10";
 // Thư mục của yêu cầu đang xử lý (để verifyUser đọc được danh sách nhân sự khi đăng nhập bằng CCCD)
 var CTX_FOLDER = null;
 
@@ -740,6 +742,17 @@ function handleConfirmPasswordReset(folder, payload) {
     writeResetState(u.username, st);
     return { success: true, message: "Đã đặt lại mật khẩu. Hãy đăng nhập bằng mật khẩu mới." };
   } finally { try { lock.releaseLock(); } catch (_) {} }
+}
+
+/**
+ * ✉️ CẤP QUYỀN GỬI EMAIL (làm 1 lần): trong trình soạn mã, chọn hàm này ở ô chọn hàm rồi bấm Chạy.
+ * Google hiện hộp "Cần được cấp quyền" → Xem lại quyền → chọn tài khoản → Nâng cao → Đi tới dự án → tích CHỌN TẤT CẢ → Cho phép.
+ * Chạy xong, Nhật ký thực thi ghi "ĐÃ CÓ QUYỀN GỬI EMAIL". Hàm chỉ hỏi số thư còn gửi được trong ngày, không gửi thư nào.
+ */
+function capQuyenGuiThu() {
+  var left = MailApp.getRemainingDailyQuota();
+  Logger.log("ĐÃ CÓ QUYỀN GỬI EMAIL. Hôm nay còn gửi được " + left + " thư. Chức năng Quên mật khẩu của phần mềm đã dùng được.");
+  return left;
 }
 
 /**

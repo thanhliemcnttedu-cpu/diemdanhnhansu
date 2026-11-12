@@ -52,11 +52,11 @@ async function call(body: Record<string, unknown>, fallback: string): Promise<Re
         message: needAuth
           ? [
             'Apps Script của trường chưa được cấp quyền gửi email. Người giữ tài khoản Google của trường làm 1 lần:',
-            '1. Mở dự án Apps Script của trường (script.google.com).',
-            '2. Trên thanh công cụ, ở ô chọn hàm, chọn hàm "newSalt" rồi bấm Chạy.',
-            '3. Hộp "Cần được cấp quyền" hiện ra → Xem lại quyền → chọn tài khoản Google của trường → Nâng cao → Đi tới dự án (không an toàn) → Cho phép.',
-            '4. Quay lại đây bấm "Gửi mã về email khôi phục" lần nữa.',
-            'Nếu vẫn báo lỗi: Triển khai → Quản lý các tùy chọn triển khai → bút chì → Phiên bản mới → Triển khai.',
+            '1. Cập nhật Apps Script lên phiên bản 1.1.10 (Dữ liệu → Google Drive của trường & Apps Script → Cài đặt / cập nhật Apps Script).',
+            '2. Trong trình soạn mã Apps Script, ở ô chọn hàm chọn "capQuyenGuiThu" rồi bấm Chạy.',
+            '3. Hộp "Cần được cấp quyền" → Xem lại quyền → chọn tài khoản Google của trường → Nâng cao → Đi tới dự án (không an toàn) → tích CHỌN TẤT CẢ các quyền → Cho phép.',
+            '4. Nhật ký thực thi ghi "ĐÃ CÓ QUYỀN GỬI EMAIL" là xong. Quay lại đây bấm "Gửi mã về email khôi phục".',
+            'Lưu ý: chỉ triển khai lại hoặc chạy hàm khác thì Google không hỏi quyền gửi email.',
           ].join('\n')
           : `Không gửi được email: ${String(d.message || '').slice(0, 200)}`,
       };
