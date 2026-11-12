@@ -45,10 +45,18 @@ const isStaffCheckInRoute = typeof window !== 'undefined'
   && (/^\/diemdanh\/?$/i.test(window.location.pathname) || /^#\/?diemdanh/i.test(window.location.hash));
 
 if (isStaffCheckInRoute) {
-  import('./components/views/staff/StaffCheckInPage').then(({ StaffCheckInPage }) => {
+  Promise.all([
+    import('./components/views/staff/StaffCheckInPage'),
+    import('./components/common/LicenseGate'),
+    import('./services/staffAttendanceService'),
+  ]).then(([{ StaffCheckInPage }, { LicenseGate }, { staffAttendanceService }]) => {
+    // Staff attendance needs the school licence; the page only locks when the school's Apps Script says there is none
+    const conn = staffAttendanceService.resolveConnection();
     createRoot(document.getElementById('root')!).render(
       <StrictMode>
-        <StaffCheckInPage />
+        <LicenseGate feature="Chấm công nhân sự" standalone conn={conn}>
+          <StaffCheckInPage />
+        </LicenseGate>
       </StrictMode>,
     );
   });

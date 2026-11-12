@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { requireLicense } from '../../utils/licenseGate';
 import { useClassroom } from '../../context/ClassroomContext';
 import { 
   Sparkles, Download, Printer, Settings, Check, 
@@ -449,6 +450,7 @@ export const InfographicView: React.FC = () => {
 
   // Export PNG
   const handleExportPng = async (which: 'page1' | 'page2' | 'page3' | 'all' = 'all') => {
+    if (!requireLicense('Xuất ảnh infographic')) return;
     try {
       setIsExportingPng(true);
 

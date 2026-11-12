@@ -1,4 +1,5 @@
 import { CoinIcon } from '../common/CoinIcon';
+import { writeReportXlsx } from '../../utils/licensedExport';
 import React, { useState, useRef } from 'react';
 import * as XLSX from 'xlsx';
 import { Student, Classroom, TeacherProfile } from '../../types';
@@ -153,7 +154,7 @@ export const ExportStudentListModal: React.FC<ExportStudentListModalProps> = ({
     XLSX.utils.book_append_sheet(wb, ws, sheetName);
 
     const fileName = `Danh_Sach_Hoc_Sinh_Lop_${classroom.name.replace(/\s+/g, '_')}_${today.getFullYear()}${String(today.getMonth() + 1).padStart(2, '0')}${String(today.getDate()).padStart(2, '0')}.xlsx`;
-    XLSX.writeFile(wb, fileName);
+    writeReportXlsx(wb, fileName);
 
     confetti({ particleCount: 45, spread: 60, origin: { y: 0.7 } });
   };

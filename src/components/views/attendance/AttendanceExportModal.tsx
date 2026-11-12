@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import { writeReportXlsx } from '../../../utils/licensedExport';
 import * as XLSX from 'xlsx';
 import { 
   X, Download, FileSpreadsheet, FileText, Printer, 
@@ -366,7 +367,7 @@ export const AttendanceExportModal: React.FC<AttendanceExportModalProps> = ({
     );
     XLSX.utils.book_append_sheet(wb, wsMeta, 'TongHop_4_Ky');
 
-    XLSX.writeFile(wb, `Bao_Cao_Chuyen_Can_Lop_${activeClass?.name || 'Lop'}_${selectedDate}.xlsx`);
+    writeReportXlsx(wb, `Bao_Cao_Chuyen_Can_Lop_${activeClass?.name || 'Lop'}_${selectedDate}.xlsx`);
     setExportToast('Đã xuất thành công file Excel báo cáo chuyên cần lớp chuẩn đẹp!');
     setTimeout(() => setExportToast(null), 3000);
   };
@@ -494,7 +495,7 @@ export const AttendanceExportModal: React.FC<AttendanceExportModalProps> = ({
       XLSX.utils.book_append_sheet(wb, wsAbsent, 'HocSinh_Vang_HomNay');
     }
 
-    XLSX.writeFile(wb, `Tong_Hop_Chuyen_Can_Toan_Truong_${selectedDate}.xlsx`);
+    writeReportXlsx(wb, `Tong_Hop_Chuyen_Can_Toan_Truong_${selectedDate}.xlsx`);
     setExportToast('Đã xuất thành công file Excel tổng hợp chuyên cần toàn trường chuẩn đẹp!');
     setTimeout(() => setExportToast(null), 3000);
   };

@@ -1,4 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { requireLicense } from '../../utils/licenseGate';
+import { writeReportXlsx } from '../../utils/licensedExport';
 import * as XLSX from 'xlsx';
 import { toPng } from 'html-to-image';
 import { useClassroom } from '../../context/ClassroomContext';
@@ -307,6 +309,7 @@ export const ScheduleLinksView: React.FC<ScheduleLinksViewProps> = ({ defaultTab
 
   // Download Image (PNG) via html-to-image
   const handleDownloadImage = async () => {
+    if (!requireLicense('Xuất ảnh thời khóa biểu')) return;
     if (!timetableContainerRef.current) return;
     try {
       setIsExportingImage(true);
@@ -380,7 +383,7 @@ export const ScheduleLinksView: React.FC<ScheduleLinksViewProps> = ({ defaultTab
 
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Thoi_Khoa_Bieu");
-    XLSX.writeFile(wb, `Thoi_Khoa_Bieu_Lop_${selectedClass?.name || '4A1'}.xlsx`);
+    writeReportXlsx(wb, `Thoi_Khoa_Bieu_Lop_${selectedClass?.name || '4A1'}.xlsx`);
     confetti({ particleCount: 35, spread: 60 });
   };
 

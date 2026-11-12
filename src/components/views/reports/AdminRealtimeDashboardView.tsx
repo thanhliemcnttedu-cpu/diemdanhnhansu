@@ -1,4 +1,5 @@
 import { CoinIcon } from '../../common/CoinIcon';
+import { writeReportXlsx } from '../../../utils/licensedExport';
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { useClassroom } from '../../../context/ClassroomContext';
 import { databaseService } from '../../../services/databaseService';
@@ -954,7 +955,7 @@ export const AdminRealtimeDashboardView: React.FC = () => {
     const scopeTitle = selectedBranch === 'all' 
       ? 'Toan_Truong' 
       : `${selectedBranch}_${selectedCampus === 'all' ? 'Tat_Ca' : selectedCampus}`.replace(/\s+/g, '_');
-    XLSX.writeFile(wb, `Bao_Cao_Realtime_BGH_${timeframe.toUpperCase()}_${scopeTitle}_${dateRange.startDate}_den_${dateRange.endDate}.xlsx`);
+    writeReportXlsx(wb, `Bao_Cao_Realtime_BGH_${timeframe.toUpperCase()}_${scopeTitle}_${dateRange.startDate}_den_${dateRange.endDate}.xlsx`);
   };
 
   return (

@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import { writeReportXlsx } from '../../../utils/licensedExport';
 import * as XLSX from 'xlsx';
 import { useClassroom } from '../../../context/ClassroomContext';
 import { SubjectTimetableSlot } from '../../../types';
@@ -249,7 +250,7 @@ export const SubjectTeacherTimetableView: React.FC<{ onNavigate?: (view: any) =>
 
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'TKB_GiangDay');
-    XLSX.writeFile(wb, `THOI_KHOA_BIEU_GIANG_DAY_${teacherName.replace(/\s+/g, '_')}_${subjectName}.xlsx`);
+    writeReportXlsx(wb, `THOI_KHOA_BIEU_GIANG_DAY_${teacherName.replace(/\s+/g, '_')}_${subjectName}.xlsx`);
     showToast('Đã xuất file Excel Thời khóa biểu giảng dạy theo mẫu chuẩn thành công!');
   };
 

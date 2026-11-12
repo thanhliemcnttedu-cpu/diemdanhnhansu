@@ -56,6 +56,9 @@
 var FOLDER_ID = "__FOLDER_ID__";
 var TARGET_FILENAME = "du_lieu_lop_hoc_hanh_phuc.json";
 var REPORT_PREFIX = "bc_";
+// 1.1.11: BẢN QUYỀN THEO TỪNG TRƯỜNG — `setLicense` nhận thêm mã bản quyền do tác giả ký cho đúng thư mục của trường
+//         (`record.v = 2`, `record.code = "LHHP2.<nội dung>.<chữ ký>"`); chỉ lưu khi mã ghi đúng mã thư mục này.
+//         Phần mềm tự kiểm tra chữ ký của tác giả. Bản ghi kích hoạt kiểu cũ (mã băm + chữ ký) vẫn nhận như trước.
 // 1.1.10: hàm `capQuyenGuiThu` — chủ tài khoản Google chạy 1 lần trong trình soạn mã để Google hiện hộp xin quyền gửi email
 //         (chạy một hàm không dùng MailApp thì Google KHÔNG hỏi quyền này; triển khai lại cũng không hỏi).
 // 1.1.9: KHÔI PHỤC MẬT KHẨU QUA EMAIL — mỗi tài khoản khai báo email khôi phục (`setRecoveryEmail`, phải đúng mật khẩu);
@@ -82,7 +85,7 @@ var REPORT_PREFIX = "bc_";
 //        rồi mã hóa lại (healStaffCccdHashes) — khi đăng nhập, khi Quản trị / BGH mở hoặc lưu danh sách nhân sự.
 // QUY TẮC ĐẶT TÊN PHIÊN BẢN (từ 11/2026): "Phiên bản A.B.C" — mỗi lần sửa mã tăng C thêm 1;
 // C tối đa 20: sau 1.1.20 là 1.2.1, sau 1.2.20 là 1.3.1… Các bản cũ dạng "4.x" (4.1 → 4.12) được coi là cũ hơn 1.1.2.
-var SCRIPT_VERSION = "1.1.10";
+var SCRIPT_VERSION = "1.1.11";
 // Thư mục của yêu cầu đang xử lý (để verifyUser đọc được danh sách nhân sự khi đăng nhập bằng CCCD)
 var CTX_FOLDER = null;
 
@@ -405,7 +408,30 @@ function handleSetLicense(folder, payload) {
     return { success: false, code: "UNAUTHORIZED", message: "Chỉ Quản trị mới lưu được bản quyền dùng chung cho cả trường." };
   }
   var r = payload.record || {};
-  var h = String(r.h || ""), sig = String(r.sig || ""), at = String(r.activatedAt || "");
+  var at = String(r.activatedAt || "");
+  // 1.1.11: bản quyền theo trường — mã do tác giả ký cho đúng thư mục này (phần mềm kiểm tra chữ ký)
+  if (Number(r.v) === 2) {
+    var code = String(r.code || "").replace(/\s+/g, "");
+    var parts = code.split(".");
+    if (parts.length !== 3 || parts[0] !== "LHHP2" || code.length > 900 || !/^[A-Za-z0-9_-]+$/.test(parts[1]) || !/^[A-Za-z0-9_-]{80,100}$/.test(parts[2]) || !at || at.length > 40) {
+      return { success: false, message: "Mã bản quyền không hợp lệ." };
+    }
+    var licFor = "";
+    try {
+      licFor = String(JSON.parse(Utilities.newBlob(Utilities.base64DecodeWebSafe(parts[1])).getDataAsString("UTF-8")).f || "");
+    } catch (_) { licFor = ""; }
+    if (licFor !== folder.getId()) {
+      return { success: false, code: "WRONG_SCHOOL", message: "Mã bản quyền này được cấp cho trường khác, không lưu cho thư mục này." };
+    }
+    var rec2 = {
+      v: 2, code: code, activatedAt: at,
+      licensedTo: String(r.licensedTo || "").slice(0, 120), schoolName: String(r.schoolName || "").slice(0, 160),
+      by: actor.username, savedAt: new Date().toISOString()
+    };
+    PropertiesService.getScriptProperties().setProperty(licensePropKey(folder), JSON.stringify(rec2));
+    return { success: true, record: rec2, message: "Đã lưu bản quyền của trường cho mọi máy." };
+  }
+  var h = String(r.h || ""), sig = String(r.sig || "");
   if (!/^[0-9a-z]{4,24}$/.test(h) || !/^[0-9a-z]{4,24}$/.test(sig) || !at || at.length > 40) {
     return { success: false, message: "Bản ghi bản quyền không hợp lệ." };
   }

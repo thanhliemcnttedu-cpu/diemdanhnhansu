@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { playFanfareSound } from '../../utils/audio';
-import { licenseService, MASKED_CDKEY, LicenseDetails } from '../../services/licenseService';
+import { licenseService, MASKED_CDKEY, LicenseDetails, currentLicenseFolderId } from '../../services/licenseService';
 import { APP_AUTHOR_INFO } from '../../data/initialData';
 import { useClassroom } from '../../context/ClassroomContext';
 
@@ -23,6 +23,9 @@ export const CDKeyModal: React.FC<CDKeyModalProps> = ({ isOpen, onClose }) => {
   const [showQr, setShowQr] = useState(true);
   const [copySuccess, setCopySuccess] = useState<string | null>(null);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [busy, setBusy] = useState(false);
+  // "Mã trường" = mã thư mục Google Drive dùng chung; tác giả cần mã này để cấp bản quyền riêng cho trường
+  const schoolCode = isOpen ? currentLicenseFolderId() : '';
 
   useEffect(() => {
     const unsub = licenseService.subscribe((details) => {
@@ -67,24 +70,28 @@ export const CDKeyModal: React.FC<CDKeyModalProps> = ({ isOpen, onClose }) => {
     setTimeout(() => setCopySuccess(null), 2000);
   };
 
-  const handleActivate = (e?: React.FormEvent) => {
+  const handleActivate = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
+    if (busy) return;
+    if (licenseState.isActivated && cdkeyInput === MASKED_CDKEY) return;
     if (!cdkeyInput.trim()) {
-      setMessage({ type: 'error', text: 'Vui lòng nhập mã CDKEY bản quyền.' });
+      setMessage({ type: 'error', text: 'Vui lòng dán mã bản quyền.' });
       return;
     }
 
-    const res = licenseService.activate(
-      cdkeyInput, 
-      currentUser?.fullName || 'Thầy/Cô Giáo Viên',
-      currentUser?.schoolName || 'Trường Học Hạnh Phúc'
-    );
+    setBusy(true);
+    let res: { success: boolean; message: string };
+    try {
+      res = await licenseService.activateAsync(cdkeyInput, currentUser?.fullName || 'Quản trị nhà trường');
+    } finally {
+      setBusy(false);
+    }
 
     if (res.success) {
       setMessage({ type: 'success', text: res.message });
-      // Quản trị đã kết nối Drive dùng chung: áp dụng bản quyền cho MỌI máy của trường (Apps Script 1.1.7)
-      licenseSyncService.push().then(r => {
-        if (r.shared) setMessage({ type: 'success', text: `${res.message} Đã áp dụng cho cả trường: mọi máy kết nối đúng thư mục và Apps Script sẽ tự kích hoạt, không cần nhập lại CDKEY.` });
+      // Quản trị đã kết nối Drive dùng chung: áp dụng bản quyền cho MỌI máy của trường (Apps Script 1.1.11)
+      licenseSyncService.push(true).then(r => {
+        if (r.shared) setMessage({ type: 'success', text: `${res.message} Đã áp dụng cho cả trường: mọi máy kết nối đúng thư mục và Apps Script sẽ tự kích hoạt, không cần nhập lại mã.` });
         else if (r.message) setMessage({ type: 'success', text: `${res.message} ${r.message}` });
       }).catch(() => {});
       playFanfareSound();
@@ -145,11 +152,16 @@ export const CDKeyModal: React.FC<CDKeyModalProps> = ({ isOpen, onClose }) => {
                   <span className="px-1.5 py-0.2 rounded bg-amber-200 text-amber-900 text-[12px] font-bold">Chưa kích hoạt CDKEY</span>
                 </div>
                 <p className="text-[12px] leading-relaxed text-amber-900">
-                  Phiên bản cài đặt dùng thử được giới hạn ở: <strong className="text-rose-700">Tối đa 01 lớp học</strong> và trong 1 lớp chỉ được chạy thử <strong className="text-rose-700">tối đa 10 học sinh</strong>.
+                  Chế độ dùng thử giới hạn: <strong className="text-rose-700">tối đa 01 lớp học</strong>, mỗi lớp <strong className="text-rose-700">tối đa 10 học sinh</strong>; và <strong className="text-rose-700">khóa</strong> Chấm công nhân sự, Kê khai tiết dạy, Thư khen, xuất báo cáo / Excel / PDF / ảnh thời khóa biểu.
                 </p>
                 <p className="text-[12px] leading-relaxed text-amber-900 font-medium">
-                  👉 Để quản lý nhiều lớp và nhiều hơn 10 học sinh, Quý Thầy/Cô vui lòng dán hoặc điền mã CDKEY Bản Quyền do tác giả cung cấp bên dưới.
+                  Bản quyền được cấp riêng cho từng trường. Quản trị nhà trường gửi <strong>Mã trường</strong> bên dưới cho tác giả để nhận mã bản quyền, rồi dán vào ô nhập. Kích hoạt một lần là mọi máy của trường dùng được.
                 </p>
+                {licenseState.wrongFolder && (
+                  <p className="text-[12px] leading-relaxed text-rose-800 font-bold">
+                    Máy này đang giữ mã bản quyền của trường khác{licenseState.schoolName ? ` (${licenseState.schoolName})` : ''} nên không có hiệu lực với thư mục đang kết nối.
+                  </p>
+                )}
               </div>
             </div>
           ) : (
@@ -163,18 +175,39 @@ export const CDKeyModal: React.FC<CDKeyModalProps> = ({ isOpen, onClose }) => {
                   <CheckCircle2 className="w-4 h-4 text-emerald-600" />
                 </div>
                 <p className="text-[12px] text-emerald-800 font-medium mt-0.5">
-                  Phần mềm đã mở khóa vĩnh viễn không giới hạn số lớp và sĩ số học sinh cho cả 3 cấp độ (Quản trị nhà trường, Ban giám hiệu, Giáo viên).
+                  {licenseState.kind === 'school'
+                    ? `Bản quyền${licenseState.schoolName ? ` của ${licenseState.schoolName}` : ' của trường'}: mở khóa vĩnh viễn đầy đủ tính năng cho mọi tài khoản của trường (Quản trị, Ban giám hiệu, Giáo viên).`
+                    : 'Phần mềm đã mở khóa vĩnh viễn đầy đủ tính năng cho cả 3 cấp độ (Quản trị nhà trường, Ban giám hiệu, Giáo viên).'}
                 </p>
               </div>
             </div>
           )}
 
-          {/* Form Nhập hoặc dán mã CDKEY */}
+          {/* Mã trường: gửi cho tác giả để nhận mã bản quyền riêng của trường */}
+          {!licenseState.isActivated && (
+            <div className="p-3 rounded-xl bg-sky-50 border border-sky-200 space-y-1.5">
+              <div className="text-xs font-black text-slate-800 uppercase">Mã trường (gửi cho tác giả để nhận mã bản quyền)</div>
+              {schoolCode ? (
+                <div className="flex flex-wrap items-center gap-2">
+                  <code className="flex-1 min-w-0 break-all px-2.5 py-1.5 rounded-lg bg-white border border-sky-200 text-sm font-bold text-slate-900 select-all">{schoolCode}</code>
+                  <button type="button" onClick={() => handleCopyText(schoolCode, 'school')}
+                    className="no-hover-fx px-3 py-1.5 rounded-lg bg-sky-700 hover:bg-sky-800 text-white text-xs font-bold inline-flex items-center gap-1.5 cursor-pointer">
+                    {copySuccess === 'school' ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />} {copySuccess === 'school' ? 'Đã chép' : 'Sao chép mã trường'}
+                  </button>
+                </div>
+              ) : (
+                <p className="text-[12px] font-bold text-amber-900">Máy này chưa kết nối thư mục Google Drive của trường. Hãy kết nối trước (Dữ liệu → Google Drive của trường) để có Mã trường.</p>
+              )}
+              <p className="text-[12px] text-slate-700">Mã trường là mã thư mục Google Drive dùng chung của trường. Mã bản quyền chỉ mở khóa cho đúng thư mục này.</p>
+            </div>
+          )}
+
+          {/* Form dán mã bản quyền */}
           <form onSubmit={handleActivate} className="space-y-2.5">
             <div className="flex items-center justify-between">
               <label className="text-xs font-black text-slate-800 flex items-center gap-1.5 uppercase tracking-wide">
                 <KeyRound className="w-3.5 h-3.5 text-indigo-600" />
-                <span>Nhập hoặc dán mã CDKEY bản quyền tác giả</span>
+                <span>Dán mã bản quyền của trường</span>
               </label>
               <button
                 type="button"
@@ -195,7 +228,7 @@ export const CDKeyModal: React.FC<CDKeyModalProps> = ({ isOpen, onClose }) => {
                   setCdkeyInput(e.target.value);
                   setMessage(null);
                 }}
-                placeholder="Dán mã CDKEY bản quyền vào đây..."
+                placeholder="Dán mã bản quyền (bắt đầu bằng LHHP2.) vào đây..."
                 className="w-full px-4 py-2.5 rounded-xl border border-indigo-300 focus:border-indigo-600 focus:ring-2 focus:ring-indigo-100 font-mono text-sm tracking-wider text-indigo-950 placeholder:text-slate-400 outline-none transition-all"
               />
             </div>
@@ -213,7 +246,7 @@ export const CDKeyModal: React.FC<CDKeyModalProps> = ({ isOpen, onClose }) => {
             {/* Nút Kích hoạt */}
             <button
               type="submit"
-              disabled={!cdkeyInput.trim()}
+              disabled={!cdkeyInput.trim() || busy}
               className={`w-full py-2.5 px-4 rounded-xl font-black text-xs sm:text-sm uppercase tracking-wide flex items-center justify-center gap-2 transition-all shadow-sm ${
                 cdkeyInput.trim()
                   ? 'bg-gradient-to-r from-indigo-600 via-indigo-700 to-indigo-600 hover:from-indigo-800 hover:to-indigo-800 text-white cursor-pointer hover:shadow-md active:scale-[0.99]'
@@ -224,9 +257,11 @@ export const CDKeyModal: React.FC<CDKeyModalProps> = ({ isOpen, onClose }) => {
               <span>
                 {licenseState.isActivated && cdkeyInput === MASKED_CDKEY
                   ? 'BẢN QUYỀN ĐANG KÍCH HOẠT CHÍNH THỨC'
+                  : busy
+                  ? 'ĐANG KIỂM TRA MÃ…'
                   : cdkeyInput.trim()
                   ? 'MỞ KHÓA BẢN QUYỀN CHÍNH THỨC'
-                  : 'VUI LÒNG ĐIỀN ĐÚNG MÃ CDKEY ĐỂ MỞ KHÓA'}
+                  : 'DÁN MÃ BẢN QUYỀN ĐỂ MỞ KHÓA'}
               </span>
             </button>
           </form>

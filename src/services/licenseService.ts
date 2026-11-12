@@ -5,11 +5,16 @@
  * Chế độ dùng thử (Trial Mode):
  * - Tối đa 01 lớp học
  * - Mỗi lớp tối đa 10 học sinh
- * Khi kích hoạt đúng CDKEY: mở khóa không giới hạn số lớp và số học sinh.
+ * - Khóa: chấm công nhân sự, kê khai tiết dạy, thư khen, xuất báo cáo / Excel / PDF / ảnh thời khóa biểu
  *
- * 🔒 Mã CDKEY KHÔNG lưu dạng chữ trong mã nguồn: chỉ so sánh mã băm.
- *    Trạng thái kích hoạt lưu kèm chữ ký (mã băm gắn với máy/trình duyệt) — sửa tay localStorage không mở khóa được.
+ * BẢN QUYỀN THEO TỪNG TRƯỜNG (11/2026): mã do tác giả KÝ riêng cho thư mục Google Drive của một trường.
+ *   LHHP2.<payload base64url>.<chữ ký ECDSA P-256 base64url>     payload = { f: mã thư mục, s: tên trường, i: ngày cấp, n: số cấp }
+ * Phần mềm chỉ chứa KHÓA CÔNG KHAI → không ai tự tạo được mã, và mã của trường này không mở khóa cho trường khác.
+ *
+ * 🔒 Mã CDKEY kiểu cũ (mã chung) KHÔNG lưu dạng chữ trong mã nguồn: chỉ so sánh mã băm. Mã cũ không còn kích hoạt MỚI;
+ *    máy / trường đã kích hoạt trước đó vẫn giữ hiệu lực (bản ghi có chữ ký `h` + `sig`).
  */
+import { LICENSE_PUBLIC_JWK } from './licensePublicKey';
 
 export const LOCAL_LICENSE_STORAGE_KEY = 'lhhp_cdkey_license_v1';
 /** Hiển thị thay cho mã thật sau khi đã kích hoạt */
@@ -20,7 +25,7 @@ export const OFFICIAL_CDKEY = MASKED_CDKEY;
 export const TRIAL_MAX_CLASSES = 1;
 export const TRIAL_MAX_STUDENTS_PER_CLASS = 10;
 
-// Mã băm của CDKEY hợp lệ (chuẩn hoá: viết hoa, bỏ khoảng trắng/gạch nối)
+// Mã băm của CDKEY kiểu cũ (chuẩn hoá: viết hoa, bỏ khoảng trắng/gạch nối) — chỉ để nhận lại bản ghi đã kích hoạt trước đây
 const VALID_KEY_HASHES = new Set<string>(['wc5v9pbrz1']);
 
 /** Băm nhanh đồng bộ (cyrb53) */
@@ -38,11 +43,61 @@ function cyrb53(str: string, seed = 0x1a2b): string {
   return (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(36);
 }
 
+const OLD_KEY_MESSAGE = 'Mã CDKEY kiểu cũ không còn dùng để kích hoạt mới. Bản quyền nay được cấp riêng cho từng trường: hãy gửi "Mã trường" ở hộp này cho Thầy Nguyễn Thanh Liêm (0888.358.363) để nhận mã bản quyền của trường mình.';
+
 const compactKey = (raw: string) => (raw || '').normalize('NFKC').toUpperCase().replace(/[^A-Z0-9]/g, '');
 const keyHash = (raw: string) => cyrb53(`LHHP|${compactKey(raw)}`);
 
-/** Chữ ký trạng thái kích hoạt: gắn với mã băm của khóa + thời điểm kích hoạt */
+/** Chữ ký trạng thái kích hoạt kiểu cũ: gắn với mã băm của khóa + thời điểm kích hoạt */
 const signLicense = (hash: string, activatedAt: string) => cyrb53(`LHHP-SIG|${hash}|${activatedAt}`, 0x5eed);
+
+// ------------------------------------------------------------------------------------------- school licence code
+const V2_PREFIX = 'LHHP2.';
+const DRIVE_CONFIG_KEY = 'lop_hoc_google_drive_config_v2';
+
+export interface SchoolLicensePayload { f: string; s?: string; i?: string; n?: string }
+
+const b64urlToBytes = (v: string): Uint8Array => {
+  const b = atob(v.replace(/-/g, '+').replace(/_/g, '/') + '==='.slice((v.length + 3) % 4));
+  const out = new Uint8Array(b.length);
+  for (let i = 0; i < b.length; i++) out[i] = b.charCodeAt(i);
+  return out;
+};
+
+/** Splits a pasted code; null when it is not a school licence code. No signature check here. */
+export function parseLicenseCode(raw: string): { code: string; signed: string; sig: Uint8Array; payload: SchoolLicensePayload } | null {
+  const code = String(raw || '').replace(/\s+/g, '');
+  if (!code.startsWith(V2_PREFIX)) return null;
+  const parts = code.split('.');
+  if (parts.length !== 3 || !/^[A-Za-z0-9_-]+$/.test(parts[1]) || !/^[A-Za-z0-9_-]+$/.test(parts[2])) return null;
+  try {
+    const payload = JSON.parse(new TextDecoder().decode(b64urlToBytes(parts[1])));
+    if (!payload || typeof payload.f !== 'string' || !payload.f) return null;
+    return { code, signed: `${parts[0]}.${parts[1]}`, sig: b64urlToBytes(parts[2]), payload };
+  } catch (_) { return null; }
+}
+
+/** Payload when the author's signature is valid, otherwise null (also null where the browser has no WebCrypto) */
+export async function verifyLicenseCode(raw: string): Promise<SchoolLicensePayload | null> {
+  const p = parseLicenseCode(raw);
+  if (!p || !LICENSE_PUBLIC_JWK || typeof crypto === 'undefined' || !crypto.subtle) return null;
+  try {
+    const key = await crypto.subtle.importKey('jwk', LICENSE_PUBLIC_JWK as JsonWebKey, { name: 'ECDSA', namedCurve: 'P-256' }, false, ['verify']);
+    const ok = await crypto.subtle.verify({ name: 'ECDSA', hash: 'SHA-256' }, key, p.sig as BufferSource, new TextEncoder().encode(p.signed));
+    return ok ? p.payload : null;
+  } catch (_) { return null; }
+}
+
+/** Google Drive folder this machine is connected to (the school's identity for licensing) */
+export function currentLicenseFolderId(): string {
+  try {
+    const cfg = JSON.parse(localStorage.getItem(DRIVE_CONFIG_KEY) || 'null') || {};
+    const id = String(cfg.folderId || '').trim();
+    if (id) return id;
+    const m = /\/folders\/([A-Za-z0-9_-]{10,})/.exec(String(cfg.folderUrl || ''));
+    return m ? m[1] : '';
+  } catch (_) { return ''; }
+}
 
 export interface LicenseDetails {
   isActivated: boolean;
@@ -50,6 +105,10 @@ export interface LicenseDetails {
   activatedAt?: string;
   licensedTo?: string;
   schoolName?: string;
+  /** 'school' = code signed for this school's folder; 'legacy' = activation made with the old shared key */
+  kind?: 'school' | 'legacy';
+  /** a school licence is stored on this machine but was issued for another folder than the one connected now */
+  wrongFolder?: boolean;
 }
 
 export type LicenseChangeListener = (details: LicenseDetails) => void;
@@ -60,6 +119,31 @@ class LicenseService {
 
   constructor() {
     this.currentDetails = this.loadFromStorage();
+    // A stored school licence is trusted for the first instant, then its signature is checked; a forged record is dropped
+    this.verifyStoredSchoolLicense();
+    if (typeof window !== 'undefined') {
+      const recheck = () => this.refresh();
+      window.addEventListener('storage', recheck);
+      window.addEventListener('focus', recheck);
+    }
+  }
+
+  private verifyStoredSchoolLicense(): void {
+    let code = '';
+    try {
+      const p = JSON.parse(localStorage.getItem(LOCAL_LICENSE_STORAGE_KEY) || 'null');
+      if (p && p.v === 2) code = String(p.code || '');
+    } catch (_) { /* ignore */ }
+    if (!code || typeof crypto === 'undefined' || !crypto.subtle) return;
+    verifyLicenseCode(code).then((payload) => { if (!payload) this.deactivate(); }).catch(() => {});
+  }
+
+  /** Re-read the stored licence (the connected folder may have changed) and tell listeners when the state flips */
+  public refresh(): void {
+    const next = this.loadFromStorage();
+    const changed = next.isActivated !== this.currentDetails.isActivated || next.wrongFolder !== this.currentDetails.wrongFolder;
+    this.currentDetails = next;
+    if (changed) this.notifyListeners();
   }
 
   private loadFromStorage(): LicenseDetails {
@@ -70,25 +154,39 @@ class LicenseService {
       const parsed = JSON.parse(raw);
       if (!parsed || !parsed.isActivated) return trial;
 
-      // Bản ghi mới: có mã băm + chữ ký hợp lệ
+      // School licence: valid only while this machine is connected to the folder the code was issued for
+      if (parsed.v === 2) {
+        const p = parseLicenseCode(String(parsed.code || ''));
+        if (!p) return trial;
+        if (p.payload.f !== currentLicenseFolderId()) return { ...trial, wrongFolder: true, schoolName: p.payload.s || '' };
+        return {
+          isActivated: true, key: MASKED_CDKEY, kind: 'school',
+          activatedAt: parsed.activatedAt,
+          licensedTo: parsed.licensedTo || 'Bản quyền của trường',
+          schoolName: p.payload.s || parsed.schoolName || '',
+        };
+      }
+
+      // Bản ghi kiểu cũ: có mã băm + chữ ký hợp lệ
       if (parsed.h && parsed.sig && VALID_KEY_HASHES.has(parsed.h) && parsed.activatedAt
         && signLicense(parsed.h, parsed.activatedAt) === parsed.sig) {
         return {
           isActivated: true,
           key: MASKED_CDKEY,
+          kind: 'legacy',
           activatedAt: parsed.activatedAt,
           licensedTo: parsed.licensedTo || 'Giáo viên Bản quyền Chính thức',
           schoolName: parsed.schoolName || '',
         };
       }
 
-      // Bản ghi cũ (trước khi có chữ ký): chỉ chấp nhận nếu chứa đúng mã → nâng cấp sang bản ghi có chữ ký
+      // Bản ghi rất cũ (trước khi có chữ ký): chỉ chấp nhận nếu chứa đúng mã → nâng cấp sang bản ghi có chữ ký
       if (typeof parsed.key === 'string' && VALID_KEY_HASHES.has(keyHash(parsed.key))) {
         const activatedAt = parsed.activatedAt || new Date().toISOString();
         const h = keyHash(parsed.key);
         const upgraded = { isActivated: true, h, sig: signLicense(h, activatedAt), activatedAt, licensedTo: parsed.licensedTo, schoolName: parsed.schoolName };
         try { localStorage.setItem(LOCAL_LICENSE_STORAGE_KEY, JSON.stringify(upgraded)); } catch (_) { /* ignore */ }
-        return { isActivated: true, key: MASKED_CDKEY, activatedAt, licensedTo: parsed.licensedTo || 'Giáo viên Bản quyền Chính thức', schoolName: parsed.schoolName || '' };
+        return { isActivated: true, key: MASKED_CDKEY, kind: 'legacy', activatedAt, licensedTo: parsed.licensedTo || 'Giáo viên Bản quyền Chính thức', schoolName: parsed.schoolName || '' };
       }
     } catch (_) { /* ignore */ }
     return trial;
@@ -117,35 +215,56 @@ class LicenseService {
     });
   }
 
-  /** Kích hoạt bản quyền bằng CDKEY (không phân biệt hoa/thường, khoảng trắng, gạch nối) */
-  public activate(inputKey: string, licensedTo?: string, schoolName?: string): { success: boolean; message: string } {
-    const h = keyHash(inputKey);
-    if (compactKey(inputKey) && VALID_KEY_HASHES.has(h)) {
-      const activatedAt = new Date().toISOString();
-      const record = {
-        isActivated: true, h, sig: signLicense(h, activatedAt), activatedAt,
-        licensedTo: licensedTo || 'Giáo viên Bản quyền Chính thức',
-        schoolName: schoolName || '',
-      };
-      try { localStorage.setItem(LOCAL_LICENSE_STORAGE_KEY, JSON.stringify(record)); } catch (_) { /* ignore */ }
-      this.currentDetails = { isActivated: true, key: MASKED_CDKEY, activatedAt, licensedTo: record.licensedTo, schoolName: record.schoolName };
-      this.notifyListeners();
-      return {
-        success: true,
-        message: 'Kích hoạt thành công! Phần mềm Lớp Học Hạnh Phúc đã mở khóa bản quyền không giới hạn.'
-      };
+  /**
+   * Synchronous entry kept for old callers. New activations need a school licence code, whose signature can only be
+   * checked asynchronously → use activateAsync. The old shared key no longer activates anything (machines and schools
+   * activated before this change keep their activation).
+   */
+  public activate(inputKey: string, _licensedTo?: string, _schoolName?: string): { success: boolean; message: string } {
+    if (parseLicenseCode(inputKey)) {
+      return { success: false, message: 'Hãy dán mã bản quyền vào hộp "Bản quyền phần mềm" để kích hoạt.' };
     }
-    return {
-      success: false,
-      message: 'Mã CDKEY không hợp lệ! Vui lòng liên hệ Thầy Nguyễn Thanh Liêm (0888.358.363) để nhận mã kích hoạt bản quyền chính thức.'
-    };
+    return { success: false, message: OLD_KEY_MESSAGE };
   }
 
-  /** Bản ghi kích hoạt ĐÃ KÝ trên máy (mã băm + chữ ký, không có mã CDKEY) — để chia sẻ cho cả trường */
-  public getSignedRecord(): { h: string; sig: string; activatedAt: string; licensedTo?: string; schoolName?: string } | null {
+  /** Activate with a licence code issued by the author for this school's Google Drive folder */
+  public async activateAsync(inputKey: string, licensedTo?: string): Promise<{ success: boolean; message: string }> {
+    const parsed = parseLicenseCode(inputKey);
+    if (!parsed) return { success: false, message: compactKey(inputKey) ? OLD_KEY_MESSAGE : 'Vui lòng dán mã bản quyền.' };
+    const folderId = currentLicenseFolderId();
+    if (!folderId) {
+      return { success: false, message: 'Máy này chưa kết nối thư mục Google Drive của trường. Hãy kết nối (Dữ liệu → Google Drive của trường) rồi nhập mã bản quyền.' };
+    }
+    if (typeof crypto === 'undefined' || !crypto.subtle) {
+      return { success: false, message: 'Trình duyệt này không kiểm tra được chữ ký bản quyền. Hãy mở phần mềm bằng Chrome hoặc Edge bản mới, qua địa chỉ https.' };
+    }
+    const payload = await verifyLicenseCode(parsed.code);
+    if (!payload) {
+      return { success: false, message: 'Mã bản quyền không hợp lệ (chữ ký không đúng). Hãy sao chép lại đầy đủ mã do tác giả gửi, hoặc liên hệ Thầy Nguyễn Thanh Liêm (0888.358.363).' };
+    }
+    if (payload.f !== folderId) {
+      return { success: false, message: `Mã bản quyền này được cấp cho trường khác${payload.s ? ` (${payload.s})` : ''}, không dùng được cho thư mục Google Drive đang kết nối. Hãy gửi "Mã trường" ở hộp này cho tác giả để nhận đúng mã.` };
+    }
+    const activatedAt = new Date().toISOString();
+    const record = { isActivated: true, v: 2, code: parsed.code, activatedAt, licensedTo: licensedTo || 'Bản quyền của trường', schoolName: payload.s || '' };
+    try { localStorage.setItem(LOCAL_LICENSE_STORAGE_KEY, JSON.stringify(record)); } catch (_) { /* ignore */ }
+    this.currentDetails = { isActivated: true, key: MASKED_CDKEY, kind: 'school', activatedAt, licensedTo: record.licensedTo, schoolName: record.schoolName };
+    this.notifyListeners();
+    return { success: true, message: `Kích hoạt thành công! Bản quyền${payload.s ? ` của ${payload.s}` : ''} đã mở khóa đầy đủ tính năng.` };
+  }
+
+  /**
+   * Bản ghi kích hoạt ĐÃ KÝ trên máy — để chia sẻ cho cả trường.
+   * Bản quyền theo trường: chính mã bản quyền (chỉ dùng được cho thư mục của trường). Kiểu cũ: mã băm + chữ ký, không có mã CDKEY.
+   */
+  public getSignedRecord(): { h?: string; sig: string; v?: number; code?: string; activatedAt: string; licensedTo?: string; schoolName?: string } | null {
     if (!this.isActivated()) return null;
     try {
       const p = JSON.parse(localStorage.getItem(LOCAL_LICENSE_STORAGE_KEY) || 'null');
+      if (p && p.v === 2 && parseLicenseCode(String(p.code || ''))) {
+        const code = String(p.code);
+        return { v: 2, code, sig: code.slice(-24), activatedAt: p.activatedAt, licensedTo: p.licensedTo, schoolName: p.schoolName };
+      }
       if (p && p.h && p.sig && p.activatedAt && VALID_KEY_HASHES.has(p.h) && signLicense(p.h, p.activatedAt) === p.sig) {
         return { h: p.h, sig: p.sig, activatedAt: p.activatedAt, licensedTo: p.licensedTo, schoolName: p.schoolName };
       }
@@ -154,7 +273,7 @@ class LicenseService {
   }
 
   /**
-   * Áp bản quyền DÙNG CHUNG của trường (Quản trị kích hoạt, Apps Script 1.1.7 lưu) — chỉ nhận bản ghi có mã băm hợp lệ
+   * Áp bản quyền DÙNG CHUNG kiểu cũ của trường (Apps Script 1.1.7 lưu) — chỉ nhận bản ghi có mã băm hợp lệ
    * và chữ ký đúng. Trả về true khi máy này vừa được kích hoạt.
    */
   public applySharedRecord(rec: any): boolean {
@@ -168,9 +287,43 @@ class LicenseService {
       source: 'school',
     };
     try { localStorage.setItem(LOCAL_LICENSE_STORAGE_KEY, JSON.stringify(record)); } catch (_) { /* ignore */ }
-    this.currentDetails = { isActivated: true, key: MASKED_CDKEY, activatedAt, licensedTo: record.licensedTo, schoolName: record.schoolName };
+    this.currentDetails = { isActivated: true, key: MASKED_CDKEY, kind: 'legacy', activatedAt, licensedTo: record.licensedTo, schoolName: record.schoolName };
     this.notifyListeners();
     return true;
+  }
+
+  /**
+   * School-wide licence read from the school's Apps Script: a school licence code (checked: author's signature + issued
+   * for the connected folder) or an old shared-key record. Returns true when this machine has just been activated.
+   */
+  public async applySharedRecordAsync(rec: any): Promise<boolean> {
+    if (this.isActivated() || !rec || typeof rec !== 'object') return false;
+    if (rec.v !== 2) return this.applySharedRecord(rec);
+    const payload = await verifyLicenseCode(String(rec.code || ''));
+    if (!payload || payload.f !== currentLicenseFolderId()) return false;
+    const activatedAt = String(rec.activatedAt || new Date().toISOString());
+    const record = {
+      isActivated: true, v: 2, code: String(rec.code).replace(/\s+/g, ''), activatedAt,
+      licensedTo: String(rec.licensedTo || 'Bản quyền dùng chung của trường'), schoolName: payload.s || '', source: 'school',
+    };
+    try { localStorage.setItem(LOCAL_LICENSE_STORAGE_KEY, JSON.stringify(record)); } catch (_) { /* ignore */ }
+    this.currentDetails = { isActivated: true, key: MASKED_CDKEY, kind: 'school', activatedAt, licensedTo: record.licensedTo, schoolName: record.schoolName };
+    this.notifyListeners();
+    return true;
+  }
+
+  /**
+   * Is this school-wide record a valid licence for the given folder? Nothing is stored. Used by the stand-alone staff
+   * check-in page, which talks to a school through its link and not through this machine's Drive connection.
+   */
+  public async isValidRecordFor(rec: any, folderId: string): Promise<boolean> {
+    if (!rec || typeof rec !== 'object') return false;
+    if (rec.v === 2) {
+      const payload = await verifyLicenseCode(String(rec.code || ''));
+      return Boolean(payload && folderId && payload.f === folderId);
+    }
+    const h = String(rec.h || ''), sig = String(rec.sig || ''), activatedAt = String(rec.activatedAt || '');
+    return Boolean(h && sig && activatedAt && VALID_KEY_HASHES.has(h) && signLicense(h, activatedAt) === sig);
   }
 
   /** Hủy kích hoạt (dùng khi thử nghiệm hoặc reset) */
@@ -188,7 +341,7 @@ class LicenseService {
       return {
         allowed: false,
         remaining,
-        message: `Chế độ Dùng Thử: Giới hạn tối đa ${String(TRIAL_MAX_CLASSES).padStart(2, '0')} lớp học! Vui lòng kích hoạt CDKEY Bản Quyền để quản lý nhiều lớp học.`
+        message: `Chế độ Dùng Thử: Giới hạn tối đa ${String(TRIAL_MAX_CLASSES).padStart(2, '0')} lớp học! Vui lòng kích hoạt bản quyền của trường để quản lý nhiều lớp học.`
       };
     }
     return { allowed: true, remaining };
@@ -203,8 +356,8 @@ class LicenseService {
         allowed: false,
         remaining,
         message: remaining > 0
-          ? `Chế độ Dùng Thử: mỗi lớp tối đa ${TRIAL_MAX_STUDENTS_PER_CLASS} học sinh. Lớp còn thêm được ${remaining} em — phần mềm chỉ thêm ${remaining} em đầu danh sách. Kích hoạt CDKEY Bản Quyền để mở khóa sĩ số không giới hạn.`
-          : `Chế độ Dùng Thử: Giới hạn tối đa ${TRIAL_MAX_STUDENTS_PER_CLASS} học sinh/lớp! Vui lòng kích hoạt CDKEY Bản Quyền để mở khóa toàn bộ sĩ số không giới hạn.`
+          ? `Chế độ Dùng Thử: mỗi lớp tối đa ${TRIAL_MAX_STUDENTS_PER_CLASS} học sinh. Lớp còn thêm được ${remaining} em — phần mềm chỉ thêm ${remaining} em đầu danh sách. Kích hoạt bản quyền của trường để mở khóa sĩ số không giới hạn.`
+          : `Chế độ Dùng Thử: Giới hạn tối đa ${TRIAL_MAX_STUDENTS_PER_CLASS} học sinh/lớp! Vui lòng kích hoạt bản quyền của trường để mở khóa toàn bộ sĩ số không giới hạn.`
       };
     }
     return { allowed: true, remaining };

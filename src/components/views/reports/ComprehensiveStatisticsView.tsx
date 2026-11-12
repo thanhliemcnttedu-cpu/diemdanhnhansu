@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
+import { writeReportXlsx } from '../../../utils/licensedExport';
 import * as XLSX from 'xlsx';
 import { useClassroom } from '../../../context/ClassroomContext';
 import { Student, Classroom, DailyAttendance, DailyBoardingMeal, AttendanceStatus } from '../../../types';
@@ -913,7 +914,7 @@ export const ComprehensiveStatisticsView: React.FC = () => {
     );
     XLSX.utils.book_append_sheet(wb, wsChart, 'BieuDo_MinhHoa');
 
-    XLSX.writeFile(wb, `Bao_Cao_Thong_Ke_Tong_Hop_${selectedDate}.xlsx`);
+    writeReportXlsx(wb, `Bao_Cao_Thong_Ke_Tong_Hop_${selectedDate}.xlsx`);
     setExportToast('Đã xuất thành công file Excel Thống kê & Biểu đồ đa trang chuẩn đẹp!');
     setTimeout(() => setExportToast(null), 3000);
   };

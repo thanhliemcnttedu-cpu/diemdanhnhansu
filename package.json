@@ -20,6 +20,8 @@
     "build:installer": "npm run build && npm run build:server && npm run build:ico && electron-builder --win --x64",
     "package:win:lite": "node scripts/build-desktop-lite.cjs",
     "desktop:keygen": "node scripts/desktop-update-keygen.cjs",
+    "license:keygen": "node scripts/license-keygen.cjs",
+    "license:issue": "node scripts/license-issue.cjs",
     "release:desktop-ui": "node scripts/release-desktop-ui.cjs",
     "package:win": "npm run build && npm run build:server && npm run build:ico && electron-builder --win --x64",
     "start:prod": "node dist-server/server.js"

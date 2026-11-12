@@ -4,6 +4,7 @@
  */
 
 import { jsPDF } from 'jspdf';
+import { requireLicense } from './licenseGate';
 import { toPng } from 'html-to-image';
 
 /**
@@ -16,6 +17,8 @@ export async function exportElementToPdf(
   orientation: 'portrait' | 'landscape' = 'portrait',
   title = 'Tài Liệu In Chuẩn A4'
 ): Promise<boolean> {
+  // Locked in trial mode: the licence dialog opens instead of the download
+  if (!requireLicense('Xuất tệp PDF')) return false;
   const el = typeof elementIdOrElement === 'string'
     ? document.getElementById(elementIdOrElement)
     : elementIdOrElement;
@@ -131,6 +134,7 @@ export async function exportElementToImagePng(
   title = 'Báo Cáo Điểm Danh Tổng Hợp',
   options?: ExportImageOptions
 ): Promise<boolean> {
+  if (!requireLicense('Xuất ảnh báo cáo')) return false;
   const el = typeof elementIdOrElement === 'string'
     ? document.getElementById(elementIdOrElement)
     : elementIdOrElement;
@@ -195,6 +199,7 @@ export async function exportMultipleElementsToPdf(
   orientation: 'portrait' | 'landscape' = 'portrait',
   title = 'Infographic Lớp Học Toàn Diện'
 ): Promise<boolean> {
+  if (!requireLicense('Xuất tệp PDF')) return false;
   try {
     const validElements: HTMLElement[] = [];
     for (const item of elementIdsOrElements) {
@@ -445,6 +450,7 @@ export async function exportMultipleElementsToImagesPng(
   baseFileName = 'Bao_Cao_A4_Ngang',
   options?: ExportImageOptions
 ): Promise<number> {
+  if (!requireLicense('Xuất ảnh báo cáo')) return 0;
   let count = 0;
   const validElements = elements.filter(Boolean) as HTMLElement[];
   if (validElements.length === 0) return 0;

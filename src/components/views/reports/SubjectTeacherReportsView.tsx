@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import { writeReportXlsx } from '../../../utils/licensedExport';
 import * as XLSX from 'xlsx';
 import { useClassroom } from '../../../context/ClassroomContext';
 import { Student } from '../../../types';
@@ -139,7 +140,7 @@ export const SubjectTeacherReportsView: React.FC<{ onNavigate?: (view: any) => v
     const wsDetail = XLSX.utils.aoa_to_sheet(detailRows);
     XLSX.utils.book_append_sheet(wb, wsDetail, `Chi_Tiet_Lop_${selectedClass?.name || 'All'}`);
 
-    XLSX.writeFile(wb, `Bao_Cao_Tong_Hop_Bo_Mon_${subjectName.replace(/\s+/g, '_')}_${new Date().toISOString().slice(0, 10)}.xlsx`);
+    writeReportXlsx(wb, `Bao_Cao_Tong_Hop_Bo_Mon_${subjectName.replace(/\s+/g, '_')}_${new Date().toISOString().slice(0, 10)}.xlsx`);
     confetti({ particleCount: 40, spread: 60 });
   };
 

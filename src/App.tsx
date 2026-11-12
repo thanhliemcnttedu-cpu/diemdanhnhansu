@@ -4,6 +4,8 @@
  */
 
 import { licenseSyncService } from './services/licenseSyncService';
+import { LicenseGate } from './components/common/LicenseGate';
+import { LICENSE_REQUIRED_EVENT } from './utils/licenseGate';
 import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { ClassroomProvider, useClassroom } from './context/ClassroomContext';
 import { TopBar } from './components/layout/TopBar';
@@ -224,6 +226,12 @@ function ClassroomApp() {
 
   // 🔑 Bản quyền dùng chung cả trường: máy kết nối đúng thư mục + Apps Script tự kích hoạt; Quản trị đã kích hoạt thì chia sẻ
   useEffect(() => { licenseSyncService.sync().catch(() => {}); }, [currentUser?.username]);
+  // A locked action (export, certificate, staff attendance…) asks for the licence dialog
+  useEffect(() => {
+    const open = () => setIsCdKeyModalOpen(true);
+    window.addEventListener(LICENSE_REQUIRED_EVENT, open);
+    return () => window.removeEventListener(LICENSE_REQUIRED_EVENT, open);
+  }, [setIsCdKeyModalOpen]);
 
   const renderCurrentView = () => {
     switch (currentView) {
@@ -249,7 +257,7 @@ function ClassroomApp() {
       case 'rewards':
         return <RewardsShopView />;
       case 'certificate':
-        return <CertificateView />;
+        return <LicenseGate feature="Thư khen"><CertificateView /></LicenseGate>;
       case 'picker':
         return <RandomStudentPickerView initialGame="dashboard" />;
       case 'wheel':
@@ -269,9 +277,9 @@ function ClassroomApp() {
       case 'data':
         return <ReportsDataView defaultTab="data" />;
       case 'staff_attendance':
-        return <StaffAttendanceView />;
+        return <LicenseGate feature="Chấm công nhân sự"><StaffAttendanceView /></LicenseGate>;
       case 'my_checkin':
-        return <StaffCheckInPage embedded onExit={() => handleNavigate('dashboard')} accountUsername={currentUser?.staffCode ? String(currentUser.username || '') : ''} presetCccd={/^\d{9,12}$/.test(String(currentUser?.username || '')) ? String(currentUser?.username) : ''} />;
+        return <LicenseGate feature="Chấm công và kê khai tiết dạy"><StaffCheckInPage embedded onExit={() => handleNavigate('dashboard')} accountUsername={currentUser?.staffCode ? String(currentUser.username || '') : ''} presetCccd={/^\d{9,12}$/.test(String(currentUser?.username || '')) ? String(currentUser?.username) : ''} /></LicenseGate>;
       case 'ai':
         return <AiAssistantView />;
       default:

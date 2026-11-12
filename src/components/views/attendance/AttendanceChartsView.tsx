@@ -1,4 +1,5 @@
 import React, { useState, useRef, useMemo } from 'react';
+import { writeReportXlsx } from '../../../utils/licensedExport';
 import * as XLSX from 'xlsx';
 import { Classroom, Student, DailyAttendance, DailyBoardingMeal } from '../../../types';
 import { 
@@ -221,7 +222,7 @@ export const AttendanceChartsView: React.FC<AttendanceChartsProps> = ({
       XLSX.utils.book_append_sheet(wb, ws3, 'So_Sanh_Cac_Lop');
     }
 
-    XLSX.writeFile(wb, `Bao_Cao_Thong_Ke_Bieu_Do_${selectedDate}.xlsx`);
+    writeReportXlsx(wb, `Bao_Cao_Thong_Ke_Bieu_Do_${selectedDate}.xlsx`);
     setExportToast('Đã xuất thành công file Excel Thống kê & Biểu đồ chuẩn đẹp!');
     setTimeout(() => setExportToast(null), 3000);
   };
