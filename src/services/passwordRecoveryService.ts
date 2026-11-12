@@ -44,6 +44,23 @@ async function call(body: Record<string, unknown>, fallback: string): Promise<Re
     const d = await schoolDriveDbService.callScript(body, 60000);
     // an toàn thêm một lớp: câu trả lời phải đúng dạng của lệnh khôi phục
     if (!d || typeof d.success !== 'boolean') return { success: false, message: fallback };
+    // Apps Script chưa được cấp quyền gửi thư: Google không tự hỏi quyền khi chỉ triển khai lại → hướng dẫn từng bước
+    if (d.success === false && d.code === 'MAIL_ERROR') {
+      const needAuth = /send_mail|authoriz|permission|quyền/i.test(String(d.message || ''));
+      return {
+        success: false, code: needAuth ? 'MAIL_NOT_AUTHORIZED' : 'MAIL_ERROR',
+        message: needAuth
+          ? [
+            'Apps Script của trường chưa được cấp quyền gửi email. Người giữ tài khoản Google của trường làm 1 lần:',
+            '1. Mở dự án Apps Script của trường (script.google.com).',
+            '2. Trên thanh công cụ, ở ô chọn hàm, chọn hàm "newSalt" rồi bấm Chạy.',
+            '3. Hộp "Cần được cấp quyền" hiện ra → Xem lại quyền → chọn tài khoản Google của trường → Nâng cao → Đi tới dự án (không an toàn) → Cho phép.',
+            '4. Quay lại đây bấm "Gửi mã về email khôi phục" lần nữa.',
+            'Nếu vẫn báo lỗi: Triển khai → Quản lý các tùy chọn triển khai → bút chì → Phiên bản mới → Triển khai.',
+          ].join('\n')
+          : `Không gửi được email: ${String(d.message || '').slice(0, 200)}`,
+      };
+    }
     return { success: d.success, message: d.message || (d.success ? 'Đã xong.' : fallback), code: d.code, maskedEmail: d.maskedEmail, minutes: d.minutes, recoveryEmail: d.recoveryEmail };
   } catch (e: any) {
     return { success: false, message: e?.message === 'NOT_CONFIGURED' ? 'Máy này chưa kết nối Google Drive của trường.' : (e?.message || fallback) };

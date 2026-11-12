@@ -45,7 +45,7 @@ export const ForgotPasswordModal: React.FC<Props> = ({ isOpen, onClose, initialU
     setBusy(false);
     if (!r.success) {
       setError(r.message);
-      if (r.code === 'NO_EMAIL' || r.code === 'OLD_SCRIPT') setHelpOpen(true);
+      setHelpOpen(r.code === 'NO_EMAIL' || r.code === 'OLD_SCRIPT');
       return;
     }
     setInfo(`Đã gửi mã 6 số tới ${r.maskedEmail || 'email khôi phục'}. Mã có hiệu lực ${r.minutes || 15} phút. Nếu chưa thấy, hãy xem cả mục Thư rác.`);
@@ -83,7 +83,7 @@ export const ForgotPasswordModal: React.FC<Props> = ({ isOpen, onClose, initialU
 
         {error && (
           <div role="alert" className="flex items-start gap-2 p-2.5 rounded-xl bg-rose-50 border border-rose-200 text-sm font-bold text-rose-800">
-            <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" /><span>{error}</span>
+            <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" /><span className="min-w-0 break-words whitespace-pre-line">{error}</span>
           </div>
         )}
         {info && (
