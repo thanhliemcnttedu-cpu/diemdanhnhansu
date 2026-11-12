@@ -56,6 +56,9 @@
 var FOLDER_ID = "__FOLDER_ID__";
 var TARGET_FILENAME = "du_lieu_lop_hoc_hanh_phuc.json";
 var REPORT_PREFIX = "bc_";
+// 1.1.8: KHÔI PHỤC TRỌN VẸN TỪ 1 TỆP TỔNG — lệnh `restoreArchive` (chỉ Quản trị) ghi lại lịch sử CHẤM CÔNG
+//        (chamcong_nhansu_YYYY-MM.json) và KÊ KHAI TIẾT DẠY (kekhai_tietday.json) từ tệp sao lưu toàn hệ thống.
+//        Mặc định CHỈ BỔ SUNG bản ghi còn thiếu (không đè dữ liệu đang có); `overwrite: true` mới ghi đè.
 // 1.1.7: BẢN QUYỀN DÙNG CHUNG CẢ TRƯỜNG — Quản trị (tối cao / trường) kích hoạt CDKEY trên máy mình → `setLicense` lưu
 //        bản ghi ĐÃ KÝ (mã băm + chữ ký, KHÔNG có mã CDKEY) ở Script Properties `license:<mã thư mục>`;
 //        mọi máy kết nối đúng thư mục + Apps Script gọi `getLicense` (GET) → phần mềm tự kiểm tra chữ ký và kích hoạt.
@@ -72,7 +75,7 @@ var REPORT_PREFIX = "bc_";
 //        rồi mã hóa lại (healStaffCccdHashes) — khi đăng nhập, khi Quản trị / BGH mở hoặc lưu danh sách nhân sự.
 // QUY TẮC ĐẶT TÊN PHIÊN BẢN (từ 11/2026): "Phiên bản A.B.C" — mỗi lần sửa mã tăng C thêm 1;
 // C tối đa 20: sau 1.1.20 là 1.2.1, sau 1.2.20 là 1.3.1… Các bản cũ dạng "4.x" (4.1 → 4.12) được coi là cũ hơn 1.1.2.
-var SCRIPT_VERSION = "1.1.7";
+var SCRIPT_VERSION = "1.1.8";
 // Thư mục của yêu cầu đang xử lý (để verifyUser đọc được danh sách nhân sự khi đăng nhập bằng CCCD)
 var CTX_FOLDER = null;
 
@@ -90,7 +93,7 @@ function doPost(e) {
 
     if (action === "staffAuth" || action === "staffCheckIn" || action === "getStaffRoster" || action === "saveStaffRoster" || action === "staffAttendanceRange" || action === "staffLock" || action === "staffProxyCheckIn"
         || action === "teachGet" || action === "teachSaveProfile" || action === "teachSaveLog" || action === "teachReport" || action === "teachLock" || action === "teachDeleteLog"
-        || action === "teachSettings") {
+        || action === "teachSettings" || action === "restoreArchive") {
       var staffFolder = resolveFolder(folderId);
       if (!staffFolder) return createJsonResponse({ success: false, message: "Không tìm thấy thư mục Google Drive: " + folderId });
       CTX_FOLDER = staffFolder;
@@ -107,6 +110,7 @@ function doPost(e) {
       if (action === "teachLock") return createJsonResponse(handleTeachLock(staffFolder, payload));
       if (action === "teachDeleteLog") return createJsonResponse(handleTeachDeleteLog(staffFolder, payload));
       if (action === "teachSettings") return createJsonResponse(handleTeachSettings(staffFolder, payload));
+      if (action === "restoreArchive") return createJsonResponse(handleRestoreArchive(staffFolder, payload));
       return createJsonResponse(handleStaffAttendanceRange(staffFolder, payload));
     }
 
@@ -1157,6 +1161,81 @@ function handleTeachSettings(folder, payload) {
     db.updatedAt = cur.updatedAt;
     writeFileOverwrite(folder, TEACH_FILE, JSON.stringify(db));
     return { success: true, settings: cur, message: cur.homeroomTeach ? "Đã BẬT kê khai tiết dạy cho giáo viên chủ nhiệm." : "Đã TẮT kê khai tiết dạy cho giáo viên chủ nhiệm." };
+  } finally { try { lock.releaseLock(); } catch (_) {} }
+}
+
+// 1.1.8 — Quản trị: khôi phục lịch sử chấm công + kê khai tiết dạy từ tệp sao lưu toàn hệ thống.
+// payload.attendance = { days: { "YYYY-MM-DD": { MÃ: {...} } }, locks: { "YYYY-MM-DD": ... } }
+// payload.teaching   = { profiles, logs: { "YYYY-MM": { MÃ: {...} } }, locks, settings }
+// Gộp không phá hủy: chỉ thêm bản ghi CHƯA có; payload.overwrite === true mới ghi đè bản ghi trùng.
+function handleRestoreArchive(folder, payload) {
+  var actor = staffActor(folder, payload.auth, true);
+  if (!actor) return { success: false, code: "UNAUTHORIZED", message: "Chỉ Quản trị được khôi phục chấm công / kê khai tiết dạy." };
+  var overwrite = payload.overwrite === true;
+  var out = { success: true, attendanceDays: 0, attendanceRecords: 0, teachingProfiles: 0, teachingLogs: 0 };
+  var lock = LockService.getScriptLock();
+  try { lock.waitLock(25000); } catch (_) {}
+  try {
+    var att = payload.attendance;
+    if (att && att.days && typeof att.days === "object") {
+      var byMonth = {};
+      for (var dk in att.days) {
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(dk)) continue;
+        var mk = dk.slice(0, 7);
+        if (!byMonth[mk]) byMonth[mk] = [];
+        byMonth[mk].push(dk);
+      }
+      for (var m in byMonth) {
+        var name = STAFF_ATT_PREFIX + m + ".json";
+        var doc = readJsonFile(folder, name, null);
+        if (!doc || typeof doc !== "object") doc = { month: m, days: {} };
+        if (!doc.days) doc.days = {};
+        var changed = false;
+        for (var i = 0; i < byMonth[m].length; i++) {
+          var d = byMonth[m][i];
+          var src = att.days[d];
+          if (!src || typeof src !== "object") continue;
+          if (!doc.days[d]) doc.days[d] = {};
+          var dayChanged = false;
+          for (var code in src) {
+            if (overwrite || !doc.days[d][code]) { doc.days[d][code] = src[code]; out.attendanceRecords++; dayChanged = true; }
+          }
+          if (dayChanged) { out.attendanceDays++; changed = true; }
+        }
+        if (att.locks && typeof att.locks === "object") {
+          for (var lk in att.locks) {
+            if (String(lk).slice(0, 7) !== m) continue;
+            if (!doc.locks) doc.locks = {};
+            if (overwrite || !doc.locks[lk]) { doc.locks[lk] = att.locks[lk]; changed = true; }
+          }
+        }
+        if (changed) { doc.updatedAt = new Date().toISOString(); writeFileOverwrite(folder, name, JSON.stringify(doc)); }
+      }
+    }
+    var t = payload.teaching;
+    if (t && typeof t === "object") {
+      var db = readTeachDb(folder);
+      var tChanged = false;
+      if (t.profiles && typeof t.profiles === "object") {
+        for (var pc in t.profiles) if (overwrite || !db.profiles[pc]) { db.profiles[pc] = t.profiles[pc]; out.teachingProfiles++; tChanged = true; }
+      }
+      if (t.logs && typeof t.logs === "object") {
+        for (var mo in t.logs) {
+          if (!/^\d{4}-\d{2}$/.test(mo) || !t.logs[mo] || typeof t.logs[mo] !== "object") continue;
+          if (!db.logs[mo]) db.logs[mo] = {};
+          for (var lc in t.logs[mo]) if (overwrite || !db.logs[mo][lc]) { db.logs[mo][lc] = t.logs[mo][lc]; out.teachingLogs++; tChanged = true; }
+        }
+      }
+      if (t.locks && typeof t.locks === "object") {
+        if (!db.locks) db.locks = {};
+        for (var tl in t.locks) if (overwrite || !db.locks[tl]) { db.locks[tl] = t.locks[tl]; tChanged = true; }
+      }
+      if (t.settings && typeof t.settings === "object" && (overwrite || !db.settings)) { db.settings = t.settings; tChanged = true; }
+      if (tChanged) { db.updatedAt = new Date().toISOString(); writeFileOverwrite(folder, TEACH_FILE, JSON.stringify(db)); }
+    }
+    out.message = "Đã khôi phục " + out.attendanceRecords + " lượt chấm công (" + out.attendanceDays + " ngày), "
+      + out.teachingProfiles + " hồ sơ kê khai, " + out.teachingLogs + " bảng kê tiết dạy.";
+    return out;
   } finally { try { lock.releaseLock(); } catch (_) {} }
 }
 

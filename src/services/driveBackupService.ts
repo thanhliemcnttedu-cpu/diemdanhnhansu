@@ -11,6 +11,8 @@
 import { googleDriveService, toLocalDateKey } from './googleDriveService';
 import { schoolDriveDbService } from './schoolDriveDbService';
 import { staffAttendanceService } from './staffAttendanceService';
+import { teachingLogService } from './teachingLogService';
+import { compareVersions } from './appsScriptSetupService';
 
 export interface DriveBackup {
   format: 'lhhp_drive_backup';
@@ -22,11 +24,23 @@ export interface DriveBackup {
   files: Record<string, any>;
   staff?: any[];
   staffAttendance?: { from: string; to: string; days: any; locks?: any };
+  /** Kê khai tiết dạy (12 tháng gần nhất): hồ sơ, bảng kê theo tháng, khóa chốt, cài đặt */
+  teaching?: { from?: string; to?: string; profiles: any; logs: any; locks?: any; settings?: any };
   license?: any;
   notes: string[];
 }
 
 type Progress = (text: string) => void;
+
+/** Result of reading a folder / several files chosen for restore */
+export interface AssembledBackup {
+  /** null = nothing restorable was recognised */
+  backup: DriveBackup | null;
+  /** files that will be restored, with a short description */
+  used: string[];
+  /** files left out, with the reason */
+  ignored: string[];
+}
 const SKIP_FILE = (name: string) => /^bc_/i.test(name) || !/\.json$/i.test(name);
 
 async function getJson(url: string): Promise<any> {
@@ -101,6 +115,17 @@ export const driveBackupService = {
       }
     } catch (_) { notes.push('Không đọc được dữ liệu nhân sự / chấm công (Apps Script cũ hoặc chưa có).'); }
 
+    // Kê khai tiết dạy: tệp được khóa trên Drive → đọc qua báo cáo của quản trị (tối đa 12 tháng gần nhất)
+    let teaching: DriveBackup['teaching'];
+    try {
+      onProgress('Đang đọc kê khai tiết dạy…');
+      const mk = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      const now = new Date();
+      const t = await teachingLogService.report(mk(new Date(now.getFullYear(), now.getMonth() - 11, 1)), mk(now), auth);
+      if (t && t.success) teaching = { from: t.from, to: t.to, profiles: t.profiles || {}, logs: t.logs || {}, locks: t.locks || {}, settings: t.settings || undefined };
+      else notes.push('Không đọc được kê khai tiết dạy.');
+    } catch (_) { notes.push('Không đọc được kê khai tiết dạy.'); }
+
     let license: any;
     try {
       const l = await getJson(`${scriptUrl}${sep}action=getLicense&folderId=${encodeURIComponent(folderId)}`);
@@ -111,7 +136,7 @@ export const driveBackupService = {
       format: 'lhhp_drive_backup', version: 1, exportedAt: new Date().toISOString(), exportedBy: auth.username,
       source: { folderId, schoolNames: (db.schools || []).map((s: any) => s?.name).filter(Boolean) },
       schoolDb: { schools: db.schools || [], users },
-      files, staff, staffAttendance, license, notes,
+      files, staff, staffAttendance, teaching, license, notes,
     };
   },
 
@@ -123,6 +148,78 @@ export const driveBackupService = {
     a.download = `LHHP_saoluu_toan_he_thong_${school}_${toLocalDateKey(new Date())}.json`;
     a.click();
     setTimeout(() => URL.revokeObjectURL(a.href), 3000);
+  },
+
+  /**
+   * 📂 Người dùng trỏ vào CẢ THƯ MỤC hoặc chọn NHIỀU TỆP: tự nhận dạng từng tệp và ghép thành một bản sao lưu để khôi phục.
+   *  - Có tệp tổng (`lhhp_drive_backup`) → dùng tệp tổng mới nhất, bỏ qua các tệp lẻ (cùng dữ liệu, tránh lẫn).
+   *  - Không có tệp tổng → ghép từ tệp lẻ: csdl_truong (trường + tài khoản), nhansu_truong (nhân sự),
+   *    gvcn_* / gvbm_* / phanhieu_truong / dieuchinh_quantri / tệp cấu hình (ghi lại đúng tên).
+   *  - Chấm công, kê khai tiết dạy, bc_*: chỉ để lưu trữ → liệt kê ở danh sách bỏ qua kèm lý do.
+   */
+  assembleFromFiles(items: Array<{ name: string; json: any }>): AssembledBackup {
+    const used: string[] = [];
+    const ignored: string[] = [];
+    const short = (n: string) => String(n || '').split(/[\\/]/).pop() || String(n || '');
+    const fulls = items.filter(it => this.isBackup(it.json));
+    if (fulls.length) {
+      fulls.sort((a, b) => String(b.json.exportedAt || '').localeCompare(String(a.json.exportedAt || '')));
+      const pick = fulls[0];
+      const sm = this.summarize(pick.json);
+      used.push(`${short(pick.name)} — tệp tổng toàn hệ thống (${sm.schools} trường, ${sm.users} tài khoản, ${sm.classFiles} tệp lớp, ${sm.staff} nhân sự)`);
+      items.forEach(it => { if (it !== pick) ignored.push(`${short(it.name)} — bỏ qua vì đã dùng tệp tổng${this.isBackup(it.json) ? ' mới hơn' : ''}`); });
+      return { backup: pick.json as DriveBackup, used, ignored };
+    }
+    let schoolDb: DriveBackup['schoolDb'] | null = null;
+    let staff: any[] | undefined;
+    let teaching: DriveBackup['teaching'];
+    const attDays: Record<string, any> = {};
+    const attLocks: Record<string, any> = {};
+    const files: Record<string, any> = {};
+    items.forEach(it => {
+      const name = short(it.name);
+      const low = name.toLowerCase();
+      const j = it.json;
+      if (!j || typeof j !== 'object' || Array.isArray(j)) { ignored.push(`${name} — không phải tệp dữ liệu của phần mềm`); return; }
+      if (j.format === 'lop_hoc_hanh_phuc_backup') { ignored.push(`${name} — bản sao lưu kiểu cũ của một tài khoản (nạp ở phần "Tệp riêng của tài khoản này")`); return; }
+      if (/^bc_/.test(low)) { ignored.push(`${name} — tệp báo cáo, Google Drive tự sinh lại`); return; }
+      if (/^chamcong_nhansu_/.test(low)) {
+        const dd = j.days && typeof j.days === 'object' ? j.days : {};
+        Object.keys(dd).forEach(k => { attDays[k] = dd[k]; });
+        if (j.locks && typeof j.locks === 'object') Object.keys(j.locks).forEach(k => { attLocks[k] = j.locks[k]; });
+        used.push(`${name} — chấm công (${Object.keys(dd).length} ngày)`);
+        return;
+      }
+      if (low === 'kekhai_tietday.json') {
+        teaching = { profiles: j.profiles || {}, logs: j.logs || {}, locks: j.locks || {}, settings: j.settings || undefined };
+        used.push(`${name} — kê khai tiết dạy (${Object.keys(j.logs || {}).length} tháng)`);
+        return;
+      }
+      if (low === 'csdl_truong.json' || (Array.isArray(j.users) && Array.isArray(j.schools))) {
+        schoolDb = { schools: Array.isArray(j.schools) ? j.schools : [], users: Array.isArray(j.users) ? j.users : [] };
+        used.push(`${name} — cơ sở dữ liệu trường (${schoolDb.schools.length} trường, ${schoolDb.users.length} tài khoản)`);
+        return;
+      }
+      if (low === 'nhansu_truong.json' || Array.isArray(j.staff)) {
+        staff = Array.isArray(j.staff) ? j.staff : [];
+        used.push(`${name} — danh sách nhân sự (${(staff || []).length} người)`);
+        return;
+      }
+      files[name] = j;
+      used.push(`${name} — ${/^gvcn_/.test(low) ? 'tệp lớp của giáo viên chủ nhiệm' : /^gvbm_/.test(low) ? 'tệp của giáo viên bộ môn' : 'tệp dữ liệu / cấu hình'}`);
+    });
+    if (!used.length) return { backup: null, used, ignored };
+    const db: DriveBackup['schoolDb'] = schoolDb || { schools: [], users: [] };
+    return {
+      backup: {
+        format: 'lhhp_drive_backup', version: 1, exportedAt: new Date().toISOString(), exportedBy: 'ghép từ các tệp đã chọn',
+        source: { folderId: '', schoolNames: (db.schools || []).map((x: any) => x?.name).filter(Boolean) },
+        schoolDb: db, files, staff, teaching,
+        staffAttendance: Object.keys(attDays).length ? { from: Object.keys(attDays).sort()[0], to: Object.keys(attDays).sort().slice(-1)[0], days: attDays, locks: attLocks } : undefined,
+        notes: [],
+      },
+      used, ignored,
+    };
   },
 
   isBackup(json: any): json is DriveBackup {
@@ -139,6 +236,7 @@ export const driveBackupService = {
       otherFiles: fileNames.filter(n => !/^(gvcn|gvbm)_/i.test(n)).length,
       staff: (b.staff || []).length,
       attendanceDays: Object.keys(b.staffAttendance?.days || {}).length,
+      teachingMonths: Object.keys(b.teaching?.logs || {}).length,
       exportedAt: b.exportedAt,
       schoolNames: b.source.schoolNames,
     };
@@ -153,22 +251,28 @@ export const driveBackupService = {
     if (!scriptUrl || !folderId) throw new Error('Chưa kết nối thư mục Google Drive dùng chung (đích).');
     const report: string[] = [];
 
-    // 1) Trường + tài khoản (giữ mật khẩu xem được; thiếu thì dùng mật khẩu chung)
-    onProgress('Đang khôi phục trường & tài khoản…');
-    const actorKey = opts.auth.username.trim().toLowerCase();
-    const users = (b.schoolDb.users || []).map((u: any) => {
-      const { currentPassword, ...rest } = u || {};
-      const isActor = String(rest.username || '').toLowerCase() === actorKey;
-      const pw = isActor ? opts.auth.password : (currentPassword || opts.fallbackPassword || '');
-      return pw ? { ...rest, password: pw } : rest;
-    });
-    if (!users.some((u: any) => String(u.username || '').toLowerCase() === actorKey)) {
-      users.unshift({ username: actorKey, fullName: 'Quản trị', role: 'admin', password: opts.auth.password });
+    // Chỉ chọn vài tệp lẻ mà không có csdl_truong → giữ nguyên trường & tài khoản đang có (không ghi đè, không đổi vai trò ai)
+    const hasDb = Boolean((b.schoolDb?.users || []).length || (b.schoolDb?.schools || []).length);
+    if (hasDb) {
+      // 1) Trường + tài khoản (giữ mật khẩu xem được; thiếu thì dùng mật khẩu chung)
+      onProgress('Đang khôi phục trường & tài khoản…');
+      const actorKey = opts.auth.username.trim().toLowerCase();
+      const users = (b.schoolDb.users || []).map((u: any) => {
+        const { currentPassword, ...rest } = u || {};
+        const isActor = String(rest.username || '').toLowerCase() === actorKey;
+        const pw = isActor ? opts.auth.password : (currentPassword || opts.fallbackPassword || '');
+        return pw ? { ...rest, password: pw } : rest;
+      });
+      if (!users.some((u: any) => String(u.username || '').toLowerCase() === actorKey)) {
+        users.unshift({ username: actorKey, fullName: 'Quản trị', role: 'admin', password: opts.auth.password });
+      }
+      const r1 = await schoolDriveDbService.callScript({ action: 'saveSchoolDb', auth: opts.auth, db: { schools: b.schoolDb.schools || [], users } }, 90000);
+      if (!r1 || r1.success === false) throw new Error(r1?.message || 'Không ghi được cơ sở dữ liệu trường vào thư mục đích.');
+      const skippedUsers = users.filter((u: any) => !u.password).length;
+      report.push(`Trường & tài khoản: ${users.length - skippedUsers} tài khoản${skippedUsers ? ` (bỏ qua ${skippedUsers} tài khoản không có mật khẩu)` : ''}.`);
+    } else {
+      report.push('Trường & tài khoản: không có trong các tệp đã chọn → giữ nguyên dữ liệu đang có.');
     }
-    const r1 = await schoolDriveDbService.callScript({ action: 'saveSchoolDb', auth: opts.auth, db: { schools: b.schoolDb.schools || [], users } }, 90000);
-    if (!r1 || r1.success === false) throw new Error(r1?.message || 'Không ghi được cơ sở dữ liệu trường vào thư mục đích.');
-    const skippedUsers = users.filter((u: any) => !u.password).length;
-    report.push(`Trường & tài khoản: ${users.length - skippedUsers} tài khoản${skippedUsers ? ` (bỏ qua ${skippedUsers} tài khoản không có mật khẩu)` : ''}.`);
     // Đăng nhập lại bằng tài khoản Quản trị đích để các lệnh sau dùng đúng phiên
     try { await schoolDriveDbService.login(opts.auth.username, opts.auth.password); } catch (_) { /* ignore */ }
 
@@ -218,8 +322,50 @@ export const driveBackupService = {
         report.push(r4 && r4.success ? 'Bản quyền: đã chuyển.' : 'Bản quyền: chưa chuyển được (cần Apps Script phiên bản 1.1.7 trở lên).');
       } catch (_) { report.push('Bản quyền: chưa chuyển được.'); }
     }
-    if (b.staffAttendance && Object.keys(b.staffAttendance.days || {}).length) {
-      report.push(`Lịch sử chấm công (${Object.keys(b.staffAttendance.days).length} ngày): chỉ lưu trong tệp sao lưu, Apps Script không cho ghi lại tự động.`);
+    // 5) Lịch sử chấm công + kê khai tiết dạy (Apps Script 1.1.8 trở lên: lệnh restoreArchive, gộp không phá hủy)
+    const attDays = b.staffAttendance?.days || {};
+    const attKeys = Object.keys(attDays).sort();
+    const hasTeaching = Boolean(b.teaching && (Object.keys(b.teaching.profiles || {}).length || Object.keys(b.teaching.logs || {}).length));
+    // ⚠️ Apps Script cũ hơn 1.1.8 KHÔNG biết lệnh restoreArchive và sẽ coi cả gói gửi lên (kèm tài khoản quản trị)
+    // là dữ liệu lớp để ghi thành tệp → phải kiểm tra phiên bản TRƯỚC, bản cũ thì tuyệt đối không gửi.
+    let archiveReady = false;
+    if (attKeys.length || hasTeaching) {
+      let ver = '';
+      try { const p = await getJson(`${scriptUrl}${scriptUrl.includes('?') ? '&' : '?'}action=ping`); ver = String(p?.version || ''); } catch (_) { ver = ''; }
+      if (ver && compareVersions(ver, '1.1.8') >= 0) archiveReady = true;
+      else report.push(`Chấm công & kê khai tiết dạy: chưa khôi phục — Apps Script của thư mục đích đang là ${ver ? `phiên bản ${ver}` : 'bản không xác định'}, cần cập nhật lên 1.1.8 (Dữ liệu → Google Drive của trường & Apps Script) rồi khôi phục lại. Các dữ liệu khác đã khôi phục xong.`);
+    }
+    if (archiveReady) {
+      // Apps Script cũ không biết lệnh restoreArchive → trả về dữ liệu chấm công (không có các số đếm)
+      const isOld = (r: any) => !r || typeof r.attendanceRecords !== 'number';
+      const OLD_MSG = 'Chấm công & kê khai tiết dạy: Apps Script của thư mục đích là bản cũ → hãy cập nhật Apps Script lên phiên bản 1.1.8 rồi khôi phục lại (các dữ liệu khác đã khôi phục xong).';
+      let archiveOk = true, records = 0, days = 0, profiles = 0, logs = 0;
+      try {
+        // chấm công: gửi theo từng tháng để mỗi lệnh gọn, không quá giới hạn thời gian của Apps Script
+        const months = Array.from(new Set(attKeys.map(k => k.slice(0, 7))));
+        for (let i = 0; i < months.length && archiveOk; i++) {
+          const m = months[i];
+          onProgress(`Đang khôi phục chấm công tháng ${m.slice(5)}/${m.slice(0, 4)} (${i + 1}/${months.length})…`);
+          const part: Record<string, any> = {};
+          attKeys.filter(k => k.slice(0, 7) === m).forEach(k => { part[k] = attDays[k]; });
+          const locks: Record<string, any> = {};
+          const srcLocks: Record<string, any> = b.staffAttendance?.locks || {};
+          Object.keys(srcLocks).filter(k => k.slice(0, 7) === m).forEach(k => { locks[k] = srcLocks[k]; });
+          const r = await schoolDriveDbService.callScript({ action: 'restoreArchive', auth: opts.auth, overwrite: opts.overwrite, attendance: { days: part, locks } }, 120000);
+          if (r && r.success && !isOld(r)) { records += r.attendanceRecords; days += r.attendanceDays || 0; }
+          else { archiveOk = false; report.push(r && r.success === false && r.code ? `Chấm công: chưa khôi phục được (${r.message || 'không đủ quyền'}).` : OLD_MSG); }
+        }
+        if (archiveOk && hasTeaching) {
+          onProgress('Đang khôi phục kê khai tiết dạy…');
+          const r = await schoolDriveDbService.callScript({ action: 'restoreArchive', auth: opts.auth, overwrite: opts.overwrite, teaching: b.teaching }, 120000);
+          if (r && r.success && !isOld(r)) { profiles = r.teachingProfiles || 0; logs = r.teachingLogs || 0; }
+          else { archiveOk = false; report.push(r && r.success === false && r.code ? `Kê khai tiết dạy: chưa khôi phục được (${r.message || 'không đủ quyền'}).` : OLD_MSG); }
+        }
+      } catch (e: any) { archiveOk = false; report.push(`Chấm công / kê khai tiết dạy: chưa khôi phục được (${e?.message || 'lỗi kết nối'}).`); }
+      if (archiveOk) {
+        if (attKeys.length) report.push(`Chấm công: thêm ${records} lượt trong ${days} ngày${opts.overwrite ? '' : ' (bản ghi đã có được giữ nguyên)'}.`);
+        if (hasTeaching) report.push(`Kê khai tiết dạy: thêm ${profiles} hồ sơ, ${logs} bảng kê${opts.overwrite ? '' : ' (bảng đã có được giữ nguyên)'}.`);
+      }
     }
     return report;
   },

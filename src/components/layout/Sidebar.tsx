@@ -31,6 +31,7 @@ export type NavigationMenuId =
   | 'noise'
   | 'timer'
   | 'links'
+  | 'guide'
   | 'reports'
   | 'staff_attendance'
   | 'my_checkin'
@@ -149,6 +150,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
       icon: Link,
     },
     {
+      id: 'guide',
+      label: 'Hướng dẫn sử dụng',
+      icon: BookOpen,
+    },
+    {
       id: 'reports',
       label: teacherRole === 'subject' ? 'Thống kê Bộ môn' : 'Thống kê',
       icon: BarChart3,
@@ -221,7 +227,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const NAV_GROUPS: Array<{ key: string; label: string; icon: React.ComponentType<{ className?: string }>; tone: string; ids: NavigationMenuId[] }> = [
     { key: 'class', label: 'Lớp học', icon: School, tone: 'text-sky-600', ids: ['dashboard', 'classes', 'students', 'attendance', 'seating', 'schedule'] },
     { key: 'activity', label: 'Hoạt động', icon: Sparkles, tone: 'text-violet-600', ids: ['picker', 'rewards', 'certificate', 'infographic', 'noise', 'timer'] },
-    { key: 'manage', label: 'Quản lý & báo cáo', icon: BarChart3, tone: 'text-emerald-700', ids: ['reports', 'staff_attendance', 'my_checkin', 'data', 'links', 'ai'] },
+    { key: 'manage', label: 'Quản lý & báo cáo', icon: BarChart3, tone: 'text-emerald-700', ids: ['reports', 'staff_attendance', 'my_checkin', 'data', 'links', 'guide', 'ai'] },
   ];
   const [closedGroups, setClosedGroups] = useState<string[]>(() => {
     try { return JSON.parse(localStorage.getItem('lhhp_nav_closed_groups') || '[]'); } catch (_) { return []; }

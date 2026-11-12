@@ -167,6 +167,36 @@ export const QuizStorageModal: React.FC = () => {
     }
     setCheck({ ...d, sync });
   });
+  // 📄 Tệp cấu hình kho câu hỏi cá nhân: chỉ gồm link thư mục Drive cá nhân + link Apps Script cá nhân,
+  // để giáo viên mang sang máy tính khác (không chứa câu hỏi, không chứa mật khẩu).
+  const downloadCfgFile = () => {
+    const f0 = (cfg?.folderUrl || folderUrl).trim();
+    const s0 = (cfg?.scriptUrl || scriptUrl).trim();
+    if (!f0 || !s0) { setDriveNote('Chưa có đủ link thư mục và link Apps Script để tạo tệp cấu hình.'); return; }
+    const data = {
+      format: 'lhhp_quiz_storage', version: 1, username, folderUrl: f0, scriptUrl: s0, createdAt: new Date().toISOString(),
+      note: 'Tệp cấu hình kho câu hỏi cá nhân — Lớp Học Hạnh Phúc. Ở máy khác: Nơi lưu câu hỏi → Nạp tệp cấu hình → Kiểm tra & kết nối.',
+    };
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }));
+    a.download = `cau_hinh_kho_cau_hoi_${username.toLowerCase() || 'ca_nhan'}.json`;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 3000);
+    setDriveNote('Đã tải tệp cấu hình kho câu hỏi. Cất tệp này để dùng khi sang máy tính khác.');
+  };
+  const loadCfgFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    let j: any = null;
+    try { j = JSON.parse(await file.text()); } catch (_) { j = null; }
+    const f0 = String(j?.folderUrl || '').trim();
+    const s0 = String(j?.scriptUrl || '').trim();
+    if (!j || !f0 || !s0) { setCheck(null); setDriveNote(`Tệp "${file.name}" không phải tệp cấu hình kho câu hỏi (thiếu link thư mục hoặc link Apps Script).`); return; }
+    if (j.format === 'lhhp_connection') { setCheck(null); setDriveNote('Đây là tệp kết nối CSDL của NHÀ TRƯỜNG, không dùng cho kho câu hỏi cá nhân. Hãy nạp tệp này ở màn đăng nhập hoặc mục Dữ liệu.'); return; }
+    setFolderUrl(f0); setScriptUrl(s0); saveDraft(f0, s0); setCheck(null);
+    setDriveNote('Đã điền 2 link từ tệp cấu hình. Bấm "Kiểm tra & kết nối" để hoàn tất.');
+  };
   const clearField = (which: 'folder' | 'script') => {
     if (which === 'folder') { setFolderUrl(''); saveDraft('', scriptUrl); } else { setScriptUrl(''); saveDraft(folderUrl, ''); }
     setCheck(null);
@@ -434,6 +464,13 @@ export const QuizStorageModal: React.FC = () => {
             <div className="flex flex-wrap gap-2">
               <button type="button" onClick={onConnect} disabled={!!busy || !folderUrl.trim() || !scriptUrl.trim()} className={`${btn} bg-sky-700 hover:bg-sky-800 text-white`}>
                 {busy === 'connect' ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />} Kiểm tra & kết nối
+              </button>
+              <label className={`${btn} border border-slate-300 bg-white hover:bg-slate-50 text-slate-800 cursor-pointer`} title="Chọn tệp cấu hình kho câu hỏi đã tải về trước đó để tự điền 2 link">
+                <Upload className="w-4 h-4" /> Nạp tệp cấu hình
+                <input type="file" accept=".json" onChange={loadCfgFile} className="hidden" />
+              </label>
+              <button type="button" onClick={downloadCfgFile} disabled={!((cfg?.folderUrl || folderUrl).trim() && (cfg?.scriptUrl || scriptUrl).trim())} className={`${btn} border border-slate-300 bg-white hover:bg-slate-50 text-slate-800`} title="Tải tệp chứa link thư mục và link Apps Script cá nhân để dùng ở máy tính khác">
+                <Download className="w-4 h-4" /> Tải tệp cấu hình
               </button>
               {cfg && (
                 <>

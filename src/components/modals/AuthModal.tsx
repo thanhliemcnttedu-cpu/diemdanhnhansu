@@ -7,6 +7,7 @@ import {
   Cloud, HardDrive, KeyRound, RefreshCw, Award,
   Volume2, Dices, CalendarCheck, Check
 } from 'lucide-react';
+import { Upload as ConnUp } from 'lucide-react';
 import { UserAccount, LoginRoleScope, SchoolEntity } from '../../types';
 import { useClassroom } from '../../context/ClassroomContext';
 import { databaseService } from '../../services/databaseService';
@@ -97,6 +98,24 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       setDriveInitialized(false);
       setDriveNotice(res.message === 'NOT_CONFIGURED' ? '' : `Chưa đọc được CSDL trường trên Drive: ${res.message || ''}`);
     }
+  };
+
+  // 📄 Cách 2: nạp tệp kết nối do Quản trị gửi → tự điền 2 ô, người dùng bấm Xác thực & kết nối
+  const handleConnectionFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    setErrorMessage('');
+    setSuccessMessage('');
+    let parsed: ReturnType<typeof googleDriveService.parseConnectionFile> = null;
+    try { parsed = googleDriveService.parseConnectionFile(await file.text()); } catch (_) { parsed = null; }
+    if (!parsed || !parsed.folderUrl || !parsed.scriptUrl) {
+      setErrorMessage(`Tệp "${file.name}" không phải tệp kết nối đầy đủ (cần có link thư mục Google Drive và link Apps Script).`);
+      return;
+    }
+    setFolderLinkInput(parsed.folderUrl);
+    setScriptLinkInput(parsed.scriptUrl);
+    setSuccessMessage(`Đã điền 2 link từ tệp kết nối${parsed.schoolName ? ` của ${parsed.schoolName}` : ''}. Bấm "Xác thực & kết nối" để hoàn tất.`);
   };
 
   // 🔐 Xác thực 2 ô: (1) link thư mục dùng chung, (2) link mã script — kiểm tra thật rồi mới lưu
@@ -516,6 +535,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                         placeholder="https://script.google.com/macros/s/.../exec"
                         className="w-full px-3 py-2 rounded-lg text-[12px] font-mono text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-amber-400"
                       />
+                    </label>
+                    <label
+                      className="w-full py-2 rounded-lg border border-white/50 bg-white/15 hover:bg-white/25 text-white text-[12px] font-black cursor-pointer flex items-center justify-center gap-1.5"
+                      title="Cách 2: chọn tệp ket_noi_csdl_truong.json do Quản trị nhà trường gửi — phần mềm tự điền 2 ô trên"
+                    >
+                      <ConnUp className="w-3.5 h-3.5" />
+                      Hoặc nạp tệp kết nối (.json)
+                      <input type="file" accept=".json,.txt" onChange={handleConnectionFile} className="hidden" />
                     </label>
                     <button
                       type="button"

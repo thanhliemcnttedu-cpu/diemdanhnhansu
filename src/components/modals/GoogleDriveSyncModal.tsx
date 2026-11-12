@@ -6,6 +6,7 @@ import {
   Clock, X, Sparkles, Play, HardDrive, History, CheckCheck, Users,
   Code2, Eye, EyeOff, Loader2, Wand2
 } from 'lucide-react';
+import { Download as ConnDown, Upload as ConnUp } from 'lucide-react';
 import { googleDriveService } from '../../services/googleDriveService';
 import { appsScriptSetupService, versionLabel, DRIVE_CONNECTION_EVENT, type DriveConnection } from '../../services/appsScriptSetupService';
 import { schoolDriveDbService } from '../../services/schoolDriveDbService';
@@ -120,8 +121,8 @@ export const GoogleDriveSyncModal: React.FC<GoogleDriveSyncModalProps> = ({ isOp
   };
 
   // 📥 GVCN / BGH dán thông tin kết nối nhận từ Quản trị nhà trường
-  const handleApplyConnectionText = async () => {
-    const parsed = googleDriveService.parseConnectionText(connectionTextInput);
+  const handleApplyConnectionText = async (textOverride?: string) => {
+    const parsed = googleDriveService.parseConnectionText(typeof textOverride === 'string' ? textOverride : connectionTextInput);
     if (!parsed.scriptUrl && !parsed.folderId) {
       setActionMessage({ type: 'error', text: 'Không tìm thấy link thư mục Google Drive hoặc mã kết nối Apps Script trong nội dung đã dán.' });
       return;
@@ -343,6 +344,26 @@ export const GoogleDriveSyncModal: React.FC<GoogleDriveSyncModalProps> = ({ isOp
   const saveAndRecheck = () => { handleSaveConfig(); setTimeout(recheckConnection, 300); };
   const testAndRecheck = async () => { await handleTestConnection(); recheckConnection(); };
   const applyTextAndRecheck = async () => { await handleApplyConnectionText(); recheckConnection(); };
+  // 📄 Cách 2: nạp tệp kết nối do Quản trị gửi (ket_noi_csdl_truong.json)
+  const handleConnectionFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    let parsed: ReturnType<typeof googleDriveService.parseConnectionFile> = null;
+    try { parsed = googleDriveService.parseConnectionFile(await file.text()); } catch (_) { parsed = null; }
+    if (!parsed) {
+      setActionMessage({ type: 'error', text: `Tệp "${file.name}" không phải tệp kết nối (không có link thư mục Google Drive và link Apps Script).` });
+      return;
+    }
+    await handleApplyConnectionText(`${parsed.folderUrl || ''}\n${parsed.scriptUrl || ''}`);
+    recheckConnection();
+  };
+  const handleDownloadConnectionFile = () => {
+    const ok = googleDriveService.downloadConnectionFile(currentUser?.schoolName);
+    setActionMessage(ok
+      ? { type: 'success', text: 'Đã tải tệp ket_noi_csdl_truong.json. Gửi tệp này cho giáo viên; giáo viên bấm "Nạp tệp kết nối" là kết nối xong.' }
+      : { type: 'error', text: 'Chưa có đủ link thư mục và link Apps Script để tạo tệp kết nối.' });
+  };
 
   const cardCls = 'rounded-2xl border border-slate-200 bg-white p-3 space-y-2';
   const titleCls = 'text-sm font-black text-slate-900 flex items-center gap-2';
@@ -490,14 +511,19 @@ export const GoogleDriveSyncModal: React.FC<GoogleDriveSyncModalProps> = ({ isOp
                   <section className={cardCls}>
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <h3 className={titleCls}><Users className="w-4 h-4 text-indigo-700" /> Gửi thông tin kết nối cho toàn trường</h3>
-                      <button type="button" onClick={handleCopyConnectionInfo} className={btnIndigo}>
-                        {isConnectionCopied ? <CheckCheck className="w-4 h-4" /> : <Copy className="w-4 h-4" />} {isConnectionCopied ? 'Đã sao chép' : 'Sao chép để gửi'}
-                      </button>
+                      <div className="flex flex-wrap gap-2">
+                        <button type="button" onClick={handleCopyConnectionInfo} className={btnIndigo}>
+                          {isConnectionCopied ? <CheckCheck className="w-4 h-4" /> : <Copy className="w-4 h-4" />} {isConnectionCopied ? 'Đã sao chép' : 'Sao chép để gửi'}
+                        </button>
+                        <button type="button" onClick={handleDownloadConnectionFile} className={btnLight} title="Tải tệp ket_noi_csdl_truong.json (chỉ có 2 đường link và tên trường) để gửi cho giáo viên">
+                          <ConnDown className="w-4 h-4" /> Tải tệp kết nối
+                        </button>
+                      </div>
                     </div>
                     <pre className="whitespace-pre-wrap break-all bg-slate-50 px-2.5 py-2 rounded-xl border border-slate-200 font-mono text-xs text-slate-700 select-all max-h-24 overflow-y-auto">
                       {googleDriveService.buildConnectionShareText(currentUser?.schoolName)}
                     </pre>
-                    <p className="text-xs text-slate-600">Gửi tin nhắn này qua Zalo / email. BGH và giáo viên dán vào màn đăng nhập là kết nối xong.</p>
+                    <p className="text-xs text-slate-600">Hai cách gửi cho BGH và giáo viên: <strong>gửi tin nhắn</strong> này (họ dán vào màn đăng nhập) hoặc <strong>gửi tệp kết nối</strong> (họ bấm "Nạp tệp kết nối").</p>
                   </section>
                 )}
                 {(!isSetupAdmin || !config.scriptUrl || !config.folderId) && (
@@ -511,7 +537,14 @@ export const GoogleDriveSyncModal: React.FC<GoogleDriveSyncModalProps> = ({ isOp
                         {isTesting ? 'Đang kiểm tra…' : 'Áp dụng'}
                       </button>
                     </div>
-                    {isSetupAdmin && <p className="text-xs text-slate-600">Quản trị cài lần đầu: bấm <strong>Trình cài đặt Apps Script</strong> ở khung bên để được hướng dẫn 5 bước.</p>}
+                    <div className="flex flex-wrap items-center gap-2">
+                      <label className={btnLight} title="Chọn tệp ket_noi_csdl_truong.json do Quản trị nhà trường gửi">
+                        <ConnUp className="w-4 h-4 text-sky-700" /> Nạp tệp kết nối
+                        <input type="file" accept=".json,.txt" onChange={handleConnectionFile} className="hidden" />
+                      </label>
+                      <span className="text-xs text-slate-600">Cách 2: dùng tệp <span className="font-mono">ket_noi_csdl_truong.json</span> Quản trị gửi.</span>
+                    </div>
+                    {isSetupAdmin && <p className="text-xs text-slate-600">Quản trị cài lần đầu: mở <strong>Cài đặt / cập nhật Apps Script</strong> để được hướng dẫn 5 bước.</p>}
                   </section>
                 )}
                 {oldFolders.length > 0 && (

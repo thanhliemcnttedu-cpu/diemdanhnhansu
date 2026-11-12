@@ -24,6 +24,8 @@ import { multiTierBackupService } from '../../services/multiTierBackupService';
 import { GoogleDriveSyncModal } from '../modals/GoogleDriveSyncModal';
 import { DataStorageLocationModal } from '../modals/DataStorageLocationModal';
 import { AppsScriptSetupWizard } from '../modals/AppsScriptSetupWizard';
+import { OPEN_QUIZ_STORAGE_EVENT } from '../modals/QuizStorageModal';
+import { BookOpen as HubBook } from 'lucide-react';
 import { appsScriptSetupService, DRIVE_CONNECTION_EVENT, type DriveConnection } from '../../services/appsScriptSetupService';
 import { Cloud as HubCloud, RefreshCw as HubSync, HardDrive as HubDisk, FileArchive as HubArchive, Calendar as HubYear, Wand2 as HubWand, ChevronDown as HubDown } from 'lucide-react';
 
@@ -32,7 +34,7 @@ const HubAccountData = React.lazy(() => import('../modals/AccountManagementModal
 
 /** Sections of the unified Data page. Other screens jump to one with DATA_HUB_EVENT (see App.tsx). */
 export type DataHubSection = 'backup' | 'newyear';
-type HubGroupId = 'backup' | 'drive' | 'stats';
+type HubGroupId = 'backup' | 'drive' | 'stats' | 'quiz';
 export const DATA_HUB_EVENT = 'lhhp:data-hub-section';
 export const DATA_HUB_KEY = 'lhhp_data_hub_section';
 const DATA_HUB_SECTIONS: Array<{ id: DataHubSection; label: string; hint: string; icon: React.ComponentType<{ className?: string }> }> = [
@@ -97,7 +99,9 @@ export const ReportsDataView: React.FC<ReportsDataViewProps> = ({ defaultTab = '
   const [dataHub, setDataHub] = useState<DataHubSection>(hubInitial.tab);
   const [hubOpen, setHubOpen] = useState<Record<HubGroupId, boolean>>({
     backup: !hubInitial.group || hubInitial.group === 'backup',
-    drive: hubInitial.group === 'drive',
+    // Giáo viên không có nhóm sao lưu → mở sẵn nhóm Google Drive của trường
+    drive: hubInitial.group === 'drive' || !canManageAccounts,
+    quiz: false,
     stats: false,
   });
   const toggleHub = (id: HubGroupId) => setHubOpen(prev => ({ ...prev, [id]: !prev[id] }));
@@ -1413,120 +1417,41 @@ export const ReportsDataView: React.FC<ReportsDataViewProps> = ({ defaultTab = '
 
             {dataHub === 'backup' && (
               <div className="space-y-3">
+                {canManageAccounts && (
                 <HubGroup
                   id="hub-group-backup"
                   open={hubOpen.backup}
                   onToggle={() => toggleHub('backup')}
                   icon={HubArchive}
                   title="Sao lưu, khôi phục & lưu trên máy tính"
-                  hint={canManageAccounts ? 'Tải bản sao lưu toàn hệ thống, khôi phục từ tệp, tệp riêng của tài khoản, thư mục tự lưu trên máy' : 'Tải bản sao lưu của tài khoản, khôi phục từ tệp, thư mục tự lưu trên máy'}
+                  hint="Một tệp tổng chứa toàn bộ dữ liệu của trường: tải về, khôi phục từ tệp / thư mục, lưu vào thư mục trên máy tính"
                 >
-                  {canManageAccounts ? (
-                    <React.Suspense fallback={<p className="text-sm font-semibold text-slate-600 px-1">Đang mở phần sao lưu…</p>}>
-                      <HubAccountData
-                        embeddedDatabase
-                        embeddedPart="backup"
-                        isOpen
-                        onClose={() => {}}
-                        currentUser={currentUser}
-                        allUsers={allUsers}
-                        onRefreshUsers={refreshUsersList}
-                        onSwitchToUser={hubSwitchToUser}
-                        embeddedExtra={<DataStorageLocationModal embedded parts="file" isOpen onClose={() => {}} />}
-                      />
-                    </React.Suspense>
-                  ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
-                    {/* Card 1: Backup Download (.JSON & .ZIP) theo phân cấp */}
-                    <div className="bg-white rounded-3xl border border-slate-200/90 p-4 sm:p-6 shadow-xs flex flex-col justify-between space-y-4 sm:space-y-5 hover-zoom-card">
-                      <div className="space-y-2">
-                        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center shadow-2xs">
-                          <Download className="w-5 h-5 sm:w-6 sm:h-6" />
-                        </div>
-                        <h3 className="text-xs sm:text-sm font-black text-slate-900 uppercase">
-                          {isCurrentUserSuperAdmin
-                            ? (selectedAdminScope === 'system' ? 'TẢI SAO LƯU TOÀN HỆ THỐNG' : `TẢI SAO LƯU TRƯỜNG: ${selectedAdminSchool}`)
-                            : (isSchoolAdminAccount ? 'TẢI SAO LƯU TOÀN BỘ NHÀ TRƯỜNG' : 'TẢI VỀ SAO LƯU TÀI KHOẢN')
-                          }
-                        </h3>
-                        <p className="text-xs text-slate-500 leading-relaxed">
-                          {isCurrentUserSuperAdmin
-                            ? (selectedAdminScope === 'system'
-                                ? 'Đóng gói toàn bộ cơ sở dữ liệu hệ thống (tất cả các trường, tài khoản người dùng, lớp học, điểm số) về máy an toàn.'
-                                : `Đóng gói toàn bộ cơ sở dữ liệu của ${selectedAdminSchool} (các lớp GVCN, học sinh, điểm số và tài khoản trường).`
-                              )
-                            : (isSchoolAdminAccount
-                                ? `Đóng gói toàn bộ cơ sở dữ liệu của nhà trường (66 lớp GVCN, 103 học sinh, điểm số, chuyên cần và tài khoản giáo viên).`
-                                : 'Đóng gói cơ sở dữ liệu học sinh, danh sách lớp, điểm số và thời khóa biểu của tài khoản bạn đang phụ trách.'
-                              )
-                          }
-                        </p>
-                      </div>
-
-                      <div className="space-y-2 sm:space-y-2.5">
-                        {/* Option 1: .JSON */}
-                        <button
-                          onClick={() => handleExportMultiTier('json')}
-                          disabled={isExportingData}
-                          className="w-full py-2.5 sm:py-3 px-4 rounded-2xl text-xs font-black text-white bg-blue-600 hover:bg-blue-700 shadow-md shadow-blue-600/20 transition-all hover-zoom-btn flex items-center justify-center gap-2 uppercase disabled:opacity-50"
-                        >
-                          <Download className="w-4 h-4" />
-                          <span>{isExportingData ? 'ĐANG ĐÓNG GÓI...' : 'TẢI FILE .JSON'}</span>
-                        </button>
-
-                        {/* Option 2: .ZIP */}
-                        <button
-                          onClick={() => handleExportMultiTier('zip')}
-                          disabled={isExportingData}
-                          className="w-full py-2.5 sm:py-3 px-4 rounded-2xl text-xs font-black text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 transition-all hover-zoom-btn flex items-center justify-center gap-2 uppercase disabled:opacity-50"
-                        >
-                          <FileArchive className="w-4 h-4 text-indigo-600" />
-                          <span>TẢI FILE NÉN .ZIP</span>
-                        </button>
-                      </div>
-                    </div>
-                    {/* Card 2: Restore Upload (.JSON & .ZIP) với Modal Xem Trước Khôi Phục */}
-                    <div className="bg-white rounded-3xl border border-slate-200/90 p-4 sm:p-6 shadow-xs flex flex-col justify-between space-y-4 sm:space-y-5 hover-zoom-card">
-                      <div className="space-y-2">
-                        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-emerald-50 text-emerald-700 flex items-center justify-center shadow-2xs">
-                          <Upload className="w-5 h-5 sm:w-6 sm:h-6" />
-                        </div>
-                        <h3 className="text-xs sm:text-sm font-black text-slate-900 uppercase">
-                          {isCurrentUserSuperAdmin
-                            ? (selectedAdminScope === 'system' ? 'KHÔI PHỤC TOÀN HỆ THỐNG' : `KHÔI PHỤC TRƯỜNG: ${selectedAdminSchool}`)
-                            : (isSchoolAdminAccount ? 'KHÔI PHỤC TOÀN BỘ NHÀ TRƯỜNG' : 'NẠP KHÔI PHỤC TÀI KHOẢN')
-                          }
-                        </h3>
-                        <p className="text-xs text-slate-500 leading-relaxed">
-                          Hỗ trợ tải lên file dạng <strong className="text-emerald-700">.JSON</strong> hoặc FILE nén <strong className="text-emerald-700">.ZIP</strong>. Hệ thống tự động phân tích cấu trúc và kiểm tra phân quyền trước khi nạp.
-                        </p>
-                      </div>
-
-                      <div>
-                        <input
-                          type="file"
-                          ref={fileInputRef}
-                          accept=".json,.zip"
-                          className="hidden"
-                          onChange={handleFileUpload}
-                        />
-                        <button
-                          onClick={() => fileInputRef.current?.click()}
-                          disabled={isImportLoading}
-                          className="w-full py-3 sm:py-3.5 px-3 sm:px-4 rounded-2xl text-xs font-black text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border-2 border-dashed border-emerald-300 transition-all hover-zoom-btn flex flex-col items-center justify-center gap-1.5 uppercase disabled:opacity-50"
-                        >
-                          <Upload className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600 animate-bounce" />
-                          <span>{isImportLoading ? 'ĐANG PHÂN TÍCH TỆP...' : 'CHỌN FILE .JSON / .ZIP'}</span>
-                          <span className="text-[12px] text-emerald-700 font-medium">BẤM ĐỂ DUYỆT TỆP</span>
-                        </button>
-                      </div>
-                    </div>
-                    </div>
-                  )}
+                  <React.Suspense fallback={<p className="text-sm font-semibold text-slate-600 px-1">Đang mở phần sao lưu…</p>}>
+                    <HubAccountData
+                      embeddedDatabase
+                      embeddedPart="backup"
+                      isOpen
+                      onClose={() => {}}
+                      currentUser={currentUser}
+                      allUsers={allUsers}
+                      onRefreshUsers={refreshUsersList}
+                      onSwitchToUser={hubSwitchToUser}
+                      embeddedExtra={<DataStorageLocationModal embedded parts="file" isOpen onClose={() => {}} />}
+                    />
+                  </React.Suspense>
                   <div className="mt-3 space-y-2">
                     <DataStorageLocationModal embedded parts="folder" isOpen onClose={() => {}} />
                   </div>
                 </HubGroup>
+                )}
+
+                {/* Giáo viên: không cần sao lưu — dữ liệu do nhà trường cấp và đồng bộ qua Google Drive của trường */}
+                {!canManageAccounts && (
+                  <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-950">
+                    <p className="font-black">Tài khoản giáo viên không cần sao lưu tệp dữ liệu.</p>
+                    <p className="mt-0.5">Dữ liệu lớp học của thầy/cô được nhà trường cấp và tự đồng bộ với thư mục Google Drive của trường. Trên máy mới chỉ cần <strong>kết nối Google Drive của trường</strong> (dán 2 link hoặc nạp tệp kết nối do quản trị gửi) rồi đăng nhập là có đủ dữ liệu.</p>
+                  </div>
+                )}
 
                 <HubGroup
                   id="hub-group-drive"
@@ -1557,6 +1482,24 @@ export const ReportsDataView: React.FC<ReportsDataViewProps> = ({ defaultTab = '
                         {showHubWizard && <AppsScriptSetupWizard embedded />}
                       </section>
                     )}
+                  </div>
+                </HubGroup>
+
+                <HubGroup
+                  id="hub-group-quiz"
+                  open={hubOpen.quiz}
+                  onToggle={() => toggleHub('quiz')}
+                  icon={HubBook}
+                  title="Kho câu hỏi cá nhân"
+                  hint="Nơi lưu bộ câu hỏi của riêng thầy/cô (thư mục máy tính hoặc Google Drive cá nhân) — không liên quan dữ liệu nhà trường"
+                >
+                  <div className="space-y-2 text-sm text-slate-800">
+                    <p>Bộ câu hỏi tự soạn là của riêng mỗi giáo viên, lưu ở nơi thầy/cô chọn: thư mục trên máy tính, USB, hoặc thư mục <strong>Google Drive cá nhân</strong> (có Apps Script riêng).</p>
+                    <p className="text-xs text-slate-700">Dùng ở máy tính khác: mở <strong>Nơi lưu câu hỏi</strong> → <strong>Nạp tệp cấu hình</strong> (tệp chứa link thư mục và link Apps Script cá nhân đã tải về trước đó) → Kiểm tra &amp; kết nối; bộ câu hỏi tự lấy về.</p>
+                    <button type="button" onClick={() => window.dispatchEvent(new Event(OPEN_QUIZ_STORAGE_EVENT))}
+                      className="no-hover-fx h-10 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-black inline-flex items-center gap-2 cursor-pointer">
+                      <HubBook className="w-4 h-4" /> Mở Nơi lưu câu hỏi
+                    </button>
                   </div>
                 </HubGroup>
 

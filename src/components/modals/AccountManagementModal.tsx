@@ -10,7 +10,7 @@ import {
   Activity, Calendar, Clock, Filter, RotateCcw, GitBranch, ChevronDown,
   FolderTree, Building2, Plus, Crown, ArrowRightLeft, FileText,
   ArrowUpDown, Layers, ArrowDownAZ, ArrowUpAZ, GraduationCap, SlidersHorizontal, LogIn, MapPin, Lock
-} from 'lucide-react';
+, FolderOpen } from 'lucide-react';
 import { UserAccount, UserRole, SchoolEntity } from '../../types';
 import { databaseService, DatabaseStats, AuditLogItem, UserSummaryItem } from '../../services/databaseService';
 import { schoolDriveDbService } from '../../services/schoolDriveDbService';
@@ -61,7 +61,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
   const [loading, setLoading] = useState(false);
   // 💾 Sao lưu / khôi phục toàn hệ thống — bản web (Drive dùng chung)
   const [backupProgress, setBackupProgress] = useState('');
-  const [restoreState, setRestoreState] = useState<null | { backup: DriveBackup; overwrite: boolean; fallbackPw: string; adminUser: string; adminPw: string; running: boolean; report: string[] }>(null);
+  const [restoreState, setRestoreState] = useState<null | { backup: DriveBackup; overwrite: boolean; fallbackPw: string; adminUser: string; adminPw: string; running: boolean; report: string[]; used?: string[]; ignored?: string[] }>(null);
   const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
   // 🎯 QUYỀN HẠN PHÂN CẤP 3 NHÓM CHÍNH (Yêu cầu e, c, d)
@@ -1165,9 +1165,40 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
     }
   };
 
+  // 📂 Khôi phục từ CẢ THƯ MỤC hoặc NHIỀU TỆP: phần mềm tự đọc, nhận dạng từng tệp rồi mở hộp xác nhận
+  const startRestoreFromFiles = async (list: File[]) => {
+    const jsonFiles = list.filter(f => /\.json$/i.test(f.name));
+    if (!jsonFiles.length) { showNotify('error', 'Không thấy tệp .json nào trong lựa chọn.'); return; }
+    if (!driveBackupService.isDriveMode()) { showNotify('error', 'Hãy kết nối thư mục Google Drive dùng chung trước khi khôi phục.'); return; }
+    const items: Array<{ name: string; json: any }> = [];
+    const unreadable: string[] = [];
+    for (const f of jsonFiles) {
+      const name = (f as any).webkitRelativePath || f.name;
+      try { items.push({ name, json: JSON.parse(await f.text()) }); }
+      catch (_) { unreadable.push(`${f.name} — không đọc được (tệp hỏng hoặc không phải JSON)`); }
+    }
+    const asm = driveBackupService.assembleFromFiles(items);
+    if (!asm.backup) {
+      showNotify('error', `Không nhận ra tệp dữ liệu nào để khôi phục.${asm.ignored.length ? ` (${asm.ignored[0]})` : ''}`);
+      return;
+    }
+    const sess = schoolDriveDbService.getAdminAuth();
+    setRestoreState({
+      backup: asm.backup, overwrite: false, fallbackPw: '', adminUser: sess?.username || currentUser?.username || '', adminPw: sess?.password || '',
+      running: false, report: [], used: asm.used, ignored: [...asm.ignored, ...unreadable],
+    });
+  };
+  const handleRestorePick = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const list = Array.from(e.target.files || []);
+    e.target.value = '';
+    if (list.length) startRestoreFromFiles(list);
+  };
+
   const handleImportDatabase = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    // Bản web đã kết nối Drive: mọi tệp (tệp tổng hay tệp lẻ) đều đi qua bộ nhận dạng
+    if (driveBackupService.isDriveMode()) { handleRestorePick(e); return; }
 
     const reader = new FileReader();
     reader.onload = async (ev) => {
@@ -3630,6 +3661,22 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                       <div>{sm.schools} trường · {sm.users} tài khoản{sm.usersNoPassword ? ` (${sm.usersNoPassword} chưa có mật khẩu xem được)` : ''} · {sm.classFiles} tệp lớp · {sm.otherFiles} tệp khác · {sm.staff} nhân sự</div>
                       <div><strong>Thư mục đích:</strong> <code className="text-xs">{(target.folderId || '').slice(0, 10)}…</code> (Apps Script đang kết nối)</div>
                     </div>
+                    {(restoreState.used?.length || restoreState.ignored?.length) ? (
+                      <div className="rounded-xl border border-slate-200 p-3 text-xs space-y-2 max-h-44 overflow-y-auto">
+                        {restoreState.used && restoreState.used.length > 0 && (
+                          <div>
+                            <p className="font-black text-emerald-800 text-sm">Sẽ khôi phục ({restoreState.used.length} tệp)</p>
+                            <ul className="list-disc pl-5 text-slate-800 space-y-0.5">{restoreState.used.map((u, i) => <li key={i}>{u}</li>)}</ul>
+                          </div>
+                        )}
+                        {restoreState.ignored && restoreState.ignored.length > 0 && (
+                          <div>
+                            <p className="font-black text-amber-800 text-sm">Không khôi phục ({restoreState.ignored.length} tệp)</p>
+                            <ul className="list-disc pl-5 text-slate-700 space-y-0.5">{restoreState.ignored.map((u, i) => <li key={i}>{u}</li>)}</ul>
+                          </div>
+                        )}
+                      </div>
+                    ) : null}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                       <label className="text-sm font-bold text-slate-700">Tài khoản Quản trị (thư mục đích)
                         <input value={restoreState.adminUser} onChange={(e) => setRestoreState({ ...restoreState, adminUser: e.target.value })} className="mt-1 w-full h-10 px-3 rounded-xl border border-slate-300 text-sm" />
@@ -3647,7 +3694,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                       <input type="checkbox" checked={restoreState.overwrite} onChange={(e) => setRestoreState({ ...restoreState, overwrite: e.target.checked })} className="mt-1" />
                       <span><strong>Ghi đè tệp đã có</strong> trong thư mục đích (không tích: chỉ thêm tệp còn thiếu, giữ nguyên dữ liệu đang có).</span>
                     </label>
-                    <p className="text-xs text-slate-600">Tài khoản được GỘP (giữ tài khoản đang có ở thư mục đích). Lịch sử chấm công chỉ nằm trong tệp sao lưu (Apps Script không cho ghi lại tự động).</p>
+                    <p className="text-xs text-slate-600">Tài khoản được GỘP (giữ tài khoản đang có ở thư mục đích). Chấm công và kê khai tiết dạy chỉ bổ sung phần còn thiếu, cần Apps Script 1.1.8 trở lên ở thư mục đích.</p>
                     {backupProgress && restoreState.running && <p className="text-sm font-bold text-indigo-700">{backupProgress}</p>}
                     {restoreState.report.length > 0 && (
                       <ul className="rounded-xl bg-emerald-50 border border-emerald-200 p-3 text-sm text-emerald-900 space-y-1 list-disc pl-6">
@@ -3713,7 +3760,9 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                     </div>
                   </div>
                   <p className="text-xs text-slate-600 leading-relaxed mt-2">
-                    Tải tệp database JSON đã lưu từ máy tính hoặc Google Drive lên để khôi phục nhanh mọi tài khoản và dữ liệu lớp học mà không mất thông tin.
+                    {driveBackupService.isDriveMode()
+                      ? 'Chọn tệp tổng, hoặc trỏ vào cả thư mục đã lưu, hoặc chọn vài tệp lẻ — phần mềm tự đọc, nhận dạng từng tệp và cho xem danh sách trước khi khôi phục. Dữ liệu được gộp vào thư mục Google Drive đang kết nối và tự tách lại thành các tệp riêng.'
+                      : 'Tải tệp database JSON đã lưu từ máy tính hoặc Google Drive lên để khôi phục nhanh mọi tài khoản và dữ liệu lớp học mà không mất thông tin.'}
                   </p>
                 </div>
                 <div className="mt-5">
@@ -3727,9 +3776,60 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                       className="hidden"
                     />
                   </label>
+                  {driveBackupService.isDriveMode() && (
+                    <div className="mt-2 grid grid-cols-2 gap-2">
+                      <label className="py-2 px-3 rounded-xl border border-emerald-300 bg-white hover:bg-emerald-50 text-emerald-900 font-black text-xs flex items-center justify-center gap-1.5 cursor-pointer text-center" title="Trỏ vào thư mục chứa các tệp dữ liệu (kể cả thư mục con); phần mềm tự đọc và nhận dạng từng tệp">
+                        <FolderOpen className="w-4 h-4 text-emerald-700 shrink-0" />
+                        <span>CHỌN CẢ THƯ MỤC</span>
+                        <input type="file" multiple onChange={handleRestorePick} className="hidden" {...({ webkitdirectory: '', directory: '' } as any)} />
+                      </label>
+                      <label className="py-2 px-3 rounded-xl border border-emerald-300 bg-white hover:bg-emerald-50 text-emerald-900 font-black text-xs flex items-center justify-center gap-1.5 cursor-pointer text-center" title="Chọn một hoặc nhiều tệp .json; phần mềm tự nhận dạng từng tệp">
+                        <Upload className="w-4 h-4 text-emerald-700 shrink-0" />
+                        <span>CHỌN NHIỀU TỆP</span>
+                        <input type="file" accept=".json" multiple onChange={handleRestorePick} className="hidden" />
+                      </label>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
+            {embeddedDatabase && embeddedPart !== 'stats' && driveBackupService.isDriveMode() && (
+              <details className="order-first rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800">
+                <summary className="cursor-pointer font-black text-slate-900">Các loại tệp sao lưu — tệp nào dùng để làm gì?</summary>
+                <div className="mt-2 space-y-2">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-xs border-collapse">
+                      <thead>
+                        <tr className="text-left text-slate-700 border-b border-slate-200">
+                          <th className="py-1.5 pr-3 font-black">Loại tệp</th>
+                          <th className="py-1.5 pr-3 font-black">Chứa gì</th>
+                          <th className="py-1.5 font-black">Dùng khi nào</th>
+                        </tr>
+                      </thead>
+                      <tbody className="align-top">
+                        <tr className="border-b border-slate-100">
+                          <td className="py-1.5 pr-3 font-bold">Tệp tổng<br /><span className="font-mono font-normal text-slate-600">LHHP_saoluu_toan_he_thong_….json<br />toan_bo_he_thong.json</span></td>
+                          <td className="py-1.5 pr-3">Toàn bộ: CSDL trường, tài khoản, lớp, học sinh, điểm danh, nhân sự, chấm công, kê khai tiết dạy.</td>
+                          <td className="py-1.5">Sao lưu và khôi phục. <strong>Chỉ cần 1 tệp này</strong> để dựng lại hệ thống trên máy khác, trang web khác.</td>
+                        </tr>
+                        <tr className="border-b border-slate-100">
+                          <td className="py-1.5 pr-3 font-bold">Tệp từng hạng mục<br /><span className="font-mono font-normal text-slate-600">csdl_truong, gvcn_…, gvbm_…,<br />nhansu_truong, phanhieu_truong…</span></td>
+                          <td className="py-1.5 pr-3">Mỗi tệp một phần: trường và tài khoản, một lớp, một giáo viên bộ môn, nhân sự, phân hiệu…</td>
+                          <td className="py-1.5">Phần mềm tự tạo trên Google Drive để đọc, thống kê nhanh. Cũng nạp lại được: chọn cả thư mục hoặc vài tệp.</td>
+                        </tr>
+                        <tr>
+                          <td className="py-1.5 pr-3 font-bold">Tệp riêng của tài khoản<br /><span className="font-mono font-normal text-slate-600">adminquantri.json…</span></td>
+                          <td className="py-1.5 pr-3">Chỉ dữ liệu của tài khoản đang đăng nhập.</td>
+                          <td className="py-1.5">Chép sang USB, nạp lại khi đổi máy (phần "Tệp riêng của tài khoản này").</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                  <p className="text-xs text-slate-700">Khôi phục từ <strong>tệp tổng</strong> xong, phần mềm tự ghi lại đầy đủ các tệp từng hạng mục trên Google Drive — không cần nạp từng tệp. Nếu chọn cả thư mục có sẵn tệp tổng, phần mềm dùng tệp tổng mới nhất và bỏ qua các tệp lẻ để tránh lẫn.</p>
+                  <p className="text-xs text-slate-700">Lịch sử chấm công và kê khai tiết dạy cũng được khôi phục (chỉ bổ sung phần còn thiếu, không đè dữ liệu đang có) khi Apps Script của thư mục đích là <strong>phiên bản 1.1.8 trở lên</strong>. Bản cũ hơn: phần mềm báo cần cập nhật Apps Script và bỏ qua riêng hai phần này.</p>
+                </div>
+              </details>
+            )}
             {embeddedDatabase && embeddedExtra && embeddedPart !== 'stats' && <div className="order-first">{embeddedExtra}</div>}
 
             {apiAvailable && (<>

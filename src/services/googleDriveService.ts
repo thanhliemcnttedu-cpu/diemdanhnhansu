@@ -1412,6 +1412,58 @@ export const googleDriveService = {
    * 📣 Tin nhắn "thông tin kết nối" Quản trị nhà trường gửi cho toàn trường (Zalo / email...).
    * GVCN / BGH chỉ cần dán nguyên tin nhắn vào phần mềm.
    */
+  /**
+   * 📄 TỆP KẾT NỐI CSDL NHÀ TRƯỜNG (ket_noi_csdl_truong.json) — cách thứ hai để kết nối, bên cạnh việc dán 2 link:
+   * Quản trị tải tệp này rồi gửi cho giáo viên; giáo viên bấm "Nạp tệp kết nối". Tệp CHỈ có 2 đường link và tên trường,
+   * không có mật khẩu hay dữ liệu.
+   */
+  buildConnectionFile(schoolName?: string) {
+    const cfg = this.getConfig();
+    const folderId = (cfg.folderId || '').trim();
+    return {
+      format: 'lhhp_connection' as const,
+      version: 1,
+      schoolName: schoolName || '',
+      folderUrl: folderId ? `https://drive.google.com/drive/folders/${folderId}` : (cfg.folderUrl || ''),
+      folderId,
+      scriptUrl: this.normalizeScriptUrl(cfg.scriptUrl),
+      createdAt: new Date().toISOString(),
+      note: 'Tệp kết nối Lớp Học Hạnh Phúc: ở màn đăng nhập hoặc mục Dữ liệu → Google Drive của trường, bấm "Nạp tệp kết nối" rồi chọn tệp này.',
+    };
+  },
+
+  downloadConnectionFile(schoolName?: string): boolean {
+    const data = this.buildConnectionFile(schoolName);
+    if (!data.folderId || !data.scriptUrl) return false;
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'ket_noi_csdl_truong.json';
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 3000);
+    return true;
+  },
+
+  /** Đọc tệp kết nối (.json) — hoặc tệp văn bản chứa tin nhắn kết nối. Không nhận ra → null. */
+  parseConnectionFile(text: string): { scriptUrl?: string; folderId?: string; folderUrl?: string; schoolName?: string } | null {
+    const raw = String(text || '');
+    try {
+      const j = JSON.parse(raw);
+      if (j && typeof j === 'object' && (j.scriptUrl || j.folderUrl || j.folderId)) {
+        const folderId = String(j.folderId || '').trim() || this.extractFolderIdFromUrl(String(j.folderUrl || '')) || '';
+        const scriptUrl = this.normalizeScriptUrl(String(j.scriptUrl || ''));
+        if (!folderId && !scriptUrl) return null;
+        return {
+          ...(folderId ? { folderId, folderUrl: `https://drive.google.com/drive/folders/${folderId}` } : {}),
+          ...(scriptUrl ? { scriptUrl } : {}),
+          schoolName: String(j.schoolName || ''),
+        };
+      }
+    } catch (_) { /* not JSON → try as plain text */ }
+    const p = this.parseConnectionText(raw);
+    return p.scriptUrl || p.folderId ? p : null;
+  },
+
   buildConnectionShareText(schoolName?: string): string {
     const cfg = this.getConfig();
     const folderLink = cfg.folderId ? `https://drive.google.com/drive/folders/${cfg.folderId}` : (cfg.folderUrl || '');

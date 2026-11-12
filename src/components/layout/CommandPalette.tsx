@@ -47,6 +47,7 @@ const VIEWS: Array<{ id: NavigationMenuId; label: string; group: string; keyword
   { id: 'my_checkin', label: 'Chấm công của tôi', group: 'Quản lý & báo cáo', keywords: 'cham cong diem danh di lam ke khai tiet day', classroomOnly: true },
   { id: 'data', label: 'Dữ liệu', group: 'Quản lý & báo cáo', keywords: 'sao luu drive excel' },
   { id: 'links', label: 'Liên kết', group: 'Quản lý & báo cáo', keywords: 'link lien ket' },
+  { id: 'guide', label: 'Hướng dẫn sử dụng', group: 'Quản lý & báo cáo', keywords: 'huong dan su dung video tai lieu pdf ho tro tac gia' },
   { id: 'ai', label: 'Trợ lý AI', group: 'Quản lý & báo cáo', keywords: 'ai tro ly gemini' },
 ];
 

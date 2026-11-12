@@ -17,3 +17,10 @@
 - Màn **Lớp học**: tích chọn nhiều lớp → nút **Gán phân hiệu, điểm trường (N lớp)** (hiện với mọi vai trò quản lý, kể cả Quản trị nhà trường/BGH) mở hộp chỉ có 2 ô Phân hiệu, Điểm trường. Hộp **Sửa thông tin đồng loạt** (chỉ `adminquantri`/GV) cũng có khối này ở đầu, bố trí 2 cột.
 - Giá trị `keep` = giữ nguyên, `__none__` = bỏ gán. Chọn phân hiệu mà để "Giữ nguyên điểm trường": lớp đang thuộc phân hiệu đó không đổi, lớp chuyển từ phân hiệu khác sang để trống điểm trường (không tự gán điểm trường đầu tiên).
 - `bulkUpdateClasses` trong `ClassroomContext` tính trên `classesRef.current` để 2 lần gọi liên tiếp trong một handler không đè nhau.
+
+## Hướng dẫn sử dụng (11/2026)
+- Mục **Hướng dẫn sử dụng** (id `guide`, nhóm "Quản lý & báo cáo", mọi vai trò): `components/views/UserGuideView.tsx` + `services/userGuideService.ts`.
+- **Mọi tài khoản**: xem danh mục; link mở thẻ mới (`target="_blank" rel="noopener noreferrer"`); nút Mã QR (tạo tại máy bằng `buildQrMatrix` / `QrSvg` của `StaffCheckInQr`); tải tệp PDF; cột "Tác giả & hỗ trợ" lấy từ `APP_AUTHOR_INFO` (Zalo, gọi, Facebook, QR Zalo).
+- **Quản trị** (`canManageAccounts`): thêm / cập nhật / xóa 5 loại — video, thư mục, trang, tệp (link), tệp PDF tải lên. Link chỉ nhận http(s) (`normalizeGuideUrl`).
+- **Nơi lưu** (không sửa Apps Script): thư mục Drive dùng chung của trường — `huongdan_sudung.json` (danh mục) và `huongdan_tep_<id>.json` (PDF dạng base64, tối đa 8 MB/tệp). Chưa kết nối Drive → chỉ lưu trong trình duyệt máy đó và có cảnh báo. Apps Script không có lệnh xóa tệp → xóa mục thì ghi đè tệp PDF bằng tệp rỗng.
+- Các tệp này là `.json` trong thư mục dùng chung nên nằm trong bản sao lưu toàn hệ thống và được khôi phục cùng.

@@ -104,6 +104,11 @@ const VIEW_TITLES: Record<NavigationMenuId, { title: string; shortTitle: string;
     shortTitle: 'LIÊN KẾT',
     subtitle: 'KHO TÀI LIỆU, TRANG WEB HỌC TẬP VÀ HỌC LIỆU SỐ DÙNG CHUNG'
   },
+  guide: {
+    title: 'HƯỚNG DẪN SỬ DỤNG',
+    shortTitle: 'HƯỚNG DẪN',
+    subtitle: 'VIDEO, TÀI LIỆU HƯỚNG DẪN VÀ THÔNG TIN LIÊN HỆ HỖ TRỢ'
+  },
   reports: {
     title: 'BÁO CÁO & PHÂN TÍCH',
     shortTitle: 'BÁO CÁO',

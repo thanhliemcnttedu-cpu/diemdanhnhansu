@@ -45,6 +45,7 @@ const StaffCheckInPage = lazy(() => import('./components/views/staff/StaffCheckI
 const StaffAttendanceView = lazy(() => import('./components/views/staff/StaffAttendanceView').then(m => ({ default: m.StaffAttendanceView })));
 const ScheduleLinksView = lazy(() => import('./components/views/ScheduleLinksView').then(m => ({ default: m.ScheduleLinksView })));
 const ReportsDataView = lazy(() => import('./components/views/ReportsDataView').then(m => ({ default: m.ReportsDataView })));
+const UserGuideView = lazy(() => import('./components/views/UserGuideView').then(m => ({ default: m.UserGuideView })));
 const InfographicView = lazy(() => import('./components/views/InfographicView').then(m => ({ default: m.InfographicView })));
 const AiAssistantView = lazy(() => import('./components/views/AiAssistantView').then(m => ({ default: m.AiAssistantView })));
 const AccountManagementModal = lazy(() => import('./components/modals/AccountManagementModal').then(m => ({ default: m.AccountManagementModal })));
@@ -260,6 +261,8 @@ function ClassroomApp() {
         return <TimerView />;
       case 'links':
         return <ScheduleLinksView defaultTab="links" onNavigate={handleNavigate} />;
+      case 'guide':
+        return <UserGuideView />;
       case 'reports':
         return <ReportsDataView defaultTab="stats" />;
       case 'data':

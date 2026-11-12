@@ -14,8 +14,6 @@
  */
 import { driveBackupService, type DriveBackup } from './driveBackupService';
 import { dataStorageService } from './dataStorageService';
-import { teachingLogService } from './teachingLogService';
-import { schoolDriveDbService } from './schoolDriveDbService';
 
 export const SYSTEM_ONE_FILE_DIR = '1_TOAN_BO_HE_THONG_1_TEP';
 export const SYSTEM_ONE_FILE_NAME = 'toan_bo_he_thong.json';
@@ -37,8 +35,6 @@ export interface LocalMirrorSummary {
 }
 export interface LocalMirrorResult { success: boolean; message: string; code?: string; summary?: LocalMirrorSummary }
 
-const monthKey = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-
 export const localSystemMirrorService = {
   /** Kết quả lần lưu gần nhất trên máy này (để hiện lại sau khi tải lại trang) */
   getLast(): LocalMirrorSummary | null {
@@ -56,19 +52,11 @@ export const localSystemMirrorService = {
     try { backup = await driveBackupService.exportAll(onProgress); }
     catch (err: any) { return { success: false, code: 'EXPORT_ERROR', message: err?.message || 'Không đọc được dữ liệu từ Google Drive.' }; }
 
-    // 3) Kê khai tiết dạy (tệp được khóa trên Drive → đọc qua báo cáo của quản trị, tối đa 12 tháng gần nhất)
-    let teaching: any = null;
-    try {
-      onProgress('Đang đọc kê khai tiết dạy…');
-      const now = new Date();
-      const from = monthKey(new Date(now.getFullYear(), now.getMonth() - 11, 1));
-      const r = await teachingLogService.report(from, monthKey(now), schoolDriveDbService.getAdminAuth());
-      if (r && r.success) teaching = { from: r.from, to: r.to, profiles: r.profiles || {}, logs: r.logs || {}, locks: r.locks || {}, settings: r.settings || null };
-      else backup.notes.push('Không đọc được kê khai tiết dạy.');
-    } catch (_) { backup.notes.push('Không đọc được kê khai tiết dạy.'); }
+    // 3) Kê khai tiết dạy đã nằm sẵn trong bản sao lưu (driveBackupService.exportAll)
+    const teaching: any = backup.teaching || null;
 
     // 4) Danh sách tệp cần ghi
-    const one = teaching ? { ...backup, teaching } : backup;
+    const one = backup;
     const entries: Array<{ dir: string; name: string; data?: any; text?: string }> = [
       { dir: SYSTEM_ONE_FILE_DIR, name: SYSTEM_ONE_FILE_NAME, data: one },
       { dir: SYSTEM_MIRROR_DIR, name: 'csdl_truong.json', data: backup.schoolDb },
