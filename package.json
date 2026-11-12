@@ -1,7 +1,7 @@
 {
   "name": "csdl-lop-hoc-hanh-phuc",
   "private": true,
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Hệ sinh thái quản lý lớp học hạnh phúc thông minh",
   "author": "Nguyễn Thanh Liêm",
   "main": "electron/main.cjs",

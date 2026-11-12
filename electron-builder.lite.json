@@ -19,7 +19,7 @@
   "win": {
     "target": [{ "target": "nsis", "arch": ["x64"] }],
     "icon": "desktop-lite/app/icon.ico",
-    "artifactName": "QTCSDL_Truong_V${version}.exe",
+    "artifactName": "QL_TRUONG_HOC_V_${version}.exe",
     "signAndEditExecutable": true
   },
   "nsis": {

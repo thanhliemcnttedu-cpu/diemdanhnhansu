@@ -25,8 +25,8 @@ concurrency:
 
 jobs:
   build:
-    # The installer is published from the template repo only; school repos carry this file but must not build releases
-    if: github.repository == 'thanhliemcnttedu-cpu/lhhp'
+    # Only these repos build and publish the installer; other school repos carry this file but must not build releases
+    if: github.repository == 'thanhliemcnttedu-cpu/lhhp' || github.repository == 'thanhliemcnttedu-cpu/diemdanhnhansu'
     runs-on: windows-latest
     timeout-minutes: 40
     steps:
@@ -68,7 +68,7 @@ jobs:
         id: hash
         shell: bash
         run: |
-          FILE="release-lite/QTCSDL_Truong_V${{ steps.ver.outputs.version }}.exe"
+          FILE="release-lite/QL_TRUONG_HOC_V_${{ steps.ver.outputs.version }}.exe"
           test -f "$FILE"
           SHA=$(sha256sum "$FILE" | cut -d' ' -f1)
           SIZE=$(stat -c %s "$FILE")
@@ -82,7 +82,7 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: QTCSDL_Truong_V${{ steps.ver.outputs.version }}
+          name: QL_TRUONG_HOC_V_${{ steps.ver.outputs.version }}
           path: |
             ${{ steps.hash.outputs.file }}
             release-lite/SHA256.txt
@@ -98,7 +98,7 @@ jobs:
           cat > notes.md <<EOF
           Bộ cài đặt Windows (64-bit) của phần mềm Lớp Học Hạnh Phúc – bản $VERSION.
 
-          - Tải tệp **QTCSDL_Truong_V$VERSION.exe** bên dưới rồi chạy để cài. Cài đè lên bản cũ được, dữ liệu giữ nguyên.
+          - Tải tệp **QL_TRUONG_HOC_V_$VERSION.exe** bên dưới rồi chạy để cài. Cài đè lên bản cũ được, dữ liệu giữ nguyên.
           - Từ bản 1.1.0, phần mềm tự cập nhật giao diện, không cần cài lại.
           - Bộ cài được dựng tự động trên máy chủ GitHub từ mã nguồn của kho này.
 
