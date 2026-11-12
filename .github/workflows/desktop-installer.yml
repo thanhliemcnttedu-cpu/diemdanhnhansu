@@ -26,7 +26,7 @@ concurrency:
 jobs:
   build:
     # Only these repos build and publish the installer; other school repos carry this file but must not build releases
-    if: github.repository == 'thanhliemcnttedu-cpu/lhhp' || github.repository == 'thanhliemcnttedu-cpu/diemdanhnhansu'
+    if: contains(fromJSON('["thanhliemcnttedu-cpu/lhhp","thanhliemcnttedu-cpu/diemdanhnhansu","thanhliemcnttedu-cpu/thso1tanuyen"]'), github.repository)
     runs-on: windows-latest
     timeout-minutes: 40
     steps:
