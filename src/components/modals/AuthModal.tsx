@@ -8,6 +8,7 @@ import {
   Volume2, Dices, CalendarCheck, Check
 } from 'lucide-react';
 import { Upload as ConnUp } from 'lucide-react';
+import { ForgotPasswordModal } from './ForgotPasswordModal';
 import { UserAccount, LoginRoleScope, SchoolEntity } from '../../types';
 import { useClassroom } from '../../context/ClassroomContext';
 import { databaseService } from '../../services/databaseService';
@@ -41,6 +42,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   } = useClassroom();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [isForgotOpen, setIsForgotOpen] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
@@ -691,6 +693,11 @@ Sau đó dán link thư mục + Apps Script mới để khởi tạo.`)) return;
                       {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
                   </div>
+                  <div className="mt-1.5 text-right">
+                    <button type="button" onClick={() => setIsForgotOpen(true)} className="no-hover-fx text-[12px] font-black text-white underline underline-offset-2 hover:text-amber-200 cursor-pointer">
+                      Quên mật khẩu?
+                    </button>
+                  </div>
                 </div>
 
                 {/* School Selection - for school_teacher and school_admin */}
@@ -1028,6 +1035,7 @@ Sau đó dán link thư mục + Apps Script mới để khởi tạo.`)) return;
           </div>
         </div>
       </div>
+      <ForgotPasswordModal isOpen={isForgotOpen} onClose={() => setIsForgotOpen(false)} initialUsername={username} onDone={(u) => { setUsername(u); setPassword(''); }} />
     </div>
   );
 };

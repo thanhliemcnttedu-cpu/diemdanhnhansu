@@ -56,6 +56,11 @@
 var FOLDER_ID = "__FOLDER_ID__";
 var TARGET_FILENAME = "du_lieu_lop_hoc_hanh_phuc.json";
 var REPORT_PREFIX = "bc_";
+// 1.1.9: KHÔI PHỤC MẬT KHẨU QUA EMAIL — mỗi tài khoản khai báo email khôi phục (`setRecoveryEmail`, phải đúng mật khẩu);
+//        quên mật khẩu: `requestPasswordReset` gửi MÃ 6 SỐ (15 phút, tối đa 5 lần nhập sai, 5 lần gửi / ngày, cách nhau 1 phút)
+//        bằng MailApp của chính tài khoản Google chủ script; `confirmPasswordReset` đặt mật khẩu mới.
+//        Chủ tài khoản Google còn có hàm `datLaiMatKhauQuanTri` chạy trong trình soạn mã khi Quản trị chưa khai báo email.
+//        ⚠️ Lần triển khai đầu của bản này Google hỏi thêm quyền "Gửi email thay mặt bạn" — bấm Cho phép.
 // 1.1.8: KHÔI PHỤC TRỌN VẸN TỪ 1 TỆP TỔNG — lệnh `restoreArchive` (chỉ Quản trị) ghi lại lịch sử CHẤM CÔNG
 //        (chamcong_nhansu_YYYY-MM.json) và KÊ KHAI TIẾT DẠY (kekhai_tietday.json) từ tệp sao lưu toàn hệ thống.
 //        Mặc định CHỈ BỔ SUNG bản ghi còn thiếu (không đè dữ liệu đang có); `overwrite: true` mới ghi đè.
@@ -75,7 +80,7 @@ var REPORT_PREFIX = "bc_";
 //        rồi mã hóa lại (healStaffCccdHashes) — khi đăng nhập, khi Quản trị / BGH mở hoặc lưu danh sách nhân sự.
 // QUY TẮC ĐẶT TÊN PHIÊN BẢN (từ 11/2026): "Phiên bản A.B.C" — mỗi lần sửa mã tăng C thêm 1;
 // C tối đa 20: sau 1.1.20 là 1.2.1, sau 1.2.20 là 1.3.1… Các bản cũ dạng "4.x" (4.1 → 4.12) được coi là cũ hơn 1.1.2.
-var SCRIPT_VERSION = "1.1.8";
+var SCRIPT_VERSION = "1.1.9";
 // Thư mục của yêu cầu đang xử lý (để verifyUser đọc được danh sách nhân sự khi đăng nhập bằng CCCD)
 var CTX_FOLDER = null;
 
@@ -121,13 +126,17 @@ function doPost(e) {
       return createJsonResponse(handleSetLicense(licFolder, payload));
     }
 
-    if (action === "saveSchoolDb" || action === "getSchoolDb" || action === "login" || action === "changePassword") {
+    if (action === "saveSchoolDb" || action === "getSchoolDb" || action === "login" || action === "changePassword"
+        || action === "setRecoveryEmail" || action === "requestPasswordReset" || action === "confirmPasswordReset") {
       var dbFolder = resolveFolder(folderId);
       if (!dbFolder) return createJsonResponse({ success: false, message: "Không tìm thấy thư mục Google Drive: " + folderId });
       CTX_FOLDER = dbFolder;
       if (action === "saveSchoolDb") return createJsonResponse(handleSaveSchoolDb(dbFolder, payload));
       if (action === "getSchoolDb") return createJsonResponse(handleGetSchoolDb(dbFolder, payload));
       if (action === "login") return createJsonResponse(handleLogin(dbFolder, payload));
+      if (action === "setRecoveryEmail") return createJsonResponse(handleSetRecoveryEmail(dbFolder, payload));
+      if (action === "requestPasswordReset") return createJsonResponse(handleRequestPasswordReset(dbFolder, payload));
+      if (action === "confirmPasswordReset") return createJsonResponse(handleConfirmPasswordReset(dbFolder, payload));
       return createJsonResponse(handleChangePassword(dbFolder, payload));
     }
 
@@ -469,6 +478,11 @@ function handleSaveSchoolDb(folder, payload) {
       var prev = oldByName[key] || null;
       var rec = publicUser(src);
       rec.username = key;
+      // 1.1.9: email khôi phục chỉ do chính chủ tài khoản đặt (setRecoveryEmail) — khi Quản trị lưu danh sách
+      // tài khoản thì luôn giữ nguyên giá trị đang có, không nhận từ danh sách gửi lên.
+      delete rec.recoveryEmail;
+      delete rec.recoveryEmailUpdatedAt;
+      if (prev && prev.recoveryEmail) { rec.recoveryEmail = prev.recoveryEmail; rec.recoveryEmailUpdatedAt = prev.recoveryEmailUpdatedAt; }
       var plain = src.password || (bootstrap && key === actorKey ? auth.password : "");
       if (plain) {
         rec.salt = newSalt();
@@ -609,6 +623,148 @@ function handleChangePassword(folder, payload) {
   } finally {
     try { lock.releaseLock(); } catch (_) {}
   }
+}
+
+// ---------------------------------------------------------------- 1.1.9: KHÔI PHỤC MẬT KHẨU QUA EMAIL
+var RESET_CODE_MINUTES = 15;
+var RESET_MAX_TRIES = 5;
+var RESET_MAX_PER_DAY = 5;
+var RESET_MIN_GAP_MS = 60000;
+
+function isEmailAddress(e) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(String(e || "").trim());
+}
+function maskEmail(e) {
+  var p = String(e || "").split("@");
+  if (p.length !== 2) return "***";
+  var n = p[0];
+  return (n.length <= 2 ? n.charAt(0) + "*" : n.slice(0, 2) + "***" + n.slice(-1)) + "@" + p[1];
+}
+function readResetState(username) {
+  try { return JSON.parse(PropertiesService.getScriptProperties().getProperty("pwreset:" + normalizeUsername(username)) || "{}") || {}; } catch (_) { return {}; }
+}
+function writeResetState(username, st) {
+  try { PropertiesService.getScriptProperties().setProperty("pwreset:" + normalizeUsername(username), JSON.stringify(st)); } catch (_) {}
+}
+
+// Người dùng (đúng mật khẩu) khai báo / đổi / xóa email khôi phục của CHÍNH MÌNH
+function handleSetRecoveryEmail(folder, payload) {
+  var lock = LockService.getScriptLock();
+  try { lock.waitLock(20000); } catch (_) {}
+  try {
+    var db = readSchoolDb(folder);
+    var a = payload.auth || {};
+    var u = db ? verifyUser(db, a.username, a.password) : null;
+    if (!u) return { success: false, code: "INVALID", message: "Mật khẩu hiện tại không đúng." };
+    if (u.disabled) return { success: false, code: "DISABLED", message: "Tài khoản đã bị khóa." };
+    var email = String(payload.email || "").trim().toLowerCase();
+    if (email && !isEmailAddress(email)) return { success: false, message: "Địa chỉ email chưa đúng." };
+    if (email) u.recoveryEmail = email; else delete u.recoveryEmail;
+    u.recoveryEmailUpdatedAt = new Date().toISOString();
+    writeSchoolDb(folder, db);
+    return { success: true, recoveryEmail: email, message: email ? "Đã lưu email khôi phục." : "Đã xóa email khôi phục." };
+  } finally { try { lock.releaseLock(); } catch (_) {} }
+}
+
+// Màn đăng nhập: gửi mã 6 số tới email khôi phục của tài khoản
+function handleRequestPasswordReset(folder, payload) {
+  var db = readSchoolDb(folder);
+  if (!db || !db.users || db.users.length === 0) {
+    return { success: false, code: "NOT_INITIALIZED", message: "Thư mục dùng chung chưa có cơ sở dữ liệu nhà trường." };
+  }
+  var u = findUser(db, payload.username);
+  if (!u) return { success: false, code: "NOT_FOUND", message: "Không có tài khoản này trong cơ sở dữ liệu nhà trường." };
+  if (u.disabled) return { success: false, code: "DISABLED", message: "Tài khoản đã bị khóa. Liên hệ Quản trị nhà trường." };
+  if (!u.recoveryEmail || !isEmailAddress(u.recoveryEmail)) {
+    return { success: false, code: "NO_EMAIL", message: "Tài khoản này chưa khai báo email khôi phục nên không gửi mã được. Xem hướng dẫn bên dưới." };
+  }
+  var st = readResetState(u.username);
+  var now = new Date().getTime();
+  var day = new Date().toISOString().slice(0, 10);
+  if (st.day !== day) { st.day = day; st.count = 0; }
+  if (st.sentAt && now - st.sentAt < RESET_MIN_GAP_MS) return { success: false, code: "TOO_SOON", message: "Vừa gửi mã xong. Hãy đợi 1 phút rồi bấm gửi lại." };
+  if ((st.count || 0) >= RESET_MAX_PER_DAY) return { success: false, code: "LIMIT", message: "Hôm nay đã gửi mã " + RESET_MAX_PER_DAY + " lần cho tài khoản này. Hãy thử lại vào ngày mai." };
+  var digits = "";
+  while (digits.length < 6) digits += Utilities.getUuid().replace(/[^0-9]/g, "");
+  var code = digits.slice(0, 6);
+  try {
+    MailApp.sendEmail({
+      to: u.recoveryEmail,
+      subject: "[Lớp Học Hạnh Phúc] Mã đặt lại mật khẩu: " + code,
+      body: "Xin chào " + (u.fullName || u.username) + ",\n\n"
+        + "Mã đặt lại mật khẩu cho tài khoản \"" + u.username + "\" là: " + code + "\n"
+        + "Mã có hiệu lực " + RESET_CODE_MINUTES + " phút và chỉ dùng được một lần.\n\n"
+        + "Nếu thầy/cô không yêu cầu đặt lại mật khẩu, hãy bỏ qua thư này — mật khẩu hiện tại không thay đổi.\n\n"
+        + "Phần mềm Lớp Học Hạnh Phúc"
+    });
+  } catch (err) {
+    return { success: false, code: "MAIL_ERROR", message: "Không gửi được email (" + (err && err.message ? err.message : err) + "). Người giữ tài khoản Google của trường cần triển khai lại Apps Script và bấm Cho phép quyền gửi thư." };
+  }
+  st.salt = newSalt();
+  st.hash = hashPassword(code, st.salt);
+  st.exp = now + RESET_CODE_MINUTES * 60000;
+  st.tries = 0;
+  st.sentAt = now;
+  st.count = (st.count || 0) + 1;
+  writeResetState(u.username, st);
+  return { success: true, maskedEmail: maskEmail(u.recoveryEmail), minutes: RESET_CODE_MINUTES, message: "Đã gửi mã tới " + maskEmail(u.recoveryEmail) + "." };
+}
+
+// Nhập mã + mật khẩu mới
+function handleConfirmPasswordReset(folder, payload) {
+  var lock = LockService.getScriptLock();
+  try { lock.waitLock(20000); } catch (_) {}
+  try {
+    var db = readSchoolDb(folder);
+    var u = db ? findUser(db, payload.username) : null;
+    if (!u) return { success: false, code: "NOT_FOUND", message: "Không có tài khoản này trong cơ sở dữ liệu nhà trường." };
+    if (u.disabled) return { success: false, code: "DISABLED", message: "Tài khoản đã bị khóa." };
+    var st = readResetState(u.username);
+    if (!st.hash || !st.exp) return { success: false, code: "NO_REQUEST", message: "Chưa có mã nào đang chờ (hoặc mã đã dùng). Hãy bấm gửi mã lại." };
+    if (new Date().getTime() > st.exp) { st.hash = ""; st.exp = 0; writeResetState(u.username, st); return { success: false, code: "EXPIRED", message: "Mã đã hết hạn. Hãy bấm gửi mã lại." }; }
+    if ((st.tries || 0) >= RESET_MAX_TRIES) return { success: false, code: "LOCKED", message: "Đã nhập sai quá " + RESET_MAX_TRIES + " lần. Hãy bấm gửi mã lại để nhận mã mới." };
+    if (hashPassword(String(payload.code || "").trim(), st.salt) !== st.hash) {
+      st.tries = (st.tries || 0) + 1;
+      writeResetState(u.username, st);
+      var left = RESET_MAX_TRIES - st.tries;
+      return { success: false, code: "WRONG_CODE", message: left > 0 ? "Mã không đúng. Còn " + left + " lần thử." : "Mã không đúng. Đã hết số lần thử, hãy bấm gửi mã lại." };
+    }
+    if (!payload.newPassword || String(payload.newPassword).length < 6) return { success: false, message: "Mật khẩu mới phải có ít nhất 6 ký tự." };
+    u.salt = newSalt();
+    u.passwordHash = hashPassword(payload.newPassword, u.salt);
+    u.passwordUpdatedAt = new Date().toISOString();
+    u.mustChangePassword = false;
+    writeSchoolDb(folder, db);
+    setVisiblePassword(u.username, payload.newPassword);
+    st.hash = ""; st.exp = 0; st.tries = 0;
+    writeResetState(u.username, st);
+    return { success: true, message: "Đã đặt lại mật khẩu. Hãy đăng nhập bằng mật khẩu mới." };
+  } finally { try { lock.releaseLock(); } catch (_) {} }
+}
+
+/**
+ * 🆘 CHỦ TÀI KHOẢN GOOGLE chạy hàm này trong trình soạn mã Apps Script (chọn hàm → Chạy) khi Quản trị quên mật khẩu
+ * và chưa khai báo email khôi phục. Đặt mật khẩu TẠM cho tài khoản quản trị cao nhất, in ra Nhật ký thực thi.
+ * Dữ liệu trường, lớp, học sinh không bị đụng tới. Đăng nhập xong hãy đổi mật khẩu ngay.
+ */
+function datLaiMatKhauQuanTri() {
+  var folder = resolveFolder(FOLDER_ID);
+  if (!folder) { Logger.log("Không mở được thư mục Google Drive của trường (FOLDER_ID). Hãy dán lại mã Apps Script từ phần mềm."); return ""; }
+  var db = readSchoolDb(folder);
+  if (!db || !db.users || !db.users.length) { Logger.log("Thư mục chưa có cơ sở dữ liệu nhà trường."); return ""; }
+  var u = findUser(db, "adminquantri");
+  if (!u) { for (var i = 0; i < db.users.length; i++) if (db.users[i].role === "admin") { u = db.users[i]; break; } }
+  if (!u) { for (var j = 0; j < db.users.length; j++) if (isAdminUser(db.users[j])) { u = db.users[j]; break; } }
+  if (!u) { Logger.log("Không tìm thấy tài khoản quản trị nào trong cơ sở dữ liệu."); return ""; }
+  var temp = "LHHP" + Utilities.getUuid().replace(/-/g, "").slice(0, 6);
+  u.salt = newSalt();
+  u.passwordHash = hashPassword(temp, u.salt);
+  u.passwordUpdatedAt = new Date().toISOString();
+  u.disabled = false;
+  writeSchoolDb(folder, db);
+  setVisiblePassword(u.username, temp);
+  Logger.log("ĐÃ ĐẶT LẠI MẬT KHẨU — tài khoản: " + u.username + " — mật khẩu tạm: " + temp + " — đăng nhập rồi đổi mật khẩu ngay.");
+  return temp;
 }
 
 // Danh sách trường (công khai, chỉ tên) để hiện ở màn hình đăng nhập
