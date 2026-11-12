@@ -310,9 +310,34 @@ export const UserGuideView: React.FC = () => {
             empty={loading ? 'Đang tải…' : canEdit ? 'Chưa có tệp hướng dẫn. Bấm "Thêm tệp / PDF" để tải tệp PDF lên hoặc dán link tệp.' : 'Nhà trường chưa đưa tệp hướng dẫn nào.'} />
         </div>
 
-        <aside className="space-y-3">
-          {/* Bản quyền • Đăng ký sử dụng • Hỗ trợ qua Zalo (chuyển từ thanh bên vào đây) */}
-          <div className="rounded-2xl border border-slate-200 bg-white p-4 space-y-2">
+        {/* Một khung: Tác giả & hỗ trợ ở trên, Bản quyền & đăng ký ở dưới */}
+        <aside className="rounded-2xl border border-slate-200 bg-white p-4 space-y-4">
+          <div className="space-y-3">
+          <h3 className="text-sm font-black text-slate-900 uppercase">Tác giả & hỗ trợ</h3>
+          <div>
+            <p className="text-xs font-bold text-slate-600">Tác giả phần mềm</p>
+            <p className="text-base font-black text-indigo-900">{APP_AUTHOR_INFO.name}</p>
+            <p className="text-sm text-slate-700">{APP_AUTHOR_INFO.schoolName}</p>
+          </div>
+          <div className="space-y-2">
+            <p className="text-xs font-bold text-slate-600">Liên hệ hỗ trợ</p>
+            <a href={APP_AUTHOR_INFO.zaloUrl} target="_blank" rel="noopener noreferrer" className="no-hover-fx w-full h-10 px-3 rounded-xl bg-sky-700 hover:bg-sky-800 text-white text-sm font-black inline-flex items-center justify-center gap-2">
+              <MessageCircle className="w-4 h-4" /> Zalo {APP_AUTHOR_INFO.zalo}
+            </a>
+            <a href={`tel:${APP_AUTHOR_INFO.zalo.replace(/\D/g, '')}`} className={`${btnLight} w-full h-10`}>
+              <Phone className="w-4 h-4 text-emerald-700" /> Gọi {APP_AUTHOR_INFO.zalo}
+            </a>
+            <a href={APP_AUTHOR_INFO.facebook} target="_blank" rel="noopener noreferrer" className={`${btnLight} w-full h-10`}>
+              <Globe className="w-4 h-4 text-indigo-700" /> Facebook tác giả
+            </a>
+          </div>
+          <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 flex items-center gap-3">
+            <div className="rounded-lg border border-slate-200 bg-white p-1 shrink-0"><QrSvg matrix={buildQrMatrix(APP_AUTHOR_INFO.zaloUrl)} size={104} title="Mã QR Zalo hỗ trợ" /></div>
+            <p className="text-xs text-slate-700">Quét mã bằng Zalo để nhắn tin hỗ trợ trực tiếp với tác giả.</p>
+          </div>
+          {!canEdit && <p className="text-xs text-slate-600">Cần thêm tài liệu hướng dẫn? Hãy báo quản trị nhà trường để đưa lên mục này.</p>}
+          </div>
+          <div className="space-y-2 pt-4 border-t border-slate-200">
             <h3 className="text-sm font-black text-slate-900 uppercase">Bản quyền & đăng ký</h3>
             <button type="button" onClick={() => setIsCdKeyModalOpen(true)}
               className={`no-hover-fx w-full px-3 py-2.5 rounded-xl border text-left flex items-center gap-2.5 cursor-pointer ${isCdKeyActivated ? 'border-emerald-300 bg-emerald-50 hover:bg-emerald-100' : 'border-amber-300 bg-amber-50 hover:bg-amber-100'}`}>
@@ -338,32 +363,6 @@ export const UserGuideView: React.FC = () => {
                 <span className="block text-xs text-slate-700">Mở mã QR Zalo để nhắn tin với tác giả</span>
               </span>
             </button>
-          </div>
-
-          <div className="rounded-2xl border border-slate-200 bg-white p-4 space-y-3">
-          <h3 className="text-sm font-black text-slate-900 uppercase">Tác giả & hỗ trợ</h3>
-          <div>
-            <p className="text-xs font-bold text-slate-600">Tác giả phần mềm</p>
-            <p className="text-base font-black text-indigo-900">{APP_AUTHOR_INFO.name}</p>
-            <p className="text-sm text-slate-700">{APP_AUTHOR_INFO.schoolName}</p>
-          </div>
-          <div className="space-y-2">
-            <p className="text-xs font-bold text-slate-600">Liên hệ hỗ trợ</p>
-            <a href={APP_AUTHOR_INFO.zaloUrl} target="_blank" rel="noopener noreferrer" className="no-hover-fx w-full h-10 px-3 rounded-xl bg-sky-700 hover:bg-sky-800 text-white text-sm font-black inline-flex items-center justify-center gap-2">
-              <MessageCircle className="w-4 h-4" /> Zalo {APP_AUTHOR_INFO.zalo}
-            </a>
-            <a href={`tel:${APP_AUTHOR_INFO.zalo.replace(/\D/g, '')}`} className={`${btnLight} w-full h-10`}>
-              <Phone className="w-4 h-4 text-emerald-700" /> Gọi {APP_AUTHOR_INFO.zalo}
-            </a>
-            <a href={APP_AUTHOR_INFO.facebook} target="_blank" rel="noopener noreferrer" className={`${btnLight} w-full h-10`}>
-              <Globe className="w-4 h-4 text-indigo-700" /> Facebook tác giả
-            </a>
-          </div>
-          <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 flex items-center gap-3">
-            <div className="rounded-lg border border-slate-200 bg-white p-1 shrink-0"><QrSvg matrix={buildQrMatrix(APP_AUTHOR_INFO.zaloUrl)} size={104} title="Mã QR Zalo hỗ trợ" /></div>
-            <p className="text-xs text-slate-700">Quét mã bằng Zalo để nhắn tin hỗ trợ trực tiếp với tác giả.</p>
-          </div>
-          {!canEdit && <p className="text-xs text-slate-600">Cần thêm tài liệu hướng dẫn? Hãy báo quản trị nhà trường để đưa lên mục này.</p>}
           </div>
         </aside>
       </div>
