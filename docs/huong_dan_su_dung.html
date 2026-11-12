@@ -66,6 +66,12 @@
   .card { border: 0.8pt solid var(--line); border-radius: 7pt; padding: 7pt 9pt; margin-bottom: 8pt; break-inside: avoid; }
   .card h3 { margin-top: 0; }
   .small { font-size: 9.2pt; color: var(--muted); }
+  .fig { margin: 8pt 0 10pt; break-inside: avoid; text-align: center; }
+  .fig img { width: 100%; border: 0.8pt solid var(--line); border-radius: 6pt; display: block; }
+  .fig figcaption { font-size: 8.8pt; color: var(--muted); margin-top: 3pt; font-style: italic; }
+  .figs { display: grid; grid-template-columns: 1fr 1fr; gap: 8pt; margin: 8pt 0 10pt; break-inside: avoid; }
+  .figs .fig { margin: 0; }
+  .fig.narrow img { width: 72%; margin: 0 auto; }
 </style>
 </head>
 <body>
@@ -105,7 +111,7 @@
   </ol>
   <div class="box note" style="margin-top:14pt">
     <span class="t">Cách đọc tài liệu</span>
-    <p>Tên mục trên thanh bên của phần mềm được in như <span class="menu">Dữ liệu</span>; tên nút được in như <span class="btn">Lưu ngay</span>. Một số màn hình có thể khác đôi chút tùy phiên bản; khi đó hãy dựa vào tên mục và mô tả chức năng.</p>
+    <p>Tên mục trên thanh bên của phần mềm được in như <span class="menu">Dữ liệu</span>; tên nút được in như <span class="btn">Lưu ngay</span>. Một số màn hình có thể khác đôi chút tùy phiên bản; khi đó hãy dựa vào tên mục và mô tả chức năng. Các hình minh họa dùng lớp và học sinh mẫu có sẵn của phần mềm, không phải dữ liệu của trường nào.</p>
   </div>
 </section>
 
@@ -224,12 +230,14 @@
     <li>Google hỏi quyền truy cập: chọn tài khoản của trường, bấm Nâng cao, đi tới dự án, tích chọn tất cả các quyền và bấm Cho phép.</li>
     <li>Sao chép địa chỉ ứng dụng web (kết thúc bằng <code>/exec</code>). Đây là <strong>link Apps Script</strong>.</li>
   </ol>
+<figure class="fig"><img src="huong_dan_anh/03_cai_apps_script.jpg" alt=""><figcaption>Hình 1. Trình cài đặt Apps Script: năm bước làm lần lượt, bước cuối phần mềm tự kiểm tra link.</figcaption></figure>
   <div class="box note">
     <span class="t">Cập nhật Apps Script về sau</span>
     <p>Khi phần mềm báo cần cập nhật: mở lại dự án Apps Script, thay toàn bộ mã bằng mã mới từ trình cài đặt, rồi vào Triển khai → Quản lý các lần triển khai → chỉnh sửa → chọn <strong>Phiên bản mới</strong> → Triển khai. Làm cách này thì link <code>/exec</code> giữ nguyên, các máy không phải kết nối lại.</p>
   </div>
 
   <h2>3.4. Kết nối và đăng nhập lần đầu</h2>
+<figure class="fig"><img src="huong_dan_anh/01_dang_nhap.jpg" alt=""><figcaption>Hình 2. Màn đăng nhập: khung kết nối Drive của trường bên trái, danh sách vai trò bên phải.</figcaption></figure>
   <ol class="steps">
     <li>Ở màn đăng nhập, dán <strong>link thư mục</strong> và <strong>link Apps Script</strong> vào khung kết nối, bấm <span class="btn">Xác thực &amp; kết nối</span>.</li>
     <li>Chọn vai trò "Tài khoản quản trị Cao nhất", nhập tên đăng nhập và mật khẩu khởi tạo được cấp, bấm đăng nhập.</li>
@@ -250,6 +258,7 @@
     <li>Khi tài khoản quản trị đã kết nối Drive, bản quyền được áp dụng cho <strong>mọi máy của trường</strong>; giáo viên không phải nhập mã.</li>
   </ol>
 
+<figure class="fig narrow"><img src="huong_dan_anh/31_hop_ban_quyen.jpg" alt=""><figcaption>Hình 3. Hộp Bản quyền phần mềm khi chưa kích hoạt: nhập mã vào ô rồi bấm mở khóa.</figcaption></figure>
   <h2>3.6. Khai báo trường, tài khoản và lớp</h2>
   <ol class="steps">
     <li><strong>Phân hiệu, điểm trường</strong> (nếu có): khai báo trong <span class="menu">Lớp học</span>.</li>
@@ -317,6 +326,7 @@
     <tr><td>Hằng tuần, hằng tháng</td><td>Xem thống kê toàn trường, xuất báo cáo; xuất bảng chấm công và biểu kê khai tiết dạy.</td><td><span class="menu">Thống kê</span>, <span class="menu">Chấm công nhân sự</span></td></tr>
     <tr><td>Định kỳ</td><td>Tải tệp sao lưu toàn hệ thống; kiểm tra phiên bản Apps Script.</td><td><span class="menu">Dữ liệu</span></td></tr>
   </table>
+<figure class="fig"><img src="huong_dan_anh/42_qt_lop_hoc.jpg" alt=""><figcaption>Hình 4. Màn Lớp học của tài khoản quản trị khi trường chưa có lớp: tải mẫu Excel, nhập từ Excel hoặc tạo lớp mới.</figcaption></figure>
   <h3>Gán phân hiệu, điểm trường cho nhiều lớp</h3>
   <p>Trong <span class="menu">Lớp học</span>, tích chọn các lớp cần sửa rồi dùng thao tác hàng loạt để gán phân hiệu hoặc điểm trường. Danh sách lớp mặc định sắp theo tên lớp; có ô lọc theo giáo viên chủ nhiệm, gõ tên giáo viên hoặc tên lớp để tìm.</p>
   <h3>Xem lớp của giáo viên</h3>
@@ -339,6 +349,7 @@
     <tr><td>Cuối tuần, cuối tháng</td><td>Cho học sinh đổi quà, tạo thư khen, xuất báo cáo chuyên cần, kê khai tiết dạy.</td><td><span class="menu">Đổi quà</span>, <span class="menu">Tạo thư khen</span>, <span class="menu">Thống kê</span>, <span class="menu">Chấm công của tôi</span></td></tr>
   </table>
 
+<figure class="fig"><img src="huong_dan_anh/10_gv_trang_chu.jpg" alt=""><figcaption>Hình 5. Trang chủ của giáo viên chủ nhiệm (dữ liệu lớp và học sinh trong các hình là dữ liệu mẫu).</figcaption></figure>
   <h2>5.4. Giáo viên bộ môn</h2>
   <p>Giáo viên bộ môn dùng các màn <span class="menu">Lớp học</span>, <span class="menu">Học sinh</span>, <span class="menu">Thời khóa biểu</span>, nhóm <strong>Hoạt động</strong>, <span class="menu">Thống kê</span> và <span class="menu">Chấm công của tôi</span>. Các màn Điểm danh học sinh, Sơ đồ lớp và Infographic lớp dành cho giáo viên chủ nhiệm.</p>
 
@@ -361,6 +372,9 @@
     <div class="card"><h3>Thời khóa biểu</h3><p>Nhập thời khóa biểu của lớp, chọn một trong năm mẫu trình bày, in hoặc tải ảnh, xuất Excel. Cấu hình số tiết buổi sáng, buổi chiều và ngày thứ Bảy.</p></div>
   </div>
 
+<figure class="fig"><img src="huong_dan_anh/12_gv_hoc_sinh.jpg" alt=""><figcaption>Hình 6. Màn Học sinh: thêm học sinh, nhập Excel, tải tệp mẫu, cộng trừ điểm xu trên từng thẻ.</figcaption></figure>
+<figure class="fig"><img src="huong_dan_anh/13_gv_diem_danh.jpg" alt=""><figcaption>Hình 7. Màn Điểm danh học sinh theo ngày.</figcaption></figure>
+<div class="figs"><figure class="fig"><img src="huong_dan_anh/14_gv_so_do_lop.jpg" alt=""><figcaption>Hình 8. Sơ đồ lớp.</figcaption></figure><figure class="fig"><img src="huong_dan_anh/15_gv_thoi_khoa_bieu.jpg" alt=""><figcaption>Hình 9. Thời khóa biểu.</figcaption></figure></div>
   <h2>6.2. Nhóm Hoạt động</h2>
   <div class="two">
     <div class="card"><h3>Gọi tên học sinh</h3><p>Chọn học sinh ngẫu nhiên bằng nhiều hình thức (vòng quay, cuộn tên…), kèm trò chơi câu hỏi từ kho câu hỏi cá nhân của giáo viên.</p></div>
@@ -371,6 +385,9 @@
     <div class="card"><h3>Đếm ngược</h3><p>Đồng hồ đếm ngược cho hoạt động nhóm, làm bài, trò chơi.</p></div>
   </div>
 
+<div class="figs"><figure class="fig"><img src="huong_dan_anh/16_gv_goi_ten.jpg" alt=""><figcaption>Hình 10. Gọi tên học sinh.</figcaption></figure><figure class="fig"><img src="huong_dan_anh/17_gv_doi_qua.jpg" alt=""><figcaption>Hình 11. Đổi quà.</figcaption></figure></div>
+<div class="figs"><figure class="fig"><img src="huong_dan_anh/18_gv_thu_khen.jpg" alt=""><figcaption>Hình 12. Tạo thư khen.</figcaption></figure><figure class="fig"><img src="huong_dan_anh/19_gv_infographic.jpg" alt=""><figcaption>Hình 13. Infographic lớp.</figcaption></figure></div>
+<div class="figs"><figure class="fig"><img src="huong_dan_anh/20_gv_chong_on.jpg" alt=""><figcaption>Hình 14. Chống ồn.</figcaption></figure><figure class="fig"><img src="huong_dan_anh/21_gv_dem_nguoc.jpg" alt=""><figcaption>Hình 15. Đếm ngược.</figcaption></figure></div>
   <h2>6.3. Nhóm Quản lý &amp; báo cáo</h2>
   <div class="two">
     <div class="card"><h3>Thống kê</h3><p>Báo cáo của lớp (với giáo viên) hoặc tổng hợp toàn trường (với quản trị và Ban giám hiệu). Xuất Excel và PDF.</p></div>
@@ -382,6 +399,7 @@
     <div class="card"><h3>Trợ lý AI</h3><p>Hỏi đáp và gợi ý nội dung phục vụ công việc của giáo viên. Mức hỗ trợ phụ thuộc cấu hình của từng bản triển khai.</p></div>
   </div>
 
+<div class="figs"><figure class="fig"><img src="huong_dan_anh/22_gv_thong_ke.jpg" alt=""><figcaption>Hình 16. Thống kê.</figcaption></figure><figure class="fig"><img src="huong_dan_anh/25_gv_huong_dan.jpg" alt=""><figcaption>Hình 17. Hướng dẫn sử dụng, có khối tác giả và bản quyền.</figcaption></figure></div>
   <h2>6.4. Nhóm Hệ thống</h2>
   <table>
     <tr><th style="width:27%">Mục</th><th>Chức năng</th><th style="width:25%">Ai thấy</th></tr>
@@ -444,6 +462,7 @@
     <li>Cất tệp ở ít nhất hai nơi (máy tính và một ổ ngoài hoặc Drive khác). Tệp có chứa dữ liệu của trường nên không gửi qua kênh công khai.</li>
   </ol>
 
+<figure class="fig"><img src="huong_dan_anh/43_qt_du_lieu.jpg" alt=""><figcaption>Hình 18. Trang Dữ liệu của quản trị (chụp trên máy chưa kết nối Drive; khi đã kết nối, các khối trong nhóm Sao lưu &amp; khôi phục có thể khác đôi chút).</figcaption></figure>
   <h2>8.2. Lưu toàn bộ hệ thống vào một thư mục trên máy (quản trị)</h2>
   <p>Sau khi chọn thư mục tự lưu, bấm <span class="btn">Lưu toàn bộ hệ thống vào thư mục này</span>. Phần mềm ghi vào thư mục đó hai thư mục con:</p>
   <ul>
@@ -470,6 +489,7 @@
   <h2>8.5. Kho câu hỏi cá nhân (giáo viên)</h2>
   <p>Mở <span class="menu">Nơi lưu câu hỏi</span> để chọn nơi lưu: thư mục trên máy tính (khuyên dùng), xuất và nhập tệp, hoặc Google Drive cá nhân. Có nút tải và nạp tệp cấu hình để chuyển sang máy khác.</p>
 
+<figure class="fig narrow"><img src="huong_dan_anh/28_noi_luu_cau_hoi.jpg" alt=""><figcaption>Hình 19. Hộp Nơi lưu câu hỏi của tôi.</figcaption></figure>
   <h2>8.6. Năm học mới</h2>
   <p>Thẻ năm học mới trong <span class="menu">Dữ liệu</span> hỗ trợ dọn dữ liệu của năm cũ để bắt đầu năm mới. <strong>Luôn tải tệp sao lưu toàn hệ thống trước khi dọn.</strong></p>
 </section>
@@ -490,6 +510,7 @@
   </table>
   <p>Không bị khóa: tệp mẫu để nhập dữ liệu, quản lý tài khoản, kết nối Drive, sao lưu và khôi phục. Dữ liệu của trường luôn được giữ nguyên.</p>
 
+<figure class="fig"><img src="huong_dan_anh/30_khoa_thu_khen.jpg" alt=""><figcaption>Hình 20. Một màn bị khóa ở chế độ dùng thử; nút Nhập mã bản quyền mở hộp kích hoạt.</figcaption></figure>
   <h2>9.2. Kích hoạt</h2>
   <ol class="steps">
     <li>Mở <span class="menu">Hướng dẫn sử dụng</span>, khối "Bản quyền &amp; đăng ký", bấm <strong>Bản quyền PRO</strong>. Khi bấm vào một chức năng đang bị khóa, hộp này cũng tự mở.</li>
@@ -517,12 +538,14 @@
   <h2>10.2. Khai báo email khôi phục</h2>
   <p>Trong hộp Đổi mật khẩu, thẻ <strong>Email khôi phục</strong>: nhập địa chỉ email và mật khẩu hiện tại để lưu. Email này dùng để nhận mã khi quên mật khẩu.</p>
 
+<figure class="fig narrow"><img src="huong_dan_anh/27_email_khoi_phuc.jpg" alt=""><figcaption>Hình 21. Hộp Đổi mật khẩu, thẻ Email khôi phục.</figcaption></figure>
   <h2>10.3. Quên mật khẩu</h2>
   <ol class="steps">
     <li>Ở màn đăng nhập, bấm <span class="btn">Quên mật khẩu?</span>, nhập tên đăng nhập, bấm gửi mã.</li>
     <li>Mở hộp thư đã khai báo (xem cả mục Thư rác), lấy <strong>mã 6 số</strong>. Mã có hiệu lực 15 phút.</li>
     <li>Nhập mã và mật khẩu mới. Dữ liệu của tài khoản được giữ nguyên.</li>
   </ol>
+<figure class="fig narrow"><img src="huong_dan_anh/02_quen_mat_khau.jpg" alt=""><figcaption>Hình 22. Hộp Quên mật khẩu ở màn đăng nhập.</figcaption></figure>
   <h3>Nếu chưa khai báo email khôi phục</h3>
   <ul>
     <li><strong>Giáo viên, Ban giám hiệu:</strong> báo quản trị nhà trường để được cấp lại mật khẩu trong <span class="menu">Tài khoản &amp; CSDL</span>.</li>
