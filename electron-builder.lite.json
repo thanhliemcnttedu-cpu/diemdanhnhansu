@@ -29,6 +29,7 @@
     "createDesktopShortcut": "always",
     "createStartMenuShortcut": true,
     "shortcutName": "Lớp Học Hạnh Phúc",
+    "include": "desktop-lite/installer.nsh",
     "installerIcon": "desktop-lite/app/icon.ico",
     "uninstallerIcon": "desktop-lite/app/icon.ico",
     "uninstallDisplayName": "Lớp Học Hạnh Phúc",

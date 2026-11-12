@@ -104,6 +104,8 @@ jobs:
           EOF
           if gh release view "$TAG" >/dev/null 2>&1; then
             gh release upload "$TAG" "${{ steps.hash.outputs.file }}" release-lite/SHA256.txt --clobber
+            # the installer was rebuilt: keep the SHA-256 in the release notes in step with the file
+            gh release edit "$TAG" --notes-file notes.md
           else
             gh release create "$TAG" "${{ steps.hash.outputs.file }}" release-lite/SHA256.txt \
               --title "Lớp Học Hạnh Phúc $VERSION – bộ cài đặt Windows" \
