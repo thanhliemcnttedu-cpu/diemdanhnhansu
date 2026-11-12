@@ -1,0 +1,577 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Hướng dẫn sử dụng – Lớp Học Hạnh Phúc</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #1e293b; --muted: #475569; --line: #cbd5e1; --soft: #f1f5f9;
+    --brand: #4338ca; --brand-soft: #eef2ff; --green: #047857; --green-soft: #ecfdf5;
+    --amber: #92400e; --amber-soft: #fffbeb; --rose: #9f1239; --rose-soft: #fff1f2; --sky: #075985; --sky-soft: #f0f9ff;
+  }
+  @page { size: A4; margin: 17mm 16mm 18mm 16mm; }
+  * { box-sizing: border-box; }
+  html { font-size: 10.6pt; }
+  body { margin: 0; font-family: 'Be Vietnam Pro', 'Segoe UI', Arial, sans-serif; color: var(--ink); line-height: 1.5; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  h1, h2, h3, h4 { line-height: 1.25; margin: 0; }
+  h1 { font-size: 19pt; font-weight: 800; color: var(--brand); padding-bottom: 6pt; border-bottom: 2.5pt solid var(--brand); margin-bottom: 10pt; break-after: avoid; }
+  h1 .num { display: inline-block; min-width: 26pt; color: #fff; background: var(--brand); border-radius: 6pt; text-align: center; margin-right: 8pt; padding: 0 5pt; }
+  h2 { font-size: 13pt; font-weight: 800; color: var(--ink); margin: 14pt 0 5pt; break-after: avoid; }
+  h3 { font-size: 11pt; font-weight: 700; color: var(--brand); margin: 10pt 0 3pt; break-after: avoid; }
+  p { margin: 0 0 6pt; }
+  ul, ol { margin: 0 0 7pt; padding-left: 17pt; }
+  li { margin-bottom: 2.5pt; }
+  li > ul, li > ol { margin-top: 2.5pt; margin-bottom: 2pt; }
+  strong { font-weight: 700; }
+  .section { break-before: page; }
+  .menu { font-weight: 700; color: var(--brand); white-space: nowrap; }
+  .btn { font-weight: 700; background: var(--soft); border: 0.6pt solid var(--line); border-radius: 4pt; padding: 0 4pt; white-space: nowrap; }
+  code { font-family: 'Be Vietnam Pro', 'Segoe UI', sans-serif; font-weight: 600; background: var(--soft); border-radius: 3pt; padding: 0 3pt; word-break: break-all; }
+  .box { border-radius: 7pt; padding: 7pt 10pt; margin: 7pt 0 9pt; break-inside: avoid; border: 0.8pt solid; }
+  .box .t { font-weight: 800; display: block; margin-bottom: 2pt; }
+  .box p:last-child, .box ul:last-child, .box ol:last-child { margin-bottom: 0; }
+  .note { background: var(--sky-soft); border-color: #bae6fd; } .note .t { color: var(--sky); }
+  .tip { background: var(--green-soft); border-color: #a7f3d0; } .tip .t { color: var(--green); }
+  .warn { background: var(--amber-soft); border-color: #fcd34d; } .warn .t { color: var(--amber); }
+  .danger { background: var(--rose-soft); border-color: #fda4af; } .danger .t { color: var(--rose); }
+  table { width: 100%; border-collapse: collapse; margin: 6pt 0 10pt; font-size: 9.6pt; break-inside: auto; }
+  th, td { border: 0.6pt solid var(--line); padding: 4pt 6pt; vertical-align: top; text-align: left; }
+  th { background: var(--brand-soft); color: #312e81; font-weight: 700; }
+  tr { break-inside: avoid; }
+  td.c, th.c { text-align: center; }
+  .yes { color: var(--green); font-weight: 800; } .no { color: #94a3b8; }
+  .steps { counter-reset: s; list-style: none; padding-left: 0; }
+  .steps > li { counter-increment: s; position: relative; padding-left: 24pt; margin-bottom: 5pt; break-inside: avoid; }
+  .steps > li::before { content: counter(s); position: absolute; left: 0; top: 0.5pt; width: 16pt; height: 16pt; border-radius: 50%; background: var(--brand); color: #fff; font-weight: 800; font-size: 8.6pt; text-align: center; line-height: 16pt; }
+  /* cover */
+  .cover { height: 250mm; display: flex; flex-direction: column; justify-content: space-between; break-after: page; }
+  .cover .top { border-top: 7pt solid var(--brand); padding-top: 16pt; }
+  .cover .kicker { font-weight: 700; color: var(--muted); letter-spacing: 0.06em; text-transform: uppercase; font-size: 10pt; }
+  .cover .title { font-size: 34pt; font-weight: 800; color: var(--brand); line-height: 1.1; margin: 46pt 0 8pt; }
+  .cover .sub { font-size: 15pt; font-weight: 600; color: var(--ink); max-width: 135mm; }
+  .cover .tags { margin-top: 20pt; display: flex; flex-wrap: wrap; gap: 6pt; }
+  .cover .tags span { border: 0.8pt solid #c7d2fe; background: var(--brand-soft); color: #312e81; border-radius: 20pt; padding: 3pt 10pt; font-weight: 600; font-size: 9.6pt; }
+  .cover .meta { border-top: 0.8pt solid var(--line); padding-top: 10pt; font-size: 10pt; color: var(--muted); display: flex; justify-content: space-between; gap: 12pt; }
+  .cover .meta strong { color: var(--ink); }
+  /* toc */
+  .toc { break-after: page; }
+  .toc ol { list-style: none; padding: 0; margin: 0; }
+  .toc > ol > li { display: flex; gap: 8pt; padding: 5.5pt 0; border-bottom: 0.6pt dashed var(--line); font-weight: 700; }
+  .toc > ol > li .n { color: #fff; background: var(--brand); border-radius: 5pt; min-width: 20pt; text-align: center; height: 15pt; line-height: 15pt; font-size: 9pt; }
+  .toc .d { display: block; font-weight: 400; color: var(--muted); font-size: 9.4pt; }
+  .two { columns: 2; column-gap: 14pt; } .two > * { break-inside: avoid; }
+  .card { border: 0.8pt solid var(--line); border-radius: 7pt; padding: 7pt 9pt; margin-bottom: 8pt; break-inside: avoid; }
+  .card h3 { margin-top: 0; }
+  .small { font-size: 9.2pt; color: var(--muted); }
+</style>
+</head>
+<body>
+
+<!-- ====================================================== BÌA -->
+<section class="cover">
+  <div class="top">
+    <div class="kicker">Tài liệu hướng dẫn sử dụng</div>
+    <div class="title">Lớp Học<br>Hạnh Phúc</div>
+    <div class="sub">Phần mềm quản lý lớp học và nhà trường: cài đặt, cấu hình và sử dụng theo từng vai trò</div>
+    <div class="tags">
+      <span>Quản trị cao nhất</span><span>Quản trị nhà trường</span><span>Ban giám hiệu</span>
+      <span>Giáo viên chủ nhiệm</span><span>Giáo viên bộ môn</span><span>Giáo viên cá nhân</span>
+    </div>
+  </div>
+  <div class="meta">
+    <div>Áp dụng cho <strong>bản web</strong> và <strong>bản cài đặt Windows 1.1.1</strong><br>Apps Script phiên bản <strong>1.1.11</strong> • Cập nhật tháng 11/2026</div>
+    <div style="text-align:right">Tác giả phần mềm: <strong>Nguyễn Thanh Liêm</strong><br>Trường Tiểu học số 1 Tân Uyên • Zalo <strong>0888.358.363</strong></div>
+  </div>
+</section>
+
+<!-- ====================================================== MỤC LỤC -->
+<section class="toc">
+  <h1>Mục lục</h1>
+  <ol>
+    <li><span class="n">1</span><span>Tổng quan<span class="d">Phần mềm làm gì, dữ liệu nằm ở đâu, các vai trò và quyền hạn</span></span></li>
+    <li><span class="n">2</span><span>Cài đặt<span class="d">Dùng trên web, cài bản Windows, cập nhật phiên bản</span></span></li>
+    <li><span class="n">3</span><span>Thiết lập lần đầu cho một trường<span class="d">Thư mục Google Drive, Apps Script, kết nối, khởi tạo, bản quyền</span></span></li>
+    <li><span class="n">4</span><span>Cấu hình theo từng vai trò<span class="d">Quản trị cao nhất, Quản trị nhà trường, Ban giám hiệu, Giáo viên</span></span></li>
+    <li><span class="n">5</span><span>Sử dụng theo từng vai trò<span class="d">Công việc hằng ngày, hằng tuần, đầu năm học</span></span></li>
+    <li><span class="n">6</span><span>Các mô-đun chức năng<span class="d">Lớp học, Hoạt động, Quản lý &amp; báo cáo, Hệ thống</span></span></li>
+    <li><span class="n">7</span><span>Chấm công nhân sự và kê khai tiết dạy<span class="d">Danh sách nhân sự, link và mã QR điểm danh, tổng hợp, khóa chốt</span></span></li>
+    <li><span class="n">8</span><span>Dữ liệu: sao lưu, khôi phục, lưu trên máy<span class="d">Một tệp tổng, khôi phục từ thư mục, nơi lưu câu hỏi</span></span></li>
+    <li><span class="n">9</span><span>Bản quyền và chế độ dùng thử<span class="d">Giới hạn khi chưa kích hoạt, cách kích hoạt cho cả trường</span></span></li>
+    <li><span class="n">10</span><span>Mật khẩu và an toàn tài khoản<span class="d">Đổi mật khẩu, email khôi phục, quên mật khẩu</span></span></li>
+    <li><span class="n">11</span><span>Xử lý sự cố thường gặp<span class="d">Không đăng nhập được, không thấy dữ liệu, bị khóa tính năng</span></span></li>
+  </ol>
+  <div class="box note" style="margin-top:14pt">
+    <span class="t">Cách đọc tài liệu</span>
+    <p>Tên mục trên thanh bên của phần mềm được in như <span class="menu">Dữ liệu</span>; tên nút được in như <span class="btn">Lưu ngay</span>. Một số màn hình có thể khác đôi chút tùy phiên bản; khi đó hãy dựa vào tên mục và mô tả chức năng.</p>
+  </div>
+</section>
+
+<!-- ====================================================== 1 -->
+<section>
+  <h1><span class="num">1</span>Tổng quan</h1>
+
+  <h2>1.1. Phần mềm làm gì</h2>
+  <p>Lớp Học Hạnh Phúc giúp giáo viên và nhà trường quản lý lớp học hằng ngày: danh sách lớp và học sinh, điểm danh, sơ đồ chỗ ngồi, thời khóa biểu, tích điểm xu và đổi quà, thư khen, các trò chơi và công cụ trên lớp, thống kê cho Ban giám hiệu, chấm công giáo viên – nhân viên và kê khai tiết dạy.</p>
+
+  <h2>1.2. Dữ liệu nằm ở đâu</h2>
+  <ul>
+    <li><strong>Mỗi trường có một thư mục Google Drive dùng chung</strong> và <strong>một Apps Script</strong> đi kèm. Toàn bộ dữ liệu của trường (trường, tài khoản, lớp, học sinh, chấm công, kê khai) nằm trong thư mục đó.</li>
+    <li>Máy tính hay điện thoại nào <strong>kết nối đúng hai đường link</strong> (link thư mục và link Apps Script) thì làm việc với dữ liệu của trường. Vì vậy cài phần mềm trên máy mới không cần chép dữ liệu sang: kết nối và đăng nhập là có lại đầy đủ.</li>
+    <li>Mật khẩu tài khoản được kiểm tra tại Apps Script của trường, không lưu trong bộ cài.</li>
+    <li>Dữ liệu của trường này không lẫn sang trường khác, vì mỗi trường dùng thư mục riêng.</li>
+  </ul>
+
+  <h2>1.3. Hai cách dùng</h2>
+  <table>
+    <tr><th style="width:23%">Cách dùng</th><th>Mô tả</th><th style="width:32%">Phù hợp khi</th></tr>
+    <tr><td><strong>Bản web</strong></td><td>Mở bằng trình duyệt Chrome hoặc Edge theo địa chỉ trang web của trường. Luôn là bản mới nhất, không phải cài.</td><td>Dùng ở mọi máy, kể cả điện thoại (điểm danh nhân sự).</td></tr>
+    <tr><td><strong>Bản cài đặt Windows</strong></td><td>Cài tệp <code>QL_TRUONG_HOC_V_1.1.1.exe</code>. Chạy giống hệt bản web, có biểu tượng trên màn hình, tự cập nhật giao diện.</td><td>Máy tính lớp học, máy văn phòng dùng thường xuyên.</td></tr>
+  </table>
+
+  <h2>1.4. Các vai trò đăng nhập</h2>
+  <p>Ở màn đăng nhập, người dùng chọn vai trò trước khi nhập tài khoản:</p>
+  <table>
+    <tr><th style="width:31%">Vai trò trên màn đăng nhập</th><th style="width:24%">Dành cho</th><th>Việc chính</th></tr>
+    <tr><td>Tài khoản quản trị Cao nhất (<code>adminquantri</code>)</td><td>Người thiết lập hệ thống của trường</td><td>Khởi tạo trường, quản lý toàn bộ tài khoản, Apps Script, sao lưu, bản quyền. Có toàn quyền với lớp và học sinh.</td></tr>
+    <tr><td>Vai trò Quản trị Nhà Trường</td><td>Quản trị nhà trường và <strong>Ban giám hiệu</strong></td><td>Tạo tài khoản, khai báo lớp và phân hiệu, xem thống kê toàn trường, chấm công nhân sự.</td></tr>
+    <tr><td>Vai trò Giáo viên thuộc Nhà trường</td><td>Giáo viên chủ nhiệm, giáo viên bộ môn</td><td>Quản lý lớp, học sinh, điểm danh, hoạt động trên lớp, chấm công của bản thân.</td></tr>
+    <tr><td>Vai trò Cá Nhân</td><td>Giáo viên tự dùng, không thuộc trường nào trên hệ thống</td><td>Quản lý lớp của riêng mình.</td></tr>
+    <tr><td>Vai Trò Quản trị Tài khoản Cá Nhân</td><td>Người quản lý nhóm giáo viên cá nhân</td><td>Quản lý tài khoản giáo viên cá nhân, tải và nạp tệp dữ liệu.</td></tr>
+  </table>
+
+  <h2>1.5. Quyền hạn theo vai trò</h2>
+  <table>
+    <tr><th>Chức năng</th><th class="c">Quản trị cao nhất</th><th class="c">Quản trị trường / BGH</th><th class="c">GV chủ nhiệm</th><th class="c">GV bộ môn</th></tr>
+    <tr><td>Kết nối Drive, cài và cập nhật Apps Script</td><td class="c yes">Có</td><td class="c yes">Có</td><td class="c no">Chỉ kết nối</td><td class="c no">Chỉ kết nối</td></tr>
+    <tr><td>Tạo, sửa, cấp lại mật khẩu tài khoản</td><td class="c yes">Có</td><td class="c yes">Có</td><td class="c no">Không</td><td class="c no">Không</td></tr>
+    <tr><td>Thêm lớp, nhập lớp, khai báo phân hiệu – điểm trường</td><td class="c yes">Có</td><td class="c yes">Có</td><td class="c yes">Lớp của mình</td><td class="c yes">Lớp dạy</td></tr>
+    <tr><td>Thêm, sửa, xóa học sinh; ảnh; chức vụ; điểm xu</td><td class="c yes">Có</td><td class="c no">Không</td><td class="c yes">Có</td><td class="c yes">Có</td></tr>
+    <tr><td>Điểm danh học sinh, Sơ đồ lớp, Infographic</td><td class="c no">Không dùng</td><td class="c no">Không dùng</td><td class="c yes">Có</td><td class="c no">Không</td></tr>
+    <tr><td>Hoạt động trên lớp (gọi tên, đổi quà, thư khen, chống ồn, đếm ngược)</td><td class="c no">Không dùng</td><td class="c no">Không dùng</td><td class="c yes">Có</td><td class="c yes">Có</td></tr>
+    <tr><td>Thống kê toàn trường</td><td class="c yes">Có</td><td class="c yes">Có</td><td class="c no">Lớp mình</td><td class="c no">Lớp dạy</td></tr>
+    <tr><td>Chấm công nhân sự (quản lý, tổng hợp)</td><td class="c yes">Có</td><td class="c yes">Có</td><td class="c no">Không</td><td class="c no">Không</td></tr>
+    <tr><td>Chấm công của tôi, kê khai tiết dạy</td><td class="c no">—</td><td class="c no">—</td><td class="c yes">Có</td><td class="c yes">Có</td></tr>
+    <tr><td>Sao lưu và khôi phục toàn hệ thống</td><td class="c yes">Có</td><td class="c yes">Có</td><td class="c no">Không</td><td class="c no">Không</td></tr>
+    <tr><td>Kích hoạt bản quyền cho cả trường</td><td class="c yes">Có</td><td class="c yes">Có</td><td class="c no">Tự nhận</td><td class="c no">Tự nhận</td></tr>
+  </table>
+  <p class="small">Tài khoản quản lý (Quản trị cao nhất, Quản trị trường, Ban giám hiệu) làm việc ở mức toàn trường nên không vào trực tiếp các màn dùng trên lớp. Muốn xem lớp của một giáo viên, quản trị dùng chức năng "Vào xem" trong quản lý tài khoản; đây là chế độ chỉ xem, không sửa được dữ liệu của giáo viên.</p>
+</section>
+
+<!-- ====================================================== 2 -->
+<section class="section">
+  <h1><span class="num">2</span>Cài đặt</h1>
+
+  <h2>2.1. Dùng bản web</h2>
+  <ol class="steps">
+    <li>Mở trình duyệt <strong>Chrome</strong> hoặc <strong>Edge</strong> bản mới.</li>
+    <li>Nhập địa chỉ trang web của trường (do quản trị nhà trường cung cấp).</li>
+    <li>Nếu vừa có bản cập nhật mà chưa thấy thay đổi, bấm <span class="btn">Ctrl + F5</span> để tải lại bản mới.</li>
+  </ol>
+  <div class="box tip"><span class="t">Mẹo</span><p>Trên Chrome hoặc Edge, có thể lưu trang web thành biểu tượng trên màn hình để mở nhanh như một ứng dụng.</p></div>
+
+  <h2>2.2. Cài bản Windows</h2>
+  <p>Yêu cầu: Windows 10 hoặc 11, 64-bit, có Internet để kết nối Google Drive của trường.</p>
+  <ol class="steps">
+    <li>Tải tệp cài đặt <code>QL_TRUONG_HOC_V_1.1.1.exe</code> từ đường link do tác giả hoặc quản trị cung cấp.</li>
+    <li>Chạy tệp vừa tải. Nếu Windows hiện bảng "Windows đã bảo vệ máy tính của bạn", bấm <span class="btn">Thông tin thêm</span> rồi <span class="btn">Vẫn chạy</span>. Bảng này xuất hiện vì bộ cài chưa có chữ ký số.</li>
+    <li>Chọn cài cho riêng người dùng này hoặc cho mọi người dùng trên máy, chọn thư mục cài (để mặc định cũng được), rồi bấm cài đặt.</li>
+    <li>Cài xong, phần mềm tự mở. Biểu tượng <strong>Lớp Học Hạnh Phúc</strong> nằm trên màn hình và trong menu Start.</li>
+  </ol>
+  <div class="box note">
+    <span class="t">Cài đè và gỡ cài đặt</span>
+    <ul>
+      <li>Cài bản mới đè lên bản cũ được. Dữ liệu trên máy nằm ở thư mục riêng của người dùng nên không bị mất khi cài lại hoặc gỡ cài đặt.</li>
+      <li>Nếu bộ cài báo phần mềm đang chạy, hãy đóng hẳn phần mềm rồi bấm thử lại.</li>
+    </ul>
+  </div>
+
+  <h2>2.3. Cập nhật phiên bản</h2>
+  <table>
+    <tr><th style="width:26%">Thành phần</th><th>Cách cập nhật</th></tr>
+    <tr><td>Bản web</td><td>Tự động. Khi có bản mới, tải lại trang (Ctrl + F5).</td></tr>
+    <tr><td>Bản cài đặt Windows</td><td>Từ bản 1.1.0, phần mềm tự kiểm tra khi mở. Có bản mới thì tải về và hiện thông báo ở góc dưới bên phải với nút <span class="btn">Cập nhật ngay</span>; chọn <span class="btn">Để sau</span> thì bản mới được dùng ở lần mở kế tiếp. Có thể kiểm tra thủ công ở <span class="menu">Hướng dẫn sử dụng</span>, khối "Bản cài đặt trên máy tính", nút <span class="btn">Kiểm tra cập nhật</span>. Bản 1.0.0 chưa có tính năng này, cần cài bản mới một lần.</td></tr>
+    <tr><td>Apps Script của trường</td><td>Do quản trị thực hiện trong <span class="menu">Dữ liệu</span>, nhóm "Google Drive của trường &amp; Apps Script". Khi thanh trên cùng báo "Cần cập nhật Apps Script" là đã có bản mới hơn (xem mục 3.3).</td></tr>
+  </table>
+</section>
+
+<!-- ====================================================== 3 -->
+<section class="section">
+  <h1><span class="num">3</span>Thiết lập lần đầu cho một trường</h1>
+  <p>Phần này do <strong>một người</strong> thực hiện (thường là người phụ trách công nghệ thông tin của trường), bằng tài khoản quản trị cao nhất. Làm một lần; các máy khác chỉ cần kết nối và đăng nhập.</p>
+
+  <h2>3.1. Chuẩn bị</h2>
+  <ul>
+    <li>Một <strong>tài khoản Google của trường</strong>. Nên dùng tài khoản chung của trường, không dùng tài khoản cá nhân, vì người giữ tài khoản này là người giữ dữ liệu.</li>
+    <li>Thông tin tài khoản quản trị cao nhất và <strong>mã bản quyền</strong> do tác giả cung cấp.</li>
+  </ul>
+
+  <h2>3.2. Tạo thư mục Google Drive dùng chung</h2>
+  <ol class="steps">
+    <li>Đăng nhập Google Drive bằng tài khoản Google của trường, tạo một thư mục mới, ví dụ "CSDL Lớp Học Hạnh Phúc – Tên trường".</li>
+    <li>Mở thư mục, sao chép đường link trên thanh địa chỉ. Đây là <strong>link thư mục</strong>.</li>
+  </ol>
+  <div class="box warn"><span class="t">Lưu ý</span><p>Không xóa hay đổi tên các tệp trong thư mục này bằng tay, nhất là tệp <code>csdl_truong.json</code>. Không đặt dự án Apps Script vào trong thư mục dữ liệu.</p></div>
+
+  <h2>3.3. Cài Apps Script</h2>
+  <p>Apps Script là đoạn chương trình chạy trên tài khoản Google của trường, giúp phần mềm đọc và ghi vào thư mục Drive.</p>
+  <ol class="steps">
+    <li>Trong phần mềm, mở <strong>Trình cài đặt Apps Script</strong>: ở màn đăng nhập (khung kết nối) hoặc trong <span class="menu">Dữ liệu</span>, nhóm "Google Drive của trường &amp; Apps Script".</li>
+    <li>Làm theo các bước trên màn hình: sao chép mã, mở trang Apps Script, dán mã vào dự án mới và lưu.</li>
+    <li>Triển khai dưới dạng <strong>Ứng dụng web</strong> với hai thiết lập: "Thực thi dưới dạng: <strong>Tôi</strong>" và "Ai có quyền truy cập: <strong>Bất kỳ ai</strong>".</li>
+    <li>Google hỏi quyền truy cập: chọn tài khoản của trường, bấm Nâng cao, đi tới dự án, tích chọn tất cả các quyền và bấm Cho phép.</li>
+    <li>Sao chép địa chỉ ứng dụng web (kết thúc bằng <code>/exec</code>). Đây là <strong>link Apps Script</strong>.</li>
+  </ol>
+  <div class="box note">
+    <span class="t">Cập nhật Apps Script về sau</span>
+    <p>Khi phần mềm báo cần cập nhật: mở lại dự án Apps Script, thay toàn bộ mã bằng mã mới từ trình cài đặt, rồi vào Triển khai → Quản lý các lần triển khai → chỉnh sửa → chọn <strong>Phiên bản mới</strong> → Triển khai. Làm cách này thì link <code>/exec</code> giữ nguyên, các máy không phải kết nối lại.</p>
+  </div>
+
+  <h2>3.4. Kết nối và đăng nhập lần đầu</h2>
+  <ol class="steps">
+    <li>Ở màn đăng nhập, dán <strong>link thư mục</strong> và <strong>link Apps Script</strong> vào khung kết nối, bấm <span class="btn">Xác thực &amp; kết nối</span>.</li>
+    <li>Chọn vai trò "Tài khoản quản trị Cao nhất", nhập tên đăng nhập và mật khẩu khởi tạo được cấp, bấm đăng nhập.</li>
+    <li>Nếu thư mục chưa có dữ liệu, phần mềm khởi tạo cơ sở dữ liệu của trường. Khai báo tên trường khi được hỏi.</li>
+  </ol>
+  <div class="box danger">
+    <span class="t">Bắt buộc làm ngay sau lần đăng nhập đầu tiên</span>
+    <ul>
+      <li>Vào <span class="menu">Đổi mật khẩu</span> và <strong>đổi mật khẩu khởi tạo</strong> thành mật khẩu riêng của trường.</li>
+      <li>Ở thẻ <strong>Email khôi phục</strong>, khai báo một địa chỉ email để lấy lại mật khẩu khi quên (xem phần 10).</li>
+    </ul>
+  </div>
+
+  <h2>3.5. Kích hoạt bản quyền</h2>
+  <ol class="steps">
+    <li>Vào <span class="menu">Hướng dẫn sử dụng</span>, khối "Bản quyền &amp; đăng ký", bấm <strong>Bản quyền PRO</strong>.</li>
+    <li>Nhập mã bản quyền do tác giả cung cấp, bấm <span class="btn">Mở khóa bản quyền chính thức</span>.</li>
+    <li>Khi tài khoản quản trị đã kết nối Drive, bản quyền được áp dụng cho <strong>mọi máy của trường</strong>; giáo viên không phải nhập mã.</li>
+  </ol>
+
+  <h2>3.6. Khai báo trường, tài khoản và lớp</h2>
+  <ol class="steps">
+    <li><strong>Phân hiệu, điểm trường</strong> (nếu có): khai báo trong <span class="menu">Lớp học</span>.</li>
+    <li><strong>Lớp học:</strong> thêm từng lớp hoặc nhập cả danh sách lớp từ tệp Excel theo mẫu tải về trong <span class="menu">Lớp học</span>.</li>
+    <li><strong>Tài khoản:</strong> trong <span class="menu">Tài khoản &amp; CSDL</span>, tạo tài khoản cho Quản trị nhà trường, Ban giám hiệu, giáo viên chủ nhiệm, giáo viên bộ môn. Có thể tạo hàng loạt từ tệp Excel hoặc từ danh sách nhân sự (xem phần 7).</li>
+    <li><strong>Gửi thông tin kết nối cho giáo viên:</strong> trong <span class="menu">Dữ liệu</span>, nhóm Google Drive, bấm <span class="btn">Tải tệp kết nối</span> rồi gửi tệp <code>ket_noi_csdl_truong.json</code> cho giáo viên. Tệp này chỉ chứa hai đường link, không chứa mật khẩu.</li>
+  </ol>
+</section>
+
+<!-- ====================================================== 4 -->
+<section class="section">
+  <h1><span class="num">4</span>Cấu hình theo từng vai trò</h1>
+
+  <h2>4.1. Quản trị cao nhất</h2>
+  <p>Ngoài phần thiết lập ở mục 3, quản trị cao nhất nên cấu hình thêm:</p>
+  <ul>
+    <li><strong>Sao lưu định kỳ:</strong> trong <span class="menu">Dữ liệu</span>, nhóm "Sao lưu &amp; khôi phục", tải tệp sao lưu toàn hệ thống về máy và cất một bản ở nơi khác (phần 8).</li>
+    <li><strong>Thư mục tự lưu trên máy:</strong> chọn một thư mục ở ổ D hoặc E để phần mềm tự ghi tệp dữ liệu của tài khoản sau mỗi thay đổi. Sau khi chọn, dán địa chỉ đầy đủ của thư mục vào ô ghi chú để lần sau biết đang lưu ở đâu.</li>
+    <li><strong>Hướng dẫn cho giáo viên:</strong> trong <span class="menu">Hướng dẫn sử dụng</span>, thêm video, thư mục, đường link hoặc tệp PDF hướng dẫn. Giáo viên xem được ngay trong phần mềm.</li>
+    <li><strong>Cấp quyền gửi email</strong> cho Apps Script để chức năng quên mật khẩu hoạt động (phần 10).</li>
+  </ul>
+
+  <h2>4.2. Quản trị nhà trường</h2>
+  <ol class="steps">
+    <li>Nhận tài khoản từ quản trị cao nhất, cùng hai đường link hoặc tệp kết nối.</li>
+    <li>Ở màn đăng nhập: kết nối (dán hai link hoặc bấm <span class="btn">Nạp tệp kết nối</span>), chọn "Vai trò Quản trị Nhà Trường", đăng nhập.</li>
+    <li>Đổi mật khẩu và khai báo email khôi phục.</li>
+    <li>Kiểm tra danh sách lớp, phân hiệu – điểm trường và tài khoản giáo viên; bổ sung nếu thiếu.</li>
+    <li>Nếu trường dùng chấm công: nhập danh sách nhân sự và phát link điểm danh (phần 7).</li>
+  </ol>
+
+  <h2>4.3. Ban giám hiệu</h2>
+  <ol class="steps">
+    <li>Kết nối và đăng nhập với "Vai trò Quản trị Nhà Trường" bằng tài khoản Ban giám hiệu được cấp.</li>
+    <li>Đổi mật khẩu, khai báo email khôi phục.</li>
+    <li>Không cần cấu hình thêm: các màn <span class="menu">Thống kê</span> và <span class="menu">Chấm công nhân sự</span> tự lấy số liệu của toàn trường.</li>
+  </ol>
+
+  <h2>4.4. Giáo viên chủ nhiệm và giáo viên bộ môn</h2>
+  <ol class="steps">
+    <li><strong>Kết nối:</strong> ở màn đăng nhập, bấm <span class="btn">Nạp tệp kết nối</span> và chọn tệp quản trị gửi, hoặc dán hai đường link. Mỗi máy chỉ làm một lần.</li>
+    <li><strong>Đăng nhập:</strong> chọn "Vai trò Giáo viên thuộc Nhà trường", nhập tên đăng nhập và mật khẩu được cấp. Với tài khoản tạo từ danh sách nhân sự, tên đăng nhập là <strong>số căn cước công dân</strong> và mật khẩu là mật khẩu điểm danh.</li>
+    <li><strong>Đổi mật khẩu</strong> và khai báo email khôi phục trong <span class="menu">Đổi mật khẩu</span>.</li>
+    <li><strong>Nơi lưu câu hỏi</strong> (nếu dùng trò chơi câu hỏi): mở <span class="menu">Nơi lưu câu hỏi</span>, chọn một thư mục trên máy tính để lưu bộ câu hỏi cá nhân. Bộ câu hỏi là dữ liệu riêng của giáo viên, không nằm trong thư mục chung của trường.</li>
+  </ol>
+  <div class="box note">
+    <span class="t">Giáo viên không cần sao lưu</span>
+    <p>Dữ liệu lớp của giáo viên được lưu trên Google Drive của trường. Thứ duy nhất giáo viên tự giữ là bộ câu hỏi cá nhân; khi đổi máy, chọn lại đúng thư mục hoặc nạp tệp cấu hình là có lại.</p>
+  </div>
+
+  <h2>4.5. Giáo viên cá nhân</h2>
+  <p>Chọn "Vai trò Cá Nhân" và đăng nhập bằng tài khoản được cấp. Giáo viên cá nhân quản lý lớp của riêng mình. Khi chưa kích hoạt bản quyền, phần mềm chạy ở chế độ dùng thử (phần 9).</p>
+</section>
+
+<!-- ====================================================== 5 -->
+<section class="section">
+  <h1><span class="num">5</span>Sử dụng theo từng vai trò</h1>
+
+  <h2>5.1. Quản trị cao nhất và Quản trị nhà trường</h2>
+  <table>
+    <tr><th style="width:22%">Thời điểm</th><th>Công việc</th><th style="width:27%">Thực hiện ở</th></tr>
+    <tr><td>Đầu năm học</td><td>Dọn dữ liệu năm cũ, khai báo lớp mới, phân công chủ nhiệm, cấp tài khoản cho giáo viên mới.</td><td><span class="menu">Dữ liệu</span> (thẻ năm học mới), <span class="menu">Lớp học</span>, <span class="menu">Tài khoản &amp; CSDL</span></td></tr>
+    <tr><td>Thường xuyên</td><td>Cấp lại mật khẩu khi giáo viên quên; thêm, khóa hoặc sửa tài khoản.</td><td><span class="menu">Tài khoản &amp; CSDL</span></td></tr>
+    <tr><td>Hằng ngày</td><td>Theo dõi điểm danh nhân sự, điểm danh hộ, khóa chốt số liệu cuối buổi.</td><td><span class="menu">Chấm công nhân sự</span></td></tr>
+    <tr><td>Hằng tuần, hằng tháng</td><td>Xem thống kê toàn trường, xuất báo cáo; xuất bảng chấm công và biểu kê khai tiết dạy.</td><td><span class="menu">Thống kê</span>, <span class="menu">Chấm công nhân sự</span></td></tr>
+    <tr><td>Định kỳ</td><td>Tải tệp sao lưu toàn hệ thống; kiểm tra phiên bản Apps Script.</td><td><span class="menu">Dữ liệu</span></td></tr>
+  </table>
+  <h3>Gán phân hiệu, điểm trường cho nhiều lớp</h3>
+  <p>Trong <span class="menu">Lớp học</span>, tích chọn các lớp cần sửa rồi dùng thao tác hàng loạt để gán phân hiệu hoặc điểm trường. Danh sách lớp mặc định sắp theo tên lớp; có ô lọc theo giáo viên chủ nhiệm, gõ tên giáo viên hoặc tên lớp để tìm.</p>
+  <h3>Xem lớp của giáo viên</h3>
+  <p>Trong quản lý tài khoản, dùng chức năng "Vào xem" ở tài khoản giáo viên. Màn hình chuyển sang chế độ chỉ xem; bấm quay lại để thoát.</p>
+
+  <h2>5.2. Ban giám hiệu</h2>
+  <ul>
+    <li><span class="menu">Trang chủ</span>: tổng quan số lớp, số học sinh của trường.</li>
+    <li><span class="menu">Thống kê</span>: số liệu chuyên cần và hoạt động theo lớp, theo khối, toàn trường; xuất báo cáo.</li>
+    <li><span class="menu">Chấm công nhân sự</span>: tình hình điểm danh giáo viên – nhân viên trong ngày và theo khoảng thời gian; so sánh số liệu; xuất bảng.</li>
+    <li>Ban giám hiệu thêm được lớp và gán phân hiệu, nhưng không sửa thông tin học sinh; việc đó thuộc giáo viên.</li>
+  </ul>
+
+  <h2>5.3. Giáo viên chủ nhiệm</h2>
+  <table>
+    <tr><th style="width:22%">Thời điểm</th><th>Công việc</th><th style="width:27%">Thực hiện ở</th></tr>
+    <tr><td>Đầu năm học</td><td>Nhập danh sách học sinh từ Excel, xếp sơ đồ chỗ ngồi, nhập thời khóa biểu.</td><td><span class="menu">Học sinh</span>, <span class="menu">Sơ đồ lớp</span>, <span class="menu">Thời khóa biểu</span></td></tr>
+    <tr><td>Đầu mỗi buổi</td><td>Điểm danh học sinh; điểm danh bản thân.</td><td><span class="menu">Điểm danh</span>, <span class="menu">Chấm công của tôi</span></td></tr>
+    <tr><td>Trong giờ học</td><td>Gọi tên ngẫu nhiên, cộng điểm xu, đo tiếng ồn, đếm ngược thời gian.</td><td>Nhóm <strong>Hoạt động</strong></td></tr>
+    <tr><td>Cuối tuần, cuối tháng</td><td>Cho học sinh đổi quà, tạo thư khen, xuất báo cáo chuyên cần, kê khai tiết dạy.</td><td><span class="menu">Đổi quà</span>, <span class="menu">Tạo thư khen</span>, <span class="menu">Thống kê</span>, <span class="menu">Chấm công của tôi</span></td></tr>
+  </table>
+
+  <h2>5.4. Giáo viên bộ môn</h2>
+  <p>Giáo viên bộ môn dùng các màn <span class="menu">Lớp học</span>, <span class="menu">Học sinh</span>, <span class="menu">Thời khóa biểu</span>, nhóm <strong>Hoạt động</strong>, <span class="menu">Thống kê</span> và <span class="menu">Chấm công của tôi</span>. Các màn Điểm danh học sinh, Sơ đồ lớp và Infographic lớp dành cho giáo viên chủ nhiệm.</p>
+
+  <h2>5.5. Chế độ trình chiếu</h2>
+  <p>Khi chiếu lên màn hình lớn, bấm <span class="btn">Ctrl + Shift + F</span> để vào chế độ trình chiếu: ẩn thanh điều hướng, chữ to hơn, toàn màn hình. Bấm lại tổ hợp phím hoặc Esc để thoát.</p>
+</section>
+
+<!-- ====================================================== 6 -->
+<section class="section">
+  <h1><span class="num">6</span>Các mô-đun chức năng</h1>
+  <p>Thanh bên chia thành các nhóm: <strong>Lớp học</strong>, <strong>Hoạt động</strong>, <strong>Quản lý &amp; báo cáo</strong> và <strong>Hệ thống</strong>. Mỗi vai trò chỉ thấy những mục mình được dùng. Ô <strong>Tìm nhanh</strong> trên thanh trên cùng (phím tắt Ctrl + K) giúp mở nhanh một mục.</p>
+
+  <h2>6.1. Nhóm Lớp học</h2>
+  <div class="two">
+    <div class="card"><h3>Trang chủ</h3><p>Tổng quan lớp hoặc trường: sĩ số, lối tắt tới các việc thường làm.</p></div>
+    <div class="card"><h3>Lớp học</h3><p>Danh sách lớp với thống kê số lớp, số học sinh. Thêm lớp, nhập lớp từ Excel, sửa thông tin lớp, khai báo phân hiệu – điểm trường, gán hàng loạt. Bộ lọc theo khối, theo giáo viên chủ nhiệm; mặc định sắp theo tên lớp.</p></div>
+    <div class="card"><h3>Học sinh</h3><p>Danh sách học sinh của lớp: thêm, sửa, ảnh đại diện, chức vụ, tổ, điểm xu. Nhập từ Excel theo mẫu; khi tệp có học sinh trùng với danh sách đang có, phần mềm báo trước và cho chọn ghi đè thông tin hoặc bỏ qua. Xuất danh sách học sinh ra Excel.</p></div>
+    <div class="card"><h3>Điểm danh</h3><p>Điểm danh học sinh theo ngày, xem biểu đồ chuyên cần, xuất báo cáo chuyên cần của lớp. Dành cho giáo viên chủ nhiệm.</p></div>
+    <div class="card"><h3>Sơ đồ lớp</h3><p>Sắp xếp chỗ ngồi của học sinh theo sơ đồ lớp. Dành cho giáo viên chủ nhiệm.</p></div>
+    <div class="card"><h3>Thời khóa biểu</h3><p>Nhập thời khóa biểu của lớp, chọn một trong năm mẫu trình bày, in hoặc tải ảnh, xuất Excel. Cấu hình số tiết buổi sáng, buổi chiều và ngày thứ Bảy.</p></div>
+  </div>
+
+  <h2>6.2. Nhóm Hoạt động</h2>
+  <div class="two">
+    <div class="card"><h3>Gọi tên học sinh</h3><p>Chọn học sinh ngẫu nhiên bằng nhiều hình thức (vòng quay, cuộn tên…), kèm trò chơi câu hỏi từ kho câu hỏi cá nhân của giáo viên.</p></div>
+    <div class="card"><h3>Đổi quà</h3><p>Học sinh dùng điểm xu tích được để đổi phần thưởng do giáo viên thiết lập.</p></div>
+    <div class="card"><h3>Tạo thư khen</h3><p>Tạo thư khen theo mẫu nền có sẵn, cho một hoặc nhiều học sinh; xuất ảnh, tệp PDF hoặc tệp nén nhiều thư.</p></div>
+    <div class="card"><h3>Infographic Lớp</h3><p>Trang giới thiệu lớp khổ A4 tổng hợp thông tin lớp, thời khóa biểu, sơ đồ; xuất PDF hoặc ảnh. Dành cho giáo viên chủ nhiệm.</p></div>
+    <div class="card"><h3>Chống ồn</h3><p>Đo mức tiếng ồn trong lớp bằng micro của máy và hiển thị trực quan để học sinh tự điều chỉnh.</p></div>
+    <div class="card"><h3>Đếm ngược</h3><p>Đồng hồ đếm ngược cho hoạt động nhóm, làm bài, trò chơi.</p></div>
+  </div>
+
+  <h2>6.3. Nhóm Quản lý &amp; báo cáo</h2>
+  <div class="two">
+    <div class="card"><h3>Thống kê</h3><p>Báo cáo của lớp (với giáo viên) hoặc tổng hợp toàn trường (với quản trị và Ban giám hiệu). Xuất Excel và PDF.</p></div>
+    <div class="card"><h3>Chấm công nhân sự</h3><p>Dành cho quản trị và Ban giám hiệu: tổng hợp điểm danh giáo viên – nhân viên, danh sách nhân sự, link và mã QR điểm danh, kê khai tiết dạy (phần 7).</p></div>
+    <div class="card"><h3>Chấm công của tôi</h3><p>Dành cho giáo viên: điểm danh hôm nay và kê khai tiết dạy, không phải nhập lại mật khẩu.</p></div>
+    <div class="card"><h3>Dữ liệu</h3><p>Một trang gom mọi việc về dữ liệu: sao lưu và khôi phục, lưu trên máy, kết nối Google Drive và Apps Script, kho câu hỏi cá nhân, số liệu và dung lượng (phần 8).</p></div>
+    <div class="card"><h3>Liên kết</h3><p>Danh sách đường link hay dùng của lớp hoặc trường (trang học tập, biểu mẫu…), mở nhanh bằng một lần bấm.</p></div>
+    <div class="card"><h3>Hướng dẫn sử dụng</h3><p>Video, tài liệu, tệp PDF do quản trị đưa lên, kèm mã QR; thông tin tác giả và hỗ trợ; bản quyền và đăng ký sử dụng.</p></div>
+    <div class="card"><h3>Trợ lý AI</h3><p>Hỏi đáp và gợi ý nội dung phục vụ công việc của giáo viên. Mức hỗ trợ phụ thuộc cấu hình của từng bản triển khai.</p></div>
+  </div>
+
+  <h2>6.4. Nhóm Hệ thống</h2>
+  <table>
+    <tr><th style="width:27%">Mục</th><th>Chức năng</th><th style="width:25%">Ai thấy</th></tr>
+    <tr><td><span class="menu">Tài khoản &amp; CSDL</span></td><td>Quản lý tài khoản: tạo, sửa, cấp lại mật khẩu, nhập từ Excel, tạo từ danh sách nhân sự, vào xem lớp của giáo viên.</td><td>Quản trị</td></tr>
+    <tr><td><span class="menu">Nơi lưu câu hỏi</span></td><td>Chọn nơi lưu bộ câu hỏi cá nhân: thư mục trên máy tính, tệp, hoặc Google Drive cá nhân.</td><td>Giáo viên</td></tr>
+    <tr><td><span class="menu">Đổi mật khẩu</span></td><td>Đổi mật khẩu và khai báo email khôi phục.</td><td>Mọi tài khoản</td></tr>
+  </table>
+</section>
+
+<!-- ====================================================== 7 -->
+<section class="section">
+  <h1><span class="num">7</span>Chấm công nhân sự và kê khai tiết dạy</h1>
+
+  <h2>7.1. Dành cho quản trị: thiết lập</h2>
+  <ol class="steps">
+    <li><strong>Nhập danh sách nhân sự:</strong> trong <span class="menu">Chấm công nhân sự</span>, thẻ danh sách nhân sự, tải tệp mẫu rồi nhập tệp Excel. Tệp phải đúng biểu mẫu cơ sở dữ liệu ngành (đúng tên và thứ tự cột); sai biểu mẫu thì phần mềm từ chối và chỉ rõ cột sai.</li>
+    <li><strong>Chọn cách cấp mật khẩu điểm danh:</strong> ngẫu nhiên, theo ngày sinh, hoặc một mật khẩu chung. Có thể đổi mật khẩu hàng loạt cho những người đã tích chọn.</li>
+    <li><strong>Tạo tài khoản đăng nhập phần mềm từ danh sách nhân sự</strong> (không bắt buộc): trong <span class="menu">Tài khoản &amp; CSDL</span>. Tên đăng nhập là số căn cước công dân, mật khẩu là mật khẩu điểm danh. Có thể nạp danh sách phân công chủ nhiệm để gán lớp cho giáo viên.</li>
+    <li><strong>Phát link điểm danh:</strong> ở thẻ link điểm danh, sao chép link hoặc tải mã QR, tải hoặc in tờ A4 có mã QR để dán ở phòng hội đồng.</li>
+  </ol>
+
+  <h2>7.2. Dành cho giáo viên, nhân viên: điểm danh</h2>
+  <h3>Trên điện thoại</h3>
+  <ol class="steps">
+    <li>Quét mã QR hoặc mở link điểm danh của trường.</li>
+    <li>Nhập số căn cước công dân (hoặc tên đăng nhập) và mật khẩu được cấp.</li>
+    <li>Chọn trạng thái: có mặt, vắng, hoặc <strong>đi công tác</strong> (ghi nơi công tác, nội dung công tác), thêm ghi chú nếu cần, rồi gửi.</li>
+    <li>Đã điểm danh rồi mà cần sửa, bấm sửa điểm danh; phần mềm ghi nhận là điểm danh lại lần thứ mấy.</li>
+  </ol>
+  <h3>Trên máy tính đã đăng nhập phần mềm</h3>
+  <p>Mở <span class="menu">Chấm công của tôi</span> và điểm danh luôn, không phải nhập lại mật khẩu. Thẻ kê khai tiết dạy nằm ngay cạnh thẻ điểm danh.</p>
+  <div class="box note"><span class="t">Khi đã khóa chốt</span><p>Sau khi quản trị khóa chốt số liệu của ngày, trang điểm danh báo đã khóa và không nhận điểm danh nữa. Cần sửa thì liên hệ quản trị nhà trường.</p></div>
+
+  <h2>7.3. Dành cho quản trị và Ban giám hiệu: theo dõi</h2>
+  <ul>
+    <li><strong>Chi tiết trong ngày:</strong> bảng danh sách tự sắp A–Z theo tên, lọc theo trạng thái, tìm theo tên hoặc số căn cước. Số căn cước hiện đầy đủ, có nút để che.</li>
+    <li><strong>Điểm danh hộ:</strong> tích chọn một hoặc nhiều người, bấm điểm danh hộ, chọn trạng thái và ghi chú. Bản ghi lưu rõ là điểm danh hộ và do tài khoản nào thực hiện.</li>
+    <li><strong>Khóa chốt:</strong> khóa hoặc mở khóa số liệu của ngày cho những người đã chọn hoặc cho tất cả.</li>
+    <li><strong>Xuất danh sách:</strong> xuất Excel trạng thái điểm danh của ngày đang xem; có tích chọn thì chỉ xuất những dòng đã chọn.</li>
+    <li><strong>Tổng hợp theo khoảng thời gian:</strong> biểu đồ, tỷ lệ đi làm (đi công tác tính là có làm việc), so sánh số liệu, xuất bảng chấm công ra Excel.</li>
+  </ul>
+
+  <h2>7.4. Kê khai tiết dạy</h2>
+  <ul>
+    <li><strong>Giáo viên</strong> kê khai tiết dạy trong <span class="menu">Chấm công của tôi</span> hoặc trên trang điểm danh ở điện thoại.</li>
+    <li><strong>Quản trị và Ban giám hiệu</strong> xem bảng tổng hợp và xuất các biểu thống kê, biểu thừa giờ trong <span class="menu">Chấm công nhân sự</span>.</li>
+    <li>Trong bảng tổng hợp có công tắc bật hoặc tắt việc kê khai đối với tài khoản giáo viên chủ nhiệm. Khi tắt, giáo viên chủ nhiệm chỉ còn phần điểm danh.</li>
+  </ul>
+</section>
+
+<!-- ====================================================== 8 -->
+<section class="section">
+  <h1><span class="num">8</span>Dữ liệu: sao lưu, khôi phục, lưu trên máy</h1>
+  <p>Mọi việc về dữ liệu nằm trong một trang: <span class="menu">Dữ liệu</span>. Trang gồm các nhóm có thể mở ra, thu gọn.</p>
+
+  <h2>8.1. Sao lưu toàn hệ thống (quản trị)</h2>
+  <ol class="steps">
+    <li>Mở <span class="menu">Dữ liệu</span>, nhóm "Sao lưu &amp; khôi phục".</li>
+    <li>Tải tệp sao lưu toàn hệ thống. <strong>Một tệp duy nhất</strong> chứa cơ sở dữ liệu trường, tài khoản, lớp, học sinh, điểm danh học sinh, chấm công nhân sự và kê khai tiết dạy.</li>
+    <li>Cất tệp ở ít nhất hai nơi (máy tính và một ổ ngoài hoặc Drive khác). Tệp có chứa dữ liệu của trường nên không gửi qua kênh công khai.</li>
+  </ol>
+
+  <h2>8.2. Lưu toàn bộ hệ thống vào một thư mục trên máy (quản trị)</h2>
+  <p>Sau khi chọn thư mục tự lưu, bấm <span class="btn">Lưu toàn bộ hệ thống vào thư mục này</span>. Phần mềm ghi vào thư mục đó hai thư mục con:</p>
+  <ul>
+    <li><code>1_TOAN_BO_HE_THONG_1_TEP</code>: một tệp duy nhất chứa tất cả, dùng để khôi phục.</li>
+    <li><code>2_CAC_TEP_NHU_TREN_GOOGLE_DRIVE</code>: các tệp giống như đang có trên thư mục Drive của trường.</li>
+  </ul>
+
+  <h2>8.3. Khôi phục</h2>
+  <ol class="steps">
+    <li>Trong nhóm "Sao lưu &amp; khôi phục", chọn khôi phục từ tệp. Có thể chọn <strong>một tệp tổng</strong>, <strong>nhiều tệp</strong>, hoặc <strong>cả một thư mục</strong> chứa các tệp dữ liệu.</li>
+    <li>Phần mềm tự nhận loại tệp và liệt kê tệp nào được dùng, tệp nào bị bỏ qua trước khi thực hiện.</li>
+    <li>Xác nhận. Dữ liệu được <strong>gộp</strong> vào dữ liệu đang có: chỉ bổ sung những gì còn thiếu, không ghi đè cái đang có, trừ khi chọn ghi đè.</li>
+  </ol>
+  <div class="box warn"><span class="t">Khi nào cần khôi phục</span><p>Chỉ khi dữ liệu trên Drive của trường bị xóa nhầm hoặc hỏng. Cài phần mềm trên máy mới <strong>không</strong> cần khôi phục: kết nối và đăng nhập là có lại dữ liệu.</p></div>
+
+  <h2>8.4. Tự lưu vào thư mục trên máy tính</h2>
+  <ul>
+    <li>Bấm chọn thư mục trên máy tính, mở đúng thư mục muốn lưu (nên ở ổ D hoặc E), cho phép trình duyệt ghi vào thư mục.</li>
+    <li>Sau đó tệp dữ liệu của tài khoản được tự ghi đè mỗi khi dữ liệu thay đổi. Nút <span class="btn">Lưu ngay</span> để ghi tức thì, <span class="btn">Kiểm tra</span> để đọc lại tệp.</li>
+    <li>Trình duyệt không cho phần mềm biết ổ đĩa và đường dẫn của thư mục. Hãy dán địa chỉ đầy đủ của thư mục vào ô ghi chú; từ đó màn hình hiện rõ đang lưu vào ổ nào, địa chỉ nào.</li>
+    <li>Sau khi mở lại trình duyệt, có thể phải bấm cho phép ghi vào thư mục một lần nữa.</li>
+  </ul>
+
+  <h2>8.5. Kho câu hỏi cá nhân (giáo viên)</h2>
+  <p>Mở <span class="menu">Nơi lưu câu hỏi</span> để chọn nơi lưu: thư mục trên máy tính (khuyên dùng), xuất và nhập tệp, hoặc Google Drive cá nhân. Có nút tải và nạp tệp cấu hình để chuyển sang máy khác.</p>
+
+  <h2>8.6. Năm học mới</h2>
+  <p>Thẻ năm học mới trong <span class="menu">Dữ liệu</span> hỗ trợ dọn dữ liệu của năm cũ để bắt đầu năm mới. <strong>Luôn tải tệp sao lưu toàn hệ thống trước khi dọn.</strong></p>
+</section>
+
+<!-- ====================================================== 9 -->
+<section class="section">
+  <h1><span class="num">9</span>Bản quyền và chế độ dùng thử</h1>
+
+  <h2>9.1. Chế độ dùng thử</h2>
+  <p>Khi chưa kích hoạt bản quyền, phần mềm chạy ở chế độ dùng thử với các giới hạn sau:</p>
+  <table>
+    <tr><th style="width:38%">Giới hạn</th><th>Chi tiết</th></tr>
+    <tr><td>Số lớp và sĩ số</td><td>Tối đa 01 lớp, mỗi lớp tối đa 10 học sinh.</td></tr>
+    <tr><td>Chấm công nhân sự</td><td>Khóa màn Chấm công nhân sự, Chấm công của tôi và trang điểm danh bằng link.</td></tr>
+    <tr><td>Kê khai tiết dạy</td><td>Khóa cùng với chấm công.</td></tr>
+    <tr><td>Thư khen</td><td>Khóa màn Tạo thư khen.</td></tr>
+    <tr><td>Xuất tệp</td><td>Không xuất được báo cáo Excel, PDF, ảnh thời khóa biểu và ảnh infographic. Vẫn xem được trên màn hình.</td></tr>
+  </table>
+  <p>Không bị khóa: tệp mẫu để nhập dữ liệu, quản lý tài khoản, kết nối Drive, sao lưu và khôi phục. Dữ liệu của trường luôn được giữ nguyên.</p>
+
+  <h2>9.2. Kích hoạt</h2>
+  <ol class="steps">
+    <li>Mở <span class="menu">Hướng dẫn sử dụng</span>, khối "Bản quyền &amp; đăng ký", bấm <strong>Bản quyền PRO</strong>. Khi bấm vào một chức năng đang bị khóa, hộp này cũng tự mở.</li>
+    <li>Nhập mã bản quyền do tác giả cung cấp. Có thể gõ kèm dấu cách hoặc gạch nối.</li>
+    <li>Bấm mở khóa. Phần mềm báo kích hoạt thành công và mở đầy đủ tính năng.</li>
+  </ol>
+
+  <h2>9.3. Bản quyền cho cả trường</h2>
+  <ul>
+    <li>Khi <strong>tài khoản quản trị</strong> đã kết nối Drive của trường và kích hoạt, bản quyền được ghi cho cả trường. Mọi máy và trình duyệt kết nối đúng thư mục và Apps Script của trường tự được mở khóa ở lần mở phần mềm hoặc đăng nhập kế tiếp.</li>
+    <li>Giáo viên, kể cả tài khoản tạo sau này, <strong>không phải nhập mã</strong>.</li>
+    <li>Bản quyền <strong>không phụ thuộc thư mục lưu trữ</strong>: đổi thư mục, đổi mật khẩu quản trị không làm mất bản quyền trên máy đã kích hoạt. Sau khi đổi sang thư mục hoặc Apps Script mới, quản trị đăng nhập lại một lần để bản quyền được ghi cho kết nối mới.</li>
+    <li>Điều kiện: Apps Script của trường từ phiên bản 1.1.7 trở lên.</li>
+  </ul>
+  <div class="box note"><span class="t">Nhận mã bản quyền</span><p>Liên hệ tác giả Nguyễn Thanh Liêm, Zalo 0888.358.363, hoặc gửi đơn trong mục "Đăng ký sử dụng" của phần mềm.</p></div>
+</section>
+
+<!-- ====================================================== 10 -->
+<section class="section">
+  <h1><span class="num">10</span>Mật khẩu và an toàn tài khoản</h1>
+
+  <h2>10.1. Đổi mật khẩu</h2>
+  <p>Mở <span class="menu">Đổi mật khẩu</span>, nhập mật khẩu hiện tại và mật khẩu mới (ít nhất 6 ký tự). Nên đổi ngay sau lần đăng nhập đầu tiên, nhất là với tài khoản quản trị.</p>
+
+  <h2>10.2. Khai báo email khôi phục</h2>
+  <p>Trong hộp Đổi mật khẩu, thẻ <strong>Email khôi phục</strong>: nhập địa chỉ email và mật khẩu hiện tại để lưu. Email này dùng để nhận mã khi quên mật khẩu.</p>
+
+  <h2>10.3. Quên mật khẩu</h2>
+  <ol class="steps">
+    <li>Ở màn đăng nhập, bấm <span class="btn">Quên mật khẩu?</span>, nhập tên đăng nhập, bấm gửi mã.</li>
+    <li>Mở hộp thư đã khai báo (xem cả mục Thư rác), lấy <strong>mã 6 số</strong>. Mã có hiệu lực 15 phút.</li>
+    <li>Nhập mã và mật khẩu mới. Dữ liệu của tài khoản được giữ nguyên.</li>
+  </ol>
+  <h3>Nếu chưa khai báo email khôi phục</h3>
+  <ul>
+    <li><strong>Giáo viên, Ban giám hiệu:</strong> báo quản trị nhà trường để được cấp lại mật khẩu trong <span class="menu">Tài khoản &amp; CSDL</span>.</li>
+    <li><strong>Quản trị:</strong> người giữ tài khoản Google của trường mở dự án Apps Script, chọn hàm <code>datLaiMatKhauQuanTri</code> và bấm Chạy; mật khẩu tạm hiện trong Nhật ký thực thi. Đăng nhập bằng mật khẩu tạm rồi đổi ngay.</li>
+  </ul>
+
+  <h2>10.4. Cấp quyền gửi email cho Apps Script (làm một lần)</h2>
+  <p>Chức năng quên mật khẩu gửi thư bằng chính tài khoản Google của trường. Nếu khi gửi mã phần mềm báo Apps Script chưa có quyền gửi email:</p>
+  <ol class="steps">
+    <li>Cập nhật Apps Script lên bản mới nhất.</li>
+    <li>Trong trình soạn mã Apps Script, chọn hàm <code>capQuyenGuiThu</code> rồi bấm <strong>Chạy</strong>.</li>
+    <li>Ở hộp xin quyền: xem lại quyền, chọn tài khoản Google của trường, Nâng cao, đi tới dự án, tích chọn tất cả các quyền, Cho phép.</li>
+    <li>Nhật ký thực thi ghi đã có quyền gửi email là xong.</li>
+  </ol>
+
+  <h2>10.5. Giữ an toàn</h2>
+  <ul>
+    <li>Không dùng chung một mật khẩu cho nhiều tài khoản; không để mật khẩu khởi tạo.</li>
+    <li>Không gửi mật khẩu và tệp sao lưu qua nhóm chat chung. Tệp kết nối chỉ chứa hai đường link nên gửi được.</li>
+    <li>Tài khoản Google của trường là chìa khóa của toàn bộ dữ liệu: bật xác minh hai bước và chỉ giao cho người có trách nhiệm.</li>
+    <li>Trên máy dùng chung, bấm đăng xuất sau khi làm việc.</li>
+  </ul>
+</section>
+
+<!-- ====================================================== 11 -->
+<section class="section">
+  <h1><span class="num">11</span>Xử lý sự cố thường gặp</h1>
+  <table>
+    <tr><th style="width:31%">Hiện tượng</th><th style="width:27%">Nguyên nhân thường gặp</th><th>Cách xử lý</th></tr>
+    <tr><td>Không đăng nhập được dù đúng mật khẩu</td><td>Máy chưa kết nối, hoặc kết nối sai thư mục, sai Apps Script.</td><td>Ở màn đăng nhập, nạp lại tệp kết nối hoặc dán lại hai đường link, bấm xác thực rồi đăng nhập.</td></tr>
+    <tr><td>Báo không kiểm tra được tài khoản trên Google Drive</td><td>Mất mạng; link Apps Script không còn hoạt động; chưa đặt quyền "Bất kỳ ai".</td><td>Kiểm tra mạng. Quản trị mở Trình cài đặt Apps Script, kiểm tra link <code>/exec</code> và thiết lập triển khai.</td></tr>
+    <tr><td>Báo thư mục chưa có cơ sở dữ liệu nhà trường</td><td>Trường chưa được khởi tạo, hoặc tệp <code>csdl_truong.json</code> bị xóa.</td><td>Quản trị cao nhất đăng nhập để khởi tạo; nếu tệp bị xóa, tìm trong Thùng rác của Drive hoặc khôi phục từ tệp sao lưu.</td></tr>
+    <tr><td>Thanh trên báo "Cần cập nhật Apps Script"</td><td>Apps Script của trường cũ hơn bản phần mềm cần.</td><td>Quản trị cập nhật theo mục 3.3, chọn triển khai phiên bản mới để giữ nguyên link.</td></tr>
+    <tr><td>Một màn hoặc nút xuất tệp báo cần kích hoạt bản quyền</td><td>Trường chưa kích hoạt, hoặc máy chưa nhận được bản quyền của trường.</td><td>Quản trị kích hoạt theo phần 9. Nếu trường đã kích hoạt: quản trị đăng nhập một lần khi đã kết nối Drive, sau đó máy giáo viên mở lại phần mềm.</td></tr>
+    <tr><td>Giáo viên không thấy lớp, không thấy học sinh</td><td>Tài khoản chưa được gán lớp; dữ liệu lớp đang tải.</td><td>Chờ dòng "Đang tải dữ liệu lớp…" trên thanh trên biến mất. Nếu vẫn trống, báo quản trị kiểm tra phân công lớp.</td></tr>
+    <tr><td>Trang điểm danh báo đã khóa chốt</td><td>Quản trị đã khóa số liệu của ngày.</td><td>Liên hệ quản trị nhà trường để mở khóa hoặc điểm danh hộ.</td></tr>
+    <tr><td>Tệp Excel nhân sự bị từ chối</td><td>Sai biểu mẫu: thiếu cột, sai tên hoặc sai thứ tự cột.</td><td>Tải tệp mẫu trong phần mềm và chép dữ liệu vào đúng cột.</td></tr>
+    <tr><td>Không chọn được thư mục lưu trên máy</td><td>Trình duyệt không hỗ trợ.</td><td>Dùng Chrome hoặc Edge trên máy tính; hoặc dùng nút tải tệp về máy.</td></tr>
+    <tr><td>Chữ hoặc bố cục hiển thị lạ sau khi cập nhật</td><td>Trình duyệt còn giữ bản cũ.</td><td>Bấm Ctrl + F5. Với bản cài đặt, bấm F5.</td></tr>
+    <tr><td>Bộ cài báo không gỡ được bản cũ</td><td>Bản cũ đang chạy hoặc tệp gỡ của bản cũ bị lỗi.</td><td>Đóng phần mềm rồi cài lại bằng bộ cài từ 1.1.0 trở lên; bộ cài mới sẽ cài đè.</td></tr>
+  </table>
+
+  <h2>Khi cần hỗ trợ</h2>
+  <p>Chuẩn bị sẵn: tên trường, vai trò tài khoản đang dùng, ảnh chụp màn hình thông báo lỗi, và phiên bản Apps Script hiện trên thanh trên cùng. <strong>Không gửi mật khẩu.</strong></p>
+  <div class="box tip">
+    <span class="t">Liên hệ</span>
+    <p>Tác giả: <strong>Nguyễn Thanh Liêm</strong> – Trường Tiểu học số 1 Tân Uyên • Zalo <strong>0888.358.363</strong>. Trong phần mềm: <span class="menu">Hướng dẫn sử dụng</span>, khối "Tác giả &amp; hỗ trợ".</p>
+  </div>
+</section>
+
+</body>
+</html>
