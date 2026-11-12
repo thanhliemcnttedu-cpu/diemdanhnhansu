@@ -64,6 +64,19 @@ export const StaffCheckInPage: React.FC<{ embedded?: boolean; presetCccd?: strin
     return () => { alive = false; };
   }, [conn]);
 
+  /**
+   * Dòng định danh dưới họ tên: SỐ CĂN CƯỚC của chính giáo viên (dễ nhận biết, dễ nhớ hơn mã GV nội bộ).
+   * Lấy theo thứ tự: số giáo viên vừa dùng để đăng nhập → số đầy đủ trong hồ sơ (nếu Apps Script trả về) →
+   * 4 số cuối (che phần đầu) → cuối cùng mới dùng mã GV.
+   */
+  const ownIdLabel = (s: StaffMember): string => {
+    const typed = cccd.replace(/\D/g, '');
+    const full = typed.length >= 9 ? typed : String(s.cccd || s.currentCccd || '').replace(/\D/g, '');
+    if (full.length >= 9) return `CCCD ${full}`;
+    if (s.cccdLast4) return `CCCD ••••••••${s.cccdLast4}`;
+    return s.code;
+  };
+
   const reset = () => {
     // Trong phần mềm: "Thoát / Xong" = quay về Trang chủ, giữ phiên để lần sau mở lại không phải nhập
     if (embedded && onExit) { setDone(null); setEditing(false); setError(''); onExit(); return; }
@@ -251,7 +264,7 @@ export const StaffCheckInPage: React.FC<{ embedded?: boolean; presetCccd?: strin
               <div className="flex items-center justify-between gap-3">
                 <div className="min-w-0">
                   <p className="text-lg font-black text-slate-900 truncate">{staff.name}</p>
-                  <p className="text-sm text-slate-600 truncate">{[staff.code, staff.position, staff.dept].filter(Boolean).join(' • ')}</p>
+                  <p className="text-sm text-slate-600 truncate">{[ownIdLabel(staff), staff.position, staff.dept].filter(Boolean).join(' • ')}</p>
                 </div>
                 <button type="button" onClick={reset} className={`shrink-0 text-sm font-bold text-slate-600 hover:text-slate-900 flex items-center gap-1 ${embedded ? 'hidden' : ''}`}>
                   <LogOut className="w-4 h-4" /> Thoát

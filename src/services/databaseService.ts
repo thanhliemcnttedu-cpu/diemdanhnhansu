@@ -407,8 +407,11 @@ export const databaseService = {
       if (driveRes.status === 'ok') {
         const result = finishLogin(driveRes.user, 'Đăng nhập thành công (CSDL nhà trường trên Google Drive).');
         if (result.success && (driveRes.user.role === 'admin' || driveRes.user.role === 'school_admin' || driveRes.user.isSchoolAdmin)) {
-          // Quản trị đăng nhập máy mới: tải toàn bộ tài khoản (không mật khẩu) về để quản lý
-          await schoolDriveDbService.pullForAdmin().catch(() => null);
+          // Quản trị đăng nhập máy mới: tải toàn bộ tài khoản (không mật khẩu) về để quản lý.
+          // Chạy NỀN (không chờ) để vào phần mềm ngay; xong thì báo cho giao diện nạp lại danh sách tài khoản.
+          schoolDriveDbService.pullForAdmin()
+            .then(() => { try { window.dispatchEvent(new Event('lhhp:admin-users-pulled')); } catch (_) { /* ignore */ } })
+            .catch(() => null);
         }
         return result;
       }

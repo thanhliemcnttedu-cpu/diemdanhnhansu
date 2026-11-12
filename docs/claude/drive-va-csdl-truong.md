@@ -89,3 +89,8 @@ Mọi việc về kết nối, đồng bộ, lưu trữ, sao lưu nằm ở **m�
 - Lần triển khai đầu của 1.1.9 Google hỏi thêm quyền **gửi email** — phải bấm Cho phép, nếu không `requestPasswordReset` trả `MAIL_ERROR`.
 - `services/passwordRecoveryService.ts` kiểm tra phiên bản bằng `ping` trước mọi lệnh (lý do: xem mục 1.1.8 — Apps Script cũ ghi cả gói lệnh lạ, kèm mật khẩu, thành tệp).
 - **Cấp quyền gửi email (1.1.10)**: Google chỉ hiện hộp xin quyền `script.send_mail` khi chạy trong trình soạn mã một hàm CÓ gọi `MailApp`. Triển khai lại, hoặc chạy hàm không dùng MailApp (đã thử `newSalt` ở trường thật: không hỏi) đều không cấp được. Vì vậy có hàm `capQuyenGuiThu` (chỉ gọi `MailApp.getRemainingDailyQuota()`); ở hộp chọn quyền phải tích "Chọn tất cả". Thông báo `MAIL_NOT_AUTHORIZED` của `passwordRecoveryService` hướng dẫn đúng các bước này.
+
+## Đăng nhập nhanh (11/2026)
+- Trước: đăng nhập tài khoản quản lý phải chờ lần lượt `login` → `getSchoolDb` (toàn bộ tài khoản) → `listClassFiles` + đọc TỪNG tệp `gvcn_*` → `dieuchinh_quantri` rồi mới vào; mỗi lệnh Apps Script mất 1–2 giây nên trường nhiều lớp mất 5–10 giây.
+- Nay: chỉ chờ `login`. `pullForAdmin` chạy nền (xong phát `lhhp:admin-users-pulled` → `refreshUsersList`). `loginUser` nhánh quản lý trả về ngay, `getExecutiveScopedData` chạy nền: xóa dữ liệu phiên trước khỏi màn hình, khóa tự lưu bằng `markRemoteUpdateActive(45000)`, phát `lhhp:workspace-loading` (TopBar hiện chip "Đang tải dữ liệu lớp…"), bỏ kết quả nếu người dùng đã đổi tài khoản.
+- **Nhánh giáo viên vẫn chờ tải dữ liệu rồi mới vào** (cố ý): cho vào trước khi nạp xong có thể làm tự lưu ghi trạng thái trống đè dữ liệu lớp.

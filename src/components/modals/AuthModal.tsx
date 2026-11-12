@@ -280,10 +280,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         isSchoolRole ? selectedSchoolName : undefined
       );
       if (res.success) {
-        setSuccessMessage('Đăng nhập thành công! Đang tải dữ liệu...');
+        setSuccessMessage('Đăng nhập thành công!');
         setTimeout(() => {
           onClose();
-        }, 600);
+        }, 150);
       } else {
         setErrorMessage(res.message || 'Bạn đã nhập sai tài khoản mật khẩu.');
       }

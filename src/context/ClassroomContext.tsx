@@ -1408,6 +1408,14 @@ export const ClassroomProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }, durationMs + 50);
   };
 
+  // Danh sách tài khoản của Quản trị được tải nền sau khi đăng nhập → nạp lại khi xong
+  useEffect(() => {
+    const onPulled = () => { refreshUsersList(); };
+    window.addEventListener('lhhp:admin-users-pulled', onPulled);
+    return () => window.removeEventListener('lhhp:admin-users-pulled', onPulled);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Load user data on startup or when currentUser changes
   useEffect(() => {
     refreshUsersList();
@@ -2168,18 +2176,40 @@ export const ClassroomProvider: React.FC<{ children: React.ReactNode }> = ({ chi
           });
         }
 
-        const scoped = await databaseService.getExecutiveScopedData(newUser);
-        markRemoteUpdateActive(1200);
-        const cleanScopedClasses = scoped.classes.filter(c => c && c.teacherRole !== 'subject' && !c.id.startsWith('class-sub-'));
-        const cleanScopedStudents = scoped.students.filter(s => s && s.classId !== 'class-1791592764810' && !s.classId.startsWith('class-sub-'));
-        setClasses(cleanScopedClasses);
-        setStudents(cleanScopedStudents);
-        setAttendanceRecords(scoped.attendanceRecords);
-        setBoardingRecords(scoped.boardingRecords);
-        setTransactions(scoped.transactions);
-        if (cleanScopedClasses.length > 0) {
-          setActiveClassId(cleanScopedClasses[0].id);
-        }
+        // ⚡ Vào phần mềm NGAY sau khi kiểm tra mật khẩu; dữ liệu các lớp (đọc từng tệp trên Drive, có thể mất 5–10 giây
+        // với trường nhiều lớp) tải NỀN rồi hiện dần. Trong lúc chờ: xóa dữ liệu của phiên trước khỏi màn hình và
+        // khóa tự lưu (markRemoteUpdateActive) để không ghi nhầm trạng thái trống.
+        const loadFor = newUser.username.toLowerCase();
+        markRemoteUpdateActive(45000);
+        setClasses([]);
+        setStudents([]);
+        setAttendanceRecords([]);
+        setBoardingRecords([]);
+        setTransactions([]);
+        try { window.dispatchEvent(new CustomEvent('lhhp:workspace-loading', { detail: true })); } catch (_) { /* ignore */ }
+        databaseService.getExecutiveScopedData(newUser)
+          .then(scoped => {
+            // người dùng đã đăng xuất / đổi tài khoản trong lúc tải → bỏ kết quả
+            if ((currentUserRef.current?.username || '').toLowerCase() !== loadFor) return;
+            markRemoteUpdateActive(1200);
+            const cleanScopedClasses = scoped.classes.filter(c => c && c.teacherRole !== 'subject' && !c.id.startsWith('class-sub-'));
+            const cleanScopedStudents = scoped.students.filter(s => s && s.classId !== 'class-1791592764810' && !s.classId.startsWith('class-sub-'));
+            setClasses(cleanScopedClasses);
+            setStudents(cleanScopedStudents);
+            setAttendanceRecords(scoped.attendanceRecords);
+            setBoardingRecords(scoped.boardingRecords);
+            setTransactions(scoped.transactions);
+            if (cleanScopedClasses.length > 0) {
+              setActiveClassId(cleanScopedClasses[0].id);
+            }
+          })
+          .catch(() => { /* giữ màn hình trống; nút Cập nhật dữ liệu tải lại được */ })
+          .finally(() => {
+            if ((currentUserRef.current?.username || '').toLowerCase() === loadFor) markRemoteUpdateActive(1200);
+            try { window.dispatchEvent(new CustomEvent('lhhp:workspace-loading', { detail: false })); } catch (_) { /* ignore */ }
+          });
+        refreshUsersList().catch(() => { /* ignore */ });
+        return { success: true, message: res.message };
       } else {
         let targetData = await databaseService.loadUserData(newUser.username);
         if (targetData) targetData = await mergeDriveClassForTeacher(newUser, targetData);

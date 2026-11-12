@@ -14,6 +14,7 @@ import { playNoiseAlertSound } from '../../utils/audio';
 import { NavigationMenuId } from './Sidebar';
 import { getOfficialDisplayName, getOfficialRoleTitle } from '../../utils/accountIdentity';
 import { appsScriptSetupService, versionLabel, DRIVE_CONNECTION_EVENT, type DriveConnection } from '../../services/appsScriptSetupService';
+import { Loader2 as WsSpin } from 'lucide-react';
 
 interface TopBarProps {
   currentView: NavigationMenuId;
@@ -198,6 +199,15 @@ export const TopBar: React.FC<TopBarProps> = ({
     if (currentUser) recheck();
     return () => { window.removeEventListener(DRIVE_CONNECTION_EVENT, onConn); window.removeEventListener('lhhp:apps-script-updated', recheck); };
   }, [currentUser?.username]);
+
+  // ⚡ Sau khi đăng nhập, dữ liệu các lớp của tài khoản quản lý tải nền → báo cho người dùng biết đang tải
+  const [workspaceLoading, setWorkspaceLoading] = useState(false);
+  useEffect(() => {
+    const h = (e: Event) => setWorkspaceLoading(Boolean((e as CustomEvent).detail));
+    window.addEventListener('lhhp:workspace-loading', h);
+    return () => window.removeEventListener('lhhp:workspace-loading', h);
+  }, []);
+  useEffect(() => { if (!currentUser) setWorkspaceLoading(false); }, [currentUser?.username]);
 
   const [gasUpdate, setGasUpdate] = useState<{ current: string; latest: string; outdated: boolean } | null>(null);
   useEffect(() => {
@@ -422,6 +432,13 @@ export const TopBar: React.FC<TopBarProps> = ({
           <Cloud className={`w-4 h-4 ${driveSyncState.status === 'syncing' ? 'animate-pulse' : ''}`} />
           <span className="hidden 2xl:inline">{driveLabel}</span>
         </button>
+
+        {workspaceLoading && (
+          <span role="status" className={`${chipBase} bg-sky-50 text-sky-900 border-sky-300`} title="Đang đọc dữ liệu các lớp từ Google Drive của trường. Phần mềm vẫn dùng được trong lúc chờ.">
+            <WsSpin className="w-4 h-4 animate-spin text-sky-700" />
+            <span className="max-sm:hidden">Đang tải dữ liệu lớp…</span>
+          </span>
+        )}
 
         {/* 🔌 Kết nối CSDL nhà trường trên Google Drive + phiên bản (mọi vai trò) */}
         {driveConn && driveConn.state === 'connected' && (
