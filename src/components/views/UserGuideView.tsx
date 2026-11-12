@@ -6,7 +6,6 @@ import {
 import { useClassroom } from '../../context/ClassroomContext';
 import { APP_AUTHOR_INFO } from '../../data/initialData';
 import { buildQrMatrix, QrSvg } from './staff/StaffCheckInQr';
-import { OPEN_ZALO_QR_EVENT } from '../modals/ZaloQrModal';
 import {
   userGuideService, normalizeGuideUrl, GUIDE_KIND_META, GUIDE_PDF_MAX_MB,
   type GuideItem, type GuideKind,
@@ -353,14 +352,6 @@ export const UserGuideView: React.FC = () => {
               <span className="min-w-0">
                 <span className="block text-sm font-black text-slate-900">Đăng ký sử dụng</span>
                 <span className="block text-xs text-slate-700">Gửi đơn đăng ký dùng phần mềm, bản quyền cho trường</span>
-              </span>
-            </button>
-            <button type="button" onClick={() => window.dispatchEvent(new Event(OPEN_ZALO_QR_EVENT))}
-              className="no-hover-fx w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-left flex items-center gap-2.5 cursor-pointer">
-              <MessageCircle className="w-5 h-5 shrink-0 text-sky-700" />
-              <span className="min-w-0">
-                <span className="block text-sm font-black text-slate-900">Hỗ trợ qua Zalo</span>
-                <span className="block text-xs text-slate-700">Mở mã QR Zalo để nhắn tin với tác giả</span>
               </span>
             </button>
           </div>
