@@ -25,6 +25,8 @@ concurrency:
 
 jobs:
   build:
+    # The installer is published from the template repo only; school repos carry this file but must not build releases
+    if: github.repository == 'thanhliemcnttedu-cpu/lhhp'
     runs-on: windows-latest
     timeout-minutes: 40
     steps:
