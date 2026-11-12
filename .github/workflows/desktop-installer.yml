@@ -10,6 +10,10 @@ on:
   push:
     tags:
       - 'desktop-v*'
+    # A change to this workflow itself also runs it (to check the workflow still works)
+    branches: [main]
+    paths:
+      - '.github/workflows/desktop-installer.yml'
   workflow_dispatch:
 
 permissions:
@@ -47,7 +51,16 @@ jobs:
         run: npm ci
 
       - name: Dung bo cai
-        run: npm run package:win:lite
+        shell: bash
+        run: |
+          set -o pipefail
+          if ! npm run package:win:lite 2>&1 | tee build.log; then
+            # Show the end of the log as an annotation so the cause is readable without opening the raw log
+            TAIL=$(grep -v -E '^\s+at |^\s*$' build.log | tail -n 40 | cut -c1-300)
+            TAIL="${TAIL//'%'/'%25'}"; TAIL="${TAIL//$'\r'/}"; TAIL="${TAIL//$'\n'/'%0A'}"
+            echo "::error title=Dung bo cai that bai::$TAIL"
+            exit 1
+          fi
 
       - name: Ma bam SHA-256
         id: hash
