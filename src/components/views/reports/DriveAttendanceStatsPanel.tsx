@@ -296,7 +296,7 @@ export const DriveAttendanceStatsPanel: React.FC<{ schoolTotalStudents?: number 
               <span className="text-[12px] font-bold text-slate-500">Ăn bán trú</span>
             </div>
             <div className="flex items-baseline gap-1.5">
-              <span className={`text-xl font-black font-mono ${p.boardingRate === null ? 'text-slate-500' : 'text-orange-700'}`}>
+              <span className={`text-xl font-black font-mono ${p.boardingRate === null ? 'text-slate-500' : 'text-blue-700'}`}>
                 {p.boardingRate === null ? '—' : `${p.boardingRate}%`}
               </span>
               <span className="text-[12px] font-bold text-slate-500">
@@ -306,8 +306,8 @@ export const DriveAttendanceStatsPanel: React.FC<{ schoolTotalStudents?: number 
               </span>
             </div>
             {p.boardingRegistered > 0 && p.boardingSchoolRate !== null && (
-              <p className="mt-0.5 text-[13px] font-bold text-slate-700 leading-snug" data-no-autofit="">
-                <span className="font-black font-mono text-orange-700">{p.boardingSchoolRate}%</span> trên tổng sĩ số trường ({p.boardingActual}/{p.students})
+              <p className="mt-1 text-sm font-bold text-violet-700 leading-snug" data-no-autofit="">
+                <span className="text-lg font-black font-mono">{p.boardingSchoolRate}%</span> trên tổng sĩ số trường ({p.boardingActual}/{p.students})
               </p>
             )}
           </div>
