@@ -196,7 +196,11 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
     assignedClassName: '4A1',
     subjectName: 'Tin học',
     schoolName: 'TRƯỜNG HỌC HẠNH PHÚC',
-    tenantType: 'school' as 'school' | 'guest' | 'demo'
+    tenantType: 'school' as 'school' | 'guest' | 'demo',
+    // Vai trò "Nhân viên": lưu vai trò nền 'subject' + cờ nonTeaching (không có chức năng quản lý lớp học)
+    nonTeaching: false,
+    // Được xem / xuất báo cáo mục Chấm công nhân sự (chỉ đọc)
+    staffReportViewer: false
   });
 
   const [localUsage, setLocalUsage] = useState<{ bytes: number; sizeKB: number; formatted: string } | null>(null);
@@ -517,7 +521,9 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
       assignedClassName: 'Lớp Tự Do',
       subjectName: 'Toán, Tiếng Việt',
       schoolName: 'Giáo Viên Cá Nhân',
-      tenantType: 'guest'
+      tenantType: 'guest',
+      nonTeaching: false,
+      staffReportViewer: false
     });
     setActiveTab('add');
   };
@@ -865,7 +871,9 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
       assignedClassName: '4A1',
       subjectName: 'Tin học',
       schoolName: isGuestAdmin ? 'Giáo Viên Cá Nhân' : defaultSchool,
-      tenantType: defaultTenant
+      tenantType: defaultTenant,
+      nonTeaching: false,
+      staffReportViewer: false
     });
     setActiveTab('add');
   };
@@ -886,7 +894,9 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
       assignedClassName: user.assignedClassName || '4A1',
       subjectName: user.subjectName || 'Tin học',
       schoolName: user.schoolName || (schoolsList[0]?.name || 'TRƯỜNG HỌC HẠNH PHÚC'),
-      tenantType: user.tenantType || 'school'
+      tenantType: user.tenantType || 'school',
+      nonTeaching: user.role === 'subject' && Boolean(user.nonTeaching),
+      staffReportViewer: Boolean(user.staffReportViewer)
     });
     setActiveTab('add');
   };
@@ -899,12 +909,19 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
     }
 
     const finalSchoolName = isSchoolAdmin ? currentSchoolScope : formData.schoolName;
+    // Vai trò "Nhân viên" chỉ có nghĩa với vai trò nền GV bộ môn; quyền xem báo cáo chấm công chỉ dành cho tài khoản giáo viên / nhân viên
+    const isStaffRole = formData.role === 'subject' && formData.nonTeaching;
+    const roleFlags = {
+      nonTeaching: isStaffRole,
+      staffReportViewer: (formData.role === 'subject' || formData.role === 'homeroom') && formData.staffReportViewer
+    };
 
     setLoading(true);
     try {
       if (editingUser) {
         // Update user
-        const res = await databaseService.updateUser(editingUser.id, {
+        const res = await databaseService.updateUser(uidOf(editingUser), {
+          ...roleFlags,
           username: isSuperAdmin && formData.username.trim() ? formData.username.trim() : undefined,
           fullName: formData.fullName.trim(),
           role: formData.role,
@@ -942,6 +959,10 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
           schoolName: finalSchoolName,
           tenantType: isSchoolAdmin ? 'school' : formData.tenantType
         });
+        // Tài khoản mới là Nhân viên / được xem báo cáo chấm công: ghi thêm 2 cờ này vào tài khoản vừa tạo
+        if (res.success && (roleFlags.nonTeaching || roleFlags.staffReportViewer)) {
+          await databaseService.updateUser(formData.username.trim().toLowerCase(), roleFlags);
+        }
         if (res.success) {
           showNotify('success', `Đã thêm tài khoản "${formData.username}" thành công!`);
           setLoading(false);
@@ -2921,7 +2942,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                       <School className="w-3.5 h-3.5" />
                       <span>Vai Trò Trực Thuộc Nhà Trường</span>
                     </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2.5">
                       {/* 1. Quản trị trong nhà trường */}
                       <label className={`p-3 rounded-2xl border-2 cursor-pointer flex flex-col justify-between transition-all ${
                         formData.role === 'school_admin' 
@@ -3011,8 +3032,8 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
 
                       {/* 4. Giáo viên bộ môn */}
                       <label className={`p-3 rounded-2xl border-2 cursor-pointer flex flex-col justify-between transition-all ${
-                        formData.role === 'subject' 
-                          ? 'border-emerald-600 bg-emerald-50/70 shadow-xs ring-1 ring-emerald-600/30' 
+                        formData.role === 'subject' && !formData.nonTeaching
+                          ? 'border-emerald-600 bg-emerald-50/70 shadow-xs ring-1 ring-emerald-600/30'
                           : 'border-slate-200 hover:border-slate-300 bg-white'
                       }`}>
                         <div>
@@ -3024,8 +3045,8 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                             <input
                               type="radio"
                               name="role"
-                              checked={formData.role === 'subject'}
-                              onChange={() => setFormData({ ...formData, role: 'subject', tenantType: 'school' })}
+                              checked={formData.role === 'subject' && !formData.nonTeaching}
+                              onChange={() => setFormData({ ...formData, role: 'subject', tenantType: 'school', nonTeaching: false })}
                               className="w-4 h-4 text-emerald-700 shrink-0"
                             />
                           </div>
@@ -3035,6 +3056,35 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                         </div>
                         <span className="text-[12px] font-black text-emerald-700 bg-emerald-100/80 px-1.5 py-0.5 rounded mt-2 self-start uppercase">
                           Bộ Môn
+                        </span>
+                      </label>
+
+                      {/* 5. Nhân viên (kế toán, văn thư, thư viện, y tế…): không có chức năng quản lý lớp học */}
+                      <label className={`p-3 rounded-2xl border-2 cursor-pointer flex flex-col justify-between transition-all ${
+                        formData.role === 'subject' && formData.nonTeaching
+                          ? 'border-teal-600 bg-teal-50/70 shadow-xs ring-1 ring-teal-600/30'
+                          : 'border-slate-200 hover:border-slate-300 bg-white'
+                      }`}>
+                        <div>
+                          <div className="flex items-center justify-between mb-1">
+                            <div className="flex items-center gap-1.5">
+                              <Briefcase className="w-4 h-4 text-teal-700 shrink-0" />
+                              <span className="font-black text-xs text-slate-900 uppercase">Nhân viên</span>
+                            </div>
+                            <input
+                              type="radio"
+                              name="role"
+                              checked={formData.role === 'subject' && formData.nonTeaching}
+                              onChange={() => setFormData({ ...formData, role: 'subject', tenantType: 'school', nonTeaching: true })}
+                              className="w-4 h-4 text-teal-700 shrink-0"
+                            />
+                          </div>
+                          <p className="text-[12px] text-slate-500 leading-snug">
+                            Kế toán, văn thư, thư viện, y tế… Chỉ điểm danh đi làm; không quản lý lớp học.
+                          </p>
+                        </div>
+                        <span className="text-[12px] font-black text-teal-800 bg-teal-100/80 px-1.5 py-0.5 rounded mt-2 self-start uppercase">
+                          Nhân Viên
                         </span>
                       </label>
                     </div>
@@ -3178,7 +3228,21 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                   </div>
                 )}
 
-                {formData.role === 'subject' && (
+                {/* Quyền xem báo cáo Chấm công nhân sự: cho tài khoản Nhân viên, GV chủ nhiệm, GV bộ môn (vd. nhân viên kế toán) */}
+                {(formData.role === 'subject' || formData.role === 'homeroom') && formData.tenantType !== 'guest' && (
+                  <div className="md:col-span-2">
+                    <label className="flex items-start gap-2.5 rounded-2xl border border-sky-200 bg-sky-50/60 px-3.5 py-3 cursor-pointer">
+                      <input type="checkbox" className="mt-0.5 w-4 h-4 accent-sky-700 shrink-0" checked={formData.staffReportViewer}
+                        onChange={(e) => setFormData({ ...formData, staffReportViewer: e.target.checked })} />
+                      <span className="text-xs text-slate-700 leading-snug">
+                        <strong className="block text-sm text-slate-900">Được xem và xuất báo cáo mục Chấm công nhân sự</strong>
+                        Chỉ xem số liệu chấm công, kê khai tiết dạy và xuất tệp báo cáo (ví dụ nhân viên kế toán). Không điểm danh hộ, không khóa số liệu, không xem danh sách nhân sự. Cần Apps Script của trường ở phiên bản mới nhất.
+                      </span>
+                    </label>
+                  </div>
+                )}
+
+                {formData.role === 'subject' && !formData.nonTeaching && (
                   <div>
                     <label className="block text-xs font-black text-slate-700 uppercase mb-1.5">
                       Môn Giảng Dạy Bộ Môn
