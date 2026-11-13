@@ -23,9 +23,10 @@
     "signAndEditExecutable": true
   },
   "nsis": {
-    "oneClick": false,
+    "oneClick": true,
     "perMachine": false,
-    "allowToChangeInstallationDirectory": true,
+    "installerLanguages": ["vi_VN"],
+    "installerHeaderIcon": "desktop-lite/app/icon.ico",
     "createDesktopShortcut": "always",
     "createStartMenuShortcut": true,
     "shortcutName": "Lớp Học Hạnh Phúc",
