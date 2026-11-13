@@ -6,6 +6,17 @@ const { contextBridge, ipcRenderer } = require('electron');
 contextBridge.exposeInMainWorld('lhhpDesktop', {
   isDesktopLite: true,
   platform: process.platform,
+  // Offline data folder (see main.cjs): relative paths only, confined to the folder the user chose
+  offline: {
+    info: () => ipcRenderer.invoke('lhhp-offline:info'),
+    choose: () => ipcRenderer.invoke('lhhp-offline:choose'),
+    useSuggested: () => ipcRenderer.invoke('lhhp-offline:use-suggested'),
+    open: () => ipcRenderer.invoke('lhhp-offline:open'),
+    read: (relPath) => ipcRenderer.invoke('lhhp-offline:read', relPath),
+    write: (relPath, text) => ipcRenderer.invoke('lhhp-offline:write', relPath, text),
+    list: (relDir) => ipcRenderer.invoke('lhhp-offline:list', relDir),
+    remove: (relPath) => ipcRenderer.invoke('lhhp-offline:remove', relPath),
+  },
   update: {
     getInfo: () => ipcRenderer.invoke('lhhp-update:info'),
     check: () => ipcRenderer.invoke('lhhp-update:check'),

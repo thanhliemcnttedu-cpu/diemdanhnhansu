@@ -8,6 +8,7 @@
  */
 import { googleDriveService } from './googleDriveService';
 import { saveManagerAuth, readManagerAuth, clearManagerAuth } from '../utils/persistedAuth';
+import { offlineStoreService } from './offlineStoreService';
 
 export type StaffStatus = 'present' | 'business_trip' | 'sick_leave' | 'personal_unpaid';
 /** Thứ tự hiển thị trạng thái (Đi công tác = có làm việc, tính vào tỷ lệ đi làm) */
@@ -368,8 +369,40 @@ export const staffAttendanceService = {
     } catch (_) { return ''; }
   },
 
+  /**
+   * 📴 Desktop build (offline data folder): keep the last successful answer of a READ call and return it when
+   * the school's Apps Script cannot be reached, marked `offline: true`. Viewing only — writes are not queued.
+   */
+  async readWithOfflineCopy<T extends Record<string, any>>(fileName: string, run: () => Promise<T>, sanitize?: (res: T) => T): Promise<T> {
+    if (!offlineStoreService.isAvailable()) return run();
+    const fromFolder = async (): Promise<T | null> => {
+      const saved = await offlineStoreService.readSchoolFile<T>(fileName);
+      return saved ? ({ ...saved.data, offline: true, offlineSavedAt: saved.savedAt } as T) : null;
+    };
+    if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+      const saved = await fromFolder();
+      if (saved) return saved;
+    }
+    try {
+      const res = await run();
+      if (res && res.success !== false) void offlineStoreService.writeSchoolFile(fileName, sanitize ? sanitize(res) : res);
+      return res;
+    } catch (e: any) {
+      if (e?.code === 'NETWORK' || /Mạng chậm/i.test(String(e?.message || ''))) {
+        const saved = await fromFolder();
+        if (saved) return saved;
+      }
+      throw e;
+    }
+  },
+
   async getRoster(auth?: { username: string; password: string } | null) {
-    return this.withFullCccd(await this.call({ action: 'getStaffRoster', auth: auth ?? staffAttendanceService.getViewerAuth() }));
+    return this.withFullCccd(await this.readWithOfflineCopy(
+      'nhan_su.json',
+      () => this.call({ action: 'getStaffRoster', auth: auth ?? staffAttendanceService.getViewerAuth() }),
+      // Check-in passwords are never written to the offline folder
+      res => (Array.isArray(res?.staff) ? { ...res, staff: res.staff.map(({ currentPin: _pin, ...rest }: any) => rest) } : res),
+    ));
   },
   async saveRoster(staff: StaffUpsert[], deletedCodes: string[] = [], auth?: { username: string; password: string } | null) {
     const res = await this.call({ action: 'saveStaffRoster', auth: auth ?? staffAttendanceService.getViewerAuth(), staff, deletedCodes }, null, 60000);
@@ -387,7 +420,11 @@ export const staffAttendanceService = {
   },
 
   async range(from: string, to: string, auth?: { username: string; password: string } | null) {
-    return this.withFullCccd(await this.call({ action: 'staffAttendanceRange', auth: auth ?? staffAttendanceService.getViewerAuth(), from, to }, null, 45000));
+    return this.withFullCccd(await this.readWithOfflineCopy(
+      `cham_cong_${from}_${to}.json`,
+      () => this.call({ action: 'staffAttendanceRange', auth: auth ?? staffAttendanceService.getViewerAuth(), from, to }, null, 45000),
+      res => (Array.isArray(res?.staff) ? { ...res, staff: res.staff.map(({ currentPin: _pin, ...rest }: any) => rest) } : res),
+    ));
   },
 };
 

@@ -6,6 +6,8 @@ import { ACCOUNT_IDENTITY_MAP, getOfficialDisplayName } from '../utils/accountId
 import { dataStorageService } from './dataStorageService';
 import { googleDriveService } from './googleDriveService';
 import { schoolDriveDbService } from './schoolDriveDbService';
+import { offlineAuthService, OFFLINE_VALID_DAYS } from './offlineAuthService';
+import { offlineStoreService } from './offlineStoreService';
 import { adminEditsService, schoolBranchesDrive } from './adminEditsService';
 import { DEFAULT_SUBJECT_TEACHER_CONFIG } from '../data/initialData';
 import { isViewOnly } from '../utils/viewOnlyMode';
@@ -22,6 +24,8 @@ export const LOCAL_SESSION_KEY = 'lop_hoc_session_time_v2';
 export const LOCAL_DB_PREFIX = 'lop_hoc_user_db_';
 export const LOCAL_SCHOOLS_KEY = 'lop_hoc_schools_list_v1';
 export const LOCAL_BRANCHES_PREFIX = 'lop_hoc_school_branches_';
+/** Marks a school's branch list as edited on this PC but not written to Drive yet */
+const BRANCHES_PENDING_PREFIX = 'lhhp_branches_pending:';
 export const SESSION_TIMEOUT_MS = 300 * 60 * 1000; // 300 minutes = 5 hours
 
 // Unique Client ID per tab/browser instance to prevent echo loops
@@ -268,6 +272,29 @@ const DRIVE_CLASS_FILES_TTL_MS = cacheFor(MANAGER_DATA_MS); // chu kỳ 60 s (ut
 let driveClassFilesCache: { key: string; at: number; data: DriveClassFilesData } | null = null;
 let driveClassFilesInflight: { key: string; promise: Promise<DriveClassFilesData | null> } | null = null;
 
+const SCHOOL_SNAPSHOT_FILE = 'lop_hoc_sinh_diem_danh.json';
+const OFFLINE_SNAPSHOT_RETRY_MS = 15000;
+let schoolSnapshotInfo: { fromOffline: boolean; savedAt: number } = { fromOffline: false, savedAt: 0 };
+let lastSnapshotSignature = '';
+/** Where the whole-school data on screen came from: Drive just now, or the copy kept in the offline folder */
+export function getSchoolSnapshotInfo() {
+  return schoolSnapshotInfo;
+}
+/** Desktop build: keep the whole-school data in the offline folder (only when it changed) */
+function saveSchoolSnapshot(data: DriveClassFilesData) {
+  if (!offlineStoreService.isAvailable()) return;
+  try {
+    const text = JSON.stringify(data);
+    let sum = 0;
+    for (let i = 0; i < text.length; i += 97) sum = (sum * 31 + text.charCodeAt(i)) | 0;
+    const signature = `${text.length}:${sum}`;
+    if (signature === lastSnapshotSignature) return;
+    offlineStoreService.writeSchoolFile(SCHOOL_SNAPSHOT_FILE, data)
+      .then(ok => { if (ok) lastSnapshotSignature = signature; })
+      .catch(() => { /* next round tries again */ });
+  } catch (_) { /* too large to serialise → skip, Drive stays the source */ }
+}
+
 async function loadDriveClassFilesCached(currentUser: UserAccount): Promise<DriveClassFilesData | null> {
   const cfg = googleDriveService.getConfig();
   if (!cfg.scriptUrl) return null;
@@ -276,10 +303,29 @@ async function loadDriveClassFilesCached(currentUser: UserAccount): Promise<Driv
     return driveClassFilesCache.data;
   }
   if (driveClassFilesInflight && driveClassFilesInflight.key === key) return driveClassFilesInflight.promise;
+  // 📴 Desktop build: Drive not reachable → last whole-school data kept in the offline folder. It is used for a
+  // short while only (OFFLINE_SNAPSHOT_RETRY_MS), then Drive is tried again.
+  const fromOfflineFolder = async (): Promise<DriveClassFilesData | null> => {
+    if (driveClassFilesCache?.key === key) return driveClassFilesCache.data;
+    const saved = await offlineStoreService.readSchoolFile<DriveClassFilesData>(SCHOOL_SNAPSHOT_FILE);
+    if (!saved || !Array.isArray(saved.data?.classes)) return null;
+    const data: DriveClassFilesData = {
+      classes: saved.data.classes,
+      students: saved.data.students || [],
+      attendanceRecords: saved.data.attendanceRecords || [],
+      boardingRecords: saved.data.boardingRecords || [],
+      appliedByClass: saved.data.appliedByClass || {}
+    };
+    driveClassFilesCache = { key, at: Date.now() - DRIVE_CLASS_FILES_TTL_MS + OFFLINE_SNAPSHOT_RETRY_MS, data };
+    schoolSnapshotInfo = { fromOffline: true, savedAt: saved.savedAt };
+    return data;
+  };
   const promise = (async () => {
     try {
+      // No network at all → do not wait for the Drive calls to time out
+      if (offlineStoreService.isAvailable() && typeof navigator !== 'undefined' && navigator.onLine === false) return await fromOfflineFolder();
       const res = await googleDriveService.pullAllClassFilesFromDrive(currentUser);
-      if (!res.success) return driveClassFilesCache?.key === key ? driveClassFilesCache.data : null;
+      if (!res.success) return await fromOfflineFolder();
       const data: DriveClassFilesData = {
         classes: res.classes,
         students: res.students,
@@ -288,9 +334,11 @@ async function loadDriveClassFilesCached(currentUser: UserAccount): Promise<Driv
         appliedByClass: res.appliedByClass || {}
       };
       driveClassFilesCache = { key, at: Date.now(), data };
+      schoolSnapshotInfo = { fromOffline: false, savedAt: Date.now() };
+      saveSchoolSnapshot(data);
       return data;
     } catch (_) {
-      return driveClassFilesCache?.key === key ? driveClassFilesCache.data : null;
+      return await fromOfflineFolder().catch(() => null);
     } finally {
       driveClassFilesInflight = null;
     }
@@ -308,7 +356,9 @@ export function invalidateDriveClassFilesCache() {
 export const FORCE_DATA_REFRESH_EVENT = 'lhhp:force-data-refresh';
 
 /** App-wide event: school-wide data has just been refreshed (automatic cycle or manual) → the top bar shows the time. */
-export const DATA_REFRESHED_EVENT = 'lhhp:data-refreshed';
+/** sessionStorage flag: the current session was opened by an offline sign-in (desktop build) */
+export const OFFLINE_SESSION_FLAG = 'lhhp_offline_session';
+export const DATA_REFRESHED_EVENT ='lhhp:data-refreshed';
 export const notifyDataRefreshed = (): void => {
   try { if (typeof window !== 'undefined') window.dispatchEvent(new Event(DATA_REFRESHED_EVENT)); } catch (_) { /* ignore */ }
 };
@@ -409,9 +459,39 @@ export const databaseService = {
     } catch (_) {}
 
     if (schoolDriveDbService.isConfigured()) {
-      const driveRes = await schoolDriveDbService.login(username, password);
+      // Desktop build, no network at all: do not wait for the Apps Script call to time out
+      const noNetwork = offlineAuthService.isEnabled() && typeof navigator !== 'undefined' && navigator.onLine === false;
+      const driveRes = noNetwork
+        ? ({ status: 'unreachable', message: 'Máy tính đang không có mạng.' } as Awaited<ReturnType<typeof schoolDriveDbService.login>>)
+        : await schoolDriveDbService.login(username, password);
+      // 📴 Offline sign-in (desktop build): the account signed in on this PC before → check the remembered verifier
+      if (driveRes.status === 'unreachable' && offlineAuthService.isEnabled()) {
+        const offline = await offlineAuthService.verify(username, password);
+        if (offline.status === 'ok') {
+          const result = finishLogin(offline.user, `Đăng nhập ngoại tuyến thành công. Dữ liệu được lưu trên máy và tự đẩy lên khi có mạng (còn ${offline.daysLeft} ngày dùng ngoại tuyến).`);
+          if (result.success) {
+            schoolDriveDbService.rememberLoginSecrets(offline.user, password);
+            // Account / school lists missing in browser storage → bring them back from the offline folder
+            await schoolDriveDbService.restoreListsFromOfflineFolder().catch(() => false);
+            try { sessionStorage.setItem(OFFLINE_SESSION_FLAG, '1'); } catch (_) { /* ignore */ }
+          }
+          return result;
+        }
+        if (offline.status === 'wrong') {
+          return { success: false, message: 'Sai mật khẩu. Máy đang ngoại tuyến nên phần mềm kiểm tra theo mật khẩu của lần đăng nhập có mạng gần nhất trên máy này.' };
+        }
+        if (offline.status === 'expired') {
+          return { success: false, message: `Tài khoản này đã quá ${OFFLINE_VALID_DAYS} ngày chưa đăng nhập khi có mạng. Hãy kết nối mạng và đăng nhập một lần để tiếp tục dùng ngoại tuyến.` };
+        }
+        if (offline.status === 'no_record' && !isAdminScope) {
+          return { success: false, message: 'Máy đang ngoại tuyến và tài khoản này chưa từng đăng nhập trên máy này. Hãy kết nối mạng để đăng nhập lần đầu.' };
+        }
+      }
       if (driveRes.status === 'ok') {
+        try { sessionStorage.removeItem(OFFLINE_SESSION_FLAG); } catch (_) { /* ignore */ }
         const result = finishLogin(driveRes.user, 'Đăng nhập thành công (CSDL nhà trường trên Google Drive).');
+        // Remember a one-way password verifier so this account can sign in on this PC without internet
+        if (result.success) void offlineAuthService.remember(driveRes.user, password, username);
         if (result.success && (driveRes.user.role === 'admin' || driveRes.user.role === 'school_admin' || driveRes.user.isSchoolAdmin)) {
           // Quản trị đăng nhập máy mới: tải toàn bộ tài khoản (không mật khẩu) về để quản lý.
           // Chạy NỀN (không chờ) để vào phần mềm ngay; xong thì báo cho giao diện nạp lại danh sách tài khoản.
@@ -1546,11 +1626,10 @@ export const databaseService = {
     }
 
     // 3. Tầng 3: LocalStorage fallback (An toàn tuyệt đối 0ms nếu offline hoặc mạng tạm thời gián đoạn)
+    // (Bản cài đặt: nếu bản trong thư mục ngoại tuyến mới hơn hoặc bộ nhớ trình duyệt trống thì dùng bản trong thư mục.)
     try {
-      const cached = localStorage.getItem(LOCAL_DB_PREFIX + cleanUser);
-      if (cached) {
-        return JSON.parse(cached) as UserClassroomData;
-      }
+      const cached = await this.getLocalCachedUserData(cleanUser);
+      if (cached) return cached;
     } catch (_) {}
 
     // (Đã bỏ "alias" gvcn1a1 <-> gvcn_1a1: hai tên đăng nhập khác nhau là hai tài khoản khác nhau;
@@ -1558,6 +1637,25 @@ export const databaseService = {
 
     // 5. Tầng 5: Nếu chưa có dữ liệu thì trả về null để khởi tạo sạch
     return null;
+  },
+
+  /**
+   * The account's data kept on THIS PC: browser storage, or (desktop build) the copy in the offline folder
+   * when that one is newer or the browser copy is missing. Null when the PC has nothing for the account.
+   */
+  async getLocalCachedUserData(username: string): Promise<UserClassroomData | null> {
+    const cleanUser = String(username || '').trim().toLowerCase();
+    if (!cleanUser) return null;
+    let browserCopy: UserClassroomData | null = null;
+    try {
+      const raw = localStorage.getItem(LOCAL_DB_PREFIX + cleanUser);
+      if (raw) browserCopy = JSON.parse(raw);
+    } catch (_) { /* unreadable → fall back to the folder copy */ }
+    if (!offlineStoreService.isAvailable()) return browserCopy;
+    const folderCopy = await offlineStoreService.readUserData<UserClassroomData>(cleanUser);
+    if (!folderCopy || !Array.isArray(folderCopy.classes)) return browserCopy;
+    if (!browserCopy) return folderCopy;
+    return Number(folderCopy.updatedAt || 0) > Number(browserCopy.updatedAt || 0) ? folderCopy : browserCopy;
   },
 
   async saveUserData(username: string, data: UserClassroomData): Promise<boolean> {
@@ -1572,6 +1670,8 @@ export const databaseService = {
       // (Đã bỏ chép dữ liệu sang "alias" gvcn1a1 <-> gvcn_1a1 — từng tạo ra lớp 1A1 trùng lặp)
       isSuccess = true;
     } catch (_) {}
+    // 📴 Desktop build: keep the same data in the offline folder (survives a full / wiped browser storage)
+    offlineStoreService.mirrorUserData(cleanUser, data);
 
     // Cập nhật thông báo đa tab nội bộ tức thì
     try {
@@ -2967,6 +3067,24 @@ export const databaseService = {
       }
     }
 
+    // 1a. Danh mục phân hiệu đã sửa trên máy này nhưng CHƯA ghi được lên Drive (mất mạng): đẩy bản trên máy
+    // lên trước; chưa đẩy được thì vẫn dùng bản trên máy — không để bản cũ trên Drive ghi đè phần vừa sửa.
+    const pendingKey = BRANCHES_PENDING_PREFIX + cleanSchool.toLowerCase();
+    try {
+      if (localStorage.getItem(pendingKey)) {
+        const mine = JSON.parse(localStorage.getItem(cacheKey) || 'null');
+        if (Array.isArray(mine)) {
+          try {
+            if (typeof navigator !== 'undefined' && navigator.onLine === false) throw new Error('offline');
+            await schoolBranchesDrive.save(cleanSchool, mine);
+            localStorage.removeItem(pendingKey);
+          } catch (_) { /* still waiting for the network */ }
+          return mine;
+        }
+        localStorage.removeItem(pendingKey);
+      }
+    } catch (_) { /* ignore */ }
+
     // 1b. ☁️ Bản web (Drive dùng chung): danh mục phân hiệu chung cho mọi máy Quản trị / BGH
     try {
       const fromDrive = await schoolBranchesDrive.load(cleanSchool);
@@ -3008,8 +3126,13 @@ export const databaseService = {
     // 1b. ☁️ Bản web (Drive dùng chung): ghi danh mục phân hiệu vào phanhieu_truong.json
     try {
       await schoolBranchesDrive.save(cleanSchool, branches);
+      try { localStorage.removeItem(BRANCHES_PENDING_PREFIX + cleanSchool.toLowerCase()); } catch (_) { /* ignore */ }
     } catch (err) {
       console.warn('Drive saveSchoolBranches error:', err);
+      // Not on Drive yet → remember it, the next getSchoolBranches pushes this copy first
+      if (schoolBranchesDrive.isAvailable()) {
+        try { localStorage.setItem(BRANCHES_PENDING_PREFIX + cleanSchool.toLowerCase(), String(nowTs)); } catch (_) { /* ignore */ }
+      }
     }
 
     // 2. Supabase Cloud Database Upsert

@@ -330,3 +330,16 @@
 - **Fix Applied**: Truyền `liveDays` / `liveRange` (dữ liệu màn chính đang giữ) vào `ComparePanel`. Kỳ nằm trong `liveRange` đọc thẳng từ đó, không gọi mạng; chỉ kỳ nằm ngoài (tuần trước, tháng trước…) mới tải riêng. Trong `liveRange` dữ liệu trực tiếp luôn thắng bản tải riêng.
 - **Prevention**: Hai khối cùng một màn hiển thị cùng một số liệu phải dùng chung một nguồn; khối con không giữ bản sao tải một lần của dữ liệu mà khối cha đang làm mới.
 - **Status**: Fixed
+
+---
+
+## [2026-11-14 00:40] - Đóng / tải lại phần mềm làm bản lưu trên máy quay về trạng thái lúc vừa mở
+
+- **Type**: Data
+- **Severity**: High
+- **File**: `src/context/ClassroomContext.tsx` (`handleBeforeUnload`), `src/services/dataAdapter.ts` (`smartMergeClassroomData`), `src/services/googleDriveService.ts` (`pullClassData`, vòng đẩy bù)
+- **Agent**: Claude Code
+- **Root Cause**: (1) Bộ xử lý `beforeunload` / `pagehide` nằm trong `useEffect(..., [])` và gọi thẳng `getCurrentUserData()` → đọc state của LẦN VẼ ĐẦU TIÊN (closure cũ), rồi `saveUserData` ghi đè bản trong `localStorage` bằng trạng thái lúc vừa mở, không có `updatedAt`. Khi có mạng thì lần mở sau gộp lại từ Drive nên không ai thấy; làm việc lúc mất mạng thì mất toàn bộ thay đổi của phiên. (2) `smartMergeClassroomData` để bản trên Drive thắng mọi bản ghi hai bên cùng có và coi bản ghi chỉ có trên Drive là "mới thêm" → đăng nhập lại khi máy còn thay đổi chưa đẩy thì thay đổi bị đè, học sinh đã xóa sống lại. (3) Vòng đẩy bù sau khi mất mạng đẩy thẳng bản trên máy, ghi đè phần máy khác đã lưu trong lúc đó.
+- **Fix Applied**: (1) Bộ xử lý đóng trang dùng `currentDataGetterRef.current()` (luôn là state mới nhất), thêm `updatedAt`, không lưu khi dữ liệu tài khoản chưa nạp xong hoặc không có lớp. (2) Khi máy còn thay đổi chưa đẩy (`isPushPending`) và bản trên máy đúng là bản chứa thay đổi cuối (`storedCopyHasLastChange` hoặc state đang chạy), `pullClassData` chạy thêm `dataAdapter.keepLocalEdits`: bản ghi trên máy thắng, bản ghi chỉ có trên Drive được giữ trừ khi mã của nó từng có trên máy (`lhhp_seen_ids_<user>`) — tức là đã xóa ở máy này. (3) Vòng đẩy bù gọi `pushAfterMergingRemote`: kéo – gộp – rồi mới đẩy; phần gộp thêm được báo cho giao diện qua `DRIVE_MERGED_EVENT`.
+- **Prevention**: Bộ xử lý sự kiện đăng ký một lần (`useEffect` với `[]`) không được đọc state trực tiếp — đọc qua ref. Gộp dữ liệu hai chiều phải biết phía nào đang giữ thay đổi chưa đẩy; "không có ở một phía" chỉ được hiểu là xóa khi có bằng chứng bản ghi từng tồn tại ở phía đó. Kiểm chứng bằng `scratchpad/merge-test.mts` và kịch bản giả lập Apps Script trong bản xem thử (`lhhp-web-static`).
+- **Status**: Fixed

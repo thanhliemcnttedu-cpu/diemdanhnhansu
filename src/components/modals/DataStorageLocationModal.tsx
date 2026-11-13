@@ -10,6 +10,7 @@ import { useClassroom } from '../../context/ClassroomContext';
 import { localSystemMirrorService, SYSTEM_ONE_FILE_DIR, SYSTEM_ONE_FILE_NAME, SYSTEM_MIRROR_DIR, type LocalMirrorSummary } from '../../services/localSystemMirrorService';
 import { driveBackupService } from '../../services/driveBackupService';
 import { schoolDriveDbService } from '../../services/schoolDriveDbService';
+import { OfflineFolderCard } from '../common/OfflineSetupWizard';
 import { FolderPathNote } from '../common/FolderPathNote';
 
 interface DataStorageLocationModalProps {
@@ -256,6 +257,8 @@ export const DataStorageLocationModal: React.FC<DataStorageLocationModalProps> =
               <span>{toastMessage.text}</span>
             </div>
           )}
+
+          {parts !== 'file' && <OfflineFolderCard />}
 
           <div className={parts === 'all' ? 'grid grid-cols-1 lg:grid-cols-2 gap-3' : 'grid grid-cols-1 gap-3'}>
             {/* ───────── CỘT TRÁI: nơi lưu ───────── */}

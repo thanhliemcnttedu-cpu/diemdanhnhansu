@@ -79,4 +79,5 @@ Dự án chuyển từ Antigravity sang; các quy tắc gốc nằm ở `GEMINI.
 - [docs/claude/cham-cong.md](docs/claude/cham-cong.md) — chấm công nhân sự, tài khoản dùng chung chấm công, kê khai tiết dạy, các phiên bản Apps Script V4.2 → 1.1.x.
 - [docs/claude/giao-dien.md](docs/claude/giao-dien.md) — khung giao diện, logo, ảnh avatar, mẫu bảng danh sách, tự co chữ, nền đăng nhập.
 - [docs/claude/tinh-nang-khac.md](docs/claude/tinh-nang-khac.md) — bản cài đặt Desktop, nhập Excel học sinh, thư khen, xuất ảnh/PDF, thời khóa biểu.
+- [docs/claude/ngoai-tuyen.md](docs/claude/ngoai-tuyen.md) — chế độ ngoại tuyến của bản cài đặt: thư mục ngoại tuyến, đăng nhập ngoại tuyến, gộp khi có mạng lại, hàng chờ của quản trị.
 - `ERRORS.md` — lỗi đã gặp và bài học.

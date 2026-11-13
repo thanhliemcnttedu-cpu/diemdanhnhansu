@@ -81,6 +81,8 @@ let latestSnapshot: { data: UserClassroomData; user: UserAccount; classId?: stri
 // ít "phiên bản cũ" Drive giữ lại (tính vào dung lượng). Xác nhận điểm danh / bán trú vẫn đẩy NGAY.
 // Phần đang chờ được đẩy ngay khi chuyển tab / ẩn / đóng trang / đăng xuất; đóng đột ngột → lần mở sau tự đẩy bù.
 export const DRIVE_PUSH_BATCH_MS = 15000;
+/** Fired after a catch-up push whose merge added records saved by another PC; detail = { username, data } */
+export const DRIVE_MERGED_EVENT = 'lhhp:drive-merged-data';
 const PENDING_PUSH_KEY = 'lhhp_drive_push_pending';
 const markPendingPush = (username?: string) => { try { if (username) localStorage.setItem(PENDING_PUSH_KEY, username.toLowerCase()); } catch (_) { /* ignore */ } };
 const clearPendingPush = (username?: string) => {
@@ -92,6 +94,59 @@ const clearPendingPush = (username?: string) => {
 // Tổng hợp tệp lớp: nhớ kết quả từng tệp theo giờ sửa trên Drive → vòng sau chỉ tải tệp đã đổi
 const classFilePullCache = new Map<string, { updatedAt: string; res: any }>();
 const hasPendingPushFor = (username?: string) => { try { return !!username && localStorage.getItem(PENDING_PUSH_KEY) === username.toLowerCase(); } catch (_) { return false; } };
+
+// Ids of the classes / students that have been part of an account's data on THIS PC. When the PC holds
+// unpushed changes, a record found only on Drive is "deleted here" if its id is in this list, and "added from
+// another PC" if it is not (see dataAdapter.keepLocalEdits).
+const SEEN_IDS_PREFIX = 'lhhp_seen_ids_';
+const SEEN_IDS_MAX = 8000;
+const seenIdsCache = new Map<string, { students: Set<string>; classes: Set<string> }>();
+const readSeenIds = (username: string) => {
+  const key = String(username || '').toLowerCase();
+  let entry = seenIdsCache.get(key);
+  if (entry) return entry;
+  entry = { students: new Set<string>(), classes: new Set<string>() };
+  try {
+    const raw = JSON.parse(localStorage.getItem(SEEN_IDS_PREFIX + key) || 'null');
+    if (raw && Array.isArray(raw.s)) raw.s.forEach((id: string) => entry!.students.add(id));
+    if (raw && Array.isArray(raw.c)) raw.c.forEach((id: string) => entry!.classes.add(id));
+  } catch (_) { /* ignore */ }
+  seenIdsCache.set(key, entry);
+  return entry;
+};
+const isManagementAccount = (user?: UserAccount | null) => Boolean(user && (
+  (user.username || '').toLowerCase() === 'adminquantri' || user.role === 'admin' || user.role === 'school_admin' ||
+  user.role === 'bgh' || user.isBgh || user.isSchoolAdmin
+));
+// Time of the account's last local change on this PC. A STORED copy (it carries `updatedAt`) is only treated as
+// "the newer side" when it really contains that last change; an older stored copy is stale (browser storage was
+// full / restored) and goes through the ordinary merge instead.
+const LOCAL_CHANGE_PREFIX = 'lhhp_last_local_change_';
+const LOCAL_CHANGE_TOLERANCE_MS = 5000;
+const noteLocalChange = (username?: string) => {
+  try { if (username) localStorage.setItem(LOCAL_CHANGE_PREFIX + username.toLowerCase(), String(Date.now())); } catch (_) { /* ignore */ }
+};
+const storedCopyHasLastChange = (username: string, data: UserClassroomData) => {
+  const localStamp = Number(data?.updatedAt) || 0;
+  if (!localStamp) return false; // freshly built default data, not something the user worked on
+  let lastChange = 0;
+  try { lastChange = Number(localStorage.getItem(LOCAL_CHANGE_PREFIX + username.toLowerCase())) || 0; } catch (_) { /* ignore */ }
+  return lastChange > 0 && localStamp >= lastChange - LOCAL_CHANGE_TOLERANCE_MS;
+};
+const noteLocalIds = (user: UserAccount | null | undefined, data: UserClassroomData | null | undefined) => {
+  if (!user?.username || !data || isManagementAccount(user)) return;
+  const entry = readSeenIds(user.username);
+  const before = entry.students.size + entry.classes.size;
+  for (const s of data.students || []) if (s?.id) entry.students.add(s.id);
+  for (const c of data.classes || []) if (c?.id) entry.classes.add(c.id);
+  if (entry.students.size + entry.classes.size === before) return;
+  try {
+    localStorage.setItem(SEEN_IDS_PREFIX + user.username.toLowerCase(), JSON.stringify({
+      s: Array.from(entry.students).slice(-SEEN_IDS_MAX),
+      c: Array.from(entry.classes).slice(-SEEN_IDS_MAX),
+    }));
+  } catch (_) { /* ignore */ }
+};
 
 export const googleDriveService = {
   /**
@@ -658,7 +713,9 @@ export const googleDriveService = {
   async pullClassData(
     localData: UserClassroomData,
     targetFileName?: string,
-    currentUser?: UserAccount | null
+    currentUser?: UserAccount | null,
+    /** localIsLive: `localData` is the app's current in-memory state (not a copy read back from storage) */
+    opts?: { localIsLive?: boolean }
   ): Promise<{ success: boolean; mergedData?: UserClassroomData; message: string; raw?: any }> {
     const config = this.getConfig();
     const scriptUrl = this.normalizeScriptUrl(config.scriptUrl);
@@ -731,7 +788,15 @@ export const googleDriveService = {
         }
 
         // Áp dụng Non-Destructive Smart Merge
-        const mergedData = dataAdapter.smartMergeClassroomData(localData, standardJson);
+        let mergedData = dataAdapter.smartMergeClassroomData(localData, standardJson);
+        // Máy này còn thay đổi CHƯA đẩy lên (làm việc lúc mất mạng / đóng phần mềm trước khi kịp đẩy):
+        // bản trên máy thắng cho các bản ghi hai bên cùng có, bản ghi đã xóa trên máy không quay lại.
+        // Chỉ áp dụng khi bản trên máy thật sự là bản mới (không cũ hơn bản máy này đã đẩy lần gần nhất).
+        if (currentUser && !isManagementAccount(currentUser) && (localData.classes || []).length > 0
+          && this.isPushPending(currentUser.username)
+          && (opts?.localIsLive === true || storedCopyHasLastChange(currentUser.username, localData))) {
+          mergedData = dataAdapter.keepLocalEdits(mergedData, localData, readSeenIds(currentUser.username));
+        }
         const nowStr = new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
         this.saveConfig({ syncStatus: 'success', lastSyncTime: nowStr });
         this.notifyStatusListeners({ status: 'success', lastSyncTime: nowStr });
@@ -990,7 +1055,7 @@ export const googleDriveService = {
     }
 
     this.notifyStatusListeners({ status: 'pending' });
-    try { const g = getData(); if (g?.data && g?.user) { latestSnapshot = { data: g.data, user: g.user, classId: g.targetClassId }; markPendingPush(g.user.username); } } catch (_) { /* ignore */ }
+    try { const g = getData(); if (g?.data && g?.user) { latestSnapshot = { data: g.data, user: g.user, classId: g.targetClassId }; markPendingPush(g.user.username); noteLocalChange(g.user.username); noteLocalIds(g.user, g.data); } } catch (_) { /* ignore */ }
 
     debounceTimer = setTimeout(async () => {
       debounceTimer = null;
@@ -1023,6 +1088,7 @@ export const googleDriveService = {
 
     // Keep the freshest snapshot for immediate pushes / retries (avoids stale closures)
     latestSnapshot = { data: userData, user: currentUser, classId: effectiveClassId };
+    noteLocalIds(currentUser, userData);
 
     // 1. Nếu cấu hình Thư mục Google Drive trên máy (Google Drive for Desktop)
     if (config.syncMethod === 'desktop' && config.desktopPath) {
@@ -1060,6 +1126,7 @@ export const googleDriveService = {
       const delay = urgentPushRequested ? 0 : Math.max(config.debounceMs || DEFAULT_DEBOUNCE_MS, DRIVE_PUSH_BATCH_MS);
       urgentPushRequested = false;
       markPendingPush(currentUser.username);
+      noteLocalChange(currentUser.username);
 
       debounceTimer = setTimeout(async () => {
         debounceTimer = null;
@@ -1075,6 +1142,43 @@ export const googleDriveService = {
    * Lần tự lưu kế tiếp (~200ms sau khi state cập nhật) sẽ đẩy không chờ debounce; nếu không có thay đổi
    * state nào (số liệu đã đúng sẵn), tự đẩy bản dữ liệu mới nhất sau 700ms.
    */
+  /**
+   * Catch-up push after a failed push / an offline period. The class file is written as a whole, so pushing
+   * the local copy straight away would erase what another PC saved meanwhile. Read the Drive copy first and
+   * merge it in (local changes win, see keepLocalEdits), then push the merged result.
+   */
+  async pushAfterMergingRemote(
+    data: UserClassroomData,
+    user: UserAccount,
+    classId?: string
+  ): Promise<{ success: boolean; message: string }> {
+    if (isViewOnly()) return { success: true, message: 'Chế độ chỉ xem — không lưu.' };
+    let toPush = data;
+    if (!isManagementAccount(user) && (data.classes || []).length > 0) {
+      try {
+        const assigned = (user.assignedClassName || '').trim().toUpperCase();
+        const isHomeroomAccount = user.role === 'homeroom' && data.teacherRole !== 'subject';
+        const cls = (isHomeroomAccount
+          ? data.classes.find(c => c.isHomeroom === true || c.teacherRole === 'homeroom' || c.teacherRole === 'GVCN')
+            || (assigned ? data.classes.find(c => (c.name || '').trim().toUpperCase() === assigned) : undefined)
+          : undefined)
+          || data.classes.find(c => c.id === (classId || data.activeClassId))
+          || data.classes[0];
+        const fileName = this.getFileNameForUser(user, cls?.name, data.teacherRole);
+        markPendingPush(user.username); // make sure the pull below treats local changes as the newer side
+        const pulled = await this.pullClassData(data, fileName, user, { localIsLive: true });
+        if (pulled.success && pulled.mergedData) toPush = pulled.mergedData;
+      } catch (_) { /* no Drive copy to merge → push the local copy */ }
+    }
+    const result = await this.pushClassData(toPush, user, classId, false);
+    // The merge brought in records another PC had saved → let the running app show them too
+    if (result.success && toPush !== data
+      && ((toPush.students || []).length !== (data.students || []).length || (toPush.classes || []).length !== (data.classes || []).length)) {
+      try { window.dispatchEvent(new CustomEvent(DRIVE_MERGED_EVENT, { detail: { username: user.username, data: toPush } })); } catch (_) { /* ignore */ }
+    }
+    return result;
+  },
+
   /** Đẩy NGAY phần thay đổi đang chờ trong hàng đợi 15 giây (chuyển tab / đóng trang / đăng xuất). */
   async flushPendingPush(): Promise<void> {
     if (!debounceTimer || !latestSnapshot) return;
@@ -1351,11 +1455,13 @@ export const googleDriveService = {
           // retries a failed push (every 15s) instead of re-uploading every 5s, which
           // exhausted Apps Script quotas with many classes.
           if (!debounceTimer && autoSyncCycleCount % 3 === 0 && config.syncStatus !== 'error' && hasPendingPushFor(curUser.username)) {
-            // Lần trước trang bị đóng khi còn thay đổi chưa đẩy → đẩy bù bản trên máy
-            await this.pushClassData(curData, curUser, actClassId, false);
+            // Lần trước trang bị đóng khi còn thay đổi chưa đẩy → đẩy bù bản trên máy (gộp phần máy khác đã ghi trước)
+            await this.pushAfterMergingRemote(curData, curUser, actClassId);
           } else if (config.syncStatus === 'error' && autoSyncCycleCount % 3 === 0) {
+            // Mất mạng: không gọi gì cho tới khi máy báo có mạng lại
+            if (typeof navigator !== 'undefined' && navigator.onLine === false) return;
             const snap = latestSnapshot && latestSnapshot.user.username === curUser.username ? latestSnapshot : null;
-            await this.pushClassData(snap ? snap.data : curData, curUser, snap ? snap.classId : actClassId, false);
+            await this.pushAfterMergingRemote(snap ? snap.data : curData, curUser, snap ? snap.classId : actClassId);
           }
         } else {
           // Khi chưa đăng nhập (ở màn hình đăng nhập): Cứ mỗi 15 giây (3 chu kỳ) tự động kéo CSDL phân cấp về máy

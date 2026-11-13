@@ -644,6 +644,64 @@ export const dataAdapter = {
   },
 
   /**
+   * 3b. Second pass after smartMergeClassroomData, used ONLY while this PC still holds changes that were not
+   * pushed yet (worked offline / app closed before the push). smartMerge lets the Drive copy win on every
+   * record both sides have, which would throw those unpushed changes away. Here the local record wins, records
+   * that exist only on Drive are kept (added from another PC), except the ones this PC had before and no longer
+   * has — those were deleted here and must not come back.
+   *
+   * @param everLocalIds ids that have been part of this account's data on this PC at some point
+   */
+  keepLocalEdits(
+    merged: UserClassroomData,
+    localData: UserClassroomData,
+    everLocalIds: { students: Set<string>; classes: Set<string> }
+  ): UserClassroomData {
+    const localClasses = new Map<string, Classroom>((localData.classes || []).map(c => [c.id, c]));
+    const localStudents = new Map<string, Student>((localData.students || []).map(s => [s.id, s]));
+
+    const classes = (merged.classes || [])
+      .filter(c => localClasses.has(c.id) || !everLocalIds.classes.has(c.id))
+      .map(c => {
+        const mine = localClasses.get(c.id);
+        return mine ? { ...c, ...mine, avatar: mine.avatar ?? c.avatar, originalAvatar: mine.originalAvatar ?? c.originalAvatar } : c;
+      });
+    const keptClassIds = new Set(classes.map(c => c.id));
+
+    const students = (merged.students || [])
+      .filter(s => localStudents.has(s.id) || (!everLocalIds.students.has(s.id) && (!s.classId || keptClassIds.has(s.classId))))
+      .map(s => {
+        const mine = localStudents.get(s.id);
+        return mine ? { ...s, ...mine, avatar: mine.avatar ?? s.avatar, originalAvatar: mine.originalAvatar ?? s.originalAvatar } : s;
+      });
+
+    const dayKey = (r: { classId?: string; date: string }) => `${r.classId || 'default'}_${r.date}`;
+    const preferLocalDays = <T extends { classId?: string; date: string; records?: any; notes?: string }>(mergedList: T[], localList: T[]): T[] => {
+      const mine = new Map<string, T>((localList || []).map(r => [dayKey(r), r]));
+      return (mergedList || []).map(r => {
+        const local = mine.get(dayKey(r));
+        if (!local) return r;
+        return { ...r, ...local, records: { ...(r.records || {}), ...(local.records || {}) }, notes: local.notes || r.notes };
+      });
+    };
+
+    const nonEmpty = <T,>(mine: T[] | undefined, other: T[] | undefined) => (Array.isArray(mine) && mine.length > 0 ? mine : other);
+
+    return {
+      ...merged,
+      classes,
+      students,
+      attendanceRecords: preferLocalDays(merged.attendanceRecords || [], localData.attendanceRecords || []),
+      boardingRecords: preferLocalDays(merged.boardingRecords || [], localData.boardingRecords || []),
+      subjects: nonEmpty(localData.subjects, merged.subjects) as any,
+      rewards: nonEmpty(localData.rewards, merged.rewards) as any,
+      timetable: nonEmpty(localData.timetable, merged.timetable) as any,
+      seatingAssignments: { ...(merged.seatingAssignments || {}), ...(localData.seatingAssignments || {}) },
+      activeClassId: keptClassIds.has(merged.activeClassId) ? merged.activeClassId : (classes[0]?.id || merged.activeClassId),
+    };
+  },
+
+  /**
    * 4. 🔄 ROLLING DAILY BACKUP (SAO LƯU LĂN CHU KỲ 7 - 10 NGÀY)
    * Tự động tạo 1 file snapshot mỗi ngày, giữ lại tối đa 10 ngày gần nhất
    */

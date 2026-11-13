@@ -1,6 +1,8 @@
 import { UserAccount, SchoolEntity } from '../types';
 import { googleDriveService } from './googleDriveService';
 import { saveManagerAuth, readManagerAuth, clearManagerAuth } from '../utils/persistedAuth';
+import { offlineAuthService } from './offlineAuthService';
+import { offlineStoreService } from './offlineStoreService';
 
 /**
  * 🏫 CƠ SỞ DỮ LIỆU NHÀ TRƯỜNG TRÊN GOOGLE DRIVE (Apps Script V4: csdl_truong.json)
@@ -44,7 +46,52 @@ const writeJson = (storage: Storage | undefined, key: string, value: unknown) =>
 const local = typeof window !== 'undefined' ? window.localStorage : undefined;
 const session = typeof window !== 'undefined' ? window.sessionStorage : undefined;
 
+/**
+ * Durable store for the "not yet saved to Drive" queue (changed accounts / schools, deletions, passwords waiting
+ * to be sent). It used to live in sessionStorage, so closing the app — or working offline and signing out —
+ * silently dropped the queue and the next read from Drive then discarded those changes. Now kept in
+ * localStorage (lightly obfuscated, never plain text) until Drive confirms; still readable from an old
+ * sessionStorage value so nothing queued before the upgrade is lost.
+ */
+const QUEUE_PREFIX = 'lhhp_q:';
+const QUEUE_SALT = 'LHHP-queue-2026';
+const xorText = (s: string) => Array.from(s).map((ch, i) => String.fromCharCode(ch.charCodeAt(0) ^ QUEUE_SALT.charCodeAt(i % QUEUE_SALT.length))).join('');
+const queue: Storage | undefined = local ? ({
+  getItem(key: string): string | null {
+    try {
+      const raw = local.getItem(QUEUE_PREFIX + key);
+      if (raw != null) return xorText(decodeURIComponent(escape(atob(raw))));
+    } catch (_) { /* unreadable → fall back to the session copy */ }
+    return session?.getItem(key) ?? null;
+  },
+  setItem(key: string, value: string) {
+    local.setItem(QUEUE_PREFIX + key, btoa(unescape(encodeURIComponent(xorText(value)))));
+    try { session?.removeItem(key); } catch (_) { /* ignore */ }
+  },
+  removeItem(key: string) {
+    local.removeItem(QUEUE_PREFIX + key);
+    try { session?.removeItem(key); } catch (_) { /* ignore */ }
+  },
+} as unknown as Storage) : undefined;
+const QUEUE_KEYS = ['lhhp_pending_passwords', 'lhhp_pending_deletes', 'lhhp_drive_dirty'];
+
+const ACCOUNTS_MIRROR_FILE = 'tai_khoan_va_truong.json';
+let accountsMirrorTimer: ReturnType<typeof setTimeout> | null = null;
+/** Desktop build: keep the account list (no passwords) and the school list in the offline folder */
+const scheduleAccountsMirror = () => {
+  if (!offlineStoreService.isAvailable()) return;
+  if (accountsMirrorTimer) clearTimeout(accountsMirrorTimer);
+  accountsMirrorTimer = setTimeout(() => {
+    accountsMirrorTimer = null;
+    const users = readJson<any[]>(local, USERS_KEY, []);
+    const schools = readJson<any[]>(local, SCHOOLS_KEY, []);
+    if (users.length === 0 && schools.length === 0) return; // never replace a good copy with an empty one
+    void offlineStoreService.writeSchoolFile(ACCOUNTS_MIRROR_FILE, { users, schools });
+  }, 2000);
+};
+
 let syncTimer: ReturnType<typeof setTimeout> | null = null;
+let retryingSync = false;
 let lastSyncError = '';
 const syncListeners = new Set<(s: { status: 'idle' | 'syncing' | 'success' | 'error'; message?: string }) => void>();
 
@@ -66,6 +113,8 @@ export const schoolDriveDbService = {
           local.removeItem(k);
         }
       });
+      // Changes queued for the previous school folder must never be sent to the new one
+      QUEUE_KEYS.forEach(k => queue?.removeItem(k));
       local.setItem(OWNER_KEY, folderId);
     } catch (_) {}
     return true;
@@ -73,8 +122,8 @@ export const schoolDriveDbService = {
 
   /** Số tài khoản / trường Quản trị vừa tạo, sửa nhưng CHƯA lưu được lên Drive */
   getUnsyncedCount(): number {
-    const d = readJson<{ users: string[]; schools: string[] }>(session, DIRTY_KEY, { users: [], schools: [] });
-    const del = readJson<{ users: string[]; schools: string[] }>(session, PENDING_DELETES_KEY, { users: [], schools: [] });
+    const d = readJson<{ users: string[]; schools: string[] }>(queue, DIRTY_KEY, { users: [], schools: [] });
+    const del = readJson<{ users: string[]; schools: string[] }>(queue, PENDING_DELETES_KEY, { users: [], schools: [] });
     return d.users.length + d.schools.length + del.users.length + del.schools.length;
   },
   getLastSyncError(): string {
@@ -156,14 +205,7 @@ export const schoolDriveDbService = {
         };
         this.upsertLocalUsers([user]);
         if (Array.isArray(data.schools)) this.mergeLocalSchools(data.schools);
-        if (user.role === 'admin' || user.role === 'school_admin' || user.isSchoolAdmin) {
-          this.rememberAdminAuth(user.username, password);
-        }
-        if (user.role === 'admin' || user.role === 'school_admin' || user.isSchoolAdmin || user.role === 'bgh' || user.isBgh) {
-          try { sessionStorage.setItem('lhhp_staff_viewer_auth', JSON.stringify({ username: user.username.trim().toLowerCase(), password })); } catch (_) { /* ignore */ }
-          // Nhớ trên máy tới khi Đăng xuất → không hỏi lại mật khẩu khi xem chấm công / ghi CSDL
-          saveManagerAuth(user.username, password, user.role === 'admin' || user.role === 'school_admin' || Boolean(user.isSchoolAdmin));
-        }
+        this.rememberLoginSecrets(user, password);
         return { status: 'ok', user, schools: data.schools || [] };
       }
       const code = String(data?.code || '');
@@ -190,10 +232,27 @@ export const schoolDriveDbService = {
     }
   },
 
+  /**
+   * Management accounts: keep the password for this session so later Apps Script calls can be signed.
+   * Used after an online sign-in and after an offline sign-in (so queued changes can be pushed once the
+   * internet is back without asking for the password again).
+   */
+  rememberLoginSecrets(user: UserAccount, password: string) {
+    if (user.role === 'admin' || user.role === 'school_admin' || user.isSchoolAdmin) {
+      this.rememberAdminAuth(user.username, password);
+    }
+    if (user.role === 'admin' || user.role === 'school_admin' || user.isSchoolAdmin || user.role === 'bgh' || user.isBgh) {
+      try { sessionStorage.setItem('lhhp_staff_viewer_auth', JSON.stringify({ username: user.username.trim().toLowerCase(), password })); } catch (_) { /* ignore */ }
+      // Nhớ trên máy tới khi Đăng xuất → không hỏi lại mật khẩu khi xem chấm công / ghi CSDL
+      saveManagerAuth(user.username, password, user.role === 'admin' || user.role === 'school_admin' || Boolean(user.isSchoolAdmin));
+    }
+  },
+
   async changePassword(username: string, oldPassword: string, newPassword: string): Promise<{ success: boolean; message: string }> {
     try {
       const data = await this.callScript({ action: 'changePassword', username, oldPassword, newPassword });
       if (data?.success) {
+        void offlineAuthService.updatePassword(username, newPassword);
         const auth = this.getAdminAuth();
         if (auth && auth.username === username.trim().toLowerCase()) this.rememberAdminAuth(username, newPassword);
         this.upsertLocalUsers([{ ...(data.user || {}), username: username.trim().toLowerCase(), mustChangePassword: false } as UserAccount]);
@@ -221,48 +280,47 @@ export const schoolDriveDbService = {
     clearManagerAuth();
     try {
       session?.removeItem(ADMIN_SECRET_KEY);
-      session?.removeItem(PENDING_PASSWORDS_KEY);
-      session?.removeItem(PENDING_DELETES_KEY);
-      session?.removeItem(DIRTY_KEY);
+      // The queue of changes not yet saved to Drive is KEPT (see `queue` above): it is sent after the next
+      // Quản trị sign-in. Dropping it here lost every account change made offline before signing out.
     } catch (_) {}
   },
 
   // ---------------- Mật khẩu vừa cấp (chỉ trên máy Quản trị) ----------------
   /** Đánh dấu tài khoản / trường vừa được Quản trị tạo hoặc sửa — chỉ những mục này được gửi lên Drive */
   markUserDirty(username: string) {
-    const d = readJson<{ users: string[]; schools: string[] }>(session, DIRTY_KEY, { users: [], schools: [] });
+    const d = readJson<{ users: string[]; schools: string[] }>(queue, DIRTY_KEY, { users: [], schools: [] });
     const key = String(username || '').trim().toLowerCase();
     if (key && !d.users.includes(key)) d.users.push(key);
-    writeJson(session, DIRTY_KEY, d);
+    writeJson(queue, DIRTY_KEY, d);
   },
   markSchoolDirty(idOrName: string) {
-    const d = readJson<{ users: string[]; schools: string[] }>(session, DIRTY_KEY, { users: [], schools: [] });
+    const d = readJson<{ users: string[]; schools: string[] }>(queue, DIRTY_KEY, { users: [], schools: [] });
     const key = String(idOrName || '').trim();
     if (key && !d.schools.includes(key)) d.schools.push(key);
-    writeJson(session, DIRTY_KEY, d);
+    writeJson(queue, DIRTY_KEY, d);
   },
 
   setPendingPassword(username: string, password: string) {
     const key = username.trim().toLowerCase();
     if (!key || !password) return;
     this.markUserDirty(key);
-    const pending = readJson<Record<string, string>>(session, PENDING_PASSWORDS_KEY, {});
+    const pending = readJson<Record<string, string>>(queue, PENDING_PASSWORDS_KEY, {});
     pending[key] = password;
-    writeJson(session, PENDING_PASSWORDS_KEY, pending);
+    writeJson(queue, PENDING_PASSWORDS_KEY, pending);
     const issued = readJson<Record<string, string>>(session, ISSUED_CREDENTIALS_KEY, {});
     issued[key] = password;
     writeJson(session, ISSUED_CREDENTIALS_KEY, issued);
   },
   markUserDeleted(username: string) {
-    const d = readJson<{ users: string[]; schools: string[] }>(session, PENDING_DELETES_KEY, { users: [], schools: [] });
+    const d = readJson<{ users: string[]; schools: string[] }>(queue, PENDING_DELETES_KEY, { users: [], schools: [] });
     const key = username.trim().toLowerCase();
     if (key && !d.users.includes(key)) d.users.push(key);
-    writeJson(session, PENDING_DELETES_KEY, d);
+    writeJson(queue, PENDING_DELETES_KEY, d);
   },
   markSchoolDeleted(schoolId: string) {
-    const d = readJson<{ users: string[]; schools: string[] }>(session, PENDING_DELETES_KEY, { users: [], schools: [] });
+    const d = readJson<{ users: string[]; schools: string[] }>(queue, PENDING_DELETES_KEY, { users: [], schools: [] });
     if (schoolId && !d.schools.includes(schoolId)) d.schools.push(schoolId);
-    writeJson(session, PENDING_DELETES_KEY, d);
+    writeJson(queue, PENDING_DELETES_KEY, d);
   },
   /** Ghi mật khẩu hiện tại (Quản trị nhận từ Drive) để hiển thị / xuất Excel — không gửi lại lên Drive */
   setIssuedPassword(username: string, password: string) {
@@ -293,15 +351,42 @@ export const schoolDriveDbService = {
       byName.set(key, { ...(byName.get(key) || {}), ...safe, username: key });
     });
     writeJson(local, USERS_KEY, Array.from(byName.values()));
+    scheduleAccountsMirror();
   },
   replaceLocalUsers(users: Partial<UserAccount>[]) {
     writeJson(local, USERS_KEY, users.map(u => {
       const { password: _omit, ...safe } = u as any;
       return safe;
     }));
+    scheduleAccountsMirror();
   },
   replaceLocalSchools(schools: Partial<SchoolEntity>[]) {
     writeJson(local, SCHOOLS_KEY, schools.filter(x => x?.name));
+    scheduleAccountsMirror();
+  },
+
+  /**
+   * 📴 Desktop build: this PC's account / school lists are empty (browser storage was cleared) → bring them
+   * back from the copy in the offline folder. Never overwrites lists that already have content.
+   */
+  async restoreListsFromOfflineFolder(): Promise<boolean> {
+    if (!offlineStoreService.isAvailable()) return false;
+    const hasUsers = readJson<any[]>(local, USERS_KEY, []).length > 0;
+    const hasSchools = readJson<any[]>(local, SCHOOLS_KEY, []).length > 0;
+    if (hasUsers && hasSchools) return false;
+    const saved = await offlineStoreService.readSchoolFile<{ users?: any[]; schools?: any[] }>(ACCOUNTS_MIRROR_FILE);
+    if (!saved) return false;
+    if (!hasUsers && Array.isArray(saved.data.users) && saved.data.users.length > 0) writeJson(local, USERS_KEY, saved.data.users);
+    if (!hasSchools && Array.isArray(saved.data.schools) && saved.data.schools.length > 0) writeJson(local, SCHOOLS_KEY, saved.data.schools);
+    return true;
+  },
+
+  /** Send the queued account / school changes when there is something to send, a Quản trị session and a network */
+  async retryPendingSync(): Promise<void> {
+    if (retryingSync || !this.isConfigured() || this.getUnsyncedCount() === 0 || !this.getAdminAuth()) return;
+    if (typeof navigator !== 'undefined' && navigator.onLine === false) return;
+    retryingSync = true;
+    try { await this.syncNow(); } catch (_) { /* next round */ } finally { retryingSync = false; }
   },
   mergeLocalSchools(schools: Partial<SchoolEntity>[]) {
     const list = readJson<any[]>(local, SCHOOLS_KEY, []);
@@ -341,9 +426,9 @@ export const schoolDriveDbService = {
       this.notify({ status: 'error', message: msg });
       return { success: false, message: msg };
     }
-    const pending = readJson<Record<string, string>>(session, PENDING_PASSWORDS_KEY, {});
-    const dirty = readJson<{ users: string[]; schools: string[] }>(session, DIRTY_KEY, { users: [], schools: [] });
-    const deletes = readJson<{ users: string[]; schools: string[] }>(session, PENDING_DELETES_KEY, { users: [], schools: [] });
+    const pending = readJson<Record<string, string>>(queue, PENDING_PASSWORDS_KEY, {});
+    const dirty = readJson<{ users: string[]; schools: string[] }>(queue, DIRTY_KEY, { users: [], schools: [] });
+    const deletes = readJson<{ users: string[]; schools: string[] }>(queue, PENDING_DELETES_KEY, { users: [], schools: [] });
     // Chỉ gửi đúng các tài khoản / trường Quản trị vừa tạo hoặc sửa (không gửi dữ liệu cũ còn trong trình duyệt)
     const users = readJson<any[]>(local, USERS_KEY, [])
       .filter(u => u?.username && dirty.users.includes(String(u.username).toLowerCase()))
@@ -367,15 +452,15 @@ export const schoolDriveDbService = {
         // Chỉ xóa đánh dấu của những mục đã gửi (mục thêm trong lúc chờ vẫn được gửi lần sau)
         const sentUsers = new Set(users.map(u => u.username));
         const sentSchools = new Set(schools.flatMap(sc => [String(sc.id || ''), String(sc.name).trim()]));
-        const nowDirty = readJson<{ users: string[]; schools: string[] }>(session, DIRTY_KEY, { users: [], schools: [] });
-        writeJson(session, DIRTY_KEY, {
+        const nowDirty = readJson<{ users: string[]; schools: string[] }>(queue, DIRTY_KEY, { users: [], schools: [] });
+        writeJson(queue, DIRTY_KEY, {
           users: nowDirty.users.filter(k => !sentUsers.has(k)),
           schools: nowDirty.schools.filter(k => !sentSchools.has(k))
         });
-        const nowPending = readJson<Record<string, string>>(session, PENDING_PASSWORDS_KEY, {});
+        const nowPending = readJson<Record<string, string>>(queue, PENDING_PASSWORDS_KEY, {});
         sentUsers.forEach(k => { delete nowPending[k]; });
-        writeJson(session, PENDING_PASSWORDS_KEY, nowPending);
-        writeJson(session, PENDING_DELETES_KEY, { users: [], schools: [] });
+        writeJson(queue, PENDING_PASSWORDS_KEY, nowPending);
+        writeJson(queue, PENDING_DELETES_KEY, { users: [], schools: [] });
         // Drive là nguồn chuẩn: thay danh sách trường + tài khoản trên máy bằng bản trên Drive
         this.applyAuthoritative(data.users, data.schools);
         this.notify({ status: 'success', message: data.message });
@@ -394,7 +479,7 @@ export const schoolDriveDbService = {
   /** Thay dữ liệu trên máy bằng CSDL trên Drive (giữ tài khoản cá nhân/vãng lai và mục chưa kịp gửi) */
   applyAuthoritative(driveUsers?: any[], driveSchools?: any[]) {
     if (Array.isArray(driveUsers)) driveUsers = [...driveUsers];
-    const dirty = readJson<{ users: string[]; schools: string[] }>(session, DIRTY_KEY, { users: [], schools: [] });
+    const dirty = readJson<{ users: string[]; schools: string[] }>(queue, DIRTY_KEY, { users: [], schools: [] });
     const localUsers = readJson<any[]>(local, USERS_KEY, []);
     if (Array.isArray(driveUsers)) {
       // Mật khẩu hiện tại (chỉ Quản trị nhận được): giữ trong phiên, không lưu vào danh sách tài khoản
@@ -512,3 +597,12 @@ export const schoolDriveDbService = {
     }
   }
 };
+
+// Queued account / school changes are retried on their own: when the network comes back, once the Quản trị
+// account list has been pulled after sign-in, and once a minute while something is still waiting.
+if (typeof window !== 'undefined') {
+  const retry = () => { schoolDriveDbService.retryPendingSync().catch(() => { /* next round */ }); };
+  window.addEventListener('online', () => setTimeout(retry, 3000));
+  window.addEventListener('lhhp:admin-users-pulled', () => setTimeout(retry, 1500));
+  setInterval(retry, 60000);
+}

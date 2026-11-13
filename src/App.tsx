@@ -25,6 +25,8 @@ import { AppsScriptSetupWizard } from './components/modals/AppsScriptSetupWizard
 import { ReinitSchoolDbModal } from './components/modals/ReinitSchoolDbModal';
 import { QuizStorageModal } from './components/modals/QuizStorageModal';
 import { DesktopUpdateNotice } from './components/common/DesktopUpdate';
+import { OfflineSetupWizard } from './components/common/OfflineSetupWizard';
+import { OfflineStatusNotice } from './components/common/OfflineStatusNotice';
 import { schoolDriveDbService } from './services/schoolDriveDbService';
 import { CommandPalette } from './components/layout/CommandPalette';
 import { OPEN_CHANGE_PASSWORD_EVENT } from './components/modals/ChangePasswordModal';
@@ -473,6 +475,9 @@ function ClassroomApp() {
       {/* 📚 Nơi lưu câu hỏi cá nhân của giáo viên (mở từ nhóm Hệ thống) */}
       <QuizStorageModal />
       <DesktopUpdateNotice />
+      {/* First-run setup of the desktop build (school connection + offline data folder); nothing on the web */}
+      <OfflineSetupWizard />
+      <OfflineStatusNotice currentUser={currentUser} />
 
       {/* Cấu Hình & Lựa Chọn Vai Trò Cài Đặt Desktop (CSDL_LHHP.exe) */}
       <DesktopRoleSetupModal

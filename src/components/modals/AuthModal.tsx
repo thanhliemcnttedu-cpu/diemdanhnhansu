@@ -14,6 +14,7 @@ import { useClassroom } from '../../context/ClassroomContext';
 import { databaseService } from '../../services/databaseService';
 import { googleDriveService } from '../../services/googleDriveService';
 import { schoolDriveDbService } from '../../services/schoolDriveDbService';
+import { offlineAuthService } from '../../services/offlineAuthService';
 import { appsScriptSetupService } from '../../services/appsScriptSetupService';
 import { StaffCheckInQrModal } from '../views/staff/StaffCheckInQr';
 import { staffAttendanceService } from '../../services/staffAttendanceService';
@@ -91,10 +92,19 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     const res = await schoolDriveDbService.listSchools();
     setDriveChecking(false);
     if (res.success && res.message === 'offline-cache') {
-      // Không gọi được Apps Script: KHÔNG báo "đã kết nối" bằng thông tin lưu trên máy
-      setDriveInitialized(false);
       setSchools(res.schools);
-      setDriveNotice('Không kết nối được Apps Script — bấm Đổi để kiểm tra link');
+      if (offlineAuthService.hasRecords()) {
+        // Bản cài đặt, mất mạng: tài khoản đã từng đăng nhập trên máy này vẫn đăng nhập được (ngoại tuyến)
+        setDriveInitialized(res.initialized);
+        setDriveNotice('Đang ngoại tuyến — đăng nhập được bằng tài khoản đã từng đăng nhập trên máy này');
+        if (res.schools.length > 0 && !res.schools.some(s => s.name === selectedSchoolName)) {
+          setSelectedSchoolName(res.schools[0].name);
+        }
+      } else {
+        // Không gọi được Apps Script: KHÔNG báo "đã kết nối" bằng thông tin lưu trên máy
+        setDriveInitialized(false);
+        setDriveNotice('Không kết nối được Apps Script — bấm Đổi để kiểm tra link');
+      }
     } else if (res.success) {
       setDriveInitialized(res.initialized);
       setDriveNotice(res.initialized ? '' : 'Thư mục dùng chung chưa có cơ sở dữ liệu trường. Quản trị đăng nhập để khởi tạo trường và cấp tài khoản.');
@@ -250,7 +260,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       refreshSchoolList();
     };
     window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
+    // Network came back / went away → re-check the school connection (unlocks or relabels the role choices)
+    window.addEventListener('online', handleStorageChange);
+    window.addEventListener('offline', handleStorageChange);
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('online', handleStorageChange);
+      window.removeEventListener('offline', handleStorageChange);
+    };
   }, []);
 
   if (!isOpen) return null;

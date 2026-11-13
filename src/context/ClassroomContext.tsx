@@ -29,6 +29,7 @@ import {
 import { playCoinSound, playDeductSound } from '../utils/audio';
 import { DEFAULT_QUESTIONS, loadQuizBank, saveQuizBank, smartMergeQuizBank } from '../utils/quizParser';
 import { databaseService, FALLBACK_USERS, LOCAL_AUTH_KEY, LOCAL_DB_PREFIX, LOCAL_SESSION_KEY, getApiBaseUrl, notifyDataRefreshed } from '../services/databaseService';
+import { offlineStoreService } from '../services/offlineStoreService';
 import { AvatarSourceType, getStudentAvatarAssignment, sanitizeStudentAvatar } from '../utils/avatarConfig';
 import { getOfficialDisplayName, getOfficialRoleTitle, ACCOUNT_IDENTITY_MAP, isRestrictedAdminOrBgh } from '../utils/accountIdentity';
 import { extractSchoolBranchesFromClasses } from '../utils/schoolBranchHelper';
@@ -38,7 +39,7 @@ import {
   SchoolLevelAiSummary, 
   SystemLevelAiSummary 
 } from '../services/aiHierarchySynthesizer';
-import { googleDriveService, LOCAL_DRIVE_CONFIG_KEY } from '../services/googleDriveService';
+import { googleDriveService, LOCAL_DRIVE_CONFIG_KEY, DRIVE_MERGED_EVENT } from '../services/googleDriveService';
 import { schoolDriveDbService } from '../services/schoolDriveDbService';
 import { adminEditsService } from '../services/adminEditsService';
 import { getAppliedAdminEdits, mergeAppliedAdminEdits } from '../services/adminEditsStore';
@@ -352,8 +353,15 @@ export const ClassroomProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         user.isGuestAdmin
       );
       if (!isExecutive) {
-        const currentData = getCurrentUserData();
+        // This effect runs once, so calling getCurrentUserData() here would read the state of the FIRST render
+        // and overwrite the local copy with it (losing the whole session's changes). The ref is refreshed on
+        // every render → always the latest state. Nothing is saved before the account's data has been loaded.
+        if (!isRemoteDataLoadedRef.current) return;
+        const currentData: UserClassroomData = { ...currentDataGetterRef.current(), updatedAt: Date.now() };
+        if (!Array.isArray(currentData.classes) || currentData.classes.length === 0) return;
         databaseService.saveUserData(user.username, currentData);
+        // Desktop build: write the copy in the offline folder right away (the page is about to go away)
+        void offlineStoreService.flushMirrors();
       }
     };
 
@@ -1898,6 +1906,24 @@ export const ClassroomProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       window.removeEventListener('focus', onFocus);
       document.removeEventListener('visibilitychange', onFocus);
     };
+  }, [currentUser?.username]);
+
+  // After an offline period the catch-up push merges what another PC saved meanwhile (googleDriveService
+  // .pushAfterMergingRemote). Show those records in the running app as well, unless the user is editing right now
+  // (then they arrive with the next start / sync round).
+  useEffect(() => {
+    if (!currentUser) return;
+    const onMerged = (e: Event) => {
+      const detail = (e as CustomEvent).detail as { username?: string; data?: UserClassroomData } | undefined;
+      const user = currentUserRef.current;
+      if (!user || !detail?.data || String(detail.username || '').toLowerCase() !== user.username.toLowerCase() || isViewOnly()) return;
+      if (Date.now() - lastLocalChangeAtRef.current < LOCAL_EDIT_QUIET_MS) return;
+      markRemoteUpdateActive(1200);
+      applyUserClassroomData(detail.data);
+    };
+    window.addEventListener(DRIVE_MERGED_EVENT, onMerged);
+    return () => window.removeEventListener(DRIVE_MERGED_EVENT, onMerged);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentUser?.username]);
 
   // Kiểm tra thời hạn phiên đăng nhập 300 phút liên tục

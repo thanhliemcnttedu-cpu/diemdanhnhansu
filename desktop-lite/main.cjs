@@ -162,6 +162,139 @@ function setupUpdater() {
   });
 }
 
+// ───────────────────────── Offline data folder ─────────────────────────
+// One folder on this PC, chosen by the user at setup, where the app keeps a working copy of its data so it can
+// run without internet. The page only ever passes a RELATIVE path; every path is confined to the chosen folder.
+const OFFLINE_MAX_BYTES = 64 * 1024 * 1024;
+const offlineConfigFile = () => path.join(app.getPath('userData'), 'offline-folder.json');
+const suggestedOfflineDir = () => path.join(app.getPath('documents'), 'LopHocHanhPhuc_DuLieu');
+
+function readOfflineDir() {
+  try {
+    const dir = String(JSON.parse(fs.readFileSync(offlineConfigFile(), 'utf8')).dir || '');
+    return dir && path.isAbsolute(dir) ? path.normalize(dir) : '';
+  } catch (_) { return ''; }
+}
+
+/** Relative path → absolute path inside the offline folder, or null when it is not acceptable */
+function resolveOfflinePath(rel, { allowDir = false } = {}) {
+  const dir = readOfflineDir();
+  if (!dir) return null;
+  const clean = String(rel == null ? '' : rel).replace(/\\/g, '/').replace(/^\/+|\/+$/g, '');
+  if (!clean) return allowDir ? dir : null;
+  if (clean.length > 240 || /[<>:"|?*\u0000-\u001f]/.test(clean)) return null;
+  if (clean.split('/').some(part => !part || part === '.' || part === '..' || /[. ]$/.test(part))) return null;
+  if (!allowDir && !/\.(json|txt)$/i.test(clean)) return null;
+  const full = path.normalize(path.join(dir, clean));
+  return full.startsWith(dir + path.sep) ? full : null;
+}
+
+async function offlineFolderInfo() {
+  const dir = readOfflineDir();
+  const info = { dir, exists: false, writable: false, suggested: suggestedOfflineDir() };
+  if (!dir) return info;
+  try {
+    info.exists = (await fs.promises.stat(dir)).isDirectory();
+    if (info.exists) {
+      const probe = path.join(dir, `.lhhp-write-test-${process.pid}`);
+      await fs.promises.writeFile(probe, 'ok');
+      await fs.promises.unlink(probe);
+      info.writable = true;
+    }
+  } catch (_) { /* missing folder / removed drive / no permission */ }
+  return info;
+}
+
+async function setOfflineDir(dir) {
+  const target = path.normalize(String(dir || ''));
+  if (!target || !path.isAbsolute(target)) return { ok: false, error: 'INVALID' };
+  try {
+    await fs.promises.mkdir(target, { recursive: true });
+    const probe = path.join(target, `.lhhp-write-test-${process.pid}`);
+    await fs.promises.writeFile(probe, 'ok');
+    await fs.promises.unlink(probe);
+  } catch (_) { return { ok: false, error: 'NOT_WRITABLE' }; }
+  fs.writeFileSync(offlineConfigFile(), JSON.stringify({ dir: target, at: new Date().toISOString() }));
+  return { ok: true, ...(await offlineFolderInfo()) };
+}
+
+function setupOfflineFolder() {
+  const fromApp = (event) => String(event.senderFrame && event.senderFrame.url || '').startsWith(APP_ORIGIN);
+  const guard = (fn) => async (event, ...args) => {
+    if (!fromApp(event)) return null;
+    try { return await fn(...args); } catch (err) { return { ok: false, error: String(err && err.code || 'FAILED') }; }
+  };
+
+  ipcMain.handle('lhhp-offline:info', guard(() => offlineFolderInfo()));
+  // The user picks the folder in the system dialog; the page never supplies an absolute path of its own
+  ipcMain.handle('lhhp-offline:choose', guard(async () => {
+    const { dialog } = require('electron');
+    const res = await dialog.showOpenDialog(mainWindow, {
+      title: 'Chọn thư mục lưu dữ liệu ngoại tuyến',
+      buttonLabel: 'Chọn thư mục này',
+      defaultPath: readOfflineDir() || app.getPath('documents'),
+      properties: ['openDirectory', 'createDirectory'],
+    });
+    if (res.canceled || !res.filePaths[0]) return { ok: false, error: 'CANCELED' };
+    return setOfflineDir(res.filePaths[0]);
+  }));
+  ipcMain.handle('lhhp-offline:use-suggested', guard(() => setOfflineDir(suggestedOfflineDir())));
+  ipcMain.handle('lhhp-offline:open', guard(async () => {
+    const dir = readOfflineDir();
+    if (!dir) return { ok: false, error: 'NO_FOLDER' };
+    const err = await shell.openPath(dir);
+    return err ? { ok: false, error: 'FAILED' } : { ok: true };
+  }));
+
+  ipcMain.handle('lhhp-offline:read', guard(async (rel) => {
+    const file = resolveOfflinePath(rel);
+    if (!file) return { ok: false, error: 'BAD_PATH' };
+    try {
+      const st = await fs.promises.stat(file);
+      if (st.size > OFFLINE_MAX_BYTES) return { ok: false, error: 'TOO_LARGE' };
+      return { ok: true, text: await fs.promises.readFile(file, 'utf8'), mtimeMs: st.mtimeMs };
+    } catch (err) {
+      return { ok: false, error: err && err.code === 'ENOENT' ? 'NOT_FOUND' : String(err && err.code || 'FAILED') };
+    }
+  }));
+  // Atomic write: a power cut can leave the old file or the new file, never half a file
+  ipcMain.handle('lhhp-offline:write', guard(async (rel, text) => {
+    const file = resolveOfflinePath(rel);
+    if (!file) return { ok: false, error: 'BAD_PATH' };
+    const data = String(text == null ? '' : text);
+    if (Buffer.byteLength(data, 'utf8') > OFFLINE_MAX_BYTES) return { ok: false, error: 'TOO_LARGE' };
+    await fs.promises.mkdir(path.dirname(file), { recursive: true });
+    const tmp = `${file}.${process.pid}.tmp`;
+    await fs.promises.writeFile(tmp, data, 'utf8');
+    await fs.promises.rename(tmp, file);
+    return { ok: true };
+  }));
+  ipcMain.handle('lhhp-offline:list', guard(async (relDir) => {
+    const dir = resolveOfflinePath(relDir, { allowDir: true });
+    if (!dir) return { ok: false, error: 'BAD_PATH' };
+    let names = [];
+    try { names = await fs.promises.readdir(dir); } catch (err) {
+      if (err && err.code === 'ENOENT') return { ok: true, files: [] };
+      throw err;
+    }
+    const files = [];
+    for (const name of names) {
+      if (!/\.(json|txt)$/i.test(name)) continue;
+      try {
+        const st = await fs.promises.stat(path.join(dir, name));
+        if (st.isFile()) files.push({ name, size: st.size, mtimeMs: st.mtimeMs });
+      } catch (_) { /* vanished meanwhile */ }
+    }
+    return { ok: true, files };
+  }));
+  ipcMain.handle('lhhp-offline:remove', guard(async (rel) => {
+    const file = resolveOfflinePath(rel);
+    if (!file) return { ok: false, error: 'BAD_PATH' };
+    try { await fs.promises.unlink(file); } catch (err) { if (!err || err.code !== 'ENOENT') throw err; }
+    return { ok: true };
+  }));
+}
+
 const gotLock = app.requestSingleInstanceLock();
 if (!gotLock) {
   app.quit();
@@ -176,6 +309,7 @@ if (!gotLock) {
   app.whenReady().then(() => {
     Menu.setApplicationMenu(null);
     setupUpdater();
+    setupOfflineFolder();
     registerAppProtocol();
     // Cho phép camera (dò khuôn mặt, chụp ảnh lớp), toàn màn hình, thông báo, sao chép
     const allowed = new Set(['media', 'fullscreen', 'notifications', 'clipboard-sanitized-write', 'clipboard-read']);

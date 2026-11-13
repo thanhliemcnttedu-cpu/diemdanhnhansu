@@ -36,7 +36,25 @@ export interface AdminEditEntry {
 export type AdminEditEntries = Record<string, AdminEditEntry>;
 
 const known = { class: new Map<string, any>(), student: new Map<string, any>() };
-let pending: AdminEditEntries = {};
+// Adjustments not yet written to Drive. Kept in localStorage as well (per school folder) so that closing the
+// app while offline does not lose them; they are sent on the next start / when the network is back.
+const PENDING_STORE_PREFIX = 'lhhp_admin_edits_pending:';
+const pendingStoreKey = () => PENDING_STORE_PREFIX + (String(googleDriveService.getConfig().folderId || '').trim() || 'default');
+const loadStoredPending = (): AdminEditEntries => {
+  try {
+    const raw = JSON.parse(localStorage.getItem(pendingStoreKey()) || 'null');
+    return raw && typeof raw === 'object' ? raw as AdminEditEntries : {};
+  } catch (_) { return {}; }
+};
+/** `extra` = a batch being sent right now (still unconfirmed, so it stays in the stored copy) */
+const storePending = (extra?: AdminEditEntries) => {
+  try {
+    const all = { ...(extra || {}), ...pending };
+    if (Object.keys(all).length === 0) localStorage.removeItem(pendingStoreKey());
+    else localStorage.setItem(pendingStoreKey(), JSON.stringify(all));
+  } catch (_) { /* storage full: the in-memory queue still retries while the app is open */ }
+};
+let pending: AdminEditEntries = typeof localStorage !== 'undefined' ? loadStoredPending() : {};
 let flushTimer: ReturnType<typeof setTimeout> | null = null;
 let flushChain: Promise<void> = Promise.resolve();
 let cache: { at: number; entries: AdminEditEntries } | null = null;
@@ -183,18 +201,23 @@ export const adminEditsService = {
     }
     const k = keyOf(kind, obj.id);
     pending[k] = combine(pending[k], entry);
+    storePending();
     if (cache) cache = { at: cache.at, entries: { ...cache.entries, [k]: combine(cache.entries[k], entry) } };
     scheduleFlush();
   },
 
   /** Ghi các điều chỉnh đang chờ lên Drive (đọc – gộp – ghi). Lỗi thì giữ lại để thử lại. */
   async flush(): Promise<void> {
+    // Only a signed-in management account writes the file (stored entries may come from an earlier session
+    // and simply wait for the next one)
+    if (!this.isActive()) return;
     const batch = pending;
     const doPrune = pruneRequested;
     if (Object.keys(batch).length === 0 && !doPrune) return;
     pending = {};
     pruneRequested = false;
     try {
+      if (typeof navigator !== 'undefined' && navigator.onLine === false) throw new Error('Đang ngoại tuyến.');
       const remote = await fetchFile();
       const merged: AdminEditEntries = { ...remote };
       for (const [k, e] of Object.entries(batch)) merged[k] = combine(merged[k], e);
@@ -209,8 +232,10 @@ export const adminEditsService = {
       await postFile(merged);
       if (doPrune) lastPruneAt = Date.now();
       cache = { at: Date.now(), entries: merged };
+      storePending(); // the batch is on Drive now → only entries added meanwhile stay stored
     } catch (err) {
       for (const [k, e] of Object.entries(batch)) pending[k] = combine(pending[k], e);
+      storePending();
       console.warn('adminEdits flush error:', err);
       scheduleFlush(10000);
     }
@@ -380,3 +405,12 @@ export const schoolBranchesDrive = {
     branchesCache = { at: Date.now(), schools };
   }
 };
+
+// Adjustments stored from an earlier session / an offline period are sent on their own: when the network is
+// back, and once a minute while something is waiting and a management account is signed in.
+if (typeof window !== 'undefined') {
+  const retry = () => { if (Object.keys(pending).length > 0 && adminEditsService.isActive()) scheduleFlush(0); };
+  window.addEventListener('online', () => setTimeout(retry, 3000));
+  setInterval(retry, 60000);
+  setTimeout(retry, 8000);
+}
