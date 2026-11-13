@@ -215,6 +215,12 @@ export const AdminRealtimeDashboardView: React.FC = () => {
 
   const excludedSubjectClassesCount = classes.length - homeroomClasses.length;
 
+  // Total enrolment of the whole school (homeroom classes, no filter) — denominator of the school-wide rate
+  const schoolTotalStudents = useMemo(() => {
+    const ids = new Set(homeroomClasses.map(c => c.id));
+    return students.filter(s => ids.has(s.classId)).length;
+  }, [homeroomClasses, students]);
+
   // Tự động trích xuất danh sách Phân hiệu & Điểm trường (Kết hợp chuẩn từ Cấu hình trường & Thực tế các lớp GVCN)
   const availableBranches = useMemo(() => {
     const set = new Set<string>();
@@ -360,9 +366,13 @@ export const AdminRealtimeDashboardView: React.FC = () => {
     const totalLogged = present + absentTotal;
     const daysCount = datesWithData.size;
 
-    const rate = totalLogged > 0 
-      ? Math.round((present / totalLogged) * 100) 
-      : (totalStudents > 0 && daysCount > 0 ? 100 : 0);
+    // School-wide rate: students present / total enrolment of the whole school (per day with data).
+    // Classes that have not reported count against the rate instead of being left out.
+    const enrolmentSlots = totalStudents * daysCount;
+    const rate = enrolmentSlots > 0
+      ? Math.min(100, Math.round((present / enrolmentSlots) * 1000) / 10)
+      : 0;
+    const notReported = Math.max(0, enrolmentSlots - totalLogged);
 
     const avgPresentPerDay = daysCount > 0 ? Math.round(present / daysCount) : 0;
     const avgAbsentPerDay = daysCount > 0 ? Math.round(absentTotal / daysCount) : 0;
@@ -375,6 +385,8 @@ export const AdminRealtimeDashboardView: React.FC = () => {
       sick,
       absentTotal,
       totalLogged,
+      enrolmentSlots,
+      notReported,
       rate,
       daysCount,
       avgPresentPerDay,
@@ -682,7 +694,7 @@ export const AdminRealtimeDashboardView: React.FC = () => {
       ['Tổng số lớp học', filteredClasses.length, `${filteredClasses.length} lớp`, 'Số lớp theo phạm vi lọc'],
       ['Tổng sĩ số học sinh', totalStudents, `${totalStudents} học sinh`, 'Toàn bộ học sinh chính thức'],
       ['Tổng học sinh có mặt', periodAttendance.present, generateAsciiBar(periodAttendance.rate), `Tỷ lệ chuyên cần đạt ${periodAttendance.rate}% (gồm ${periodAttendance.late} lượt đi muộn)`],
-      ['Tổng học sinh vắng mặt', periodAttendance.absentTotal, `${periodAttendance.totalLogged > 0 ? Math.round((periodAttendance.absentTotal / periodAttendance.totalLogged) * 100) : 0}%`, `Có phép: ${periodAttendance.excused} • Không phép: ${periodAttendance.unexcused} • Ốm: ${periodAttendance.sick}`],
+      ['Tổng học sinh vắng mặt', periodAttendance.absentTotal, `${periodAttendance.enrolmentSlots > 0 ? Math.round((periodAttendance.absentTotal / periodAttendance.enrolmentSlots) * 1000) / 10 : 0}%`, `Có phép: ${periodAttendance.excused} • Không phép: ${periodAttendance.unexcused} • Ốm: ${periodAttendance.sick}`],
       ['Tổng suất ăn bán trú', periodBoarding.eating, generateAsciiBar(periodBoarding.rate), `Tỷ lệ bán trú đạt ${periodBoarding.rate}% (TB ${periodBoarding.avgEatingPerDay} suất/ngày)`],
       ['Học sinh không ăn bán trú', periodBoarding.notEating, `${periodBoarding.totalLogged > 0 ? Math.round((periodBoarding.notEating / periodBoarding.totalLogged) * 100) : 0}%`, `Vắng ăn: ${periodBoarding.absentMeal} suất`],
       ['Tổng Xu thi đua toàn trường', totalCoins, `${avgCoins} xu / HS`, 'Điểm tích lũy khen thưởng rèn luyện'],
@@ -743,7 +755,8 @@ export const AdminRealtimeDashboardView: React.FC = () => {
 
     // Dòng tổng cộng cho Sheet 1
     const totalGradeLogged = sumGradePresent + sumGradeAbsent;
-    const totalGradeAttRate = totalGradeLogged > 0 ? Math.round((sumGradePresent / totalGradeLogged) * 100) : 0;
+    // Whole-school row: present / total enrolment (same rule as the on-screen card)
+    const totalGradeAttRate = totalGradeLogged > 0 ? periodAttendance.rate : 0;
     const totalGradeMealRate = sumGradeStudents > 0 ? Math.round((sumGradeMeals / sumGradeStudents) * 100) : 0;
     const totalGradeAvgCoins = sumGradeStudents > 0 ? (sumGradeCoins / sumGradeStudents).toFixed(1) : '0';
 
@@ -1187,6 +1200,11 @@ export const AdminRealtimeDashboardView: React.FC = () => {
                 </>
               )}
             </div>
+            {periodAttendance.notReported > 0 && (
+              <div className="mt-0.5 text-[12px] font-bold text-amber-700 whitespace-nowrap">
+                Chưa điểm danh: {periodAttendance.notReported} {timeframe === 'day' ? 'học sinh' : 'lượt'}
+              </div>
+            )}
           </div>
           <div className="mt-2 pt-2 border-t border-emerald-100 text-[12px] text-slate-500 font-bold flex items-center justify-between">
             <span>Phép: {periodAttendance.excused + periodAttendance.sick} • K.Phép: {periodAttendance.unexcused}</span>
@@ -1266,7 +1284,7 @@ export const AdminRealtimeDashboardView: React.FC = () => {
       </div>
 
       {/* 2b. Thống kê toàn trường từ Google Drive dùng chung (hôm nay / hôm qua / tuần / tháng) */}
-      <DriveAttendanceStatsPanel />
+      <DriveAttendanceStatsPanel schoolTotalStudents={schoolTotalStudents} />
 
       {/* 4. Biểu Đồ Tròn Trực Quan Sinh Động (Realtime Donut Charts) */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

@@ -2,7 +2,7 @@ import { STAFF_SYNC_MS, startJitteredLoop } from '../../../utils/liveSync';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import * as XLSX from 'xlsx';
 import {
-  UserCheck, RefreshCw, Download, Upload, Users, Link2, Copy, Check, Plus, KeyRound, Lock, Unlock, Trash2, Search, Loader2, ShieldAlert, TrendingUp, TrendingDown, Minus, Pencil, MapPin, CheckCircle2, Info, Eye, EyeOff, BookOpenCheck, ChevronLeft, ChevronRight,
+  UserCheck, RefreshCw, Download, Upload, Users, Link2, Copy, Check, Plus, KeyRound, Lock, Unlock, Trash2, Search, Loader2, ShieldAlert, TrendingUp, TrendingDown, Minus, Pencil, MapPin, CheckCircle2, Info, Eye, EyeOff, BookOpenCheck, ChevronLeft, ChevronRight, Save,
 } from 'lucide-react';
 import { useClassroom } from '../../../context/ClassroomContext';
 import {
@@ -1394,7 +1394,28 @@ const RosterPanel: React.FC<{ canManage: boolean; auth: { username: string; pass
 
 // ---------------------------------------------------------------- link điểm danh
 const LinkPanel: React.FC<{ schoolName: string; isBghOnly: boolean }> = ({ schoolName }) => {
+  // baseUrl = address in use (saved, or the page's own origin on the web build); draft = what is being typed
   const [baseUrl, setBaseUrl] = useState(() => staffAttendanceService.getWebBaseUrl());
+  const [draft, setDraft] = useState(baseUrl);
+  const [savedUrl, setSavedUrl] = useState(() => staffAttendanceService.getSavedWebBaseUrl());
+  const [urlNote, setUrlNote] = useState<{ ok: boolean; text: string } | null>(null);
+  const cleanDraft = draft.trim().replace(/\/+$/, '');
+  const draftValid = /^https?:\/\/[^/\s]+$/i.test(cleanDraft);
+  const saveUrl = () => {
+    if (!draftValid) {
+      setUrlNote({ ok: false, text: 'Địa chỉ chưa đúng. Hãy nhập dạng https://tentruong.vercel.app (không kèm đường dẫn phía sau).' });
+      return;
+    }
+    staffAttendanceService.setWebBaseUrl(cleanDraft);
+    setDraft(cleanDraft); setBaseUrl(cleanDraft); setSavedUrl(cleanDraft);
+    setUrlNote({ ok: true, text: 'Đã lưu địa chỉ trên máy này. Mã QR và link điểm danh bên dưới dùng địa chỉ này.' });
+  };
+  const clearUrl = () => {
+    staffAttendanceService.clearWebBaseUrl();
+    const fallback = staffAttendanceService.getWebBaseUrl(); // web build: the page's own address; desktop: empty
+    setDraft(fallback); setBaseUrl(fallback); setSavedUrl('');
+    setUrlNote({ ok: true, text: fallback ? 'Đã xóa địa chỉ đã lưu. Đang dùng địa chỉ của trang web đang mở.' : 'Đã xóa địa chỉ đã lưu trên máy này.' });
+  };
   const link = /^https?:\/\/[^/]+/i.test(baseUrl) ? staffAttendanceService.buildCheckInLink(schoolName, baseUrl) : null;
   const [copied, setCopied] = useState(false);
   const shareText = link ? `📋 ĐIỂM DANH GIÁO VIÊN – NHÂN VIÊN${schoolName ? ' ' + schoolName.toUpperCase() : ''}\nMỗi ngày làm việc, thầy cô mở link dưới đây, nhập số CCCD + mật khẩu điểm danh do nhà trường cấp:\n${link}\n(Chỉ điểm danh được cho ngày hôm nay.)` : '';
@@ -1402,8 +1423,25 @@ const LinkPanel: React.FC<{ schoolName: string; isBghOnly: boolean }> = ({ schoo
     <div className="space-y-3">
       <div className="rounded-3xl bg-white border border-slate-200 p-4 space-y-1.5">
         <label className="block text-sm font-black text-slate-800" htmlFor="school-web-url">Địa chỉ trang web của trường</label>
-        <input id="school-web-url" value={baseUrl} onChange={(e) => { setBaseUrl(e.target.value); staffAttendanceService.setWebBaseUrl(e.target.value); }}
-          placeholder="https://tentruong.vercel.app" className="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm font-mono" />
+        <form className="flex flex-wrap items-center gap-2" onSubmit={(e) => { e.preventDefault(); saveUrl(); }}>
+          <input id="school-web-url" value={draft} onChange={(e) => { setDraft(e.target.value); setUrlNote(null); }}
+            placeholder="https://tentruong.vercel.app" className="flex-1 min-w-[14rem] h-10 px-3 rounded-xl border border-slate-300 text-sm font-mono" />
+          <button type="submit" disabled={!cleanDraft || cleanDraft === savedUrl}
+            title={cleanDraft === savedUrl && savedUrl ? 'Địa chỉ này đã được lưu' : 'Lưu địa chỉ trang web của trường trên máy này'}
+            className="no-hover-fx h-10 px-4 rounded-xl bg-emerald-700 hover:bg-emerald-800 disabled:bg-slate-200 disabled:text-slate-500 text-white text-sm font-black inline-flex items-center gap-1.5 whitespace-nowrap">
+            <Save className="w-4 h-4" /> Lưu link
+          </button>
+          <button type="button" onClick={clearUrl} disabled={!savedUrl && !draft}
+            title="Xóa địa chỉ đã lưu trên máy này"
+            className="no-hover-fx h-10 px-4 rounded-xl bg-white border border-rose-300 hover:bg-rose-50 disabled:border-slate-200 disabled:text-slate-400 text-rose-700 text-sm font-black inline-flex items-center gap-1.5 whitespace-nowrap">
+            <Trash2 className="w-4 h-4" /> Xóa link
+          </button>
+        </form>
+        {urlNote ? (
+          <p role="status" className={`text-xs font-bold ${urlNote.ok ? 'text-emerald-700' : 'text-rose-700'}`}>{urlNote.text}</p>
+        ) : cleanDraft !== baseUrl.trim().replace(/\/+$/, '') ? (
+          <p className="text-xs font-bold text-amber-700">Địa chỉ vừa sửa chưa được lưu. Bấm Lưu link để áp dụng cho mã QR và link điểm danh.</p>
+        ) : null}
         <p className="text-xs text-slate-600">Bản web tự điền. Trên bản cài đặt máy tính, hãy nhập địa chỉ web Vercel của trường để tạo link điểm danh.</p>
       </div>
       {!link ? (

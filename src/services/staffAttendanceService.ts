@@ -228,6 +228,13 @@ export const staffAttendanceService = {
   setWebBaseUrl(url: string) {
     try { localStorage.setItem('lhhp_school_web_url', url.trim().replace(/\/+$/, '')); } catch (_) { /* ignore */ }
   },
+  /** Địa chỉ đã lưu trên máy này ('' khi chưa lưu) — khác getWebBaseUrl ở chỗ không tự lấy địa chỉ đang mở */
+  getSavedWebBaseUrl(): string {
+    try { return localStorage.getItem('lhhp_school_web_url') || ''; } catch (_) { return ''; }
+  },
+  clearWebBaseUrl() {
+    try { localStorage.removeItem('lhhp_school_web_url'); } catch (_) { /* ignore */ }
+  },
 
   /** 1.1.6: tài khoản phần mềm của giáo viên đang mở "Chấm công của tôi" — gửi kèm thay cho mật khẩu điểm danh */
   selfAccount: null as { username: string; password: string } | null,

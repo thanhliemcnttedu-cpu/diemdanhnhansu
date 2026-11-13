@@ -342,7 +342,7 @@ const HomeroomDashboard: React.FC<DashboardViewProps> = ({
 
       {/* 2b. BGH / Quản trị: thống kê chuyên cần & bán trú toàn trường từ Google Drive dùng chung */}
       {isManagementAccount && currentUser?.role !== 'guest_admin' && !currentUser?.isGuestAdmin && (
-        <DriveAttendanceStatsPanel />
+        <DriveAttendanceStatsPanel schoolTotalStudents={homeroomStudents.length} />
       )}
 
       {/* 3. 4 thẻ số liệu dạng thẻ màu hiện đại (số to, chữ trắng rõ, có thanh tiến độ) */}

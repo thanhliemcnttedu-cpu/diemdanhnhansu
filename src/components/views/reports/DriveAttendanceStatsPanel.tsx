@@ -50,7 +50,9 @@ const formatVN = (key: string) => {
 
 const pct = (num: number, den: number): number | null => (den > 0 ? Math.round((num / den) * 1000) / 10 : null);
 
-const computePeriods = (data: DriveRangeAggregate | null, now: Date): PeriodStats[] => {
+// schoolTotal = total enrolment of the whole school. The rate is present / (schoolTotal × days with data),
+// so classes that have not reported lower the rate instead of being left out.
+const computePeriods = (data: DriveRangeAggregate | null, now: Date, schoolTotal: number): PeriodStats[] => {
   const today = toLocalDateKey(now);
   const yesterday = toLocalDateKey(addDays(now, -1));
   const dow = (now.getDay() + 6) % 7; // Monday = 0
@@ -80,12 +82,14 @@ const computePeriods = (data: DriveRangeAggregate | null, now: Date): PeriodStat
       acc.boardingRegistered += t.boardingRegistered || 0;
       acc.boardingActual += t.boardingActual || 0;
     });
+    // Never below the reported headcount (class lists on this machine may lag behind Drive)
+    const enrolment = days > 0 ? Math.max(schoolTotal * days, acc.students) : acc.students;
     return {
       ...def,
       days,
-      attendanceRate: pct(acc.present, acc.students),
+      attendanceRate: pct(acc.present, enrolment),
       present: acc.present,
-      students: acc.students,
+      students: enrolment,
       absent: acc.excused + acc.unexcused,
       boardingRate: pct(acc.boardingActual, acc.boardingRegistered),
       boardingActual: acc.boardingActual,
@@ -94,7 +98,7 @@ const computePeriods = (data: DriveRangeAggregate | null, now: Date): PeriodStat
   });
 };
 
-export const DriveAttendanceStatsPanel: React.FC = () => {
+export const DriveAttendanceStatsPanel: React.FC<{ schoolTotalStudents?: number }> = ({ schoolTotalStudents = 0 }) => {
   const { currentUser, setIsGoogleDriveModalOpen } = useClassroom();
   const [data, setData] = useState<DriveRangeAggregate | null>(null);
   const [loading, setLoading] = useState(false);
@@ -161,7 +165,12 @@ export const DriveAttendanceStatsPanel: React.FC = () => {
 
   const now = new Date();
   const todayKey = toLocalDateKey(now);
-  const periods = useMemo(() => computePeriods(data, now), [data, todayKey]);
+  // Whole-school enrolment: the larger of the class lists held by this account and the class files on Drive
+  const schoolTotal = useMemo(() => {
+    const onDrive = (data?.classes || []).reduce((sum, c) => sum + (Number(c.totalStudents) || 0), 0);
+    return Math.max(schoolTotalStudents, onDrive);
+  }, [data, schoolTotalStudents]);
+  const periods = useMemo(() => computePeriods(data, now, schoolTotal), [data, todayKey, schoolTotal]);
 
   const classRows = useMemo(() => {
     if (!data) return [];
