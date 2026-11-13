@@ -189,11 +189,17 @@ export const StaffCheckInPage: React.FC<{ embedded?: boolean; presetCccd?: strin
           <form onSubmit={handleAuth} className="bg-white rounded-3xl border border-slate-200 shadow-sm p-5 space-y-4">
             <label className="block space-y-1.5">
               <span className="text-sm font-black text-slate-800">Số căn cước công dân</span>
+              {/* name lạ + autoComplete tắt: trình duyệt không tự điền tên đăng nhập phần mềm đã lưu (vd. "adminquantri") vào ô CCCD */}
               <input
                 value={cccd}
                 onChange={(e) => setCccd(e.target.value.replace(/[^\d\s]/g, '').slice(0, 15))}
                 inputMode="numeric"
+                name="lhhp-staff-id-number"
                 autoComplete="off"
+                autoCorrect="off"
+                spellCheck={false}
+                data-lpignore="true"
+                data-1p-ignore="true"
                 placeholder="12 chữ số trên thẻ CCCD"
                 className="w-full px-4 py-3 rounded-2xl border-2 border-slate-300 focus:border-emerald-600 outline-none text-lg font-bold tracking-wider text-slate-900"
               />
@@ -201,11 +207,23 @@ export const StaffCheckInPage: React.FC<{ embedded?: boolean; presetCccd?: strin
             <label className="block space-y-1.5">
               <span className="text-sm font-black text-slate-800">Mật khẩu điểm danh</span>
               <div className="relative">
+                {/*
+                  Ô chữ thường được che bằng CSS (không dùng type="password"): trình quản lý mật khẩu của trình duyệt sẽ KHÔNG tự điền
+                  mật khẩu PHẦN MỀM đã lưu của cùng trang web vào đây — mật khẩu điểm danh là mật khẩu khác, tự điền sai là báo "không đúng".
+                  Tắt viết hoa / sửa lỗi tự động của bàn phím điện thoại để mật khẩu không bị đổi chữ.
+                */}
                 <input
                   value={pin}
                   onChange={(e) => setPin(e.target.value)}
-                  type={showPin ? 'text' : 'password'}
-                  autoComplete="current-password"
+                  type="text"
+                  name="lhhp-staff-checkin-code"
+                  autoComplete="off"
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  spellCheck={false}
+                  data-lpignore="true"
+                  data-1p-ignore="true"
+                  style={{ WebkitTextSecurity: showPin ? 'none' : 'disc' } as React.CSSProperties}
                   placeholder="Do nhà trường cấp"
                   className="w-full px-4 py-3 pr-12 rounded-2xl border-2 border-slate-300 focus:border-emerald-600 outline-none text-lg font-bold text-slate-900"
                 />

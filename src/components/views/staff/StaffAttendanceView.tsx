@@ -1125,9 +1125,106 @@ const RosterPanel: React.FC<{ canManage: boolean; auth: { username: string; pass
     if (ok) { setBulkPinOpen(false); setBulkPin(''); setSelected([]); }
   };
 
+  // 🔍 KIỂM TRA ĐĂNG NHẬP ĐIỂM DANH: thử đúng số CCCD + mật khẩu đang hiện trong danh sách với Apps Script, như nhân sự tự đăng nhập.
+  // Tìm ra người mà thông tin Quản trị đang phát KHÔNG đăng nhập được (mã băm trên Drive lệch với số / mật khẩu đang hiển thị),
+  // rồi cho ghi lại số CCCD + mật khẩu của những người đó để đăng nhập được. Không ghi điểm danh, không đổi mật khẩu của ai khác.
+  type LoginIssue = { code: string; name: string; position: string; fixable: boolean; text: string };
+  const [chk, setChk] = useState<{ running: boolean; done: number; total: number; okCount: number; issues: LoginIssue[] } | null>(null);
+  const chkAlive = useRef(true);
+  useEffect(() => { chkAlive.current = true; return () => { chkAlive.current = false; }; }, []);
+  const runLoginCheck = async (people: StaffMember[]) => {
+    const targets = people.filter(s => !s.disabled);
+    if (targets.length === 0) return;
+    setMsg(null);
+    const issues: LoginIssue[] = [];
+    let done = 0, okCount = 0, cursor = 0;
+    setChk({ running: true, done: 0, total: targets.length, okCount: 0, issues: [] });
+    const prevSelf = staffAttendanceService.selfAccount;
+    staffAttendanceService.setSelfAccount(null); // thử đúng như trang điểm danh: chỉ số CCCD + mật khẩu điểm danh
+    const worker = async () => {
+      while (cursor < targets.length && chkAlive.current) {
+        const s = targets[cursor++];
+        const base = { code: s.code, name: s.name, position: s.position || '' };
+        const cccd = String(s.currentCccd || s.cccd || '').replace(/\D/g, '');
+        const pin = String(s.currentPin || '');
+        if (cccd.length < 9) issues.push({ ...base, fixable: false, text: 'Danh sách chưa có số CCCD đầy đủ của người này — bấm biểu tượng bút để nhập số CCCD.' });
+        else if (!pin) issues.push({ ...base, fixable: false, text: 'Chưa có mật khẩu điểm danh — bấm biểu tượng chìa khóa để cấp.' });
+        else {
+          try {
+            const r = await staffAttendanceService.staffAuth(cccd, pin);
+            if (r?.success || r?.code === 'DISABLED') okCount++;
+            else if (r?.code === 'INVALID' || r?.code === 'NOT_FOUND' || r?.code === 'WRONG_PIN' || r?.code === 'NO_PIN') {
+              issues.push({ ...base, fixable: true, text: r.code === 'WRONG_PIN' ? 'Mật khẩu đang hiển thị không khớp mật khẩu đã lưu trên Drive.'
+                : r.code === 'NOT_FOUND' ? 'Số CCCD đang hiển thị không khớp số đã lưu trên Drive.'
+                : r.code === 'NO_PIN' ? 'Trên Drive chưa có mật khẩu của người này.'
+                : 'Số CCCD hoặc mật khẩu đang hiển thị không khớp dữ liệu đã lưu trên Drive.' });
+            } else issues.push({ ...base, fixable: false, text: r?.message || 'Apps Script không trả lời — thử kiểm tra lại.' });
+          } catch (e: any) {
+            issues.push({ ...base, fixable: false, text: e?.message || 'Lỗi kết nối — thử kiểm tra lại.' });
+          }
+        }
+        done++;
+        if (chkAlive.current) setChk({ running: true, done, total: targets.length, okCount, issues: [...issues] });
+      }
+    };
+    // 3 lệnh cùng lúc: đủ nhanh mà không dồn lệnh vào Apps Script của trường
+    try { await Promise.all(Array.from({ length: Math.min(3, targets.length) }, worker)); }
+    finally { staffAttendanceService.setSelfAccount(prevSelf); }
+    if (chkAlive.current) setChk({ running: false, done, total: targets.length, okCount, issues: [...issues].sort((a, b) => a.name.localeCompare(b.name, 'vi')) });
+  };
+  const repairLogins = async () => {
+    if (!chk || chk.running) return;
+    const codes = chk.issues.filter(i => i.fixable).map(i => i.code);
+    const items: StaffUpsert[] = list.filter(s => codes.includes(s.code)).map(s => ({
+      code: s.code, name: s.name,
+      cccd: String(s.currentCccd || s.cccd || '').replace(/\D/g, ''),
+      pin: String(s.currentPin || ''),
+    })).filter(it => it.cccd && it.pin);
+    if (items.length === 0) return;
+    if (!confirm(`Ghi lại số CCCD và mật khẩu điểm danh (đúng như đang hiển thị trong danh sách) cho ${items.length} người?\nMật khẩu của họ giữ nguyên như trong tệp đã xuất; những người khác không bị ảnh hưởng.`)) return;
+    const ok = await save(items, [], `Đã ghi lại thông tin đăng nhập cho ${items.length} người. Đang kiểm tra lại…`);
+    if (ok) await runLoginCheck(list.filter(s => codes.includes(s.code)));
+  };
+
   return (
     <div className="space-y-3">
       {msg && <div className={`rounded-2xl px-4 py-3 text-sm font-bold border ${msg.type === 'ok' ? 'bg-emerald-50 border-emerald-200 text-emerald-900' : 'bg-rose-50 border-rose-200 text-rose-800'}`}>{msg.text}</div>}
+
+      {canManage && chk && (
+        <section className={`rounded-2xl border px-4 py-3 space-y-2 ${chk.running ? 'bg-sky-50 border-sky-200' : chk.issues.length ? 'bg-amber-50 border-amber-300' : 'bg-emerald-50 border-emerald-200'}`} role="status" aria-label="Kết quả kiểm tra đăng nhập điểm danh">
+          <div className="flex flex-wrap items-center gap-2">
+            {chk.running ? <Loader2 className="w-4 h-4 animate-spin text-sky-700 shrink-0" /> : chk.issues.length ? <ShieldAlert className="w-4 h-4 text-amber-700 shrink-0" /> : <CheckCircle2 className="w-4 h-4 text-emerald-700 shrink-0" />}
+            <p className="text-sm font-black text-slate-900 mr-auto">
+              {chk.running
+                ? `Đang thử đăng nhập điểm danh: ${chk.done}/${chk.total} người…`
+                : chk.issues.length
+                  ? `${chk.okCount}/${chk.total} người đăng nhập được • ${chk.issues.length} người KHÔNG đăng nhập được bằng thông tin trong danh sách`
+                  : `Cả ${chk.total} người đều đăng nhập được bằng số CCCD và mật khẩu trong danh sách.`}
+            </p>
+            {!chk.running && chk.issues.some(i => i.fixable) && (
+              <button type="button" onClick={repairLogins} disabled={loading}
+                className="no-hover-fx h-9 px-3.5 rounded-lg text-sm font-black bg-amber-700 hover:bg-amber-800 text-white inline-flex items-center gap-1.5 whitespace-nowrap disabled:opacity-50">
+                <KeyRound className="w-4 h-4" /> Sửa cho {chk.issues.filter(i => i.fixable).length} người
+              </button>
+            )}
+            {!chk.running && <button type="button" onClick={() => setChk(null)} className="no-hover-fx h-9 px-3 rounded-lg text-sm font-bold text-slate-700 hover:bg-white/70 whitespace-nowrap">Đóng</button>}
+          </div>
+          {chk.issues.length > 0 && (
+            <ul className="text-sm text-slate-800 space-y-1 max-h-56 overflow-y-auto pr-1">
+              {chk.issues.map(i => (
+                <li key={i.code} className="flex flex-wrap gap-x-2">
+                  <strong className="text-slate-900">{i.name}</strong>
+                  {i.position && <span className="text-slate-600">({i.position})</span>}
+                  <span className="text-slate-700">— {i.text}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+          {!chk.running && chk.issues.length === 0 && (
+            <p className="text-sm text-slate-700">Nếu vẫn có người báo "không đúng": người đó đang nhập số CCCD khác với số trong danh sách (ví dụ danh sách ghi số CMND 9 số cũ), hoặc điện thoại tự điền mật khẩu đăng nhập phần mềm thay cho mật khẩu điểm danh. Từ Apps Script bản mới nhất, trang điểm danh báo rõ sai số CCCD hay sai mật khẩu.</p>
+          )}
+        </section>
+      )}
 
       {/* Thẻ danh sách: tiêu đề + số người + nút thao tác → bộ lọc → bảng */}
       <section className="rounded-2xl bg-white border border-slate-200 shadow-sm overflow-hidden" aria-label="Danh sách cán bộ, giáo viên, nhân viên">
@@ -1144,6 +1241,11 @@ const RosterPanel: React.FC<{ canManage: boolean; auth: { username: string; pass
               <button type="button" onClick={downloadTemplate} className="no-hover-fx h-9 px-3.5 rounded-lg text-sm font-bold bg-emerald-700 hover:bg-emerald-800 text-white inline-flex items-center gap-1.5"><Download className="w-4 h-4" /> Tải mẫu</button>
               <button type="button" onClick={() => fileRef.current?.click()} className="no-hover-fx h-9 px-3.5 rounded-lg text-sm font-bold bg-amber-600 hover:bg-amber-700 text-white inline-flex items-center gap-1.5"><Upload className="w-4 h-4" /> Nhập Excel</button>
               <button type="button" onClick={exportPins} disabled={list.length === 0} className="no-hover-fx h-9 px-3.5 rounded-lg text-sm font-bold bg-teal-700 hover:bg-teal-800 text-white inline-flex items-center gap-1.5 disabled:opacity-50"><KeyRound className="w-4 h-4" /> Xuất mật khẩu</button>
+              <button type="button" onClick={() => runLoginCheck(selectedPeople.length ? selectedPeople : list)} disabled={list.length === 0 || loading || Boolean(chk?.running)}
+                title={selectedPeople.length ? `Thử đăng nhập điểm danh cho ${selectedPeople.length} người đang chọn` : 'Thử đăng nhập điểm danh bằng số CCCD + mật khẩu trong danh sách cho tất cả nhân sự, tìm người không đăng nhập được'}
+                className="no-hover-fx h-9 px-3.5 rounded-lg text-sm font-bold bg-sky-700 hover:bg-sky-800 text-white inline-flex items-center gap-1.5 whitespace-nowrap disabled:opacity-50">
+                <ShieldAlert className="w-4 h-4" /> Kiểm tra đăng nhập{selectedPeople.length ? ` (${selectedPeople.length})` : ''}
+              </button>
               <input ref={fileRef} type="file" accept=".xlsx,.xls,.csv" className="hidden" onChange={onFile} />
             </>}
             <button type="button" onClick={load} disabled={loading} className="no-hover-fx h-9 px-3.5 rounded-lg text-sm font-bold border border-slate-300 bg-white hover:bg-slate-50 text-slate-800 inline-flex items-center gap-1.5">

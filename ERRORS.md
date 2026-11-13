@@ -1,5 +1,18 @@
 # ERRORS.md - Nhật ký lỗi & bài học
 
+## [2026-11-13 16:00] - Trang điểm danh bị trình duyệt tự điền tài khoản / mật khẩu PHẦN MỀM → báo "không đúng"
+
+- **Type**: UX / Integration
+- **Severity**: High
+- **File**: `src/components/views/staff/StaffCheckInPage.tsx`, `scripts/google_apps_script.js` (`verifyStaff`)
+- **Agent**: Claude
+- **Root Cause**: Trang `/diemdanh` cùng địa chỉ web với phần mềm, ô mật khẩu điểm danh là `type="password"` + `autoComplete="current-password"`. Trình quản lý mật khẩu của trình duyệt tự điền tài khoản đã lưu của phần mềm (ảnh chụp: ô CCCD hiện "adminquantri", ô mật khẩu là mật khẩu quản trị); với giáo viên là mật khẩu đăng nhập phần mềm — khác mật khẩu điểm danh. Apps Script lại chỉ trả một câu chung "Số CCCD hoặc mật khẩu điểm danh không đúng" nên không ai biết sai ở đâu. Chưa xác nhận được đây là nguyên nhân của MỌI trường hợp người dùng báo (chưa có dữ liệu từng người).
+- **Fix Applied**: Ô mật khẩu điểm danh là ô chữ che bằng CSS (`-webkit-text-security`), tên ô lạ, tắt tự điền / viết hoa / sửa lỗi tự động. Apps Script 1.1.13 tách 3 câu báo: `NOT_FOUND` (số CCCD chưa có trong danh sách), `NO_PIN`, `WRONG_PIN`. Thẻ Danh sách nhân sự có nút **Kiểm tra đăng nhập**: thử số CCCD + mật khẩu đang hiển thị của từng người, liệt kê người không vào được và ghi lại thông tin cho họ.
+- **Prevention**: Ô nhập mã / mật khẩu KHÔNG phải mật khẩu tài khoản của trang web thì không dùng `type="password"`. Lỗi xác thực phải nói rõ sai trường nào khi việc đó không làm lộ thông tin đáng kể.
+- **Status**: Fixed (chưa chạy thật)
+
+---
+
 ## [2026-11-13 11:00] - Gói cập nhật giao diện Desktop build trên máy tác giả nhúng cấu hình Supabase trong `.env`
 
 - **Type**: Build / Data flow

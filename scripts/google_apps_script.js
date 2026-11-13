@@ -56,6 +56,9 @@
 var FOLDER_ID = "__FOLDER_ID__";
 var TARGET_FILENAME = "du_lieu_lop_hoc_hanh_phuc.json";
 var REPORT_PREFIX = "bc_";
+// 1.1.13: ĐIỂM DANH BÁO RÕ NGUYÊN NHÂN khi nhân sự không vào được — tách 3 trường hợp thay cho một câu chung
+//         "Số CCCD hoặc mật khẩu điểm danh không đúng": số CCCD chưa có trong danh sách (`NOT_FOUND`), chưa được cấp
+//         mật khẩu (`NO_PIN`), sai mật khẩu (`WRONG_PIN`). Quản trị nhìn câu báo là biết sửa số CCCD hay cấp lại mật khẩu.
 // 1.1.12: QUYỀN XEM BÁO CÁO CHẤM CÔNG — tài khoản được Quản trị bật `staffReportViewer` (ví dụ nhân viên kế toán)
 //         được XEM tổng hợp chấm công (`staffAttendanceRange`) và tổng hợp kê khai tiết dạy (`teachReport`) để xuất báo cáo.
 //         Chỉ đọc: không điểm danh hộ, không khóa / mở khóa, không xem danh sách nhân sự, mật khẩu hay số CCCD đầy đủ.
@@ -88,7 +91,7 @@ var REPORT_PREFIX = "bc_";
 //        rồi mã hóa lại (healStaffCccdHashes) — khi đăng nhập, khi Quản trị / BGH mở hoặc lưu danh sách nhân sự.
 // QUY TẮC ĐẶT TÊN PHIÊN BẢN (từ 11/2026): "Phiên bản A.B.C" — mỗi lần sửa mã tăng C thêm 1;
 // C tối đa 20: sau 1.1.20 là 1.2.1, sau 1.2.20 là 1.3.1… Các bản cũ dạng "4.x" (4.1 → 4.12) được coi là cũ hơn 1.1.2.
-var SCRIPT_VERSION = "1.1.12";
+var SCRIPT_VERSION = "1.1.13";
 // Thư mục của yêu cầu đang xử lý (để verifyUser đọc được danh sách nhân sự khi đăng nhập bằng CCCD)
 var CTX_FOLDER = null;
 
@@ -1240,8 +1243,17 @@ function saveHealedStaffDb(folder, db) {
 function verifyStaff(folder, cccd, pin) {
   var db = readStaffDb(folder);
   var s = findStaffByCccd(db, cccd);
-  if (!s || !s.pinHash) return { ok: false, code: "INVALID", message: "Số CCCD hoặc mật khẩu điểm danh không đúng." };
-  if (hashPassword(String(pin || ""), s.salt) !== s.pinHash) return { ok: false, code: "INVALID", message: "Số CCCD hoặc mật khẩu điểm danh không đúng." };
+  // 1.1.13: báo rõ nguyên nhân để nhân sự và Quản trị biết sửa chỗ nào
+  if (!s) {
+    var typed = normalizeCccd(cccd);
+    return { ok: false, code: "NOT_FOUND", message: typed.length < 9
+      ? "Số căn cước công dân chưa đủ. Hãy nhập đủ 12 chữ số trên thẻ căn cước."
+      : "Số căn cước công dân " + typed.slice(0, 3) + "…" + typed.slice(-3) + " (" + typed.length + " số) chưa có trong danh sách nhân sự của nhà trường. Kiểm tra lại từng số trên thẻ; nếu đã nhập đúng, báo Quản trị nhà trường sửa lại số CCCD của thầy cô trong danh sách nhân sự." };
+  }
+  if (!s.pinHash) return { ok: false, code: "NO_PIN", message: "Thầy cô chưa được cấp mật khẩu điểm danh. Liên hệ Quản trị nhà trường để được cấp." };
+  if (hashPassword(String(pin || ""), s.salt) !== s.pinHash) {
+    return { ok: false, code: "WRONG_PIN", message: "Số căn cước đúng, nhưng mật khẩu điểm danh không đúng. Lưu ý đây là mật khẩu ĐIỂM DANH do nhà trường cấp (không phải mật khẩu đăng nhập phần mềm). Quên mật khẩu thì liên hệ Quản trị nhà trường." };
+  }
   if (db.__healed) { try { saveHealedStaffDb(folder, db); } catch (_) {} }
   if (s.disabled) return { ok: false, code: "DISABLED", message: "Tài khoản điểm danh đã bị khóa. Liên hệ Quản trị nhà trường." };
   return { ok: true, staff: s, db: db };
