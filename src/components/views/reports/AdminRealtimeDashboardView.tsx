@@ -1276,9 +1276,9 @@ export const AdminRealtimeDashboardView: React.FC = () => {
               )}
             </div>
             {periodBoarding.eating > 0 && (
-              <div className="mt-0.5 text-[12px] font-bold text-slate-600 whitespace-nowrap"
-                title={`${periodBoarding.eating} suất ăn / ${periodBoarding.presentInPeriod} học sinh đi học = ${periodBoarding.rate}%  •  ${periodBoarding.eating} suất ăn / ${periodBoarding.enrolmentSlots} tổng sĩ số = ${periodBoarding.schoolRate}%`}>
-                {periodBoarding.rate}% HS đi học • {periodBoarding.schoolRate}% sĩ số trường
+              <div className="mt-1 text-[13px] font-bold text-slate-700 leading-snug space-y-0.5" data-no-autofit="">
+                <p><span className="font-black font-mono text-amber-800">{periodBoarding.rate}%</span> trên học sinh đi học ({periodBoarding.eating}/{periodBoarding.presentInPeriod})</p>
+                <p><span className="font-black font-mono text-amber-800">{periodBoarding.schoolRate}%</span> trên tổng sĩ số trường ({periodBoarding.eating}/{periodBoarding.enrolmentSlots})</p>
               </div>
             )}
           </div>
