@@ -7,7 +7,7 @@ import React from 'react';
 import { 
   Home, Users, BarChart3, Menu, Sparkles, CheckSquare, UserCheck
 } from 'lucide-react';
-import { NavigationMenuId } from './Sidebar';
+import { NavigationMenuId, isNonTeachingAccount } from './Sidebar';
 import { useClassroom } from '../../context/ClassroomContext';
 
 interface MobileBottomNavProps {
@@ -23,7 +23,15 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
 }) => {
   const { currentUser, isBgh, isSchoolAdmin } = useClassroom();
   const isManager = Boolean(currentUser?.role === 'admin' || isSchoolAdmin || isBgh);
-  const navItems: Array<{ id: NavigationMenuId; label: string; icon: React.ComponentType<{ className?: string }>; action: () => void }> = isManager
+  // Nhân sự không phải giáo viên: không có lớp học → thanh đáy chỉ còn chấm công và hướng dẫn
+  const isStaffAccount = !isManager && isNonTeachingAccount(currentUser);
+  const navItems: Array<{ id: NavigationMenuId; label: string; icon: React.ComponentType<{ className?: string }>; action: () => void }> = isStaffAccount
+    ? [
+        { id: 'my_checkin', label: 'Chấm công', icon: UserCheck, action: () => onNavigate('my_checkin') },
+        ...(currentUser?.staffReportViewer ? [{ id: 'staff_attendance' as NavigationMenuId, label: 'Báo cáo', icon: BarChart3, action: () => onNavigate('staff_attendance') }] : []),
+        { id: 'guide', label: 'Hướng dẫn', icon: Home, action: () => onNavigate('guide') },
+      ]
+    : isManager
     ? [
         { id: 'dashboard', label: 'Trang chủ', icon: Home, action: () => onNavigate('dashboard') },
         { id: 'staff_attendance', label: 'Chấm công', icon: UserCheck, action: () => onNavigate('staff_attendance') },

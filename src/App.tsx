@@ -187,9 +187,16 @@ function ClassroomApp() {
   // → chỉ dùng Chấm công của tôi, Hướng dẫn và (khi được cấp quyền) báo cáo Chấm công nhân sự
   const isNonTeaching = !isMacroAdmin && isNonTeachingAccount(currentUser);
   const canViewStaffReport = isMacroAdmin || Boolean(currentUser?.staffReportViewer);
+  // Các màn tài khoản Nhân viên được dùng (undefined = tài khoản thường, không giới hạn theo danh sách này)
+  const staffViewIds = React.useMemo(
+    () => (isNonTeaching ? NON_TEACHING_MENU_IDS.filter(id => id !== 'staff_attendance' || canViewStaffReport) : undefined),
+    [isNonTeaching, canViewStaffReport]
+  );
+  // Ctrl+Shift+F không bật trình chiếu lớp học với tài khoản Nhân viên
+  useEffect(() => { if (isNonTeaching && isPresenting) exitPresentation(); }, [isNonTeaching, isPresenting]);
   useEffect(() => {
     if (isNonTeaching) {
-      const allowed = NON_TEACHING_MENU_IDS.filter(id => id !== 'staff_attendance' || canViewStaffReport);
+      const allowed = staffViewIds || [];
       if (!allowed.includes(currentView)) setCurrentView(canViewStaffReport ? 'staff_attendance' : 'my_checkin');
     } else if (currentUser && currentView === 'staff_attendance' && !canViewStaffReport) {
       setCurrentView('dashboard');
@@ -402,6 +409,7 @@ function ClassroomApp() {
       <CommandPalette
         isMacroAdmin={isMacroAdmin}
         isSubjectTeacher={teacherRole === 'subject'}
+        onlyViewIds={staffViewIds}
         onNavigate={handleNavigate}
         onPresentation={enterPresentation}
         onOpenCdKey={() => setIsCdKeyModalOpen(true)}

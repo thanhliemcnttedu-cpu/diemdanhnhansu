@@ -11,7 +11,7 @@ import { googleDriveService } from '../../services/googleDriveService';
 import { invalidateDriveClassFilesCache, FORCE_DATA_REFRESH_EVENT, DATA_REFRESHED_EVENT } from '../../services/databaseService';
 import { adminEditsService } from '../../services/adminEditsService';
 import { playNoiseAlertSound } from '../../utils/audio';
-import { NavigationMenuId } from './Sidebar';
+import { NavigationMenuId, isNonTeachingAccount } from './Sidebar';
 import { getOfficialDisplayName, getOfficialRoleTitle } from '../../utils/accountIdentity';
 import { appsScriptSetupService, versionLabel, DRIVE_CONNECTION_EVENT, type DriveConnection } from '../../services/appsScriptSetupService';
 import { Loader2 as WsSpin } from 'lucide-react';
@@ -186,6 +186,9 @@ export const TopBar: React.FC<TopBarProps> = ({
     isBgh
   );
   const isManagementAdmin = isSuperAdmin || isSchoolAdminAccount;
+  // Nhân sự không phải giáo viên (kế toán, văn thư…): không có lớp học → ẩn Trình chiếu, ô chọn lớp, chuông trật tự
+  const isStaffAccount = !isManagerUser && isNonTeachingAccount(currentUser);
+  const accountRoleTitle = isStaffAccount ? 'Nhân viên' : getOfficialRoleTitle(currentUser);
 
   // 🔄 Quản trị tối cao / Quản trị nhà trường / BGH: cập nhật ngay dữ liệu mới nhất của mọi GVCN
   // 🧭 Apps Script của trường cũ hơn mã trong phần mềm → nhắc cập nhật (chỉ tài khoản quản lý)
@@ -423,7 +426,7 @@ export const TopBar: React.FC<TopBarProps> = ({
           <span className="inline-flex items-center gap-1.5"><Search className="w-3.5 h-3.5" /><span className="max-xl:hidden">Tìm nhanh…</span></span>
           <kbd className="max-xl:hidden text-[12px] font-bold text-slate-500 border border-slate-200 rounded px-1">Ctrl K</kbd>
         </button>
-        {!isManagerUser && (
+        {!isManagerUser && !isStaffAccount && (
           <button
             type="button"
             onClick={() => window.dispatchEvent(new Event('lhhp:toggle-presentation'))}
@@ -509,7 +512,7 @@ export const TopBar: React.FC<TopBarProps> = ({
         )}
 
           {/* Class Selector Dropdown */}
-          {!isManagementAdmin && (
+          {!isManagementAdmin && !isStaffAccount && (
             <div className="relative shrink-0">
               <button
                 onClick={() => setIsClassDropdownOpen(!isClassDropdownOpen)}
@@ -585,7 +588,7 @@ export const TopBar: React.FC<TopBarProps> = ({
         )}
 
         {/* Chuông trật tự (chỉ giáo viên, dùng trong lớp) */}
-        {!isManagerUser && <button
+        {!isManagerUser && !isStaffAccount && <button
           onClick={handleQuickAlarm}
           className="w-8 h-8 rounded-xl bg-rose-600 hover:bg-rose-700 text-white flex items-center justify-center shrink-0 shadow-sm"
           title="Phát chuông ổn định trật tự lớp học ngay lập tức"
@@ -624,7 +627,7 @@ export const TopBar: React.FC<TopBarProps> = ({
                   { icon: <ShieldCheck className="w-4 h-4" />, label: adminLabel, cls: 'text-indigo-700 bg-indigo-50', onClick: openAdmin },
                   { icon: <Sparkles className="w-4 h-4" />, label: 'Trợ lý AI', cls: 'text-violet-700 bg-violet-50', onClick: () => onNavigate('ai') },
                   { icon: isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />, label: isFullscreen ? 'Thu nhỏ cửa sổ' : 'Toàn màn hình', cls: 'text-slate-700 bg-slate-100', onClick: toggleFullscreen }
-                ].map(item => (
+                ].filter(item => !(isStaffAccount && item.label === 'Trợ lý AI')).map(item => (
                   <button
                     key={item.label}
                     onClick={() => { setIsMoreMenuOpen(false); item.onClick(); }}
@@ -658,7 +661,7 @@ export const TopBar: React.FC<TopBarProps> = ({
                 <ChevronDown className="w-3.5 h-3.5 text-slate-500 group-hover:text-slate-800 shrink-0" />
               </div>
               <div className="text-xs text-slate-500 font-semibold leading-tight truncate max-w-[140px]">
-                {getOfficialRoleTitle(currentUser)}
+                {accountRoleTitle}
               </div>
             </div>
           </button>
@@ -696,7 +699,7 @@ export const TopBar: React.FC<TopBarProps> = ({
                         ? 'bg-indigo-100 text-indigo-700 border border-indigo-200'
                         : 'bg-emerald-100 text-emerald-700 border border-emerald-200'
                     }`}>
-                      {getOfficialRoleTitle(currentUser)}
+                      {accountRoleTitle}
                     </span>
                   </div>
                 </div>

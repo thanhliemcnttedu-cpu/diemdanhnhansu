@@ -27,6 +27,8 @@ interface Props {
   onPresentation: () => void;
   onOpenCdKey: () => void;
   onChangePassword: () => void;
+  /** Tài khoản Nhân viên (không quản lý lớp): chỉ liệt kê các màn này, không có lệnh trình chiếu */
+  onlyViewIds?: NavigationMenuId[];
 }
 
 const VIEWS: Array<{ id: NavigationMenuId; label: string; group: string; keywords: string; classroomOnly?: boolean; homeroomOnly?: boolean; managerOnly?: boolean }> = [
@@ -51,7 +53,7 @@ const VIEWS: Array<{ id: NavigationMenuId; label: string; group: string; keyword
   { id: 'ai', label: 'Trợ lý AI', group: 'Quản lý & báo cáo', keywords: 'ai tro ly gemini' },
 ];
 
-export const CommandPalette: React.FC<Props> = ({ isMacroAdmin, isSubjectTeacher, onNavigate, onPresentation, onOpenCdKey, onChangePassword }) => {
+export const CommandPalette: React.FC<Props> = ({ isMacroAdmin, isSubjectTeacher, onNavigate, onPresentation, onOpenCdKey, onChangePassword, onlyViewIds }) => {
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState('');
   const [sel, setSel] = useState(0);
@@ -73,19 +75,21 @@ export const CommandPalette: React.FC<Props> = ({ isMacroAdmin, isSubjectTeacher
   useEffect(() => { if (open) { setQ(''); setSel(0); setTimeout(() => inputRef.current?.focus(), 20); } }, [open]);
 
   const commands = useMemo<PaletteCommand[]>(() => {
-    const views = VIEWS
-      .filter(v => !(isMacroAdmin && v.classroomOnly))
-      .filter(v => !(isSubjectTeacher && v.homeroomOnly))
-      .filter(v => !(v.managerOnly && !isMacroAdmin))
+    const views = (onlyViewIds
+      ? VIEWS.filter(v => onlyViewIds.includes(v.id))
+      : VIEWS
+        .filter(v => !(isMacroAdmin && v.classroomOnly))
+        .filter(v => !(isSubjectTeacher && v.homeroomOnly))
+        .filter(v => !(v.managerOnly && !isMacroAdmin)))
       .map(v => ({ id: `view:${v.id}`, label: v.label, group: v.group, keywords: v.keywords, icon: <ArrowRight className="w-4 h-4" />, run: () => onNavigate(v.id) }));
     const actions: PaletteCommand[] = [
-      ...(!isMacroAdmin ? [{ id: 'act:present', label: 'Bật chế độ trình chiếu lớp học', group: 'Thao tác', keywords: 'trinh chieu may chieu toan man hinh present', icon: <MonitorPlay className="w-4 h-4" />, shortcut: 'Ctrl Shift F', run: onPresentation }] : []),
+      ...(!isMacroAdmin && !onlyViewIds ? [{ id: 'act:present', label: 'Bật chế độ trình chiếu lớp học', group: 'Thao tác', keywords: 'trinh chieu may chieu toan man hinh present', icon: <MonitorPlay className="w-4 h-4" />, shortcut: 'Ctrl Shift F', run: onPresentation }] : []),
       { id: 'act:checkin', label: 'Mở trang điểm danh giáo viên – nhân viên', group: 'Thao tác', keywords: 'diem danh nhan su cham cong cccd', icon: <UserCheck className="w-4 h-4" />, run: () => { window.location.href = '/diemdanh'; } },
       { id: 'act:cdkey', label: 'Nhập CDKEY bản quyền', group: 'Thao tác', keywords: 'cdkey ban quyen kich hoat', icon: <KeyRound className="w-4 h-4" />, run: onOpenCdKey },
       { id: 'act:password', label: 'Đổi mật khẩu', group: 'Thao tác', keywords: 'doi mat khau password', icon: <Lock className="w-4 h-4" />, run: onChangePassword },
     ];
     return [...views, ...actions];
-  }, [isMacroAdmin, isSubjectTeacher, onNavigate, onPresentation, onOpenCdKey, onChangePassword]);
+  }, [isMacroAdmin, isSubjectTeacher, onNavigate, onPresentation, onOpenCdKey, onChangePassword, onlyViewIds]);
 
   const results = useMemo(() => {
     const t = fold(q.trim());
