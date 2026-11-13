@@ -239,29 +239,70 @@ export const StaffAttendanceView: React.FC = () => {
     const title = `BẢNG TỔNG HỢP CHẤM CÔNG GIÁO VIÊN – NHÂN VIÊN${schoolName ? ' • ' + schoolName.toUpperCase() : ''}`;
     const sub = `Thời gian: ${range.label} (${range.from} → ${range.to}) • Số ngày làm việc: ${stats.workingDays.length} • Nhân sự đang làm việc: ${stats.activeCount}`;
 
-    // 1. Tổng hợp theo ngày
+    // 📐 NGUYÊN TẮC XUẤT EXCEL (người dùng quy định 11/2026): mọi cột TỔNG HỢP là CÔNG THỨC đếm trên bảng chi tiết,
+    // không ghi số chết — sửa một ô chấm công trong tệp là các cột tổng hợp ở cả 3 trang tự tính lại.
+    // Ô công thức vẫn kèm giá trị đã tính sẵn (v) để mở tệp ở đâu cũng thấy số ngay.
+    const SH3 = `'Cham cong chi tiet'`;                 // trang chi tiết: dòng tiêu đề 4, dữ liệu từ dòng 5
+    const SH4 = `'Nhat ky diem danh'`;
+    const FIRST = 5;                                    // dòng dữ liệu đầu tiên ở cả 3 trang
+    const nPeople = stats.people.length, nDays = stats.workingDays.length;
+    const lastRow = FIRST + nPeople - 1;
+    const col = (i: number) => XLSX.utils.encode_col(i);
+    const dayCol = (j: number) => col(3 + j);           // trang chi tiết: A STT, B Mã GV, C Họ tên, D… các ngày
+    const firstDayCol = dayCol(0), lastDayCol = dayCol(Math.max(nDays - 1, 0));
+    const canFormula = nPeople > 0 && nDays > 0;
+    const F = (f: string, v: number): any => (canFormula ? { t: 'n', f, v } : v);
+    const SYM = { present: 'X', business_trip: 'CT', sick_leave: 'Ô', personal_unpaid: 'R', missing: '–' } as const;
+
+    // 1. Tổng hợp theo ngày — không có dòng TỔNG CỘNG (nhân sự cố định, cộng dồn theo ngày không có ý nghĩa)
     const s1: any[][] = [[title], [sub], [],
       ['Ngày', 'Thứ', 'Tổng nhân sự', 'Có mặt', 'Đi công tác', 'Nghỉ ốm có phép', 'Nghỉ việc riêng KHL', 'Chưa điểm danh', 'Tỷ lệ đi làm (%)', 'Tỷ lệ đã điểm danh (%)']];
-    stats.daily.forEach(d => s1.push([d.date.split('-').reverse().join('/'), weekdayLabel(d.date), d.total, d.present, d.business_trip, d.sick_leave, d.personal_unpaid, d.missing, d.workRate, d.markRate]));
-    s1.push(['TỔNG CỘNG', '', stats.totals.slots, stats.totals.present, stats.totals.business_trip, stats.totals.sick_leave, stats.totals.personal_unpaid, stats.totals.missing, stats.totals.workRate, stats.totals.markRate]);
+    stats.daily.forEach((d, j) => {
+      const r = FIRST + j;                              // dòng của ngày này ở trang 1
+      const rng = `${SH3}!$${dayCol(j)}$${FIRST}:$${dayCol(j)}$${lastRow}`;   // cột của ngày này ở trang chi tiết
+      const cnt = (s: string) => `COUNTIF(${rng},"${s}")`;
+      s1.push([d.date.split('-').reverse().join('/'), weekdayLabel(d.date),
+        F(`COUNTA(${SH3}!$C$${FIRST}:$C$${lastRow})`, d.total),
+        F(cnt(SYM.present), d.present), F(cnt(SYM.business_trip), d.business_trip), F(cnt(SYM.sick_leave), d.sick_leave),
+        F(cnt(SYM.personal_unpaid), d.personal_unpaid), F(cnt(SYM.missing), d.missing),
+        F(`IF(C${r}>0,ROUND((D${r}+E${r})/C${r}*100,1),0)`, d.workRate),
+        F(`IF(C${r}>0,ROUND((C${r}-H${r})/C${r}*100,1),0)`, d.markRate)]);
+    });
     const ws1 = XLSX.utils.aoa_to_sheet(s1);
     ws1['!cols'] = [{ wch: 12 }, { wch: 10 }, { wch: 13 }, { wch: 10 }, { wch: 12 }, { wch: 16 }, { wch: 19 }, { wch: 15 }, { wch: 16 }, { wch: 20 }];
     XLSX.utils.book_append_sheet(wb, ws1, 'Tong hop theo ngay');
 
-    // 2. Tổng hợp theo nhân sự
+    // 2. Tổng hợp theo nhân sự — cùng thứ tự người với trang chi tiết, mỗi cột số là công thức đếm trên dòng của người đó
     const s2: any[][] = [[title], [sub], [],
-      ['STT', 'Mã GV', 'Họ và tên', 'Chức vụ', 'Tổ / bộ phận', 'Số ngày làm việc', 'Có mặt', 'Đi công tác', 'Nghỉ ốm có phép', 'Nghỉ việc riêng KHL', 'Chưa điểm danh', 'Tỷ lệ đi làm (%)', 'Số ngày có điểm danh lại']];
-    stats.people.forEach((p, i) => s2.push([i + 1, p.staff.code, p.staff.name, p.staff.position || '', p.staff.dept || '', p.workDays, p.present, p.business_trip, p.sick_leave, p.personal_unpaid, p.missing, p.workRate,
-      stats.workingDays.filter(d => attemptOf((days[d] || {})[p.staff.code]) > 1).length]));
+      ['STT', 'Mã GV', 'Họ và tên', 'Chức vụ', 'Tổ / bộ phận', 'Số ngày làm việc trong tháng', 'Có mặt', 'Đi công tác', 'Nghỉ ốm có phép', 'Nghỉ việc riêng KHL', 'Chưa điểm danh', 'Tỷ lệ đi làm (%)', 'Số ngày có điểm danh lại']];
+    stats.people.forEach((p, i) => {
+      const r = FIRST + i;
+      const rng = `${SH3}!$${firstDayCol}${r}:$${lastDayCol}${r}`;           // các ô ngày của người này ở trang chi tiết
+      const cnt = (s: string) => `COUNTIF(${rng},"${s}")`;
+      const redo = stats.workingDays.filter(d => attemptOf((days[d] || {})[p.staff.code]) > 1).length;
+      s2.push([i + 1, p.staff.code, p.staff.name, p.staff.position || '', p.staff.dept || '',
+        F(`COUNTA(${rng})`, p.workDays),
+        F(cnt(SYM.present), p.present), F(cnt(SYM.business_trip), p.business_trip), F(cnt(SYM.sick_leave), p.sick_leave),
+        F(cnt(SYM.personal_unpaid), p.personal_unpaid), F(cnt(SYM.missing), p.missing),
+        F(`IF(F${r}>0,ROUND((G${r}+H${r})/F${r}*100,1),0)`, p.workRate),
+        // mỗi ngày điểm danh lại có đúng một dòng "Lần 2" trong trang Nhật ký
+        F(`COUNTIFS(${SH4}!$B:$B,$B${r},${SH4}!$D:$D,2)`, redo)]);
+    });
     const ws2 = XLSX.utils.aoa_to_sheet(s2);
-    ws2['!cols'] = [{ wch: 5 }, { wch: 14 }, { wch: 26 }, { wch: 18 }, { wch: 16 }, { wch: 14 }, { wch: 9 }, { wch: 12 }, { wch: 15 }, { wch: 18 }, { wch: 14 }, { wch: 15 }, { wch: 20 }];
+    ws2['!cols'] = [{ wch: 5 }, { wch: 14 }, { wch: 26 }, { wch: 18 }, { wch: 20 }, { wch: 27 }, { wch: 9 }, { wch: 12 }, { wch: 16 }, { wch: 19 }, { wch: 15 }, { wch: 15 }, { wch: 24 }];
     XLSX.utils.book_append_sheet(wb, ws2, 'Tong hop theo nhan su');
 
-    // 3. Bảng chấm công chi tiết (người × ngày)
-    const code = (r?: StaffRecord) => (!r ? '–' : r.status === 'present' ? 'X' : r.status === 'business_trip' ? 'CT' : r.status === 'sick_leave' ? 'Ô' : 'R');
+    // 3. Bảng chấm công chi tiết (người × ngày) — 5 cột cuối là công thức đếm ký hiệu trên chính dòng đó
+    const code = (r?: StaffRecord) => (!r ? SYM.missing : r.status === 'present' ? SYM.present : r.status === 'business_trip' ? SYM.business_trip : r.status === 'sick_leave' ? SYM.sick_leave : SYM.personal_unpaid);
     const s3: any[][] = [[title], [sub, '', '', 'Ký hiệu: X = có mặt, CT = đi công tác, Ô = nghỉ ốm có phép, R = nghỉ việc riêng không hưởng lương, – = chưa điểm danh'], [],
       ['STT', 'Mã GV', 'Họ và tên', ...stats.workingDays.map(d => `${shortDateLabel(d)} ${weekdayShort(d)}`), 'X', 'CT', 'Ô', 'R', '–']];
-    stats.people.forEach((p, i) => s3.push([i + 1, p.staff.code, p.staff.name, ...stats.workingDays.map(d => code((days[d] || {})[p.staff.code])), p.present, p.business_trip, p.sick_leave, p.personal_unpaid, p.missing]));
+    stats.people.forEach((p, i) => {
+      const r = FIRST + i;
+      const cnt = (s: string) => `COUNTIF($${firstDayCol}${r}:$${lastDayCol}${r},"${s}")`;
+      s3.push([i + 1, p.staff.code, p.staff.name, ...stats.workingDays.map(d => code((days[d] || {})[p.staff.code])),
+        F(cnt(SYM.present), p.present), F(cnt(SYM.business_trip), p.business_trip), F(cnt(SYM.sick_leave), p.sick_leave),
+        F(cnt(SYM.personal_unpaid), p.personal_unpaid), F(cnt(SYM.missing), p.missing)]);
+    });
     const ws3 = XLSX.utils.aoa_to_sheet(s3);
     ws3['!cols'] = [{ wch: 5 }, { wch: 14 }, { wch: 26 }, ...stats.workingDays.map(() => ({ wch: 8 })), { wch: 5 }, { wch: 5 }, { wch: 5 }, { wch: 5 }, { wch: 5 }];
     XLSX.utils.book_append_sheet(wb, ws3, 'Cham cong chi tiet');

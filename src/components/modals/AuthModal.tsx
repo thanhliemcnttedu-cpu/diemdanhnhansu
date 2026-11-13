@@ -16,6 +16,7 @@ import { googleDriveService } from '../../services/googleDriveService';
 import { schoolDriveDbService } from '../../services/schoolDriveDbService';
 import { appsScriptSetupService } from '../../services/appsScriptSetupService';
 import { StaffCheckInQrModal } from '../views/staff/StaffCheckInQr';
+import { staffAttendanceService } from '../../services/staffAttendanceService';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -59,6 +60,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   // 🏫 THƯ MỤC DÙNG CHUNG CỦA NHÀ TRƯỜNG (Google Drive) — bắt buộc trước khi đăng nhập vai trò trường
   const [driveConfigured, setDriveConfigured] = useState<boolean>(() => schoolDriveDbService.isConfigured());
   const [isCheckInQrOpen, setIsCheckInQrOpen] = useState(false);
+  // Link nút "Điểm danh GV – NV": trên bản web dùng link ĐẦY ĐỦ (kèm kết nối của trường) của chính trang đang mở —
+  // giống mã QR và thẻ Link điểm danh. Bản cài đặt (không phải http) giữ đường dẫn nội bộ.
+  const checkInHref = (driveConfigured && typeof window !== 'undefined' && /^https?:$/.test(window.location.protocol)
+    ? staffAttendanceService.buildCheckInLink(undefined, window.location.origin)
+    : null) || '/diemdanh';
   // Dùng kết quả lần đọc trước (nếu có) để không khóa nhấp nháy các vai trò trong lúc đang tải
   const [driveInitialized, setDriveInitialized] = useState<boolean>(() => {
     try {
@@ -772,8 +778,10 @@ Sau đó dán link thư mục + Apps Script mới để khởi tạo.`)) return;
               {/* Điểm danh giáo viên – nhân viên trên máy tính (dùng kết nối Drive sẵn có của máy, không cần đăng nhập) */}
               {driveConfigured && (
                 <div className="mt-2.5 flex gap-2">
+                  {/* Cùng MỘT link với mã QR và thẻ "Link điểm danh" trong phần mềm (link đầy đủ có kèm kết nối của trường),
+                      không dùng "/diemdanh" trần: link trần chỉ mở được trên máy đã kết nối sẵn, chép gửi người khác thì không vào được. */}
                   <a
-                    href="/diemdanh"
+                    href={checkInHref}
                     className="flex-1 py-2.5 rounded-2xl bg-white/95 hover:bg-white text-emerald-900 font-black text-sm flex items-center justify-center gap-2 shadow-sm whitespace-nowrap"
                     title="Giáo viên, nhân viên điểm danh đi làm hôm nay bằng số CCCD + mật khẩu điểm danh"
                   >
