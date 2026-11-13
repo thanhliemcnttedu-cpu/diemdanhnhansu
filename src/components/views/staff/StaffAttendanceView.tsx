@@ -1104,10 +1104,17 @@ const RosterPanel: React.FC<{ canManage: boolean; auth: { username: string; pass
 
   const exportPins = () => {
     const rows: any[][] = [[`DANH SÁCH MẬT KHẨU ĐIỂM DANH${schoolName ? ' • ' + schoolName.toUpperCase() : ''}`], ['Lưu ý: tài liệu mật, cắt theo dòng phát riêng cho từng người.'], [],
-      ['STT', 'Mã GV', 'Họ và tên', 'Chức vụ', 'CCCD (4 số cuối)', 'Mật khẩu điểm danh', 'Trạng thái']];
-    list.forEach((s, i) => rows.push([i + 1, s.code, s.name, s.position || '', s.cccdLast4 ? `…${s.cccdLast4}` : '', s.currentPin || '(chưa có – cấp lại)', s.disabled ? 'Đã khóa' : 'Hoạt động']));
+      ['STT', 'Mã GV', 'Họ và tên', 'Chức vụ', 'Số căn cước công dân', 'Mật khẩu điểm danh', 'Trạng thái']];
+    // Số CCCD ĐẦY ĐỦ (người dùng yêu cầu 11/2026) để chép thẳng vào ô đăng nhập. Ghi dạng CHỮ nên Excel giữ nguyên số 0 ở đầu;
+    // người chưa có số đầy đủ trong danh sách thì ghi 4 số cuối.
+    list.forEach((s, i) => {
+      const full = String(s.currentCccd || s.cccd || '').replace(/\D/g, '');
+      rows.push([i + 1, s.code, s.name, s.position || '', full.length >= 9 ? full : (s.cccdLast4 ? `…${s.cccdLast4}` : ''), s.currentPin || '(chưa có – cấp lại)', s.disabled ? 'Đã khóa' : 'Hoạt động']);
+    });
     const ws = XLSX.utils.aoa_to_sheet(rows);
-    ws['!cols'] = [{ wch: 5 }, { wch: 14 }, { wch: 26 }, { wch: 18 }, { wch: 15 }, { wch: 20 }, { wch: 11 }];
+    // Định dạng ô kiểu Văn bản cho cột CCCD và cột mật khẩu: sửa ô trong Excel cũng không bị đổi thành số (mất số 0 đầu)
+    for (let r = 4; r < rows.length; r++) ['E', 'F'].forEach(c => { const cell = ws[`${c}${r + 1}`]; if (cell) { cell.t = 's'; cell.v = String(cell.v); cell.z = '@'; } });
+    ws['!cols'] = [{ wch: 5 }, { wch: 14 }, { wch: 26 }, { wch: 18 }, { wch: 22 }, { wch: 20 }, { wch: 11 }];
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Mat khau diem danh');
     XLSX.writeFile(wb, 'MatKhau_DiemDanh_NhanSu.xlsx');
