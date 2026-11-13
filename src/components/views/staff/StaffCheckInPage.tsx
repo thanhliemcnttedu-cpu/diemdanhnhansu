@@ -97,7 +97,15 @@ export const StaffCheckInPage: React.FC<{ embedded?: boolean; presetCccd?: strin
     if (!viaAccount) staffAttendanceService.setSelfAccount(null);
     setBusy(true);
     try {
-      const r = await staffAttendanceService.staffAuth(digits, pinValue);
+      let r = await staffAttendanceService.staffAuth(digits, pinValue);
+      let usedCccd = digits;
+      // Số CCCD luôn đủ 12 số và thường bắt đầu bằng số 0. Người nhập chép số từ Excel hay bị MẤT SỐ 0 ĐẦU (còn 9–11 số):
+      // không tìm thấy thì thử lại với số đã thêm đủ số 0 ở đầu trước khi báo lỗi.
+      if (!r?.success && !viaAccount && digits.length >= 9 && digits.length < 12 && (r?.code === 'NOT_FOUND' || r?.code === 'INVALID')) {
+        const padded = digits.padStart(12, '0');
+        const again = await staffAttendanceService.staffAuth(padded, pinValue);
+        if (again?.success || again?.code === 'WRONG_PIN' || again?.code === 'NO_PIN' || again?.code === 'DISABLED') { r = again; usedCccd = padded; setCccd(padded); }
+      }
       if (!r?.success) { if (!silent) setError(r?.message || 'Không kiểm tra được thông tin.'); return false; }
       setPin(pinValue);
       // Nhập tay đúng mật khẩu điểm danh trong phần mềm → nhớ cho tài khoản đang đăng nhập (Apps Script nhận mật khẩu điểm danh
@@ -106,7 +114,7 @@ export const StaffCheckInPage: React.FC<{ embedded?: boolean; presetCccd?: strin
       if (viaAccount && r.staff?.cccd) setCccd(String(r.staff.cccd));
       setTeachMsg(r.teachAllowed === false ? (r.teachMessage || 'Nhà trường không áp dụng kê khai tiết dạy cho giáo viên chủ nhiệm.') : '');
       if (r.teachAllowed === false) setMainTab('checkin');
-      if (!embedded) { try { if (remember) localStorage.setItem(REMEMBER_KEY, digits); else localStorage.removeItem(REMEMBER_KEY); } catch (_) { /* ignore */ } }
+      if (!embedded) { try { if (remember) localStorage.setItem(REMEMBER_KEY, usedCccd); else localStorage.removeItem(REMEMBER_KEY); } catch (_) { /* ignore */ } }
       setStaff(r.staff); setToday(r.today); setExisting(r.record || null);
       setStatus(r.record?.status || '');
       if (r.record?.status === 'business_trip') { const t = parseTripNote(r.record.note || ''); setTripPlace(t.place); setTripContent(t.content); setNote(t.extra); }
@@ -203,6 +211,12 @@ export const StaffCheckInPage: React.FC<{ embedded?: boolean; presetCccd?: strin
                 placeholder="12 chữ số trên thẻ CCCD"
                 className="w-full px-4 py-3 rounded-2xl border-2 border-slate-300 focus:border-emerald-600 outline-none text-lg font-bold tracking-wider text-slate-900"
               />
+              {(() => {
+                const n = cccd.replace(/\D/g, '').length;
+                return n >= 9 && n < 12
+                  ? <span className="block text-xs font-bold text-amber-700">Đang có {n} số. Số căn cước đủ 12 số, thường bắt đầu bằng số 0 — nếu thiếu số 0 ở đầu, phần mềm sẽ tự thêm khi kiểm tra.</span>
+                  : null;
+              })()}
             </label>
             <label className="block space-y-1.5">
               <span className="text-sm font-black text-slate-800">Mật khẩu điểm danh</span>

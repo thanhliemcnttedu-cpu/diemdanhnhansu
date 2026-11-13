@@ -142,7 +142,7 @@ export const schoolDriveDbService = {
     }
   },
 
-  async login(username: string, password: string): Promise<DriveLoginResult> {
+  async login(username: string, password: string, _paddedRetry = false): Promise<DriveLoginResult> {
     if (!this.isConfigured()) return { status: 'not_configured', message: 'Chưa cấu hình thư mục dùng chung.' };
     try {
       const data = await this.callScript({ action: 'login', username, password });
@@ -167,6 +167,12 @@ export const schoolDriveDbService = {
         return { status: 'ok', user, schools: data.schools || [] };
       }
       const code = String(data?.code || '');
+      // Tên đăng nhập là số CCCD nhưng bị nhập thiếu số 0 ở đầu (chép từ Excel còn 9–11 số) → thử lại với đủ 12 số
+      const typedDigits = String(username || '').replace(/\s/g, '');
+      if (!_paddedRetry && /^\d{9,11}$/.test(typedDigits) && (code === 'NOT_FOUND' || code === 'INVALID')) {
+        const again = await this.login(typedDigits.padStart(12, '0'), password, true);
+        if (again.status === 'ok') return again;
+      }
       if (code === 'NOT_INITIALIZED') return { status: 'not_initialized', message: data.message };
       if (code === 'DISABLED') return { status: 'disabled', message: data.message };
       if (code === 'NOT_FOUND') {

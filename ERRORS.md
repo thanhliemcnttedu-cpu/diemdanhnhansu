@@ -1,5 +1,18 @@
 # ERRORS.md - Nhật ký lỗi & bài học
 
+## [2026-11-13 16:10] - Nhân sự nhập số CCCD thiếu số 0 ở đầu → "chưa có trong danh sách nhân sự"
+
+- **Type**: Data entry / UX
+- **Severity**: High
+- **File**: `src/components/views/staff/StaffCheckInPage.tsx` (`doAuth`), `src/services/schoolDriveDbService.ts` (`login`)
+- **Agent**: Claude
+- **Root Cause**: Số CCCD đủ 12 số và hầu hết bắt đầu bằng số 0. Nhân sự chép số từ bảng tính (ô kiểu số làm mất số 0 đầu) nên nhập 11 số (ảnh chụp: "121…368 (11 số)"). Danh sách nhân sự lưu đúng 12 số → mã băm không khớp. Nút "Kiểm tra đăng nhập" xác nhận cả 119 người đăng nhập được bằng số trong danh sách, tức dữ liệu trên Drive không sai. Chỉ tìm ra nhờ câu báo mới của Apps Script 1.1.13 ghi số chữ số đã nhập.
+- **Fix Applied**: Trang điểm danh và đăng nhập phần mềm: không tìm thấy với số 9–11 chữ số thì tự thử lại với số đã thêm đủ số 0 ở đầu (12 số); ô CCCD nhắc khi đang thiếu số. Không cần đổi Apps Script.
+- **Prevention**: Mọi ô nhập số định danh có số 0 đầu (CCCD, điện thoại, mã) phải chấp nhận bản bị mất số 0; thông báo lỗi nên ghi số chữ số đã nhận.
+- **Status**: Fixed (chưa chạy thật)
+
+---
+
 ## [2026-11-13 16:00] - Trang điểm danh bị trình duyệt tự điền tài khoản / mật khẩu PHẦN MỀM → báo "không đúng"
 
 - **Type**: UX / Integration
