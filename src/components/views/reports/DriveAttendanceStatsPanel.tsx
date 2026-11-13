@@ -33,6 +33,7 @@ interface PeriodStats {
   students: number;
   absent: number;
   boardingRate: number | null;
+  boardingSchoolRate: number | null;
   boardingActual: number;
   boardingRegistered: number;
 }
@@ -66,6 +67,18 @@ const computePeriods = (data: DriveRangeAggregate | null, now: Date, schoolTotal
     { key: 'month', label: 'Tháng này', from: monthStart, to: today }
   ];
 
+  // Boarding per day, counted only for classes that took attendance that day
+  // (a class without an attendance sheet is left out of the boarding totals).
+  const boardingByDay: Record<string, { registered: number; actual: number }> = {};
+  (data?.classes || []).forEach(c => {
+    Object.entries(c.days || {}).forEach(([date, d]) => {
+      if (!d?.att || !d?.brd) return;
+      const slot = boardingByDay[date] || (boardingByDay[date] = { registered: 0, actual: 0 });
+      slot.registered += Number(d.brd.registered) || 0;
+      slot.actual += Number(d.brd.actual) || 0;
+    });
+  });
+
   return defs.map(def => {
     const acc: DriveRangeDayTotals = {
       attendanceClasses: 0, students: 0, present: 0, late: 0, excused: 0, unexcused: 0,
@@ -79,8 +92,11 @@ const computePeriods = (data: DriveRangeAggregate | null, now: Date, schoolTotal
       acc.present += t.present || 0;
       acc.excused += t.excused || 0;
       acc.unexcused += t.unexcused || 0;
-      acc.boardingRegistered += t.boardingRegistered || 0;
-      acc.boardingActual += t.boardingActual || 0;
+    });
+    Object.entries(boardingByDay).forEach(([date, b]) => {
+      if (date < def.from || date > def.to) return;
+      acc.boardingRegistered += b.registered;
+      acc.boardingActual += b.actual;
     });
     // Never below the reported headcount (class lists on this machine may lag behind Drive)
     const enrolment = days > 0 ? Math.max(schoolTotal * days, acc.students) : acc.students;
@@ -91,7 +107,9 @@ const computePeriods = (data: DriveRangeAggregate | null, now: Date, schoolTotal
       present: acc.present,
       students: enrolment,
       absent: acc.excused + acc.unexcused,
-      boardingRate: pct(acc.boardingActual, acc.boardingRegistered),
+      // Boarding: meals registered / students actually present; plus the share of the whole school
+      boardingRate: pct(acc.boardingActual, acc.present),
+      boardingSchoolRate: pct(acc.boardingActual, enrolment),
       boardingActual: acc.boardingActual,
       boardingRegistered: acc.boardingRegistered
     };
@@ -282,9 +300,16 @@ export const DriveAttendanceStatsPanel: React.FC<{ schoolTotalStudents?: number 
                 {p.boardingRate === null ? '—' : `${p.boardingRate}%`}
               </span>
               <span className="text-[12px] font-bold text-slate-500">
-                {p.boardingRegistered > 0 ? `${p.boardingActual}/${p.boardingRegistered} suất` : 'chưa có số liệu'}
+                {p.boardingRegistered > 0
+                  ? (p.present > 0 ? `${p.boardingActual}/${p.present} HS đi học` : `${p.boardingActual} suất`)
+                  : 'chưa có số liệu'}
               </span>
             </div>
+            {p.boardingRegistered > 0 && p.boardingSchoolRate !== null && (
+              <p className="text-[12px] font-bold text-slate-500 whitespace-nowrap">
+                {p.boardingSchoolRate}% sĩ số trường ({p.boardingActual}/{p.students})
+              </p>
+            )}
           </div>
         ))}
       </div>
@@ -316,7 +341,7 @@ export const DriveAttendanceStatsPanel: React.FC<{ schoolTotalStudents?: number 
                     <td className="px-2.5 py-1.5 text-right font-mono">{r.att ? r.att.present : '—'}</td>
                     <td className="px-2.5 py-1.5 text-right font-mono">{r.att ? `${r.att.excused}/${r.att.unexcused}` : '—'}</td>
                     <td className="px-2.5 py-1.5 text-right font-mono font-black">{rate === null ? '—' : `${rate}%`}</td>
-                    <td className="px-2.5 py-1.5 text-right font-mono">{r.brd ? `${r.brd.actual}/${r.brd.registered}` : '—'}</td>
+                    <td className="px-2.5 py-1.5 text-right font-mono">{r.att && r.brd ? `${r.brd.actual}/${r.brd.registered}` : '—'}</td>
                     <td className="px-2.5 py-1.5 text-center">
                       {r.att ? (
                         <span className="inline-flex items-center gap-1 text-emerald-700 font-black"><CheckCircle2 className="w-3.5 h-3.5" />Đã báo cáo</span>

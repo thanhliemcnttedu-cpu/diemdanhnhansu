@@ -125,7 +125,7 @@ const HomeroomDashboard: React.FC<DashboardViewProps> = ({
   }, [attendanceRecords, isManagementAccount, homeroomClassIds, activeClassId]);
 
   const displayAttendanceRate = displayTotalStudents > 0 
-    ? Math.round((displayPresentCount / displayTotalStudents) * 100) 
+    ? Math.round((displayPresentCount / displayTotalStudents) * 1000) / 10
     : 100;
 
   const displayTotalCoins = isManagementAccount

@@ -333,6 +333,15 @@ export const AdminRealtimeDashboardView: React.FC = () => {
   const totalBoys = filteredStudents.filter(s => s.gender === 'Nam').length;
   const totalGirls = filteredStudents.filter(s => s.gender === 'Nữ').length;
 
+  // "classId|date" of every class-day that has an attendance sheet — boarding is only counted for these
+  const attendedClassDays = useMemo(() => {
+    const set = new Set<string>();
+    attendanceRecords.forEach(r => {
+      if (r && r.records && Object.keys(r.records).length > 0) set.add(`${r.classId}|${r.date}`);
+    });
+    return set;
+  }, [attendanceRecords]);
+
   // =========================================================================
   // 🌟 TỔNG HỢP CHUYÊN CẦN / ĐIỂM DANH THEO KỲ [startDate, endDate]
   // =========================================================================
@@ -399,8 +408,10 @@ export const AdminRealtimeDashboardView: React.FC = () => {
   // =========================================================================
   const periodBoarding = useMemo(() => {
     const { startDate, endDate } = dateRange;
-    const recordsInPeriod = boardingRecords.filter(r => 
-      r.date >= startDate && r.date <= endDate && filteredClassIds.has(r.classId)
+    // A class that has not taken attendance on a day is left out of the boarding totals for that day
+    const recordsInPeriod = boardingRecords.filter(r =>
+      r.date >= startDate && r.date <= endDate && filteredClassIds.has(r.classId) &&
+      attendedClassDays.has(`${r.classId}|${r.date}`)
     );
 
     const datesWithData = new Set<string>();
@@ -421,8 +432,15 @@ export const AdminRealtimeDashboardView: React.FC = () => {
     const totalLogged = eating + notEating + absentMeal;
     const daysCount = datesWithData.size;
 
-    const rate = totalLogged > 0 
-      ? Math.round((eating / totalLogged) * 100) 
+    // Boarding rate = meals registered / students actually present in the same period.
+    // schoolRate = meals registered / total enrolment of the school (per day with boarding data).
+    const presentInPeriod = periodAttendance.present;
+    const rate = presentInPeriod > 0
+      ? Math.round((eating / presentInPeriod) * 1000) / 10
+      : 0;
+    const enrolmentSlots = totalStudents * daysCount;
+    const schoolRate = enrolmentSlots > 0
+      ? Math.round((eating / enrolmentSlots) * 1000) / 10
       : 0;
 
     const avgEatingPerDay = daysCount > 0 ? Math.round(eating / daysCount) : 0;
@@ -433,10 +451,13 @@ export const AdminRealtimeDashboardView: React.FC = () => {
       absentMeal,
       totalLogged,
       rate,
+      schoolRate,
+      presentInPeriod,
+      enrolmentSlots,
       daysCount,
       avgEatingPerDay
     };
-  }, [boardingRecords, filteredClassIds, dateRange]);
+  }, [boardingRecords, filteredClassIds, dateRange, periodAttendance.present, totalStudents, attendedClassDays]);
 
   // Tổng hợp Xu thi đua & Điểm thưởng
   const totalCoins = useMemo(() => {
@@ -481,8 +502,9 @@ export const AdminRealtimeDashboardView: React.FC = () => {
         : (hasAttendanceData ? 100 : 0);
 
       // Bán trú lớp trong kỳ
-      const clsMealRecords = boardingRecords.filter(r => 
-        r.classId === cls.id && r.date >= startDate && r.date <= endDate
+      const clsMealRecords = boardingRecords.filter(r =>
+        r.classId === cls.id && r.date >= startDate && r.date <= endDate &&
+        attendedClassDays.has(`${r.classId}|${r.date}`)
       );
 
       let clsEating = 0;
@@ -533,7 +555,7 @@ export const AdminRealtimeDashboardView: React.FC = () => {
       }
       return (a.name || '').localeCompare(b.name || '', 'vi', { numeric: true, sensitivity: 'base' });
     });
-  }, [filteredClasses, students, attendanceRecords, boardingRecords, dateRange, classSortBy]);
+  }, [filteredClasses, students, attendanceRecords, boardingRecords, dateRange, classSortBy, attendedClassDays]);
 
   // =========================================================================
   // 🌟 HÀM ĐIỀU KHIỂN BỘ LỌC KÈM TỰ ĐỘNG SẮP XẾP THEO THỨ TỰ ABC
@@ -695,7 +717,7 @@ export const AdminRealtimeDashboardView: React.FC = () => {
       ['Tổng sĩ số học sinh', totalStudents, `${totalStudents} học sinh`, 'Toàn bộ học sinh chính thức'],
       ['Tổng học sinh có mặt', periodAttendance.present, generateAsciiBar(periodAttendance.rate), `Tỷ lệ chuyên cần đạt ${periodAttendance.rate}% (gồm ${periodAttendance.late} lượt đi muộn)`],
       ['Tổng học sinh vắng mặt', periodAttendance.absentTotal, `${periodAttendance.enrolmentSlots > 0 ? Math.round((periodAttendance.absentTotal / periodAttendance.enrolmentSlots) * 1000) / 10 : 0}%`, `Có phép: ${periodAttendance.excused} • Không phép: ${periodAttendance.unexcused} • Ốm: ${periodAttendance.sick}`],
-      ['Tổng suất ăn bán trú', periodBoarding.eating, generateAsciiBar(periodBoarding.rate), `Tỷ lệ bán trú đạt ${periodBoarding.rate}% (TB ${periodBoarding.avgEatingPerDay} suất/ngày)`],
+      ['Tổng suất ăn bán trú', periodBoarding.eating, generateAsciiBar(periodBoarding.rate), `Tỷ lệ bán trú đạt ${periodBoarding.rate}% số học sinh đi học, ${periodBoarding.schoolRate}% tổng sĩ số (TB ${periodBoarding.avgEatingPerDay} suất/ngày)`],
       ['Học sinh không ăn bán trú', periodBoarding.notEating, `${periodBoarding.totalLogged > 0 ? Math.round((periodBoarding.notEating / periodBoarding.totalLogged) * 100) : 0}%`, `Vắng ăn: ${periodBoarding.absentMeal} suất`],
       ['Tổng Xu thi đua toàn trường', totalCoins, `${avgCoins} xu / HS`, 'Điểm tích lũy khen thưởng rèn luyện'],
       [],
@@ -723,7 +745,8 @@ export const AdminRealtimeDashboardView: React.FC = () => {
 
       const gLogged = gPresent + gAbsent;
       const gAttRate = gLogged > 0 ? Math.round((gPresent / gLogged) * 100) : 0;
-      const gMealRate = gStudents > 0 ? Math.round((gMeals / gStudents) * 100) : 0;
+      // Boarding rate of the grade = meals registered / students present
+      const gMealRate = gPresent > 0 ? Math.round((gMeals / gPresent) * 100) : 0;
       const gAvgCoins = gStudents > 0 ? (gCoins / gStudents).toFixed(1) : '0';
 
       sumGradeClasses += gClassesCount;
@@ -757,7 +780,7 @@ export const AdminRealtimeDashboardView: React.FC = () => {
     const totalGradeLogged = sumGradePresent + sumGradeAbsent;
     // Whole-school row: present / total enrolment (same rule as the on-screen card)
     const totalGradeAttRate = totalGradeLogged > 0 ? periodAttendance.rate : 0;
-    const totalGradeMealRate = sumGradeStudents > 0 ? Math.round((sumGradeMeals / sumGradeStudents) * 100) : 0;
+    const totalGradeMealRate = sumGradePresent > 0 ? Math.round((sumGradeMeals / sumGradePresent) * 1000) / 10 : 0;
     const totalGradeAvgCoins = sumGradeStudents > 0 ? (sumGradeCoins / sumGradeStudents).toFixed(1) : '0';
 
     sheet1Rows.push([
@@ -1252,6 +1275,12 @@ export const AdminRealtimeDashboardView: React.FC = () => {
                 </>
               )}
             </div>
+            {periodBoarding.eating > 0 && (
+              <div className="mt-0.5 text-[12px] font-bold text-slate-600 whitespace-nowrap"
+                title={`${periodBoarding.eating} suất ăn / ${periodBoarding.presentInPeriod} học sinh đi học = ${periodBoarding.rate}%  •  ${periodBoarding.eating} suất ăn / ${periodBoarding.enrolmentSlots} tổng sĩ số = ${periodBoarding.schoolRate}%`}>
+                {periodBoarding.rate}% HS đi học • {periodBoarding.schoolRate}% sĩ số trường
+              </div>
+            )}
           </div>
           <div className="mt-2 pt-2 border-t border-amber-100 text-[12px] text-slate-500 font-bold flex items-center justify-between">
             <span>Cắt suất: {periodBoarding.absentMeal} lượt</span>
@@ -1398,7 +1427,7 @@ export const AdminRealtimeDashboardView: React.FC = () => {
                   stroke="#F59E0B"
                   strokeWidth="12"
                   strokeDasharray={251.2}
-                  strokeDashoffset={251.2 - (251.2 * (periodBoarding.rate || 0)) / 100}
+                  strokeDashoffset={251.2 - (251.2 * Math.min(100, periodBoarding.rate || 0)) / 100}
                   strokeLinecap="round"
                   className="transition-all duration-700 ease-out"
                 />
