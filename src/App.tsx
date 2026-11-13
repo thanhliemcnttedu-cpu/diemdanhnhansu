@@ -74,6 +74,13 @@ function ClassroomApp() {
   } = useClassroom();
   const [currentView, setCurrentView] = useState<NavigationMenuId>('dashboard');
 
+  // Log out / log in with another account → always start at the home page,
+  // never on the screen the previous account left open.
+  useEffect(() => {
+    setCurrentView('dashboard');
+    setIsMobileSidebarOpen(false);
+  }, [currentUser?.username]);
+
   // One Data page instead of separate Drive / storage dialogs: any "open Google Drive" or "open storage location"
   // request made while logged in jumps to the matching section. Before login (auth screen) the dialogs still open.
   useEffect(() => {
