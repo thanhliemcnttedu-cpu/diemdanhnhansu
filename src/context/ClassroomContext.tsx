@@ -28,7 +28,7 @@ import {
 } from '../data/initialData';
 import { playCoinSound, playDeductSound } from '../utils/audio';
 import { DEFAULT_QUESTIONS, loadQuizBank, saveQuizBank, smartMergeQuizBank } from '../utils/quizParser';
-import { databaseService, FALLBACK_USERS, LOCAL_AUTH_KEY, LOCAL_DB_PREFIX, LOCAL_SESSION_KEY, getApiBaseUrl } from '../services/databaseService';
+import { databaseService, FALLBACK_USERS, LOCAL_AUTH_KEY, LOCAL_DB_PREFIX, LOCAL_SESSION_KEY, getApiBaseUrl, notifyDataRefreshed } from '../services/databaseService';
 import { AvatarSourceType, getStudentAvatarAssignment, sanitizeStudentAvatar } from '../utils/avatarConfig';
 import { getOfficialDisplayName, getOfficialRoleTitle, ACCOUNT_IDENTITY_MAP, isRestrictedAdminOrBgh } from '../utils/accountIdentity';
 import { extractSchoolBranchesFromClasses } from '../utils/schoolBranchHelper';
@@ -1800,6 +1800,7 @@ export const ClassroomProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         if (currentUser.role === 'admin' || currentUser.username?.toLowerCase() === 'adminquantri' || isExecutive) {
           const scoped = await databaseService.getExecutiveScopedData(currentUser);
           if (scoped && Array.isArray(scoped.classes)) {
+            notifyDataRefreshed(); // top bar shows the time of this automatic refresh (even when nothing changed)
             // ⚡ Chỉ cập nhật giao diện khi dữ liệu tổng hợp thật sự thay đổi (tránh vẽ lại toàn ứng dụng mỗi 12 giây)
             let signature = '';
             try {
@@ -2500,6 +2501,7 @@ export const ClassroomProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         setBoardingRecords(scoped.boardingRecords || []);
         setTransactions(scoped.transactions || []);
         setDbSyncStatus('synced');
+        notifyDataRefreshed();
       } else {
         setDbSyncStatus('offline');
       }

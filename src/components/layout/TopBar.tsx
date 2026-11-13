@@ -8,7 +8,7 @@ import {
 , Search, MonitorPlay, MapPin, CalendarDays, AlertTriangle, CheckCircle2
 } from 'lucide-react';
 import { googleDriveService } from '../../services/googleDriveService';
-import { invalidateDriveClassFilesCache, FORCE_DATA_REFRESH_EVENT } from '../../services/databaseService';
+import { invalidateDriveClassFilesCache, FORCE_DATA_REFRESH_EVENT, DATA_REFRESHED_EVENT } from '../../services/databaseService';
 import { adminEditsService } from '../../services/adminEditsService';
 import { playNoiseAlertSound } from '../../utils/audio';
 import { NavigationMenuId } from './Sidebar';
@@ -226,6 +226,18 @@ export const TopBar: React.FC<TopBarProps> = ({
 
   const [isRefreshingAll, setIsRefreshingAll] = useState(false);
   const [lastRefreshAllAt, setLastRefreshAllAt] = useState<string>('');
+  const timeNow = () => {
+    const now = new Date();
+    return [now.getHours(), now.getMinutes(), now.getSeconds()].map(n => String(n).padStart(2, '0')).join(':');
+  };
+  // Automatic refresh cycles (and the manual button) report here → the chip always shows the latest refresh time
+  useEffect(() => {
+    const onRefreshed = () => setLastRefreshAllAt(timeNow());
+    window.addEventListener(DATA_REFRESHED_EVENT, onRefreshed);
+    return () => window.removeEventListener(DATA_REFRESHED_EVENT, onRefreshed);
+  }, []);
+  // Another account logged in → the previous account's time no longer applies
+  useEffect(() => { setLastRefreshAllAt(''); }, [currentUser?.username]);
   const handleRefreshAllData = async () => {
     if (isRefreshingAll) return;
     setIsRefreshingAll(true);
@@ -234,8 +246,7 @@ export const TopBar: React.FC<TopBarProps> = ({
       adminEditsService.invalidateCache(); // đọc lại điều chỉnh của Quản trị
       await syncDatabaseNow();             // tổng hợp lại lớp, học sinh, điểm danh, bán trú
       window.dispatchEvent(new Event(FORCE_DATA_REFRESH_EVENT)); // bảng thống kê tải lại
-      const now = new Date();
-      setLastRefreshAllAt(`${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`);
+      setLastRefreshAllAt(timeNow());
     } catch (err) {
       console.warn('Cập nhật dữ liệu lỗi:', err);
       alert('Chưa cập nhật được dữ liệu. Vui lòng kiểm tra kết nối Internet / Google Drive rồi thử lại.');
@@ -487,7 +498,7 @@ export const TopBar: React.FC<TopBarProps> = ({
             onClick={handleRefreshAllData}
             disabled={isRefreshingAll}
             className={`${chipBase} bg-emerald-700 text-white border-emerald-600 hover:bg-emerald-800 disabled:opacity-80 disabled:cursor-wait`}
-            title={`Cập nhật ngay dữ liệu mới nhất từ tất cả tài khoản giáo viên (lớp, học sinh, điểm danh, bán trú)${lastRefreshAllAt ? ` • Lần cuối: ${lastRefreshAllAt}` : ''}`}
+            title={`Bấm để cập nhật ngay dữ liệu mới nhất từ tất cả tài khoản giáo viên (lớp, học sinh, điểm danh, bán trú)${lastRefreshAllAt ? ` • Lần cập nhật gần nhất (tự động hoặc bấm tay): ${lastRefreshAllAt}` : ''}`}
             aria-label="Cập nhật dữ liệu mới nhất từ tất cả giáo viên"
           >
             <RefreshCw className={`w-4 h-4 ${isRefreshingAll ? 'animate-spin' : ''}`} />

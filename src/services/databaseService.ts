@@ -307,6 +307,12 @@ export function invalidateDriveClassFilesCache() {
 /** Sự kiện toàn app: Quản trị/BGH bấm "Cập nhật dữ liệu" → các bảng thống kê tải lại ngay. */
 export const FORCE_DATA_REFRESH_EVENT = 'lhhp:force-data-refresh';
 
+/** App-wide event: school-wide data has just been refreshed (automatic cycle or manual) → the top bar shows the time. */
+export const DATA_REFRESHED_EVENT = 'lhhp:data-refreshed';
+export const notifyDataRefreshed = (): void => {
+  try { if (typeof window !== 'undefined') window.dispatchEvent(new Event(DATA_REFRESHED_EVENT)); } catch (_) { /* ignore */ }
+};
+
 export const databaseService = {
   // Authentication
   async login(

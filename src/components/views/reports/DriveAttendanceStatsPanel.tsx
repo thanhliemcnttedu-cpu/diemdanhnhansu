@@ -2,7 +2,7 @@ import { MANAGER_REPORT_MS } from '../../../utils/liveSync';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Cloud, RefreshCw, CheckSquare, Utensils, AlertCircle, CheckCircle2, Clock } from 'lucide-react';
 import { useClassroom } from '../../../context/ClassroomContext';
-import { databaseService, FORCE_DATA_REFRESH_EVENT } from '../../../services/databaseService';
+import { databaseService, FORCE_DATA_REFRESH_EVENT, notifyDataRefreshed } from '../../../services/databaseService';
 import {
   googleDriveService,
   toLocalDateKey,
@@ -144,6 +144,7 @@ export const DriveAttendanceStatsPanel: React.FC<{ schoolTotalStudents?: number 
       setData(res.data);
       setError(null);
       setLastLoadedAt(new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
+      notifyDataRefreshed(); // the same time also shows on the top bar
     } else {
       setError(res.message);
     }
