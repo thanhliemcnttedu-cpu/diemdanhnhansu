@@ -9,7 +9,7 @@ import { LICENSE_REQUIRED_EVENT } from './utils/licenseGate';
 import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { ClassroomProvider, useClassroom } from './context/ClassroomContext';
 import { TopBar } from './components/layout/TopBar';
-import { Sidebar, NavigationMenuId } from './components/layout/Sidebar';
+import { Sidebar, NavigationMenuId, isNonTeachingAccount, NON_TEACHING_MENU_IDS } from './components/layout/Sidebar';
 import { MobileBottomNav } from './components/layout/MobileBottomNav';
 
 import { DashboardView } from './components/views/DashboardView';
@@ -182,6 +182,19 @@ function ClassroomApp() {
       }
     }
   }, [isMacroAdmin, currentView]);
+
+  // Guard: nhân sự không phải giáo viên (kế toán, văn thư…) không có chức năng quản lý lớp học
+  // → chỉ dùng Chấm công của tôi, Hướng dẫn và (khi được cấp quyền) báo cáo Chấm công nhân sự
+  const isNonTeaching = !isMacroAdmin && isNonTeachingAccount(currentUser);
+  const canViewStaffReport = isMacroAdmin || Boolean(currentUser?.staffReportViewer);
+  useEffect(() => {
+    if (isNonTeaching) {
+      const allowed = NON_TEACHING_MENU_IDS.filter(id => id !== 'staff_attendance' || canViewStaffReport);
+      if (!allowed.includes(currentView)) setCurrentView(canViewStaffReport ? 'staff_attendance' : 'my_checkin');
+    } else if (currentUser && currentView === 'staff_attendance' && !canViewStaffReport) {
+      setCurrentView('dashboard');
+    }
+  }, [isNonTeaching, canViewStaffReport, currentView, currentUser?.username]);
 
   // 👁️ "Vào xem" lớp của giáo viên từ màn Quản trị: CHẾ ĐỘ CHỈ XEM (không đăng nhập thay giáo viên)
   const handleSwitchToUser = async (username: string): Promise<boolean> => {

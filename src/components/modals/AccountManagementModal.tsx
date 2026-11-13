@@ -10,7 +10,7 @@ import {
   Activity, Calendar, Clock, Filter, RotateCcw, GitBranch, ChevronDown,
   FolderTree, Building2, Plus, Crown, ArrowRightLeft, FileText,
   ArrowUpDown, Layers, ArrowDownAZ, ArrowUpAZ, GraduationCap, SlidersHorizontal, LogIn, MapPin, Lock
-, FolderOpen } from 'lucide-react';
+, FolderOpen, ClipboardCheck, Briefcase } from 'lucide-react';
 import { UserAccount, UserRole, SchoolEntity } from '../../types';
 import { databaseService, DatabaseStats, AuditLogItem, UserSummaryItem } from '../../services/databaseService';
 import { schoolDriveDbService } from '../../services/schoolDriveDbService';
@@ -829,6 +829,26 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
     setTimeout(() => {
       setNotification(null);
     }, 4000);
+  };
+
+  // Bật / tắt quyền riêng của tài khoản: xem báo cáo chấm công, hoặc tài khoản Nhân viên (không quản lý lớp)
+  const handleToggleAccountFlag = async (u: UserAccount, key: 'staffReportViewer' | 'nonTeaching') => {
+    if (isSchoolAdmin && u.schoolName !== currentSchoolScope) { showNotify('error', 'Tài khoản này không thuộc trường của bạn.'); return; }
+    const next = !u[key];
+    const what = key === 'staffReportViewer'
+      ? (next ? `CẤP quyền xem và xuất báo cáo "Chấm công nhân sự" cho ${u.fullName}?\nTài khoản chỉ xem số liệu và xuất tệp, không sửa được.` : `THU HỒI quyền xem báo cáo "Chấm công nhân sự" của ${u.fullName}?`)
+      : (next ? `Chuyển ${u.fullName} thành tài khoản NHÂN VIÊN?\nTài khoản sẽ không còn các mục quản lý lớp học, học sinh.` : `Chuyển ${u.fullName} trở lại tài khoản GV bộ môn (có quản lý lớp học)?`);
+    if (!window.confirm(what)) return;
+    try {
+      const res = await databaseService.updateUser(uidOf(u), { [key]: next } as Partial<UserAccount>);
+      if (!res.success) { showNotify('error', res.message || 'Chưa lưu được thay đổi.'); return; }
+      showNotify('success', key === 'staffReportViewer'
+        ? (next ? `Đã cấp quyền xem báo cáo chấm công cho ${u.fullName}. Cần Apps Script của trường ở phiên bản mới nhất; tài khoản đăng nhập lại để thấy mục Chấm công nhân sự.` : `Đã thu hồi quyền xem báo cáo chấm công của ${u.fullName}.`)
+        : (next ? `${u.fullName} đã là tài khoản Nhân viên (không quản lý lớp học).` : `${u.fullName} đã trở lại tài khoản GV bộ môn.`));
+      onRefreshUsers();
+    } catch (err: any) {
+      showNotify('error', err?.message || 'Chưa lưu được thay đổi.');
+    }
   };
 
   const handleStartCreate = () => {
@@ -2680,10 +2700,12 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                         : u.role === 'school_admin' ? { label: 'Quản trị nhà trường', cls: 'text-blue-700', level: 'Cấp 2', desc: 'Quản trị trong nhà trường' }
                         : isBghUser ? { label: 'Ban giám hiệu', cls: 'text-purple-700', level: 'Cấp 2', desc: 'Ban giám hiệu (toàn trường)' }
                         : u.role === 'guest_admin' ? { label: 'Quản trị cá nhân', cls: 'text-fuchsia-700', level: 'Cấp 2', desc: 'Quản trị cá nhân' }
+                        : (u.role === 'subject' && u.nonTeaching) ? { label: 'Nhân viên', cls: 'text-teal-700', level: 'Cấp 4', desc: 'Nhân sự không dạy lớp (không quản lý lớp học)' }
                         : u.role === 'subject' ? { label: 'GV bộ môn', cls: 'text-emerald-700', level: 'Cấp 4', desc: 'Giáo viên bộ môn' }
                         : { label: 'GV chủ nhiệm', cls: 'text-indigo-700', level: 'Cấp 3', desc: 'Giáo viên chủ nhiệm' };
                       const uGrade = getUserGrade(u);
                       const scope = u.role === 'homeroom' ? `${uGrade ? `Khối ${uGrade} • ` : ''}${u.assignedClassName || 'Chưa gán lớp'}`
+                        : (u.role === 'subject' && u.nonTeaching) ? 'Không quản lý lớp'
                         : u.role === 'subject' ? `Môn: ${u.subjectName || 'Bộ môn'}`
                         : (u.role === 'school_admin' || u.role === 'bgh' || u.isBgh) ? 'Toàn trường'
                         : u.role === 'admin' ? 'Toàn hệ thống' : 'Chưa gán';
@@ -2738,6 +2760,9 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                                     ? <span className="px-1.5 py-0.5 rounded-md bg-emerald-50 border border-emerald-200 text-emerald-800 font-bold" title="Tài khoản dùng chung với chấm công: tên đăng nhập là số CCCD, mật khẩu điểm danh dùng được">CCCD · chung chấm công</span>
                                     : <span className="px-1.5 py-0.5 rounded-md bg-amber-50 border border-amber-200 text-amber-900 font-bold" title="Nên chuyển tên đăng nhập sang số CCCD: Import biểu mẫu → Tạo từ danh sách nhân sự → Chuyển sang số CCCD">nên chuyển sang CCCD</span>)}
                                   <span className={`font-semibold ${roleInfo.cls}`}>{roleInfo.label}</span>
+                                  {u.staffReportViewer && (
+                                    <span className="px-1.5 py-0.5 rounded-md bg-sky-50 border border-sky-200 text-sky-800 font-bold" title="Tài khoản này được xem và xuất báo cáo mục Chấm công nhân sự (chỉ đọc)">Xem báo cáo chấm công</span>
+                                  )}
                                 </p>
                                 <p className={`text-xs mt-0.5 flex items-center gap-1 whitespace-nowrap max-w-[280px] ${u.tenantType === 'guest' ? 'text-fuchsia-700' : 'text-emerald-700'}`}>
                                   <MapPin className="w-3 h-3 shrink-0" /><span className="truncate">{u.tenantType === 'guest' ? 'Giáo viên cá nhân (vãng lai)' : (u.schoolName || 'Nhà trường')}</span>
@@ -2772,6 +2797,22 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
                               <button onClick={() => handleOpenTransferModal(u)} className={`${iconBtn} text-purple-600 hover:bg-purple-50`}
                                 title={u.tenantType === 'guest' ? 'Gán vào trường (chuyển toàn bộ dữ liệu cá nhân sang nhà trường)' : 'Chuyển trường (di chuyển toàn bộ dữ liệu)'} aria-label={`Chuyển trường cho ${u.fullName}`}>
                                 <ArrowRightLeft className="w-4 h-4" />
+                              </button>
+                            )}
+                            {(u.role === 'homeroom' || u.role === 'subject') && u.tenantType !== 'guest' && (
+                              <button onClick={() => handleToggleAccountFlag(u, 'staffReportViewer')} aria-pressed={Boolean(u.staffReportViewer)}
+                                className={`${iconBtn} ${u.staffReportViewer ? 'bg-sky-100 text-sky-800 hover:bg-sky-200' : 'text-sky-700 hover:bg-sky-50'}`}
+                                title={u.staffReportViewer ? 'Đang được xem / xuất báo cáo Chấm công nhân sự — bấm để thu hồi quyền' : 'Cấp quyền xem và xuất báo cáo mục Chấm công nhân sự (chỉ đọc), ví dụ cho nhân viên kế toán'}
+                                aria-label={`${u.staffReportViewer ? 'Thu hồi' : 'Cấp'} quyền xem báo cáo chấm công cho ${u.fullName}`}>
+                                <ClipboardCheck className="w-4 h-4" />
+                              </button>
+                            )}
+                            {u.role === 'subject' && u.tenantType !== 'guest' && (
+                              <button onClick={() => handleToggleAccountFlag(u, 'nonTeaching')} aria-pressed={Boolean(u.nonTeaching)}
+                                className={`${iconBtn} ${u.nonTeaching ? 'bg-teal-100 text-teal-800 hover:bg-teal-200' : 'text-teal-700 hover:bg-teal-50'}`}
+                                title={u.nonTeaching ? 'Đang là tài khoản Nhân viên (không quản lý lớp học) — bấm để chuyển lại thành GV bộ môn' : 'Chuyển thành tài khoản Nhân viên: nhân sự không phải giáo viên, không có chức năng quản lý lớp học'}
+                                aria-label={`${u.nonTeaching ? 'Chuyển thành GV bộ môn' : 'Chuyển thành Nhân viên không quản lý lớp'}: ${u.fullName}`}>
+                                <Briefcase className="w-4 h-4" />
                               </button>
                             )}
                             <button onClick={() => handleResetPassword(u)} className={`${iconBtn} text-amber-700 hover:bg-amber-50`} title="Đặt lại mật khẩu cho tài khoản này" aria-label={`Đặt lại mật khẩu cho ${u.fullName}`}>

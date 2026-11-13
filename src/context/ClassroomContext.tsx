@@ -963,6 +963,11 @@ export const ClassroomProvider: React.FC<{ children: React.ReactNode }> = ({ chi
           if (tU && tU !== curU) return false;
           return true;
         });
+      } else if (currentUserRef.current?.role === 'subject') {
+        // 🧑‍🏫 Tài khoản GV bộ môn: mọi lớp đều là lớp bộ môn của riêng giáo viên (kể cả lớp tạo từ bản trước chưa gắn nhãn)
+        cleanClasses = data.classes.map(c => (
+          c && (c.teacherRole !== 'subject' || c.isHomeroom !== false) ? { ...c, teacherRole: 'subject' as const, isHomeroom: false } : c
+        ));
       } else {
         cleanClasses = data.classes;
       }
@@ -2613,6 +2618,14 @@ export const ClassroomProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   };
 
   // Class methods
+  // 🧑‍🏫 Giáo viên bộ môn: tài khoản GVBM, hoặc tài khoản giáo viên đang ở chế độ "GV bộ môn".
+  // Lớp do các tài khoản này tạo / nhập là lớp bộ môn độc lập — không phải lớp chủ nhiệm của trường.
+  const SUBJECT_CLASS_TAGS: Pick<Classroom, 'teacherRole' | 'isHomeroom'> = { teacherRole: 'subject', isHomeroom: false };
+  const isSubjectTeacherNow = (): boolean => Boolean(
+    currentUser && !isRestrictedAdminOrBghUser && currentUser.role !== 'admin' &&
+    (currentUser.role === 'subject' || (currentUser.role === 'homeroom' && teacherRole === 'subject'))
+  );
+
   const addClass = (cls: Omit<Classroom, 'id'>) => {
     // 🛡️ Kiểm tra CDKEY Bản Quyền (Trial: Tối đa 01 lớp học)
     const classLimitCheck = licenseService.checkClassLimit(classes.length);
@@ -2640,7 +2653,8 @@ export const ClassroomProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         member2: { name: '', phone: '' }
       }
     } : cls;
-    const newCls: Classroom = { ...sanitizedCls, id: newId };
+    // Lớp do giáo viên bộ môn tạo luôn là lớp bộ môn của riêng giáo viên đó (không tính vào số liệu tổng hợp của trường)
+    const newCls: Classroom = { ...sanitizedCls, ...(isSubjectTeacherNow() ? SUBJECT_CLASS_TAGS : {}), id: newId };
     const nextClasses = [...classes, newCls];
     setClasses(nextClasses);
     classesRef.current = nextClasses;
@@ -2707,8 +2721,15 @@ export const ClassroomProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       return;
     }
 
+    const subjectOwner = isSubjectTeacherNow();
     const createdClasses: Classroom[] = newClassesList.map((item, idx) => ({
       ...item,
+      // GV bộ môn nhập danh sách lớp: lớp bộ môn của riêng giáo viên đang đăng nhập
+      ...(subjectOwner ? {
+        ...SUBJECT_CLASS_TAGS,
+        teacherUsername: (currentUser?.username || '').toLowerCase(),
+        teacherName: currentUser?.fullName || item.teacherName
+      } : {}),
       id: `class-${Date.now()}-${idx}-${Math.random().toString(36).substr(2, 4)}`
     }));
 
@@ -4464,10 +4485,20 @@ export const ClassroomProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         academicYear: teacherProfile.academicYear || '2026–2027',
         teacherName: item.teacherName || `GVCN Lớp ${trimmedName}`,
         slogan: item.slogan || `Tập thể ${trimmedName} chăm ngoan, đoàn kết, học tốt môn ${currentSubjectName}!`,
-        avatar: `https://api.dicebear.com/7.x/shapes/svg?seed=Class${trimmedName}&backgroundColor=3b82f6`
+        avatar: `https://api.dicebear.com/7.x/shapes/svg?seed=Class${trimmedName}&backgroundColor=3b82f6`,
+        // Lớp dạy bộ môn: của riêng giáo viên, không tính vào số lớp / học sinh tổng hợp của trường
+        ...SUBJECT_CLASS_TAGS,
+        teacherUsername: (currentUser?.username || '').toLowerCase() || undefined
       };
 
       if (existingClassIdx >= 0) {
+        // Trùng tên với lớp chủ nhiệm đang có của chính tài khoản này: giữ nguyên nhãn lớp chủ nhiệm
+        const prevCls = newClassesList[existingClassIdx];
+        if (prevCls && (prevCls.isHomeroom === true || prevCls.teacherRole === 'homeroom' || prevCls.teacherRole === 'GVCN')) {
+          classObj.teacherRole = prevCls.teacherRole;
+          classObj.isHomeroom = prevCls.isHomeroom;
+          classObj.teacherUsername = prevCls.teacherUsername;
+        }
         newClassesList[existingClassIdx] = classObj;
       } else {
         newClassesList.push(classObj);

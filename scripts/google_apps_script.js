@@ -56,6 +56,9 @@
 var FOLDER_ID = "__FOLDER_ID__";
 var TARGET_FILENAME = "du_lieu_lop_hoc_hanh_phuc.json";
 var REPORT_PREFIX = "bc_";
+// 1.1.12: QUYỀN XEM BÁO CÁO CHẤM CÔNG — tài khoản được Quản trị bật `staffReportViewer` (ví dụ nhân viên kế toán)
+//         được XEM tổng hợp chấm công (`staffAttendanceRange`) và tổng hợp kê khai tiết dạy (`teachReport`) để xuất báo cáo.
+//         Chỉ đọc: không điểm danh hộ, không khóa / mở khóa, không xem danh sách nhân sự, mật khẩu hay số CCCD đầy đủ.
 // 1.1.11: BẢN QUYỀN THEO TỪNG TRƯỜNG — `setLicense` nhận thêm mã bản quyền do tác giả ký cho đúng thư mục của trường
 //         (`record.v = 2`, `record.code = "LHHP2.<nội dung>.<chữ ký>"`); chỉ lưu khi mã ghi đúng mã thư mục này.
 //         Phần mềm tự kiểm tra chữ ký của tác giả. Bản ghi kích hoạt kiểu cũ (mã băm + chữ ký) vẫn nhận như trước.
@@ -85,7 +88,7 @@ var REPORT_PREFIX = "bc_";
 //        rồi mã hóa lại (healStaffCccdHashes) — khi đăng nhập, khi Quản trị / BGH mở hoặc lưu danh sách nhân sự.
 // QUY TẮC ĐẶT TÊN PHIÊN BẢN (từ 11/2026): "Phiên bản A.B.C" — mỗi lần sửa mã tăng C thêm 1;
 // C tối đa 20: sau 1.1.20 là 1.2.1, sau 1.2.20 là 1.3.1… Các bản cũ dạng "4.x" (4.1 → 4.12) được coi là cũ hơn 1.1.2.
-var SCRIPT_VERSION = "1.1.11";
+var SCRIPT_VERSION = "1.1.12";
 // Thư mục của yêu cầu đang xử lý (để verifyUser đọc được danh sách nhân sự khi đăng nhập bằng CCCD)
 var CTX_FOLDER = null;
 
@@ -1301,6 +1304,31 @@ function staffActor(folder, auth, needAdmin) {
   return null;
 }
 
+/**
+ * 1.1.12: người được XEM báo cáo chấm công / kê khai tiết dạy — Quản trị, BGH, hoặc tài khoản được Quản trị
+ * bật quyền `staffReportViewer` (ví dụ nhân viên kế toán). Chỉ dùng cho các lệnh ĐỌC số liệu.
+ */
+function staffReportActor(folder, auth) {
+  var sdb = readSchoolDb(folder);
+  var actor = sdb ? verifyUser(sdb, (auth || {}).username, (auth || {}).password) : null;
+  if (!actor || actor.disabled) return null;
+  if (isAdminUser(actor) || actor.role === "bgh" || actor.isBgh || actor.staffReportViewer === true) return actor;
+  return null;
+}
+
+/** Tài khoản chỉ có quyền xem báo cáo (không phải Quản trị / BGH) */
+function isReportViewerOnly(actor) {
+  return !!actor && !isAdminUser(actor) && !(actor.role === "bgh" || actor.isBgh);
+}
+
+/** Hồ sơ nhân sự gửi cho người chỉ xem báo cáo: không kèm số CCCD đầy đủ, số điện thoại */
+function reportStaff(s) {
+  var p = publicStaff(s);
+  p.cccd = "";
+  p.phone = "";
+  return p;
+}
+
 // --- Giáo viên/nhân viên: xác thực + xem trạng thái hôm nay
 function handleStaffAuth(folder, payload) {
   var v = verifyStaffReq(folder, payload);
@@ -1552,15 +1580,16 @@ function handleTeachSaveLog(folder, payload) {
 
 // BGH / Quản trị: tổng hợp kê khai các tháng from..to (tối đa 12 tháng)
 function handleTeachReport(folder, payload) {
-  var actor = staffActor(folder, payload.auth, false);
-  if (!actor) return { success: false, code: "UNAUTHORIZED", message: "Chỉ BGH / Quản trị được xem tổng hợp kê khai." };
+  var actor = staffReportActor(folder, payload.auth);
+  if (!actor) return { success: false, code: "UNAUTHORIZED", message: "Chỉ BGH / Quản trị hoặc tài khoản được cấp quyền xem báo cáo mới xem được tổng hợp kê khai." };
+  var viewerOnly = isReportViewerOnly(actor);
   var from = cleanMonth(payload.from), to = cleanMonth(payload.to || payload.from);
   if (from > to) { var t = from; from = to; to = t; }
   var db = readTeachDb(folder);
   var logs = {}, n = 0;
   for (var m in db.logs) if (m >= from && m <= to && n++ < 12) logs[m] = db.logs[m];
   var sdb = readStaffDb(folder);
-  return { success: true, from: from, to: to, today: staffToday(), profiles: db.profiles, logs: logs, locks: db.locks || {}, staff: sdb.staff.map(publicStaff), settings: teachSettingsOf(db) };
+  return { success: true, from: from, to: to, today: staffToday(), profiles: db.profiles, logs: logs, locks: db.locks || {}, staff: sdb.staff.map(viewerOnly ? reportStaff : publicStaff), settings: teachSettingsOf(db), viewerOnly: viewerOnly };
 }
 
 // ---------------------------------------------------------------- V4.9: khóa chốt kê khai tiết dạy theo THÁNG
@@ -1916,8 +1945,9 @@ function handleGetStaffRosterResult(db, props, errors) {
 
 // --- BGH / Quản trị: dữ liệu điểm danh trong khoảng ngày (tối đa 400 ngày)
 function handleStaffAttendanceRange(folder, payload) {
-  var actor = staffActor(folder, payload.auth, false);
-  if (!actor) return { success: false, code: "UNAUTHORIZED", message: "Chỉ Quản trị / BGH được xem tổng hợp chấm công." };
+  var actor = staffReportActor(folder, payload.auth);
+  if (!actor) return { success: false, code: "UNAUTHORIZED", message: "Chỉ Quản trị / BGH hoặc tài khoản được cấp quyền xem báo cáo mới xem được tổng hợp chấm công." };
+  var viewerOnly = isReportViewerOnly(actor);
   var today = staffToday();
   var from = String(payload.from || today).slice(0, 10);
   var to = String(payload.to || today).slice(0, 10);
@@ -1942,11 +1972,11 @@ function handleStaffAttendanceRange(folder, payload) {
   var showCccd = isAdminUser(actor);
   var props = PropertiesService.getScriptProperties();
   var staff = db.staff.map(function (s) {
-    var p = publicStaff(s);
+    var p = viewerOnly ? reportStaff(s) : publicStaff(s);
     if (showCccd) p.currentCccd = props.getProperty("scccd:" + s.code) || "";
     return p;
   });
-  return { success: true, today: today, from: from, to: to, staff: staff, days: days, locks: locks };
+  return { success: true, today: today, from: from, to: to, staff: staff, days: days, locks: locks, viewerOnly: viewerOnly };
 }
 
 function createJsonResponse(obj) {

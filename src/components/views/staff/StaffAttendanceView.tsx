@@ -13,6 +13,7 @@ import { StaffCheckInQrCard } from './StaffCheckInQr';
 import { TeachingReportPanel } from './TeachingReportPanel';
 import { appsScriptSetupService, compareVersions, versionLabel } from '../../../services/appsScriptSetupService';
 import { openReinitSchoolDb } from '../../modals/ReinitSchoolDbModal';
+import { readTeacherAuth } from '../../../utils/teacherAuth';
 
 type Tab = 'summary' | 'roster' | 'teach' | 'link';
 type Period = 'today' | 'yesterday' | 'week' | 'month' | 'custom';
@@ -86,16 +87,27 @@ const Legend = () => (
 );
 
 // ---------------------------------------------------------------- main view
+/** Người chỉ xem báo cáo bị Apps Script từ chối: sai mật khẩu, quyền đã thu hồi, hoặc Apps Script của trường còn bản cũ */
+const VIEWER_DENIED_MESSAGE = 'Chưa mở được báo cáo chấm công. Kiểm tra lại mật khẩu; nếu mật khẩu đúng thì Quản trị nhà trường cần cập nhật Apps Script lên phiên bản mới nhất, hoặc quyền xem báo cáo của tài khoản này đã được thu hồi.';
+
 export const StaffAttendanceView: React.FC = () => {
   const { currentUser, isBgh, isSchoolAdmin } = useClassroom();
   const canManage = Boolean(currentUser && (currentUser.role === 'admin' || currentUser.role === 'school_admin' || isSchoolAdmin));
   const schoolName = currentUser?.schoolName || '';
 
+  // 👁️ Tài khoản được Quản trị cấp quyền "Xem báo cáo chấm công" (vd. nhân viên kế toán): CHỈ XEM và XUẤT TỆP —
+  // không có thẻ Danh sách nhân sự / Link điểm danh, không điểm danh hộ, không khóa / mở khóa (Apps Script 1.1.12)
+  const viewOnly = !canManage && !isBgh && currentUser?.role !== 'bgh' && Boolean(currentUser?.staffReportViewer);
+
   const [tab, setTab] = useState<Tab>('summary');
   // Phiên đã nhớ phải đúng tài khoản đang đăng nhập phần mềm
   const [auth, setAuth] = useState(() => {
+    const me = (currentUser?.username || '').trim().toLowerCase();
     const a = staffAttendanceService.getViewerAuth();
-    return a && (!currentUser?.username || a.username === currentUser.username.trim().toLowerCase()) ? a : null;
+    if (a && (!me || a.username === me)) return a;
+    // Người chỉ xem báo cáo đăng nhập bằng tài khoản dùng chung chấm công: dùng luôn phiên đã nhớ của tài khoản đó
+    const t = viewOnly ? readTeacherAuth() : null;
+    return t && me && t.username === me ? t : null;
   });
   const [authPassword, setAuthPassword] = useState('');
   const [authError, setAuthError] = useState('');
@@ -142,6 +154,7 @@ export const StaffAttendanceView: React.FC = () => {
           const d = await staffAttendanceService.diagnoseFailure();
           if (d.kind === 'no_db' || d.kind === 'dead') { setError(d.message); setErrorKind(d.kind); return; }
           staffAttendanceService.clearViewerAuth(); setAuth(null);
+          if (viewOnly) setAuthError(VIEWER_DENIED_MESSAGE);
         }
         setError(r?.message || 'Không tải được dữ liệu chấm công.');
         return;
@@ -209,7 +222,7 @@ export const StaffAttendanceView: React.FC = () => {
       const r = await staffAttendanceService.range(today, today, a);
       if (!r?.success) {
         const d = r?.code === 'UNAUTHORIZED' ? await staffAttendanceService.diagnoseFailure() : null;
-        setAuthError(d && d.kind !== 'ok' && d.kind !== 'unknown' ? d.message : (r?.message || 'Sai mật khẩu.'));
+        setAuthError(d && d.kind !== 'ok' && d.kind !== 'unknown' ? d.message : (viewOnly && r?.code === 'UNAUTHORIZED' ? VIEWER_DENIED_MESSAGE : (r?.message || 'Sai mật khẩu.')));
         return;
       }
       staffAttendanceService.rememberViewerAuth(a.username, a.password, canManage);
@@ -287,7 +300,7 @@ export const StaffAttendanceView: React.FC = () => {
           <div className="flex items-center gap-3">
             <div className="w-11 h-11 rounded-2xl bg-indigo-600 text-white flex items-center justify-center"><Lock className="w-5 h-5" /></div>
             <div>
-              <h2 className="text-lg font-black text-slate-900">Xác nhận để xem chấm công nhân sự</h2>
+              <h2 className="text-lg font-black text-slate-900">{viewOnly ? 'Xác nhận để xem báo cáo chấm công' : 'Xác nhận để xem chấm công nhân sự'}</h2>
               <p className="text-sm text-slate-600">Dữ liệu nhân sự được bảo vệ. Nhập mật khẩu tài khoản <strong>{currentUser?.username}</strong> một lần — phần mềm nhớ trên máy này cho tới khi Đăng xuất.</p>
             </div>
           </div>
@@ -315,7 +328,9 @@ export const StaffAttendanceView: React.FC = () => {
           </div>
         </div>
         <div className="grid grid-cols-4 sm:flex gap-1 sm:gap-1.5 bg-slate-100 p-1 rounded-2xl overflow-x-auto no-scrollbar max-w-full self-stretch sm:self-start 2xl:self-auto 2xl:shrink-0" role="tablist">
-          {([['summary', 'Tổng hợp', 'Tổng hợp', <TrendingUp key="i" className="w-4 h-4" />], ['roster', 'Danh sách nhân sự', 'Nhân sự', <Users key="i" className="w-4 h-4" />], ['teach', 'Kê khai tiết dạy', 'Tiết dạy', <BookOpenCheck key="i" className="w-4 h-4" />], ['link', 'Link điểm danh', 'Link', <Link2 key="i" className="w-4 h-4" />]] as const).map(([id, label, shortLabel, icon]) => (
+          {([['summary', 'Tổng hợp', 'Tổng hợp', <TrendingUp key="i" className="w-4 h-4" />], ['roster', 'Danh sách nhân sự', 'Nhân sự', <Users key="i" className="w-4 h-4" />], ['teach', 'Kê khai tiết dạy', 'Tiết dạy', <BookOpenCheck key="i" className="w-4 h-4" />], ['link', 'Link điểm danh', 'Link', <Link2 key="i" className="w-4 h-4" />]] as const)
+            .filter(([id]) => !viewOnly || id === 'summary' || id === 'teach')
+            .map(([id, label, shortLabel, icon]) => (
             <button key={id} type="button" role="tab" aria-selected={tab === id} onClick={() => setTab(id)}
               className={`min-w-0 sm:flex-none justify-center px-1 sm:px-3.5 py-2 rounded-xl text-sm font-black inline-flex items-center gap-1.5 whitespace-nowrap sm:shrink-0 ${tab === id ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600 hover:text-slate-900'}`}>
               <span className="hidden sm:inline-flex">{icon}</span><span className="sm:hidden">{shortLabel}</span><span className="hidden sm:inline">{label}</span>
@@ -323,6 +338,13 @@ export const StaffAttendanceView: React.FC = () => {
           ))}
         </div>
       </div>
+
+      {viewOnly && (
+        <p className="rounded-2xl border border-sky-200 bg-sky-50 px-4 py-2.5 text-sm text-sky-950 flex items-start gap-2" role="status">
+          <Eye className="w-4 h-4 mt-0.5 shrink-0 text-sky-700" />
+          <span><strong>Chế độ xem báo cáo.</strong> Tài khoản của bạn được nhà trường cấp quyền xem số liệu và xuất tệp báo cáo chấm công, kê khai tiết dạy. Điểm danh hộ, khóa chốt số liệu và danh sách nhân sự do Quản trị nhà trường, Ban giám hiệu thực hiện.</span>
+        </p>
+      )}
 
       {tab === 'summary' && (
         <>
@@ -453,7 +475,7 @@ export const StaffAttendanceView: React.FC = () => {
               <ComparePanel staff={staff} auth={auth} today={today} liveDays={days} liveRange={loadedRange} />
 
               {/* Hôm nay: chi tiết từng người */}
-              <TodayDetail staff={staff} records={days[dd] || {}} today={today} date={dd} dayLock={locks[dd] || null} auth={auth}
+              <TodayDetail staff={staff} records={days[dd] || {}} today={today} date={dd} dayLock={locks[dd] || null} auth={auth} readOnly={viewOnly}
                 loadingDate={detailLoading} onDateChange={(d) => setDetailDate(d >= today ? '' : d)}
                 onRecordsChanged={(date, recs) => setDays(prev => ({ ...prev, [date]: { ...(prev[date] || {}), ...recs } }))}
                 onLockChanged={(L) => setLocks(prev => { const next = { ...prev }; if (L) next[dd] = L; else delete next[dd]; return next; })} />
@@ -462,9 +484,9 @@ export const StaffAttendanceView: React.FC = () => {
         </>
       )}
 
-      {tab === 'roster' && <RosterPanel canManage={canManage} auth={auth} schoolName={schoolName} />}
-      {tab === 'teach' && auth && <TeachingReportPanel auth={auth} schoolName={schoolName} today={today} />}
-      {tab === 'link' && <LinkPanel schoolName={schoolName} isBghOnly={Boolean(isBgh && !canManage)} />}
+      {tab === 'roster' && !viewOnly && <RosterPanel canManage={canManage} auth={auth} schoolName={schoolName} />}
+      {tab === 'teach' && auth && <TeachingReportPanel auth={auth} schoolName={schoolName} today={today} readOnly={viewOnly} />}
+      {tab === 'link' && !viewOnly && <LinkPanel schoolName={schoolName} isBghOnly={Boolean(isBgh && !canManage)} />}
     </div>
   );
 };
@@ -607,7 +629,9 @@ const TodayDetail: React.FC<{
   date: string; loadingDate?: boolean; onDateChange: (d: string) => void;
   auth: { username: string; password: string } | null; onLockChanged: (L: StaffDayLock | null) => void;
   onRecordsChanged: (date: string, recs: Record<string, StaffRecord>) => void;
-}> = ({ staff, records, today, date, loadingDate, onDateChange, dayLock, auth, onLockChanged, onRecordsChanged }) => {
+  /** Người chỉ xem báo cáo: không điểm danh hộ, không khóa / mở khóa */
+  readOnly?: boolean;
+}> = ({ staff, records, today, date, loadingDate, onDateChange, dayLock, auth, onLockChanged, onRecordsChanged, readOnly }) => {
   const isPast = date < today;
   /** "hôm nay" hoặc "ngày 05/11" — dùng trong mọi câu thông báo của bảng */
   const dayText = isPast ? `ngày ${shortDateLabel(date)}/${date.slice(0, 4)}` : 'hôm nay';
@@ -749,7 +773,12 @@ Người bị khóa sẽ không điểm danh / sửa điểm danh được và n
           <Download className="w-4 h-4" /> {rows.some(x => picked.includes(x.s.code)) ? `Xuất danh sách (${rows.filter(x => picked.includes(x.s.code)).length} đã chọn)` : `Xuất danh sách (${rows.length})`}
         </button>
       </div>
-      {isPast && (
+      {isPast && readOnly && (
+        <p className="mx-4 mt-3 rounded-2xl border border-amber-300 bg-amber-50 px-3 py-2.5 text-sm text-amber-950" role="status">
+          <strong>Đang xem {weekdayLabel(date)}, {dayText}.</strong>
+        </p>
+      )}
+      {isPast && !readOnly && (
         <p className="mx-4 mt-3 rounded-2xl border border-amber-300 bg-amber-50 px-3 py-2.5 text-sm text-amber-950" role="status">
           <strong>Đang xem {weekdayLabel(date)}, {dayText}.</strong> Nhân sự chỉ tự điểm danh được cho ngày hôm nay; với ngày đã qua, Quản trị / BGH chọn nhân sự rồi bấm <strong>Điểm danh hộ</strong> để điểm danh bù — số liệu được tính vào biểu tổng hợp của tháng.
         </p>
@@ -761,7 +790,11 @@ Người bị khóa sẽ không điểm danh / sửa điểm danh được và n
           {dayLock?.all ? `Đã khóa điểm danh ${dayText} của tất cả nhân sự` : lockedCount ? `Đã khóa điểm danh ${dayText} của ${lockedCount} người` : isPast ? `${dayText[0].toUpperCase()}${dayText.slice(1)}: nhân sự không tự điểm danh được — chỉ điểm danh bù` : 'Điểm danh hôm nay đang mở'}
           {dayLock?.at && (dayLock.all || lockedCount) ? <span className="font-normal text-slate-600"> • lúc {timeHMS(dayLock.at)}{dayLock.by ? ` bởi ${dayLock.by}` : ''}</span> : null}
         </span>
-        {picked.length > 0 && <>
+        {readOnly && picked.length > 0 && <>
+          <span className="text-sm font-bold text-slate-700">Đã chọn {picked.length} để xuất danh sách</span>
+          <button type="button" onClick={() => setPicked([])} className="no-hover-fx h-8 px-2.5 rounded-lg text-sm font-bold text-slate-700 hover:bg-white whitespace-nowrap">Bỏ chọn</button>
+        </>}
+        {!readOnly && picked.length > 0 && <>
           <span className="text-sm font-bold text-slate-700">Đã chọn {picked.length}:</span>
           <button type="button" onClick={() => openProxy(picked)} className="no-hover-fx h-8 px-3 rounded-lg text-sm font-bold bg-indigo-600 hover:bg-indigo-700 text-white inline-flex items-center gap-1.5 whitespace-nowrap"><UserCheck className="w-4 h-4" /> {isPast ? 'Điểm danh bù' : 'Điểm danh hộ'} ({picked.length})</button>
           <button type="button" disabled={lockBusy} onClick={() => applyLock(true, false, picked)} className="no-hover-fx h-8 px-3 rounded-lg text-sm font-bold bg-rose-600 hover:bg-rose-700 text-white inline-flex items-center gap-1.5 whitespace-nowrap disabled:opacity-50"><Lock className="w-4 h-4" /> Khóa ({picked.length})</button>
@@ -769,12 +802,14 @@ Người bị khóa sẽ không điểm danh / sửa điểm danh được và n
           <button type="button" onClick={() => setPicked([])} className="no-hover-fx h-8 px-2.5 rounded-lg text-sm font-bold text-slate-700 hover:bg-white whitespace-nowrap">Bỏ chọn</button>
           <span className="w-px h-6 bg-slate-300 mx-0.5" aria-hidden="true" />
         </>}
+        {!readOnly && <>
         <button type="button" disabled={lockBusy || Boolean(dayLock?.all)} onClick={() => applyLock(true, true)} className="no-hover-fx h-8 px-3 rounded-lg text-sm font-bold border border-rose-300 bg-white hover:bg-rose-50 text-rose-800 inline-flex items-center gap-1.5 whitespace-nowrap disabled:opacity-50">
           {lockBusy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Lock className="w-4 h-4" />} Khóa tất cả
         </button>
         <button type="button" disabled={lockBusy || (!dayLock?.all && !lockedCount)} onClick={() => applyLock(false, true)} className="no-hover-fx h-8 px-3 rounded-lg text-sm font-bold border border-emerald-300 bg-white hover:bg-emerald-50 text-emerald-800 inline-flex items-center gap-1.5 whitespace-nowrap disabled:opacity-50">
           <Unlock className="w-4 h-4" /> Mở khóa tất cả
         </button>
+        </>}
       </div>
       {lockMsg && <p className={`mx-4 mt-2 text-sm font-bold ${lockMsg.type === 'ok' ? 'text-emerald-800' : 'text-rose-700'}`}>{lockMsg.text}</p>}
 
@@ -862,8 +897,10 @@ Người bị khóa sẽ không điểm danh / sửa điểm danh được và n
                     </p>
                   </td>
                   <td className="py-1.5 text-center">
+                    {!readOnly && (
                     <button type="button" onClick={() => openProxy([s.code])} title={`${isPast ? 'Điểm danh bù' : 'Điểm danh hộ'} ${s.name}`} aria-label={`${isPast ? 'Điểm danh bù' : 'Điểm danh hộ'} ${s.name}`}
                       className="no-hover-fx w-8 h-8 inline-flex items-center justify-center rounded-lg text-indigo-700 hover:bg-indigo-50"><UserCheck className="w-4 h-4" /></button>
+                    )}
                   </td>
                 </tr>
               );

@@ -458,6 +458,10 @@ export interface UserAccount {
   /** Phân hiệu / điểm trường của lớp chủ nhiệm (gán từ danh sách phân công chủ nhiệm) — lớp tạo lần đầu nhận luôn */
   assignedBranch?: string;
   assignedCampus?: string;
+  /** Quản trị cấp: được XEM và XUẤT báo cáo mục "Chấm công nhân sự" (chỉ đọc), ví dụ nhân viên kế toán (Apps Script 1.1.12) */
+  staffReportViewer?: boolean;
+  /** Nhân sự không phải giáo viên (kế toán, văn thư…): tài khoản không có chức năng quản lý lớp học / học sinh */
+  nonTeaching?: boolean;
 }
 
 export interface RegistrationRequest {

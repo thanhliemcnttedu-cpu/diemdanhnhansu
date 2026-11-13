@@ -24,7 +24,11 @@ const classesOf = (p: TeachProfile | null | undefined, k: TeachKey): string[] =>
   return (k === 'disabled' ? p.classesDisabled : k === 'english' ? p.classesEnglish : p.classesPE) || [];
 };
 
-export const TeachingReportPanel: React.FC<{ auth: { username: string; password: string }; schoolName: string; today: string }> = ({ auth, schoolName, today }) => {
+export const TeachingReportPanel: React.FC<{
+  auth: { username: string; password: string }; schoolName: string; today: string;
+  /** Người chỉ xem báo cáo (vd. kế toán): xem và xuất tệp, không khóa / mở khóa / xóa / đổi cài đặt */
+  readOnly?: boolean;
+}> = ({ auth, schoolName, today, readOnly }) => {
   const thisMonth = (today || new Date().toISOString()).slice(0, 7);
   const [month, setMonth] = useState(thisMonth);
   const [view, setView] = useState<View>('all');
@@ -375,7 +379,7 @@ export const TeachingReportPanel: React.FC<{ auth: { username: string; password:
                 ? `${monthLabel(month)}: đang khóa ${lockedCount} giáo viên; những người khác vẫn kê / sửa được.`
                 : `${monthLabel(month)}: giáo viên đang kê / sửa được bất cứ lúc nào.`}
           </p>
-          {picked.size > 0 && (
+          {!readOnly && picked.size > 0 && (
             <>
               <span className="text-sm font-bold text-slate-700 whitespace-nowrap">Đã chọn {picked.size}</span>
               <button type="button" disabled={lockBusy} onClick={() => doLock(true, { codes: [...picked] })} className="no-hover-fx h-9 px-3 rounded-lg text-sm font-bold bg-rose-700 hover:bg-rose-800 text-white inline-flex items-center gap-1.5 whitespace-nowrap disabled:opacity-50"><Lock className="w-4 h-4" /> Khóa</button>
@@ -383,10 +387,10 @@ export const TeachingReportPanel: React.FC<{ auth: { username: string; password:
               <button type="button" disabled={lockBusy || delBusy} onClick={() => askDelete([...picked])} className="no-hover-fx h-9 px-3 rounded-lg text-sm font-bold border border-rose-300 bg-white hover:bg-rose-50 text-rose-700 inline-flex items-center gap-1.5 whitespace-nowrap disabled:opacity-50"><Trash2 className="w-4 h-4" /> Xóa kê khai</button>
             </>
           )}
-          {monthLock?.all || lockedCount
+          {!readOnly && (monthLock?.all || lockedCount)
             ? <button type="button" disabled={lockBusy} onClick={() => doLock(false, { all: true })} className="no-hover-fx h-9 px-3 rounded-lg text-sm font-bold border border-slate-300 bg-white hover:bg-slate-50 text-slate-800 inline-flex items-center gap-1.5 whitespace-nowrap disabled:opacity-50">{lockBusy ? <Loader2 className="w-4 h-4 animate-spin" /> : <LockOpen className="w-4 h-4" />} Mở khóa tất cả</button>
             : null}
-          {!monthLock?.all && (
+          {!readOnly && !monthLock?.all && (
             <button type="button" disabled={lockBusy} onClick={() => doLock(true, { all: true })} className="no-hover-fx h-9 px-3 rounded-lg text-sm font-bold bg-rose-700 hover:bg-rose-800 text-white inline-flex items-center gap-1.5 whitespace-nowrap disabled:opacity-50">{lockBusy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Lock className="w-4 h-4" />} Khóa chốt {monthLabel(month).toLowerCase()}</button>
           )}
         </div>
@@ -399,7 +403,7 @@ export const TeachingReportPanel: React.FC<{ auth: { username: string; password:
                 : <span className="text-rose-700 font-bold">Đang TẮT</span>}
               <span className="text-slate-600"> — {homeroomTeach ? 'GVCN kê khai như giáo viên khác.' : 'tài khoản vai trò GV chủ nhiệm chỉ điểm danh hằng ngày.'}</span>
             </p>
-            <button type="button" role="switch" aria-checked={homeroomTeach} disabled={settingBusy} onClick={toggleHomeroomTeach}
+            <button type="button" role="switch" aria-checked={homeroomTeach} disabled={settingBusy || readOnly} onClick={toggleHomeroomTeach} hidden={readOnly}
               title={homeroomTeach ? 'Bấm để tắt kê khai cho giáo viên chủ nhiệm' : 'Bấm để bật kê khai cho giáo viên chủ nhiệm'}
               className={`no-hover-fx relative inline-flex h-7 w-12 shrink-0 items-center rounded-full transition-colors disabled:opacity-50 ${homeroomTeach ? 'bg-emerald-600' : 'bg-slate-300'}`}>
               <span className="sr-only">Kê khai tiết dạy cho giáo viên chủ nhiệm</span>
@@ -504,14 +508,14 @@ export const TeachingReportPanel: React.FC<{ auth: { username: string; password:
                     {(() => {
                       const on = isTeachLocked(monthLock, x.s.code);
                       return (
-                        <button type="button" disabled={lockBusy} onClick={() => doLock(!on, { codes: [x.s.code] })}
-                          title={on ? 'Đã khóa — bấm để mở khóa cho giáo viên này' : 'Đang mở — bấm để khóa giáo viên này'} aria-label={on ? `Mở khóa ${x.s.name}` : `Khóa ${x.s.name}`}
+                        <button type="button" disabled={lockBusy || readOnly} onClick={() => doLock(!on, { codes: [x.s.code] })}
+                          title={readOnly ? (on ? 'Đã khóa chốt' : 'Đang mở cho giáo viên kê / sửa') : on ? 'Đã khóa — bấm để mở khóa cho giáo viên này' : 'Đang mở — bấm để khóa giáo viên này'} aria-label={on ? `Mở khóa ${x.s.name}` : `Khóa ${x.s.name}`}
                           className={`no-hover-fx w-8 h-8 rounded-lg inline-flex items-center justify-center disabled:opacity-50 ${on ? 'bg-rose-50 text-rose-700 hover:bg-rose-100' : 'text-slate-500 hover:bg-slate-100'}`}>
                           {on ? <Lock className="w-4 h-4" /> : <LockOpen className="w-4 h-4" />}
                         </button>
                       );
                     })()}
-                    <button type="button" disabled={(!x.log && !x.p) || delBusy} onClick={() => askDelete([x.s.code])}
+                    <button type="button" hidden={readOnly} disabled={(!x.log && !x.p) || delBusy || readOnly} onClick={() => askDelete([x.s.code])}
                       title={x.log ? 'Xóa số tiết tháng này / xóa khỏi bảng tổng hợp' : 'Xóa khỏi bảng tổng hợp (khai báo nhầm)'} aria-label={`Xóa kê khai của ${x.s.name}`}
                       className="no-hover-fx w-8 h-8 rounded-lg inline-flex items-center justify-center text-rose-600 hover:bg-rose-50 disabled:opacity-30 disabled:hover:bg-transparent">
                       <Trash2 className="w-4 h-4" />

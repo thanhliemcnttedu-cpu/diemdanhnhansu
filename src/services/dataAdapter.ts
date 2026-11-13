@@ -263,8 +263,9 @@ export const dataAdapter = {
       campus: standardJson.classInfo?.campus || standardJson.metadata?.campus || null,
       teacherName: standardJson.metadata?.teacherName,
       teacherUsername: standardJson.metadata?.teacherUsername,
-      teacherRole: 'homeroom',
-      isHomeroom: true
+      // Tệp của giáo viên bộ môn (metadata.teacherRole = 'subject') dựng lại thành lớp bộ môn, không phải lớp chủ nhiệm
+      teacherRole: (standardJson.metadata as any)?.teacherRole === 'subject' ? 'subject' : 'homeroom',
+      isHomeroom: (standardJson.metadata as any)?.teacherRole !== 'subject'
     };
 
     const reconstructedStudents: Student[] = (standardJson.students || []).map((s, idx) => ({
@@ -469,8 +470,8 @@ export const dataAdapter = {
       campus: incomingJson.classInfo.campus || null,
       teacherName: incomingJson.metadata?.teacherName,
       teacherUsername: incomingJson.metadata?.teacherUsername,
-      teacherRole: 'homeroom' as const,
-      isHomeroom: true
+      teacherRole: ((incomingJson.metadata as any)?.teacherRole === 'subject' ? 'subject' : 'homeroom') as 'subject' | 'homeroom',
+      isHomeroom: (incomingJson.metadata as any)?.teacherRole !== 'subject'
     }] : []);
 
     for (const inCls of incomingClasses) {

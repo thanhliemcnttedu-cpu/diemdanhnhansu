@@ -849,6 +849,10 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
     return true;
   });
 
+  // Giáo viên bộ môn (tài khoản GVBM, hoặc tài khoản giáo viên đang ở chế độ GV bộ môn): lớp và học sinh là của riêng
+  // giáo viên đó, độc lập với lớp chủ nhiệm và KHÔNG tính vào số lớp / số học sinh tổng hợp của trường.
+  const isSubjectTeacherAccount = Boolean(currentUser && !isAdmin && (currentUser.role === 'subject' || (currentUser.role === 'homeroom' && teacherRole === 'subject')));
+
   // 1. CLASS MANAGEMENT HANDLERS (User Request 1 & 2)
   const handleCreateClass = (e: React.FormEvent) => {
     e.preventDefault();
@@ -864,9 +868,9 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
     const effectiveTeacherUsername = canAssignHomeroomTeacher && newClassAssignedUsername
       ? newClassAssignedUsername
       : (currentUser?.username || '');
-    const effectiveRole = canAssignHomeroomTeacher 
-      ? 'homeroom' 
-      : (currentUser?.role === 'subject' ? 'subject' : 'homeroom');
+    const effectiveRole = canAssignHomeroomTeacher
+      ? 'homeroom'
+      : (isSubjectTeacherAccount ? 'subject' : 'homeroom');
 
     addClass({
       name: newClassName.trim(),
@@ -1026,10 +1030,15 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
             name: String(classNameVal).trim(),
             grade: String(gradeVal).trim(),
             academicYear: String(yearVal).trim(),
-            teacherName: String(teacherNameVal).trim() || 'Giáo viên Chủ nhiệm',
-            teacherUsername: teacherUsernameVal || (currentUser?.username || ''),
-            teacherRole: 'homeroom',
-            isHomeroom: true,
+            // GV bộ môn nhập danh sách lớp: giáo viên phụ trách luôn là chính tài khoản đang đăng nhập (bỏ qua cột trong tệp)
+            teacherName: isSubjectTeacherAccount
+              ? (currentUser?.fullName || teacherProfile.name || '')
+              : (String(teacherNameVal).trim() || 'Giáo viên Chủ nhiệm'),
+            teacherUsername: isSubjectTeacherAccount
+              ? (currentUser?.username || '').toLowerCase()
+              : (teacherUsernameVal || (currentUser?.username || '')),
+            teacherRole: isSubjectTeacherAccount ? 'subject' : 'homeroom',
+            isHomeroom: !isSubjectTeacherAccount,
             schoolName: currentUser?.schoolName || undefined,
             branch: String(branchVal).trim() || undefined,
             campus: String(campusVal).trim() || undefined,
@@ -1719,8 +1728,10 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
 
   // 🌟 Toàn bộ danh sách lớp chủ nhiệm toàn trường (loại bỏ lớp bộ môn/ảo)
   const allSchoolHomeroomClasses = React.useMemo(() => {
+    // GV bộ môn: dải số liệu đếm các lớp giáo viên đang dạy (lớp bộ môn của riêng mình)
+    if (isSubjectTeacherAccount) return classes;
     return classes.filter(c => (c.teacherRole === 'homeroom' || !c.teacherRole) && !c.id.startsWith('class-sub-'));
-  }, [classes]);
+  }, [classes, isSubjectTeacherAccount]);
 
   // 🌟 Tập hợp ID lớp hợp lệ thuộc toàn trường
   const validSchoolClassIdSet = React.useMemo(() => {
@@ -1729,17 +1740,17 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
 
   // 🌟 Tổng số học sinh toàn trường thuộc các lớp hợp lệ (chính xác 103 em: 1A1: 30, 1A2: 45, 1A3: 28)
   const totalSchoolStudentsCount = React.useMemo(() => {
-    return students.filter(s => 
+    return students.filter(s =>
       Boolean(s.classId && validSchoolClassIdSet.has(s.classId)) &&
-      s.classId !== 'class-1791592764810' &&
-      !s.classId.startsWith('class-sub-')
+      (isSubjectTeacherAccount || (s.classId !== 'class-1791592764810' && !s.classId.startsWith('class-sub-')))
     ).length;
-  }, [students, validSchoolClassIdSet]);
+  }, [students, validSchoolClassIdSet, isSubjectTeacherAccount]);
 
   // 🌟 Lọc lấy danh sách Lớp thực tế đang hiển thị theo bộ lọc
   const statsHomeroomClasses = React.useMemo(() => {
+    if (isSubjectTeacherAccount) return displayedClasses;
     return displayedClasses.filter(c => (c.teacherRole === 'homeroom' || !c.teacherRole) && !c.id.startsWith('class-sub-'));
-  }, [displayedClasses]);
+  }, [displayedClasses, isSubjectTeacherAccount]);
 
   // 🌟 Sĩ số của các lớp đang hiển thị theo bộ lọc
   const statsTotalStudents = React.useMemo(() => {
@@ -2932,7 +2943,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                         </h3>
                         <p className="text-[12px] sm:text-xs text-blue-700 font-black mt-0.5 flex items-center gap-1 uppercase">
                           <span>🏫</span>
-                          <span>GVCN: <strong className="text-indigo-800 font-black">{cls.teacherName || allUsers.find(u => u.username?.toLowerCase() === cls.teacherUsername?.toLowerCase())?.fullName || teacherProfile.name}</strong></span>
+                          <span>{cls.teacherRole === 'subject' || (currentUser?.role === 'subject' && !isAdmin) ? 'GV bộ môn' : 'GVCN'}: <strong className="text-indigo-800 font-black">{cls.teacherName || allUsers.find(u => u.username?.toLowerCase() === cls.teacherUsername?.toLowerCase())?.fullName || teacherProfile.name}</strong></span>
                         </p>
                         <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-50 text-[12px] sm:text-[12px] font-black text-amber-800 border border-amber-200 shadow-2xs mt-0.5 uppercase">
                           <span>📅</span>

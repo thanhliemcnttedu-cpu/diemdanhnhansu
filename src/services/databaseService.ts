@@ -992,6 +992,10 @@ export const databaseService = {
     /** Phân hiệu / điểm trường của lớp chủ nhiệm */
     assignedBranch?: string;
     assignedCampus?: string;
+    /** Nhân sự không phải giáo viên: không có chức năng quản lý lớp */
+    nonTeaching?: boolean;
+    /** Được xem / xuất báo cáo chấm công nhân sự */
+    staffReportViewer?: boolean;
   }>): Promise<{ success: boolean; count: number; created?: UserAccount[]; errors?: string[]; message?: string }> {
     if (!items || items.length === 0) {
       return { success: false, count: 0, message: 'Danh sách tạo rỗng.' };
@@ -1017,11 +1021,13 @@ export const databaseService = {
           ? `https://api.dicebear.com/7.x/bottts/svg?seed=${cleanU}&backgroundColor=b6e3f4`
           : `https://api.dicebear.com/7.x/bottts/svg?seed=${cleanU}&backgroundColor=d1d4f9`,
         assignedClassName: item.assignedClassName?.trim() || (item.role === 'homeroom' ? 'Lớp mới' : undefined),
-        subjectName: item.subjectName?.trim() || (item.role === 'subject' ? 'Tin học' : undefined),
+        subjectName: item.subjectName?.trim() || (item.role === 'subject' && !item.nonTeaching ? 'Tin học' : undefined),
         schoolName: item.schoolName?.trim() || 'Trường Tiểu học',
         tenantType: item.tenantType || 'school',
         createdAt: nowTs + idx,
         status: 'active',
+        ...(item.nonTeaching ? { nonTeaching: true } : {}),
+        ...(item.staffReportViewer ? { staffReportViewer: true } : {}),
         ...(item.staffCode ? { staffCode: String(item.staffCode).trim().toUpperCase() } : {}),
         ...(item.assignedBranch?.trim() ? { assignedBranch: item.assignedBranch.trim() } : {}),
         ...(item.assignedCampus?.trim() ? { assignedCampus: item.assignedCampus.trim() } : {})

@@ -15,8 +15,9 @@ import { schoolDriveDbService } from '../../services/schoolDriveDbService';
  *   đăng nhập bằng số CCCD + MẬT KHẨU ĐIỂM DANH (hoặc mật khẩu đã cấp) — 1 tài khoản cho cả điểm danh lẫn phần mềm.
  * - Tài khoản đã tạo trước bằng mã GV: nút "Chuyển sang số CCCD" (Apps Script 1.1.5 đổi tên, giữ nguyên mật khẩu).
  */
-type RoleChoice = 'homeroom' | 'subject' | 'bgh' | 'skip';
-interface RowCfg { pick: boolean; role: RoleChoice; cls: string }
+// 'staff' = nhân sự không phải giáo viên (kế toán, văn thư…): tài khoản không có chức năng quản lý lớp học
+type RoleChoice = 'homeroom' | 'subject' | 'bgh' | 'staff' | 'skip';
+interface RowCfg { pick: boolean; role: RoleChoice; cls: string; /** 'staff': được xem / xuất báo cáo chấm công */ viewer?: boolean }
 /** Lớp chủ nhiệm gán từ danh sách phân công (theo mã GV) */
 interface Assign { className: string; grade: string; branch: string; campus: string }
 interface AssignReport {
@@ -43,10 +44,11 @@ function guessRole(s: StaffMember): { role: RoleChoice; cls: string } {
   return { role: 'homeroom', cls: '' };
 }
 
-/** Tích tay người đang "Không cấp": cán bộ quản lý / hiệu trưởng → BGH, còn lại → GV bộ môn (sửa được) */
+/** Tích tay người đang "Không cấp": cán bộ quản lý / hiệu trưởng → BGH, giáo viên → GV bộ môn, còn lại → Nhân viên (sửa được) */
 const manualRole = (s: StaffMember): RoleChoice => {
   const pos = norm(`${s.position || ''} ${s.dept || ''}`);
-  return pos.includes('can bo quan ly') || pos.includes('hieu truong') ? 'bgh' : 'subject';
+  if (pos.includes('can bo quan ly') || pos.includes('hieu truong')) return 'bgh';
+  return norm(s.position || '').includes('giao vien') ? 'subject' : 'staff';
 };
 
 export const StaffToAccountsPanel: React.FC<{
@@ -235,7 +237,9 @@ export const StaffToAccountsPanel: React.FC<{
           username: cccdOf(s),
           password,
           fullName: s.name,
-          role: c.role as UserRole,
+          // Nhân viên: lưu vai trò nền 'subject' + cờ nonTeaching (không có mục quản lý lớp học)
+          role: (c.role === 'staff' ? 'subject' : c.role) as UserRole,
+          ...(c.role === 'staff' ? { nonTeaching: true, staffReportViewer: Boolean(c.viewer) } : {}),
           phone: s.phone || '',
           assignedClassName: c.role === 'homeroom' ? (c.cls.trim().toUpperCase() || undefined) : undefined,
           subjectName: c.role === 'subject' ? (c.cls.trim() || undefined) : undefined,
@@ -417,6 +421,7 @@ export const StaffToAccountsPanel: React.FC<{
                           <option value="homeroom">GV chủ nhiệm</option>
                           <option value="subject">GV bộ môn</option>
                           <option value="bgh">Ban giám hiệu</option>
+                          <option value="staff">Nhân viên (không quản lý lớp)</option>
                           <option value="skip">Không cấp</option>
                         </select>
                       </td>
@@ -425,6 +430,12 @@ export const StaffToAccountsPanel: React.FC<{
                           ? <input value={c.cls} disabled={!!linked} onChange={(e) => setRow(s.code, { cls: c.role === 'homeroom' ? e.target.value.toUpperCase() : e.target.value })}
                               placeholder={c.role === 'homeroom' ? 'VD: 3A1' : 'VD: Tin học'} aria-label={`Lớp / môn của ${s.name}`}
                               className="h-9 w-full px-2 rounded-lg border border-slate-300 text-sm disabled:bg-slate-100" />
+                          : c.role === 'staff'
+                            ? <label className="inline-flex items-center gap-1.5 text-sm text-slate-800 cursor-pointer whitespace-nowrap" title="Cho tài khoản này xem và xuất báo cáo mục Chấm công nhân sự (chỉ đọc), ví dụ nhân viên kế toán">
+                                <input type="checkbox" className="w-4 h-4 accent-sky-700" checked={Boolean(c.viewer)} disabled={!!linked}
+                                  onChange={(e) => setRow(s.code, { viewer: e.target.checked })} />
+                                Xem báo cáo chấm công
+                              </label>
                           : <span className="text-slate-400">—</span>}
                         {c.role === 'homeroom' && assign[s.code] && assign[s.code].className === c.cls.trim().toUpperCase() && (assign[s.code].branch || assign[s.code].campus) && (
                           <p className="mt-0.5 text-xs text-emerald-800 truncate" title={[assign[s.code].campus, assign[s.code].branch].filter(Boolean).join(' · ')}>

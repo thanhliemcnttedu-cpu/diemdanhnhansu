@@ -39,6 +39,12 @@ export type NavigationMenuId =
   | 'settings'
   | 'ai';
 
+/** Nhân sự không phải giáo viên (kế toán, văn thư…): tài khoản không có chức năng quản lý lớp học */
+export const isNonTeachingAccount = (u?: { role?: string; nonTeaching?: boolean } | null): boolean =>
+  Boolean(u && u.nonTeaching === true && (u.role === 'subject' || u.role === 'homeroom'));
+/** Các mục tài khoản Nhân viên được dùng (mục Chấm công nhân sự còn cần quyền xem báo cáo) */
+export const NON_TEACHING_MENU_IDS: NavigationMenuId[] = ['staff_attendance', 'my_checkin', 'guide'];
+
 interface SidebarProps {
   currentView: NavigationMenuId;
   onNavigate: (view: NavigationMenuId) => void;
@@ -203,8 +209,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
     // Loại bỏ hoàn toàn mục "Cài đặt" với mọi role
     if (item.id === 'settings') return false;
 
-    // Chấm công giáo viên – nhân viên: chỉ Quản trị tối cao, Quản trị trường, BGH
-    if (item.id === 'staff_attendance' && !isMacroAdmin) return false;
+    // Chấm công giáo viên – nhân viên: Quản trị tối cao, Quản trị trường, BGH; và tài khoản được cấp quyền xem báo cáo
+    if (item.id === 'staff_attendance' && !isMacroAdmin && !currentUser?.staffReportViewer) return false;
+    // Nhân sự không phải giáo viên: không có chức năng quản lý lớp học — chỉ còn chấm công, báo cáo được cấp và hướng dẫn
+    if (isNonTeachingAccount(currentUser)) return NON_TEACHING_MENU_IDS.includes(item.id);
     // Giáo viên: tự điểm danh đi làm hằng ngày + kê khai tiết dạy (quản lý dùng màn Chấm công nhân sự)
     if (item.id === 'my_checkin' && isMacroAdmin) return false;
 
@@ -286,7 +294,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </div>
 
         {/* Role Selection Switcher (Chỉ hiển thị với GVCN & GVBM, không dành cho Quản trị nhà trường) */}
-        {!isMacroAdmin && (
+        {!isMacroAdmin && !isNonTeachingAccount(currentUser) && (
           !isEffectivelyCollapsed ? (
             <div className="px-2.5 pt-2 pb-0.5 shrink-0">
               <div className="p-0.5 bg-slate-100/90 rounded-xl border border-slate-200/80 flex items-center gap-1">
