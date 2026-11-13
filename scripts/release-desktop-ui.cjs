@@ -9,9 +9,10 @@
  * Sau đó đưa 2 tệp trong release-ui/ lên kênh cập nhật (địa chỉ ở desktop-lite/update-config.json).
  * Phiên bản lấy từ package.json → PHẢI tăng số phiên bản trước mỗi lần phát hành.
  */
-const { execSync } = require('child_process');
+const { execFileSync } = require('child_process');
 const crypto = require('crypto');
 const fs = require('fs');
+const os = require('os');
 const path = require('path');
 const JSZip = require('jszip');
 const { signedText, verifySignature } = require('../desktop-lite/updater.cjs');
@@ -35,8 +36,16 @@ if (!fs.existsSync(privFile) || !fs.existsSync(pubFile)) {
 }
 
 if (!args.includes('--skip-build')) {
-  console.log('▶ Build giao diện web (vite build)…');
-  execSync('npx vite build', { cwd: root, stdio: 'inherit' });
+  // Build WITHOUT this machine's .env: the package goes to every school, so it must not carry the
+  // developer's VITE_SUPABASE_* / VITE_DRIVE_* values (the installer is built on CI, where there is no .env).
+  // VITE_* variables set on purpose in the shell environment are still honoured.
+  console.log('▶ Build giao diện web (vite build, không đọc tệp .env của máy)…');
+  const emptyEnvDir = fs.mkdtempSync(path.join(os.tmpdir(), 'lhhp-ui-env-'));
+  execFileSync(process.execPath, [
+    '-e',
+    "import('vite').then(v => v.build({ envDir: process.argv[1] })).catch(e => { console.error(e); process.exit(1); })",
+    emptyEnvDir,
+  ], { cwd: root, stdio: 'inherit' });
 }
 if (!fs.existsSync(path.join(distDir, 'index.html'))) { console.error('⛔ Không thấy dist/index.html.'); process.exit(1); }
 

@@ -1,5 +1,18 @@
 # ERRORS.md - Nhật ký lỗi & bài học
 
+## [2026-11-13 11:00] - Gói cập nhật giao diện Desktop build trên máy tác giả nhúng cấu hình Supabase trong `.env`
+
+- **Type**: Build / Data flow
+- **Severity**: High
+- **File**: `scripts/release-desktop-ui.cjs`
+- **Agent**: Claude
+- **Root Cause**: `npm run release:desktop-ui` chạy `npx vite build` ngay trên máy tác giả → Vite đọc `.env` và nhúng `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` vào gói `ui-<ver>.zip`. Bộ cài thì dựng trên GitHub Actions (không có `.env`) nên không có Supabase. Phát hành gói như vậy sẽ bật luồng Supabase ở bản cài đặt của MỌI trường (đổi thứ tự đọc / ghi dữ liệu) và phát tán khóa Supabase. Phát hiện khi chuẩn bị gói 1.1.2, trước khi đưa lên kênh cập nhật. Kèm theo: trong PowerShell `$env:TEN = ''` là XÓA biến, không đặt được giá trị rỗng để đè `.env`.
+- **Fix Applied**: Script build bằng API của Vite với `envDir` trỏ vào thư mục trống (không đọc `.env` của máy; biến `VITE_*` đặt chủ động trong môi trường vẫn nhận).
+- **Prevention**: Mọi gói phát hành cho các trường phải build không kèm `.env` của máy tác giả. Trước khi đưa gói lên kênh cập nhật, quét gói tìm `supabase.co`.
+- **Status**: Fixed
+
+---
+
 ## [2026-11-11 15:30] - Kết nối Drive cá nhân trên máy mới có thể XÓA TRẮNG kho câu hỏi trên Drive
 
 - **Type**: Logic / Data loss
