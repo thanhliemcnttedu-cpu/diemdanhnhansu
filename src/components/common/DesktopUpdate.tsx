@@ -41,11 +41,69 @@ function useUpdateInfo(): UpdateInfo | null {
   return info;
 }
 
+/**
+ * Version and release date of the UI that is actually ON SCREEN, read once from `ui-version.json` (written into
+ * every UI package and installer). The shell's `uiVersion` is not enough: it already names a downloaded
+ * version before the window was reloaded onto it.
+ */
+interface LoadedUi { version: string; releaseDate: string }
+let loadedUiPromise: Promise<LoadedUi> | null = null;
+const readLoadedUi = (): Promise<LoadedUi> => {
+  if (!loadedUiPromise) {
+    loadedUiPromise = fetch('/ui-version.json', { cache: 'no-store' })
+      .then(r => (r.ok ? r.json() : null))
+      .then(v => {
+        const d = v?.builtAt ? new Date(v.builtAt) : null;
+        return {
+          version: String(v?.version || ''),
+          releaseDate: d && !Number.isNaN(d.getTime()) ? `ngày ${d.getDate()} tháng ${d.getMonth() + 1} năm ${d.getFullYear()}` : '',
+        };
+      })
+      .catch(() => ({ version: '', releaseDate: '' }));
+  }
+  return loadedUiPromise;
+};
+function useLoadedUi(): LoadedUi {
+  const [ui, setUi] = useState<LoadedUi>({ version: '', releaseDate: '' });
+  useEffect(() => {
+    if (!bridge()) return;
+    let alive = true;
+    readLoadedUi().then(v => { if (alive) setUi(v); });
+    return () => { alive = false; };
+  }, []);
+  return ui;
+}
+
+/**
+ * The shell keeps reporting phase "ready" for the rest of the app session after "Cập nhật ngay" was pressed
+ * (it only switches folder and reloads). When the UI on screen already IS that version, the update is done.
+ */
+const isAlreadyApplied = (info: UpdateInfo | null, loaded: LoadedUi): boolean =>
+  !!info && info.phase === 'ready' && !!info.newVersion && !!loaded.version && info.newVersion === loaded.version;
+
+const UPDATE_DONE_SEEN_KEY = 'lhhp_update_done_seen';
+
 /** Floating notice: a new version is downloaded / a new installer is needed / the update was rolled back */
 export const DesktopUpdateNotice: React.FC = () => {
   const info = useUpdateInfo();
   const [hiddenFor, setHiddenFor] = useState('');
   const [applying, setApplying] = useState(false);
+  const loaded = useLoadedUi();
+  const applied = isAlreadyApplied(info, loaded);
+  const releaseDate = loaded.releaseDate;
+  // "Update finished" is shown once per version: until closed, or 20 s
+  const [doneSeen, setDoneSeen] = useState<string>(() => { try { return localStorage.getItem(UPDATE_DONE_SEEN_KEY) || ''; } catch { return ''; } });
+  const markDoneSeen = (version: string) => {
+    setDoneSeen(version);
+    try { localStorage.setItem(UPDATE_DONE_SEEN_KEY, version); } catch { /* ignore */ }
+  };
+  useEffect(() => {
+    if (!applied || doneSeen === loaded.version) return;
+    const version = loaded.version;
+    const t = setTimeout(() => markDoneSeen(version), 20000);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [applied, loaded.version, doneSeen]);
 
   // The UI rendered: tell the shell this version starts correctly (otherwise it rolls back after 2 failed starts)
   useEffect(() => {
@@ -54,6 +112,28 @@ export const DesktopUpdateNotice: React.FC = () => {
     const t = setTimeout(() => { b.uiReady().catch(() => {}); }, 4000);
     return () => clearTimeout(t);
   }, []);
+
+  // Already running the downloaded version → no "update now" prompt; a short confirmation instead
+  if (info && applied) {
+    if (doneSeen === loaded.version) return null;
+    return (
+      <div role="status" className="fixed bottom-4 right-4 z-[90] w-[min(24rem,calc(100vw-2rem))] rounded-2xl border border-emerald-300 bg-white shadow-2xl p-4">
+        <div className="flex items-start gap-2.5">
+          <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 bg-emerald-100 text-emerald-700">
+            <CheckCircle2 className="w-5 h-5" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-black text-slate-900">Bạn đã cập nhật xong bản mới nhất</p>
+            <p className="text-sm text-slate-700">Phiên bản hiện tại: <strong className="text-slate-900">V{loaded.version}</strong></p>
+            {releaseDate && <p className="text-sm text-slate-700">Phiên bản phát hành {releaseDate}</p>}
+          </div>
+          <button type="button" onClick={() => markDoneSeen(loaded.version)} className="no-hover-fx p-1 rounded-lg text-slate-600 hover:bg-slate-100 cursor-pointer" aria-label="Đóng thông báo">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   if (!info || !['ready', 'need-installer', 'rolled-back'].includes(info.phase)) return null;
   const key = `${info.phase}:${info.newVersion || ''}`;
@@ -99,6 +179,9 @@ export const DesktopUpdateNotice: React.FC = () => {
 export const DesktopVersionPanel: React.FC = () => {
   const info = useUpdateInfo();
   const [busy, setBusy] = useState(false);
+  const loaded = useLoadedUi();
+  const applied = isAlreadyApplied(info, loaded);
+  const releaseDate = loaded.releaseDate;
   if (!info) return null;
   const working = busy || info.phase === 'checking' || info.phase === 'downloading';
   const tone = info.phase === 'error' || info.phase === 'need-installer' || info.phase === 'rolled-back' ? 'text-amber-800'
@@ -109,9 +192,16 @@ export const DesktopVersionPanel: React.FC = () => {
       <p className="text-sm font-black text-slate-900 flex items-center gap-2"><MonitorDown className="w-4 h-4 text-indigo-700" /> Bản cài đặt trên máy tính</p>
       <p className="text-xs font-semibold text-slate-700">
         Phiên bản giao diện <strong className="text-slate-900">{info.uiVersion}</strong> • bộ cài <strong className="text-slate-900">{info.shellVersion}</strong>
+        {releaseDate ? ` • phát hành ${releaseDate}` : ''}
         {info.lastCheck ? ` • kiểm tra lần cuối ${new Date(info.lastCheck).toLocaleString('vi-VN')}` : ''}
       </p>
-      {info.message && (
+      {applied && (
+        <p className="text-xs font-bold flex items-start gap-1.5 text-emerald-800">
+          <CheckCircle2 className="w-3.5 h-3.5 mt-0.5 shrink-0" />
+          <span>Bạn đã cập nhật xong bản mới nhất, phiên bản hiện tại V{loaded.version}.</span>
+        </p>
+      )}
+      {info.message && !applied && (
         <p className={`text-xs font-bold flex items-start gap-1.5 ${tone}`}>
           {info.phase === 'up-to-date' || info.phase === 'ready' ? <CheckCircle2 className="w-3.5 h-3.5 mt-0.5 shrink-0" /> : null}
           <span className="break-words">{info.message}{info.phase === 'downloading' && info.progress ? ` ${info.progress}%` : ''}</span>
@@ -124,7 +214,7 @@ export const DesktopVersionPanel: React.FC = () => {
             <RefreshCw className={`w-4 h-4 ${working ? 'animate-spin' : ''}`} /> {working ? 'Đang kiểm tra…' : 'Kiểm tra cập nhật'}
           </button>
         )}
-        {info.phase === 'ready' && (
+        {info.phase === 'ready' && !applied && (
           <button type="button" onClick={() => { bridge()?.apply().catch(() => {}); }}
             className="no-hover-fx h-9 px-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-black inline-flex items-center gap-1.5 cursor-pointer">
             <Download className="w-4 h-4" /> Cập nhật ngay
