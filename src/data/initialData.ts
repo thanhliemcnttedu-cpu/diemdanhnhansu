@@ -109,8 +109,15 @@ export const INITIAL_QUICK_LINKS: QuickLink[] = [
   { id: 'link-1', title: 'Sách giáo khoa điện tử', url: 'https://hanhtrangso.nxbgd.vn', category: 'Học liệu & SGK', description: 'Xem trực tuyến sách giáo khoa và bài tập', isPinned: true },
   { id: 'link-2', title: 'Google Meet dạy học trực tuyến', url: 'https://meet.google.com', category: 'Học liệu & SGK', description: 'Phòng học trực tuyến Google Meet dùng chung', isPinned: true },
   { id: 'link-3', title: 'Học Trực Tuyến OLM.vn', url: 'https://olm.vn', category: 'Luyện tập', description: 'Ngân hàng đề thi và luyện tập tương tác' },
-  { id: 'link-4', title: 'Quizizz Trò chơi trắc nghiệm', url: 'https://quizizz.com', category: 'Trò chơi', description: 'Tổ chức mini-game kiểm tra kiến thức nhanh' }
+  { id: 'link-4', title: 'Quizizz Trò chơi trắc nghiệm', url: 'https://quizizz.com', category: 'Trò chơi', description: 'Tổ chức mini-game kiểm tra kiến thức nhanh' },
+  { id: 'link-5', title: 'Máy chiếu vật thể bằng Smart phone', url: 'https://sharecame-production.up.railway.app/', category: 'Học liệu số', description: 'Dùng điện thoại làm máy chiếu vật thể: đưa bài làm, vật thật lên màn hình lớp' }
 ];
+
+/**
+ * Default links added AFTER accounts already had their own saved list. Each one is offered once to an existing
+ * account (see ClassroomContext.applyUserClassroomData); a link the teacher then deletes does not come back.
+ */
+export const LATER_DEFAULT_QUICK_LINK_IDS = ['link-5'];
 
 // Thời khóa biểu cố định của lớp 4A1 (Yêu cầu 1)
 export const INITIAL_TIMETABLE: TimetableSlot[] = [];

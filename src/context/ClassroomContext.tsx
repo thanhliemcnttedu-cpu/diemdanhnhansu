@@ -22,7 +22,7 @@ import { generateStudentsForClass, getStudentRealAvatar } from '../utils/student
 import { 
   INITIAL_CLASSES, INITIAL_STUDENTS_CLASS_4A1, INITIAL_SUBJECTS, 
   INITIAL_CRITERIA, INITIAL_REWARDS, INITIAL_TIMETABLE, 
-  INITIAL_QUICK_LINKS, DEFAULT_TEACHER, ADMIN_QUANTRI_PROFILE, DEFAULT_CORE_SUBJECTS,
+  INITIAL_QUICK_LINKS, LATER_DEFAULT_QUICK_LINK_IDS, DEFAULT_TEACHER, ADMIN_QUANTRI_PROFILE, DEFAULT_CORE_SUBJECTS,
   DEFAULT_SUBJECT_TEACHER_CONFIG, INITIAL_SUBJECT_TIMETABLE, PRESET_SUBJECT_CLASS_NAMES,
   SAMPLE_SUBJECT_TIMETABLE_BY_IMAGE, SAMPLE_SUBJECT_CLASSES_BY_IMAGE
 } from '../data/initialData';
@@ -30,6 +30,9 @@ import { playCoinSound, playDeductSound } from '../utils/audio';
 import { DEFAULT_QUESTIONS, loadQuizBank, saveQuizBank, smartMergeQuizBank } from '../utils/quizParser';
 import { databaseService, FALLBACK_USERS, LOCAL_AUTH_KEY, LOCAL_DB_PREFIX, LOCAL_SESSION_KEY, getApiBaseUrl, notifyDataRefreshed } from '../services/databaseService';
 import { offlineStoreService } from '../services/offlineStoreService';
+
+/** Per account: ids of later-added default links the teacher removed (so they are not added again) */
+const REMOVED_DEFAULT_LINKS_PREFIX = 'lhhp_default_links_removed:';
 import { AvatarSourceType, getStudentAvatarAssignment, sanitizeStudentAvatar } from '../utils/avatarConfig';
 import { getOfficialDisplayName, getOfficialRoleTitle, ACCOUNT_IDENTITY_MAP, isRestrictedAdminOrBgh } from '../utils/accountIdentity';
 import { extractSchoolBranchesFromClasses } from '../utils/schoolBranchHelper';
@@ -1089,7 +1092,22 @@ export const ClassroomProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       setSubjectTimetable(data.subjectTimetable);
     }
     if (data.quickLinks && Array.isArray(data.quickLinks)) {
-      setQuickLinks(data.quickLinks);
+      // Default links introduced later are added to an account that already has a saved list, unless the
+      // teacher removed that link (remembered in removeQuickLink) or the same address is already in the list.
+      // This function runs several times with the same saved data, so the rule must give the same answer each time.
+      let links: QuickLink[] = data.quickLinks;
+      try {
+        const owner = (currentUserRef.current?.username || '').toLowerCase();
+        if (owner && !isViewOnly()) {
+          const removed: string[] = JSON.parse(localStorage.getItem(REMOVED_DEFAULT_LINKS_PREFIX + owner) || '[]');
+          const normalize = (u: string) => String(u || '').trim().toLowerCase().replace(/\/+$/, '');
+          const fresh = INITIAL_QUICK_LINKS.filter(d =>
+            LATER_DEFAULT_QUICK_LINK_IDS.includes(d.id) && !removed.includes(d.id)
+            && !links.some(l => l.id === d.id || normalize(l.url) === normalize(d.url)));
+          if (fresh.length > 0) links = [...links, ...fresh];
+        }
+      } catch (_) { /* keep the saved list as is */ }
+      setQuickLinks(links);
     }
     if (data.teacherProfile) {
       setTeacherProfile(data.teacherProfile);
@@ -4571,6 +4589,17 @@ export const ClassroomProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   };
 
   const deleteQuickLink = (id: string) => {
+    // A default link added later that the teacher removes must not be added again on the next load
+    if (LATER_DEFAULT_QUICK_LINK_IDS.includes(id)) {
+      try {
+        const owner = (currentUserRef.current?.username || '').toLowerCase();
+        if (owner) {
+          const key = REMOVED_DEFAULT_LINKS_PREFIX + owner;
+          const removed: string[] = JSON.parse(localStorage.getItem(key) || '[]');
+          if (!removed.includes(id)) localStorage.setItem(key, JSON.stringify([...removed, id]));
+        }
+      } catch (_) { /* ignore */ }
+    }
     setQuickLinks(prev => prev.filter(l => l.id !== id));
   };
 
