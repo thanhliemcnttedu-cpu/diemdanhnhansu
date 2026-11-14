@@ -412,7 +412,7 @@ export type UserRole = 'admin' | 'homeroom' | 'subject' | 'bgh' | 'school_admin'
 // 5 Vai trò đăng nhập theo yêu cầu người dùng
 export type LoginRoleScope = 
   | 'personal_teacher'  // a. Vai trò Cá Nhân
-  | 'school_teacher'    // b. Vai trò Giáo viên thuộc Nhà trường
+  | 'school_teacher'    // b. Vai trò Giáo viên - Nhân viên thuộc Nhà trường
   | 'school_admin'      // c. Vai trò Quản trị Nhà Trường
   | 'guest_admin'       // d. Vai Trò Quản trị Tài khoản Cá Nhân
   | 'admin';            // e. Vai Trò Admin

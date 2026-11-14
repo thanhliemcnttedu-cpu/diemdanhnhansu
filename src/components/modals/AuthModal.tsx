@@ -339,8 +339,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     },
     {
       id: 'school_teacher',
-      title: 'Vai trò Giáo viên thuộc Nhà trường',
-      sub: 'Giáo viên chính khóa / bộ môn thuộc trường học trên hệ thống',
+      title: 'Vai trò Giáo viên - Nhân viên thuộc Nhà trường',
+      sub: 'Giáo viên chủ nhiệm / bộ môn và nhân viên thuộc trường học trên hệ thống',
       icon: <School className="w-5 h-5" />,
       color: 'text-blue-700',
       activeBorder: 'border-blue-400',
