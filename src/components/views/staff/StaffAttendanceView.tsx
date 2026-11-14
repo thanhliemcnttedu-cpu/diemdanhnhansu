@@ -200,7 +200,18 @@ export const StaffAttendanceView: React.FC = () => {
   }, [dd, auth, tab, loadedRange]);
 
   const stats = useMemo(() => aggregate(staff, days, range.from, range.to, today), [staff, days, range, today]);
-  const todayStats = useMemo(() => aggregate(staff, days, today, today, today).daily[0], [staff, days, today]);
+  // Saturday / Sunday with nobody checked in is not a working day → aggregate() returns no row for today.
+  // The whole summary used to render nothing in that case (blank screen); use an all-zero row instead.
+  const isRestDayToday = useMemo(() => {
+    const dow = fromDateKey(today).getDay();
+    return (dow === 0 || dow === 6) && Object.keys(days[today] || {}).length === 0;
+  }, [days, today]);
+  const todayStats = useMemo(() => {
+    const row = aggregate(staff, days, today, today, today).daily[0];
+    if (row) return row;
+    const total = staff.filter(s => !s.disabled).length;
+    return { date: today, total, present: 0, business_trip: 0, sick_leave: 0, personal_unpaid: 0, missing: total, marked: 0, workRate: 0, markRate: 0 };
+  }, [staff, days, today]);
   // Ngày làm việc gần nhất trước hôm nay (Thứ Hai so với Thứ Sáu tuần trước)
   const prevDay = useMemo(() => {
     for (let i = 1; i <= 7; i++) {
@@ -434,6 +445,12 @@ export const StaffAttendanceView: React.FC = () => {
             <div className="rounded-2xl border-2 border-dashed border-slate-300 bg-white p-6 text-center text-sm text-slate-700">
               Chưa có danh sách nhân sự. {canManage ? 'Vào thẻ "Danh sách nhân sự" để nhập từ Excel.' : 'Quản trị nhà trường cần nhập danh sách nhân sự trước.'}
             </div>
+          )}
+
+          {staff.length > 0 && isRestDayToday && (
+            <p role="status" className="rounded-2xl border border-sky-200 bg-sky-50 text-sky-950 text-sm px-4 py-3 font-bold">
+              Hôm nay là {weekdayLabel(today)} — ngày nghỉ, chưa có ai điểm danh nên các số liệu của hôm nay đều bằng 0. Chọn "Hôm qua", "Tuần này" hoặc "Tháng này" để xem số liệu các ngày làm việc.
+            </p>
           )}
 
           {staff.length > 0 && todayStats && (
