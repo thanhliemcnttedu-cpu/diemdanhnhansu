@@ -41,6 +41,16 @@ protocol.registerSchemesAsPrivileged([
 
 app.setAppUserModelId('com.lhhp.lophochanhphuc.desktop');
 
+// Automated tests (scripts/smoke-test-desktop-lite.mjs) and support: run on a separate data folder so nothing
+// of the real installation on this PC (connection, session, offline-folder setting, UI updates) is read or
+// written. Chromium's --user-data-dir switch alone does not move Electron's userData folder.
+if (process.env.LHHP_USER_DATA_DIR && path.isAbsolute(process.env.LHHP_USER_DATA_DIR)) {
+  try {
+    fs.mkdirSync(process.env.LHHP_USER_DATA_DIR, { recursive: true });
+    app.setPath('userData', process.env.LHHP_USER_DATA_DIR);
+  } catch (_) { /* fall back to the normal folder */ }
+}
+
 let mainWindow = null;
 
 function resolveDistFile(urlPath) {

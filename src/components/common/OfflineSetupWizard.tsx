@@ -14,10 +14,13 @@ import {
 import { googleDriveService } from '../../services/googleDriveService';
 import { schoolDriveDbService } from '../../services/schoolDriveDbService';
 import { offlineStoreService, OfflineFolderInfo } from '../../services/offlineStoreService';
+import { useClassroom } from '../../context/ClassroomContext';
 
 export const OPEN_OFFLINE_SETUP_EVENT = 'lhhp:open-offline-setup';
 /** Marker written into the folder when setup finishes (also proves the folder really accepts our files) */
 const SETUP_MARKER_FILE = 'thiet_lap.json';
+/** localStorage: installer (shell) version for which the setup steps were last confirmed on this PC */
+const SETUP_CONFIRMED_KEY = 'lhhp_setup_confirmed_shell';
 
 const STEPS = [
   { title: 'Kết nối trường', hint: 'Cơ sở dữ liệu của nhà trường', icon: Cloud },
@@ -60,6 +63,13 @@ export const OfflineSetupWizard: React.FC = () => {
   const [finishing, setFinishing] = useState(false);
   const [finishError, setFinishError] = useState('');
   const headingRef = useRef<HTMLHeadingElement>(null);
+  const { currentUser, logoutUser } = useClassroom();
+  // Latest values for the one-time start-up check (it must not re-run when the account changes)
+  const currentUserRef = useRef(currentUser);
+  const logoutRef = useRef(logoutUser);
+  currentUserRef.current = currentUser;
+  logoutRef.current = logoutUser;
+  const shellVersionRef = useRef('');
 
   const refreshFolder = useCallback(async () => {
     const info = await offlineStoreService.getFolder();
@@ -67,17 +77,35 @@ export const OfflineSetupWizard: React.FC = () => {
     return info;
   }, []);
 
-  // First run: open when the desktop shell has the bridge but no usable folder yet
+  // Open by itself in two cases:
+  //  1. First start after an installer was run (new or reinstalled shell version): the person at the PC signs in
+  //     again and goes through every step, even when the PC still holds a connection / folder from an earlier
+  //     installation (uninstalling keeps the app data) — so they see what this PC is connected to and where its
+  //     data is kept, instead of landing in someone's still-open session.
+  //  2. No usable offline folder (never chosen, or the chosen one is gone).
   useEffect(() => {
     if (!offlineStoreService.isAvailable()) return;
     let cancelled = false;
-    refreshFolder().then(info => {
-      if (cancelled || folderReady(info)) return;
+    (async () => {
+      let shellVersion = '';
+      try { shellVersion = String((await (window as any).lhhpDesktop?.update?.getInfo?.())?.shellVersion || ''); } catch (_) { /* older bridge */ }
+      const info = await refreshFolder();
+      if (cancelled) return;
+      let confirmedFor = '';
+      try { confirmedFor = localStorage.getItem(SETUP_CONFIRMED_KEY) || ''; } catch (_) { /* ignore */ }
+      const freshInstall = !!shellVersion && confirmedFor !== shellVersion;
+      if (!freshInstall && folderReady(info)) return;
+      shellVersionRef.current = shellVersion;
+      if (freshInstall && currentUserRef.current) {
+        try { await logoutRef.current(); } catch (_) { /* the login screen still opens once setup is done */ }
+      }
+      if (cancelled) return;
+      setConnected(schoolDriveDbService.isConfigured());
       setManageMode(false);
-      // A folder was chosen before but is gone now (USB removed, folder deleted) → go straight to the folder step
-      setStep(info.dir && schoolDriveDbService.isConfigured() ? 1 : 0);
+      // Only the folder is missing (USB removed, folder deleted) → go straight to the folder step
+      setStep(!freshInstall && info.dir && schoolDriveDbService.isConfigured() ? 1 : 0);
       setOpen(true);
-    });
+    })();
     return () => { cancelled = true; };
   }, [refreshFolder]);
 
@@ -105,6 +133,13 @@ export const OfflineSetupWizard: React.FC = () => {
   if (!open) return null;
 
   const cfg = googleDriveService.getConfig();
+  // School names kept from the last successful read of the school database (shown so the person can tell
+  // which school this PC is tied to)
+  let connectedSchools = '';
+  try {
+    const cached = JSON.parse(localStorage.getItem('lhhp_drive_schools_cache') || 'null');
+    connectedSchools = Array.isArray(cached?.schools) ? cached.schools.map((s: any) => s?.name).filter(Boolean).slice(0, 3).join(', ') : '';
+  } catch (_) { /* no cached list */ }
   const ready = folderReady(folder);
   const folderMissing = !!folder?.dir && !ready;
 
@@ -177,6 +212,18 @@ export const OfflineSetupWizard: React.FC = () => {
       : 'Đã kết nối thư mục dùng chung. Nhà trường chưa khởi tạo cơ sở dữ liệu — Quản trị đăng nhập để khởi tạo.');
   };
 
+  // Same effect as "Làm sạch kết nối cũ trên máy này" on the login screen: forget the school connection kept
+  // on this PC (nothing on Google Drive is touched) so the links of another school can be entered.
+  const clearConnection = () => {
+    if (!window.confirm('Làm sạch kết nối trên máy này?\n\nXóa link thư mục, link Apps Script, thông tin trường và phiên Quản trị đã nhớ trên máy này. Dữ liệu trên Google Drive KHÔNG bị ảnh hưởng.\n\nSau đó nhập 2 đường link của trường bạn.')) return;
+    googleDriveService.resetLocalConnection();
+    setConnected(false);
+    setConnectionChanged(true);
+    setShowConnectForm(false);
+    setConnectError('');
+    setConnectNote('Đã làm sạch kết nối cũ. Nhập 2 đường link của trường rồi bấm "Xác thực và kết nối".');
+  };
+
   const pickFolder = async (mode: 'suggested' | 'choose') => {
     setFolderError('');
     setFolderBusy(true);
@@ -201,6 +248,8 @@ export const OfflineSetupWizard: React.FC = () => {
       setFinishError('Không ghi được vào thư mục ngoại tuyến. Hãy quay lại bước 2 và chọn thư mục khác.');
       return;
     }
+    // Setup confirmed for this installer version → not asked again until another installer is run
+    try { if (shellVersionRef.current) localStorage.setItem(SETUP_CONFIRMED_KEY, shellVersionRef.current); } catch (_) { /* ignore */ }
     setOpen(false);
     // The login screen read the connection when it was mounted → reload so it sees the new one
     if (connectionChanged) window.location.reload();
@@ -275,12 +324,22 @@ export const OfflineSetupWizard: React.FC = () => {
                   <div className="rounded-2xl border border-emerald-300 bg-emerald-50 px-4 py-3 flex items-start gap-3">
                     <CheckCircle2 className="w-5 h-5 text-emerald-700 shrink-0 mt-0.5" aria-hidden="true" />
                     <div className="min-w-0 flex-1">
-                      <p className="font-black text-emerald-950">Máy này đã kết nối với cơ sở dữ liệu của trường</p>
-                      <p className="text-xs text-emerald-900 truncate" title={cfg.folderUrl}>Thư mục: {cfg.folderId}</p>
+                      <p className="font-black text-emerald-950">
+                        Máy này đang kết nối với{connectedSchools ? `: ${connectedSchools}` : ' cơ sở dữ liệu của một trường'}
+                      </p>
+                      <p className="text-xs text-emerald-900 truncate" title={cfg.folderUrl}>Thư mục Google Drive: {cfg.folderId}</p>
+                      <p className="text-sm text-emerald-950 mt-1.5">
+                        Kết nối này được lưu trên máy từ trước (gỡ cài đặt hoặc cài đè không xóa). Đúng trường của bạn thì bấm <strong>Tiếp tục</strong>.
+                      </p>
                     </div>
-                    {!showConnectForm && (
-                      <button type="button" className={`${btnLight} h-9 px-3`} onClick={() => setShowConnectForm(true)}>Đổi kết nối</button>
-                    )}
+                  </div>
+                )}
+                {connected && !showConnectForm && (
+                  <div className="flex flex-wrap gap-2">
+                    <button type="button" className={btnLight} onClick={() => setShowConnectForm(true)}>Đổi sang link khác</button>
+                    <button type="button" className={`${btnLight} border-rose-300 text-rose-800 hover:bg-rose-50`} onClick={clearConnection}>
+                      Máy dùng cho trường khác — làm sạch kết nối
+                    </button>
                   </div>
                 )}
                 {showForm && (
@@ -408,6 +467,17 @@ export const OfflineSetupWizard: React.FC = () => {
                     </div>
                   </div>
                 </dl>
+                <div className="rounded-2xl border border-slate-200 px-4 py-3">
+                  <p className="font-black text-slate-900">Dữ liệu của máy này lưu ở đâu</p>
+                  <ol className="mt-1.5 space-y-1.5 text-sm text-slate-700 list-decimal pl-5">
+                    <li><strong>Google Drive của trường</strong> — bản gốc, mọi máy trong trường dùng chung.</li>
+                    <li><strong>Thư mục ngoại tuyến</strong> ở trên — bản để làm việc khi mất mạng; tự đẩy lên Drive khi có mạng lại.</li>
+                    <li>
+                      <strong>Bộ nhớ của phần mềm trên máy</strong> (link kết nối trường, phiên làm việc) — được giữ lại khi gỡ cài đặt hoặc cài đè.
+                      Muốn đưa máy về trạng thái chưa cấu hình: ở màn đăng nhập bấm <strong>Đổi</strong> rồi <strong>Làm sạch kết nối cũ trên máy này</strong>.
+                    </li>
+                  </ol>
+                </div>
                 <div className="rounded-2xl border border-sky-200 bg-sky-50 px-4 py-3 text-sky-950">
                   <p className="font-black">Bước tiếp theo</p>
                   <p className="text-sm mt-1">Đăng nhập một lần khi máy đang có mạng để phần mềm ghi nhớ tài khoản và tải dữ liệu về thư mục này.</p>

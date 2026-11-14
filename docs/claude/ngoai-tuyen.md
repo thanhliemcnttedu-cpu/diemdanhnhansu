@@ -13,6 +13,12 @@ Chỉ có trên bản cài đặt có cầu nối thư mục (`window.lhhpDeskto
   - `du_lieu_toan_truong/<trường>/tai_khoan_va_truong.json` — danh sách tài khoản (không mật khẩu) và trường.
   - `du_lieu_toan_truong/<trường>/nhan_su.json`, `cham_cong_<từ>_<đến>.json` — bản xem của chấm công (không có mật khẩu điểm danh).
 
+## Lần chạy đầu sau khi cài một bộ cài (từ giao diện 1.2.1)
+- Gỡ cài đặt / cài đè KHÔNG xóa `%APPDATA%\LopHocHanhPhuc` (link kết nối trường, phiên đăng nhập). Vì vậy màn thiết lập so phiên bản vỏ (`lhhpDesktop.update.getInfo().shellVersion`) với `localStorage lhhp_setup_confirmed_shell`: khác nhau → **đăng xuất** phiên đang mở và bắt buộc đi lại 3 bước từ bước 1 (hiện tên trường máy đang kết nối, nút "làm sạch kết nối"; bước 3 giải thích 3 nơi lưu dữ liệu). Bấm Hoàn tất mới ghi nhớ phiên bản vỏ.
+- Cài lại đúng cùng một phiên bản vỏ thì không kích hoạt lại.
+- Thử tự động: `LHHP_USER_DATA_DIR` (đọc trong `desktop-lite/main.cjs`) chuyển cả thư mục dữ liệu của ứng dụng sang chỗ khác; chỉ `--user-data-dir` thì `offline-folder.json` và `ui-updates` vẫn ghi vào hồ sơ thật. `scripts/smoke-test-desktop-lite.mjs` (`npm run test:desktop-lite`) chạy trong quy trình GitHub trước khi phát hành.
+- Đóng gói tại máy này (Node 26) cho ra `.exe` hỏng ở bước sửa tài nguyên (mã thoát 0xC0000096); bản do GitHub dựng (Node 22) chạy được. Không phát bộ cài dựng tại máy.
+
 ## Đăng nhập ngoại tuyến (`services/offlineAuthService.ts`)
 - Sau mỗi lần đăng nhập CÓ MẠNG thành công: lưu mã kiểm tra + thông tin tài khoản. Khi Apps Script không trả lời: kiểm tra theo mã đó, hiệu lực `OFFLINE_VALID_DAYS` = 30 ngày từ lần có mạng gần nhất. Chấp nhận số CCCD thiếu số 0 đầu.
 - Tài khoản quản lý vào ngoại tuyến vẫn được nhớ mật khẩu phiên (`rememberLoginSecrets`) để ký các lệnh ghi khi có mạng lại.

@@ -26,7 +26,12 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 if (!fs.existsSync(exe)) { console.error(`⛔ Không thấy ${exe}`); process.exit(1); }
 console.log(`▶ Chạy thử ${path.relative(root, exe)} (cần bản ${expected})…`);
 
-const child = spawn(exe, [`--remote-debugging-port=${port}`, `--user-data-dir=${profile}`], { stdio: 'ignore' });
+// LHHP_USER_DATA_DIR moves the app's own data folder (see desktop-lite/main.cjs); --user-data-dir alone only
+// moves the browser storage, and the test would then read / write the real installation's settings on this PC.
+const child = spawn(exe, [`--remote-debugging-port=${port}`, `--user-data-dir=${profile}`], {
+  stdio: 'ignore',
+  env: { ...process.env, LHHP_USER_DATA_DIR: profile },
+});
 let exitCode = null;
 child.on('exit', (code) => { exitCode = code; });
 
