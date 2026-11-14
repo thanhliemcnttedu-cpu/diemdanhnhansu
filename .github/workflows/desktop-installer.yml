@@ -64,6 +64,18 @@ jobs:
             exit 1
           fi
 
+      # Start the packaged app once: an exe that cannot start (corrupted while packaging) must never be published
+      - name: Chay thu ban dong goi
+        shell: bash
+        run: |
+          set -o pipefail
+          if ! node scripts/smoke-test-desktop-lite.mjs 2>&1 | tee smoke.log; then
+            TAIL=$(tail -n 15 smoke.log | cut -c1-300)
+            TAIL="${TAIL//'%'/'%25'}"; TAIL="${TAIL//$'\r'/}"; TAIL="${TAIL//$'\n'/'%0A'}"
+            echo "::error title=Ban dong goi khong chay duoc::$TAIL"
+            exit 1
+          fi
+
       - name: Ma bam SHA-256
         id: hash
         shell: bash
