@@ -33,3 +33,10 @@
 - **Nơi lưu** (không sửa Apps Script): thư mục Drive dùng chung của trường — `huongdan_sudung.json` (danh mục) và `huongdan_tep_<id>.json` (PDF dạng base64, tối đa 8 MB/tệp). Chưa kết nối Drive → chỉ lưu trong trình duyệt máy đó và có cảnh báo. Apps Script không có lệnh xóa tệp → xóa mục thì ghi đè tệp PDF bằng tệp rỗng.
 - Các tệp này là `.json` trong thư mục dùng chung nên nằm trong bản sao lưu toàn hệ thống và được khôi phục cùng.
 - Ba mục **Bản quyền PRO / Kích hoạt CDKEY**, **Đăng ký sử dụng**, **Hỗ trợ qua Zalo** không còn ở nhóm Hệ thống của thanh bên; nay là 3 nút trong cột phải của màn Hướng dẫn sử dụng (khối "Bản quyền & đăng ký"), vẫn mở đúng các hộp cũ (`setIsCdKeyModalOpen`, `setIsRegistrationModalOpen`, `OPEN_ZALO_QR_EVENT`).
+
+## Link tải bộ cài trên trang web của trường (11/2026)
+- `services/installerLinkService.ts` + `components/common/InstallerDownload.tsx`. Link và số phiên bản lưu trong tệp `bocai_maytinh.json` ở thư mục Drive dùng chung (ghi bằng `saveClassData`, đọc bằng `getLatest&strict=1`, không cần đổi Apps Script); bản đọc gần nhất nhớ ở `localStorage lhhp_installer_link:<folderId>`.
+- Chỉ có khi máy đã kết nối CSDL trường (link thư mục + link Apps Script). Chưa kết nối: không cấu hình được, không hiện nút.
+- Đặt link: Quản trị cao nhất và Quản trị nhà trường (không gồm BGH), ở **Hướng dẫn sử dụng › Bộ cài đặt cho máy tính**. Chỉ nhận link `https://`; phiên bản tự lấy từ tên tệp dạng `…_V_1.2.0.exe`.
+- Nút "Tải file cài đặt trên máy tính" hiện ở màn đăng nhập (dưới hàng "ĐIỂM DANH GV – NV") và ở trang Hướng dẫn sử dụng; trong bản cài đặt (có `window.lhhpDesktop`) nút tải ẩn, ô cấu hình vẫn có.
+- Tệp này không có lớp bảo vệ quyền ghi ở Apps Script (giống `phanhieu_truong.json`, `huongdan_sudung.json`).

@@ -15,6 +15,7 @@ import { databaseService } from '../../services/databaseService';
 import { googleDriveService } from '../../services/googleDriveService';
 import { schoolDriveDbService } from '../../services/schoolDriveDbService';
 import { offlineAuthService } from '../../services/offlineAuthService';
+import { InstallerDownloadButton } from '../common/InstallerDownload';
 import { appsScriptSetupService } from '../../services/appsScriptSetupService';
 import { StaffCheckInQrModal } from '../views/staff/StaffCheckInQr';
 import { staffAttendanceService } from '../../services/staffAttendanceService';
@@ -816,6 +817,8 @@ Sau đó dán link thư mục + Apps Script mới để khởi tạo.`)) return;
                   </button>
                 </div>
               )}
+              {/* Link tải bộ cài cho máy tính do Quản trị đặt (lưu trên Drive của trường) — chỉ hiện khi máy đã kết nối CSDL trường */}
+              <InstallerDownloadButton variant="login" enabled={driveConfigured} />
               <StaffCheckInQrModal open={isCheckInQrOpen} onClose={() => setIsCheckInQrOpen(false)} />
 
               {/* ─────────── CỨU HỘ & KHÔI PHỤC DỮ LIỆU (gọn 1 dòng) ─────────── */}
