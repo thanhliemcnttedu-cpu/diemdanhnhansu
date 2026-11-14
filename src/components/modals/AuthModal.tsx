@@ -349,8 +349,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     },
     {
       id: 'school_admin',
-      title: 'Vai trò Quản trị Nhà Trường',
-      sub: 'Quản lý toàn diện GV, lớp, HS trường, tải/nạp JSON & dọn năm học mới',
+      title: 'Vai trò Ban giám hiệu - Quản trị Nhà Trường',
+      sub: 'Tài khoản Ban giám hiệu và Quản trị CSDL nhà trường (do Quản trị cao nhất cấp)',
       icon: <ShieldCheck className="w-5 h-5" />,
       color: 'text-amber-700',
       activeBorder: 'border-amber-400',
