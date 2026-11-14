@@ -110,7 +110,10 @@ function ClassroomApp() {
 
   // Lắng nghe phím tắt hoặc mở modal cấu hình vai trò máy tính
   useEffect(() => {
-    const handleOpenRoleModal = () => setIsDesktopRoleModalOpen(true);
+    // "Vai trò cài đặt máy tính" only exists where a local server can store it (not on the web / lite desktop build)
+    const handleOpenRoleModal = () => {
+      if ((window as any).__lhhpApiAvailable === true || Boolean((window as any).electronAPI)) setIsDesktopRoleModalOpen(true);
+    };
     window.addEventListener('open-desktop-role-modal', handleOpenRoleModal);
     return () => window.removeEventListener('open-desktop-role-modal', handleOpenRoleModal);
   }, []);

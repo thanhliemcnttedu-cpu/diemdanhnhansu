@@ -160,6 +160,8 @@ export const TopBar: React.FC<TopBarProps> = ({
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isClassDropdownOpen, setIsClassDropdownOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  // Build with its own server (localhost / old desktop EXE); false on the web build and the lite desktop build
+  const hasLocalServer = typeof window !== 'undefined' && ((window as any).__lhhpApiAvailable === true || Boolean((window as any).electronAPI));
   const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
   // Kiểu "chip" hiện đại cho các tiện ích ở thanh trên cùng
   const chipBase = 'inline-flex items-center gap-1.5 h-8 px-2.5 rounded-xl text-[12px] font-bold border transition-colors shrink-0 cursor-pointer';
@@ -738,7 +740,10 @@ export const TopBar: React.FC<TopBarProps> = ({
                   <span>Quản trị tài khoản & DB</span>
                 </button>
 
+                {/* Chỉ có ý nghĩa ở bản có máy chủ kèm theo (lưu được "vai trò của máy"). Bản web / bản cài đặt gọn:
+                    vai trò do tài khoản đăng nhập quyết định → ẩn để không gây hiểu nhầm. */}
                 <button
+                  {...(hasLocalServer ? {} : { style: { display: 'none' } })}
                   onClick={() => {
                     setIsUserMenuOpen(false);
                     window.dispatchEvent(new CustomEvent('open-desktop-role-modal'));

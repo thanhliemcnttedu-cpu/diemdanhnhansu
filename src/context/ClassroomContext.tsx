@@ -2382,18 +2382,26 @@ export const ClassroomProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     const targetUser = allUsers.find(u => u.username.toLowerCase() === username.toLowerCase());
     if (!targetUser) return false;
 
-    const isExecutiveAdmin = Boolean(
-      !currentUser ||
-      currentUser.role === 'admin' || 
-      currentUser.role === 'school_admin' || 
-      currentUser.isSchoolAdmin || 
-      currentUser.role === 'bgh' || 
-      currentUser.isBgh
-    );
-    if (!isExecutiveAdmin) {
-      const isTargetAdmin = targetUser.role === 'admin' || targetUser.role === 'school_admin' || Boolean(targetUser.isSchoolAdmin) || targetUser.role === 'bgh';
-      if (!isTargetAdmin) {
+    // 🔒 Chuyển tài khoản KHÔNG hỏi mật khẩu → chỉ được chuyển XUỐNG tài khoản có quyền thấp hơn.
+    // (Trước đây tài khoản giáo viên lại chuyển được sang tài khoản Quản trị / BGH có sẵn trong danh sách trên máy.)
+    // Muốn dùng tài khoản ngang hoặc cao quyền hơn thì phải đăng xuất và đăng nhập bằng mật khẩu của tài khoản đó.
+    const managementRank = (u: UserAccount | null | undefined): number => {
+      if (!u) return 0;
+      if (u.role === 'admin' || (u.username || '').toLowerCase() === 'adminquantri') return 3;
+      if (u.role === 'school_admin' || u.isSchoolAdmin || u.role === 'guest_admin' || u.isGuestAdmin) return 2;
+      if (u.role === 'bgh' || u.isBgh) return 1;
+      return 0;
+    };
+    const currentRank = managementRank(currentUser);
+    const targetRank = managementRank(targetUser);
+    const isSameAccount = Boolean(currentUser && currentUser.username.toLowerCase() === targetUser.username.toLowerCase());
+    if (!isSameAccount) {
+      if (currentUser && currentRank === 0) {
         console.warn('Tài khoản giáo viên không thể chuyển đổi nhanh sang tài khoản khác. Vui lòng đăng xuất để đăng nhập.');
+        return false;
+      }
+      if (targetRank >= Math.max(currentRank, 1)) {
+        console.warn('Không thể chuyển sang tài khoản quản lý ngang hoặc cao quyền hơn khi chưa đăng nhập bằng mật khẩu của tài khoản đó.');
         return false;
       }
     }
