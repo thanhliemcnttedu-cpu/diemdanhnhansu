@@ -19,6 +19,7 @@ import { loadQuizBank, saveQuizBank } from '../../../utils/quizParser';
 
 import { handleAvatarImgError } from '../../../utils/avatarConfig';
 import { CalledStudentModal } from './CalledStudentModal';
+import { QuestionChallengeModal } from './QuestionChallengeModal';
 import { QuestionAudioButton } from './QuestionAudioButton';
 import { useQuizSelection, QuizSelectionChip } from './QuizSetPicker';
 export const RocketMissionGame: React.FC = () => {
@@ -39,9 +40,8 @@ export const RocketMissionGame: React.FC = () => {
 
   // Question challenge state (For mode 3: Gọi tên + Trả lời câu hỏi)
   const [currentQuestion, setCurrentQuestion] = useState<QuestionItem | null>(null);
-  const [selectedOption, setSelectedOption] = useState<number | null>(null);
-  const [showTeacherKey, setShowTeacherKey] = useState(false);
-  const [isAnswerCorrect, setIsAnswerCorrect] = useState<boolean | null>(null);
+  const [quizDrawToken, setQuizDrawToken] = useState(0);
+  const [isQuizOpen, setIsQuizOpen] = useState(false);
   const [isQuestionBankOpen, setIsQuestionBankOpen] = useState(false);
   const [editTargetQuestion, setEditTargetQuestion] = useState<QuestionItem | null>(null);
   // Chế độ câu hỏi: giáo viên chọn kho + bộ câu hỏi trước khi chơi; chỉ bốc câu trong phần đã chọn
@@ -124,9 +124,6 @@ export const RocketMissionGame: React.FC = () => {
     setWinner(null);
     setShowWinnerPopup(false);
     setHasAwarded(false);
-    setSelectedOption(null);
-    setShowTeacherKey(false);
-    setIsAnswerCorrect(null);
 
     const targetWinner = activeList[Math.floor(Math.random() * activeList.length)];
     const totalDurationMs = spinDuration * 1000;
@@ -165,12 +162,6 @@ export const RocketMissionGame: React.FC = () => {
         if (autoExclude) {
           setExcludedIds(prev => [...prev, targetWinner.id]);
         }
-
-        // If mode is Quiz, draw random question
-        if (callMode === 'quiz' && quizPool.length > 0) {
-          const q = quizPool[Math.floor(Math.random() * quizPool.length)];
-          setCurrentQuestion(q);
-        }
       }
     };
 
@@ -185,37 +176,17 @@ export const RocketMissionGame: React.FC = () => {
     confetti({ particleCount: 50, spread: 60 });
   };
 
-  const handleSelectOption = (idx: number) => {
-    if (!currentQuestion || selectedOption !== null) return;
-    setSelectedOption(idx);
-    const correct = idx === currentQuestion.correctOptionIndex;
-    setIsAnswerCorrect(correct);
-
-    if (correct) {
-      triggerCorrectCelebration();
-      handleAwardCoins(currentQuestion.pointsReward || 2);
-    } else {
-      setShowTeacherKey(true);
-      triggerWrongFeedback();
-    }
-  };
-
-  const handlePickAnotherQuestion = () => {
-    if (quizPool.length === 0) return;
-    const remaining = quizPool.filter(q => q.id !== currentQuestion?.id);
-    const poolQ = remaining.length > 0 ? remaining : quizPool;
-    const q = poolQ[Math.floor(Math.random() * poolQ.length)];
-    setCurrentQuestion(q);
-    setSelectedOption(null);
-    setShowTeacherKey(false);
-    setIsAnswerCorrect(null);
-    setHasAwarded(false);
+  // Mode 3: draw a random question from the chosen set and show it wide-screen
+  const drawQuestion = () => {
+    if (quizPool.length === 0) { quizSel.request(); return; }
+    setQuizDrawToken(n => n + 1);
+    setIsQuizOpen(true);
   };
 
   return (
     <div className="space-y-6">
       {/* 1. TOP CONTROL BAR: 3 CALL MODES + SPIN DURATION (4s) */}
-      <div className="bg-white rounded-3xl p-4 md:p-5 border border-indigo-900/60 shadow-xl flex flex-col lg:flex-row lg:items-center justify-between gap-4 text-slate-800">
+      <div className="bg-white rounded-3xl p-4 md:p-5 border border-slate-200 shadow-xs flex flex-col lg:flex-row lg:flex-wrap lg:items-center justify-between gap-4 text-slate-800">
         <div>
           <div className="flex items-center gap-2">
             <span className="w-8 h-8 rounded-xl bg-indigo-600 flex items-center justify-center font-bold">
@@ -236,7 +207,7 @@ export const RocketMissionGame: React.FC = () => {
             type="button"
             onClick={() => setCallMode('random')}
             className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer uppercase ${
-              callMode === 'random' ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-400 hover:text-white'
+              callMode === 'random' ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'
             }`}
           >
             1. Gọi Ngẫu Nhiên
@@ -245,7 +216,7 @@ export const RocketMissionGame: React.FC = () => {
             type="button"
             onClick={() => setCallMode('coins')}
             className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer uppercase ${
-              callMode === 'coins' ? 'bg-amber-500 text-amber-950 shadow-xs' : 'text-slate-400 hover:text-white'
+              callMode === 'coins' ? 'bg-amber-500 text-amber-950 shadow-xs' : 'text-slate-600 hover:text-slate-900'
             }`}
           >
             2. Gọi + Tặng Xu
@@ -254,7 +225,7 @@ export const RocketMissionGame: React.FC = () => {
             type="button"
             onClick={() => quizSel.request(() => setCallMode('quiz'))}
             className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer uppercase ${
-              callMode === 'quiz' ? 'bg-purple-600 text-white shadow-xs' : 'text-slate-400 hover:text-white'
+              callMode === 'quiz' ? 'bg-purple-600 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'
             }`}
           >
             3. Gọi + Trả Lời Câu Hỏi
@@ -262,7 +233,7 @@ export const RocketMissionGame: React.FC = () => {
         </div>
 
         {callMode === 'quiz' && (
-          <QuizSelectionChip label={quizSel.label} count={quizPool.length} onChange={() => quizSel.request()} />
+          <div className="w-full lg:basis-full lg:order-last"><QuizSelectionChip label={quizSel.label} count={quizPool.length} onChange={() => quizSel.request()} /></div>
         )}
 
         {/* Duration selection (User request: lựa chọn 4 giây) */}
@@ -351,7 +322,8 @@ export const RocketMissionGame: React.FC = () => {
         message={winner ? <>Phi thuyền đã đáp xuống hành tinh của <strong className="text-slate-900">{winner.name}</strong>. Chúc mừng em!</> : undefined}
         onAward={callMode === 'quiz' ? undefined : (pts) => handleAwardCoins(pts)}
         awarded={hasAwarded}
-        secondaryAction={callMode === 'quiz' && currentQuestion ? { label: 'Trả lời câu hỏi', icon: <Sparkles className="w-4 h-4" />, onClick: () => setShowWinnerPopup(false) } : undefined}
+        secondaryAction={callMode === 'quiz' ? { label: 'Bốc câu hỏi', icon: <Sparkles className="w-4 h-4" />, onClick: () => { setShowWinnerPopup(false); drawQuestion(); } } : undefined}
+        continueLabel={callMode === 'quiz' ? 'Để sau' : 'Tiếp tục gọi em khác'}
         onClose={() => {
           setShowWinnerPopup(false);
           if (callMode !== 'quiz') { setWinner(null); setCurrentQuestion(null); }
@@ -434,174 +406,41 @@ export const RocketMissionGame: React.FC = () => {
             </div>
           </div>
 
-          {/* Mode 3: Gọi + Trả Lời Câu Hỏi (Question Challenge Box) */}
-          {callMode === 'quiz' && currentQuestion && (
-            <div className="bg-white rounded-2xl p-4 md:p-5 border border-indigo-200 shadow-sm space-y-3 mt-3">
-              <div className="flex items-center justify-between pb-2 border-b border-slate-100">
-                <div className="flex items-center gap-2">
-                  <span className="px-2 py-0.5 rounded-md bg-purple-100 text-purple-800 text-[12px] font-black uppercase">
-                    {currentQuestion.type === 'multiple_choice' ? '📝 Câu hỏi Trắc nghiệm' : '🗣️ Câu hỏi Bằng lời'}
-                  </span>
-                  <span className="text-xs font-bold text-slate-600">{currentQuestion.subject || 'Tổng hợp'}</span>
-                  <span className="text-xs font-bold text-amber-700">Thưởng +{currentQuestion.pointsReward || 2} xu</span>
-                </div>
-
-                <div className="flex items-center gap-1.5">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setEditTargetQuestion(currentQuestion);
-                      setIsQuestionBankOpen(true);
-                    }}
-                    className="text-[12px] font-bold text-amber-800 hover:text-amber-950 bg-amber-50 hover:bg-amber-100 border border-amber-200 px-2 py-1 rounded-lg flex items-center gap-1 cursor-pointer transition-colors"
-                  >
-                    <Edit3 className="w-3 h-3 text-amber-600" />
-                    <span>Sửa câu hỏi</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handlePickAnotherQuestion}
-                    className="text-[12px] font-bold text-indigo-600 hover:underline px-2 py-1 cursor-pointer"
-                  >
-                    Đổi câu khác
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setEditTargetQuestion(null);
-                      setIsQuestionBankOpen(true);
-                    }}
-                    className="text-[12px] font-bold text-slate-500 hover:text-slate-800 px-2 py-1 cursor-pointer"
-                  >
-                    Kho đề
-                  </button>
-                </div>
-              </div>
-
-              {/* Question Text */}
-              <div className="text-sm md:text-base font-black text-slate-900">
-                {currentQuestion.questionText}
-              </div>
-
-              {/* Question Image */}
-              <QuestionAudioButton src={currentQuestion.audio} className="pt-1" />
-              {currentQuestion.image && (
-                <div className="pt-1">
-                  <img 
-                    src={currentQuestion.image} 
-                    alt="Ảnh câu hỏi" 
-                    className="max-h-40 rounded-xl border border-slate-200 object-contain bg-slate-50"
-                  />
-                </div>
-              )}
-
-              {/* Multiple Choice Options */}
-              {currentQuestion.type === 'multiple_choice' && currentQuestion.options && (
-                <div className="space-y-2 pt-1">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    {currentQuestion.options.map((opt, idx) => {
-                      const isSelected = selectedOption === idx;
-                      const isCorrect = currentQuestion.correctOptionIndex === idx;
-                      let btnStyle = 'bg-slate-50 border-slate-200 text-slate-800 hover:border-indigo-400';
-
-                      if (selectedOption !== null) {
-                        if (isCorrect) {
-                          btnStyle = 'bg-emerald-50 border-emerald-400 text-emerald-950 font-bold';
-                        } else if (isSelected) {
-                          btnStyle = 'bg-rose-50 border-rose-400 text-rose-950';
-                        }
-                      }
-
-                      return (
-                        <button
-                          key={idx}
-                          disabled={selectedOption !== null}
-                          onClick={() => handleSelectOption(idx)}
-                          className={`p-3 rounded-xl text-xs flex items-center gap-2.5 border text-left transition-all cursor-pointer ${btnStyle}`}
-                        >
-                          <span className="w-6 h-6 rounded-lg bg-indigo-100 text-indigo-800 flex items-center justify-center font-black text-xs shrink-0">
-                            {String.fromCharCode(65 + idx)}
-                          </span>
-                          <span className="flex-1">{opt}</span>
-                          {selectedOption !== null && isCorrect && <Check className="w-4 h-4 text-emerald-600 shrink-0" />}
-                        </button>
-                      );
-                    })}
-                  </div>
-
-                  {/* Explanation & Answer Image */}
-                  {selectedOption !== null && (currentQuestion.teacherAnswerKey || currentQuestion.answerImage) && (
-                    <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 space-y-1.5 animate-in fade-in duration-150">
-                      {currentQuestion.teacherAnswerKey && (
-                        <div>
-                          <strong className="text-slate-900">Giải thích:</strong> {currentQuestion.teacherAnswerKey}
-                        </div>
-                      )}
-                      {currentQuestion.answerImage && (
-                        <div className="pt-1">
-                          <span className="text-[12px] font-black uppercase text-slate-600 block mb-1">Ảnh minh họa đáp án:</span>
-                          <img
-                            src={currentQuestion.answerImage}
-                            alt="Ảnh đáp án"
-                            className="max-h-40 rounded-xl border border-slate-300 object-contain bg-white shadow-2xs"
-                          />
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Oral question answer key toggle */}
-              {currentQuestion.type === 'oral' && (
-                <div className="space-y-2 pt-1">
-                  <div className="flex items-center justify-between">
-                    <button
-                      type="button"
-                      onClick={() => setShowTeacherKey(!showTeacherKey)}
-                      className="text-xs font-bold text-indigo-700 hover:underline flex items-center gap-1 cursor-pointer"
-                    >
-                      <span>{showTeacherKey ? 'Ẩn đáp án giáo viên' : '👁️ Xem đáp án & gợi ý chấm của giáo viên'}</span>
-                    </button>
-
-                    <button
-                      onClick={() => handleAwardCoins(currentQuestion.pointsReward || 2)}
-                      disabled={hasAwarded}
-                      className={`px-4 py-1.5 rounded-xl text-xs font-black shadow-xs flex items-center gap-1 transition-all ${
-                        hasAwarded ? 'bg-emerald-700 text-white' : 'bg-emerald-700 hover:bg-emerald-800 text-white cursor-pointer'
-                      }`}
-                    >
-                      <Check className="w-3.5 h-3.5" />
-                      <span>{hasAwarded ? 'Đã tặng xu đúng' : `✓ Trả lời đúng (+${currentQuestion.pointsReward || 2} xu)`}</span>
-                    </button>
-                  </div>
-
-                  {showTeacherKey && (
-                    <div className="p-3 bg-amber-50/70 border border-amber-200 rounded-xl text-xs text-amber-950 font-medium space-y-2 animate-in fade-in duration-150">
-                      {currentQuestion.teacherAnswerKey && (
-                        <div>
-                          <strong>Đáp án / Hướng dẫn giáo viên:</strong> {currentQuestion.teacherAnswerKey}
-                        </div>
-                      )}
-                      {currentQuestion.answerImage && (
-                        <div className="pt-1">
-                          <span className="text-[12px] font-black uppercase text-amber-900 block mb-1">Ảnh minh họa đáp án giáo viên:</span>
-                          <img
-                            src={currentQuestion.answerImage}
-                            alt="Ảnh đáp án giáo viên"
-                            className="max-h-44 rounded-xl border border-amber-300 object-contain bg-white shadow-2xs"
-                          />
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
+          {/* Mode 3: draw a question → wide-screen QuestionChallengeModal */}
+          {callMode === 'quiz' && (
+            <div className="flex flex-wrap items-center gap-3">
+              <button
+                type="button"
+                onClick={drawQuestion}
+                className="flex-1 min-w-[240px] py-3.5 px-5 bg-purple-600 hover:bg-purple-700 text-white font-black text-sm md:text-base rounded-2xl shadow-md flex items-center justify-center gap-2.5 uppercase cursor-pointer"
+              >
+                <Sparkles className="w-5 h-5" />
+                <span>{currentQuestion ? 'Bốc câu hỏi khác cho em này' : 'Bốc câu hỏi cho em này'}</span>
+              </button>
+              {currentQuestion && (
+                <button
+                  type="button"
+                  onClick={() => setIsQuizOpen(true)}
+                  className="px-4 py-3.5 bg-white hover:bg-purple-50 text-purple-800 font-bold text-sm rounded-2xl border border-purple-300 cursor-pointer"
+                >
+                  Xem lại câu đang mở
+                </button>
               )}
             </div>
           )}
         </div>
       )}
 
+      <QuestionChallengeModal
+        open={isQuizOpen}
+        student={callMode === 'quiz' ? winner : null}
+        pool={quizPool}
+        drawToken={quizDrawToken}
+        onClose={() => setIsQuizOpen(false)}
+        closeLabel="🚀 HOÀN THÀNH & QUAY LẠI TÀU VŨ TRỤ"
+        onEditQuestion={(q) => { setEditTargetQuestion(q); setIsQuestionBankOpen(true); }}
+        onQuestionChange={setCurrentQuestion}
+      />
       {quizSel.element}
       {/* QUESTION BANK MODAL */}
       <QuestionBankModal
