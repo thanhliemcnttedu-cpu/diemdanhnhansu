@@ -11,3 +11,8 @@
 - `src/components/views/picker/QuestionChallengeModal.tsx` là màn câu hỏi màn hình rộng DUY NHẤT cho Cuộn phim, Tàu vũ trụ, Hộp quà: tự giữ toàn bộ trạng thái câu hỏi (7 dạng), bốc câu ngẫu nhiên trong `pool` mỗi khi `drawToken` tăng, cộng xu cho `student`. Trò chơi chỉ quyết định lúc bốc (`setQuizDrawToken(n => n + 1)`) và lúc mở (`open`).
 - Không chép lại khối hiển thị câu hỏi vào từng trò (trước đây Tàu vũ trụ, Hộp quà có khung riêng chỉ hỗ trợ trắc nghiệm 1 đáp án và tự luận, nằm khuất dưới màn chơi; Cuộn phim bị chép trùng khối sắp xếp và nối cột).
 - Màn câu hỏi dùng nền sáng, chữ đậm (`text-slate-900`); không đặt chữ nhạt trên nền chuyển sắc.
+
+## Quiz Nghiêng Đầu: chọn câu hỏi từ kho (11/2026)
+- `picker/headtilt/HeadTiltBankPicker.tsx`: hộp chọn kho (của tôi / mẫu / tất cả) → tích cả môn, cả bài (`lesson`) hoặc từng câu, có ô tìm. Chỉ câu `multiple_choice` (đáp án đúng + 1 đáp án sai ngẫu nhiên) và `true_false` chọn được; dạng khác hiện mờ kèm lý do.
+- Màn danh sách bài: nút "Chọn câu hỏi từ kho" → "Lưu thành bài mới" (qua `requireQuizStorage`) hoặc "Chơi ngay" (bài tạm, không lưu). Màn soạn bài: "Chọn câu hỏi từ Kho" → thêm vào bài đang soạn.
+- `QuestionBankModal` mở từ trò này chỉ để soạn / tạo bằng AI; lưu kho KHÔNG còn đổ toàn bộ kho vào bài (lỗi cũ).

@@ -7,6 +7,8 @@ import {
 import { QuestionBankModal } from '../../../modals/QuestionBankModal';
 import { useClassroom } from '../../../../context/ClassroomContext';
 import { requireQuizStorage } from '../../../modals/QuizStorageModal';
+import { HeadTiltBankPicker } from './HeadTiltBankPicker';
+import type { HeadTiltQuestion } from './types';
 
 interface HeadTiltQuizManageViewProps {
   onPlayQuiz: (quiz: HeadTiltQuizConfig) => void;
@@ -30,6 +32,26 @@ export const HeadTiltQuizManageView: React.FC<HeadTiltQuizManageViewProps> = ({
 
   const [activeTab, setActiveTab] = useState<'my_quizzes' | 'new' | 'bank'>('my_quizzes');
   const [isQuestionBankOpen, setIsQuestionBankOpen] = useState(false);
+  const [isPickerOpen, setIsPickerOpen] = useState(false);
+
+  // Lesson built from questions picked in the bank (saved as a new lesson, or played once)
+  const quizFromBank = (picked: HeadTiltQuestion[], subjects: string[]): HeadTiltQuizConfig => ({
+    id: `quiz-${Date.now()}`,
+    title: `${subjects.length === 1 ? subjects[0] : 'Tổng hợp'} – ${picked.length} câu từ kho`,
+    description: 'Câu hỏi chọn từ kho câu hỏi',
+    isTrial: false,
+    shuffleQuestions: true,
+    shuffleOptions: false,
+    useCamera: true,
+    useAiVoice: false,
+    tiltSensitivity: 20,
+    autoNextDelay: 3,
+    bgMusicEnabled: true,
+    bgMusicPreset: 'default_fun',
+    questions: picked,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  });
 
   // Sync to localStorage
   const saveQuizzes = (updated: HeadTiltQuizConfig[]) => {
@@ -99,6 +121,15 @@ export const HeadTiltQuizManageView: React.FC<HeadTiltQuizManageViewProps> = ({
             Tạo bài mới
           </button>
           
+          <button
+            type="button"
+            onClick={() => setIsPickerOpen(true)}
+            className="px-4 py-2.5 rounded-2xl border-2 border-indigo-600 bg-white text-indigo-800 text-xs font-black hover:bg-indigo-50 transition-colors flex items-center gap-1.5 cursor-pointer"
+          >
+            <BookOpen className="w-4 h-4" />
+            Chọn câu hỏi từ kho
+          </button>
+
           <button
             type="button"
             onClick={() => setIsQuestionBankOpen(true)}
@@ -223,6 +254,20 @@ export const HeadTiltQuizManageView: React.FC<HeadTiltQuizManageViewProps> = ({
           onClose={() => setIsQuestionBankOpen(false)}
           questions={quizBank}
           onSaveQuestions={(updated) => updateQuizBank(updated)}
+        />
+      )}
+      {isPickerOpen && (
+        <HeadTiltBankPicker
+          bank={quizBank}
+          onClose={() => setIsPickerOpen(false)}
+          addLabel="Lưu thành bài mới"
+          onAdd={async (picked, subjects) => {
+            if (!(await requireQuizStorage(currentUser))) return;
+            saveQuizzes([quizFromBank(picked, subjects), ...quizzes]);
+            setIsPickerOpen(false);
+          }}
+          onPlay={(picked, subjects) => { setIsPickerOpen(false); onPlayQuiz(quizFromBank(picked, subjects)); }}
+          onOpenBank={() => { setIsPickerOpen(false); setIsQuestionBankOpen(true); }}
         />
       )}
     </div>

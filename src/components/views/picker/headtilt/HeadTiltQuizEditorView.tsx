@@ -6,7 +6,8 @@ import {
   Shuffle, Sliders, CheckCircle2, FileSpreadsheet, Eye
 } from 'lucide-react';
 import { QuestionBankModal } from '../../../modals/QuestionBankModal';
-import { QuestionItem } from '../../../../types';
+import { saveQuizBank } from '../../../../utils/quizParser';
+import { HeadTiltBankPicker } from './HeadTiltBankPicker';
 import { useClassroom } from '../../../../context/ClassroomContext';
 
 interface HeadTiltQuizEditorViewProps {
@@ -32,6 +33,7 @@ export const HeadTiltQuizEditorView: React.FC<HeadTiltQuizEditorViewProps> = ({
   const [autoNextDelay, setAutoNextDelay] = useState(initialConfig?.autoNextDelay ?? 3);
   const [bgMusicPreset, setBgMusicPreset] = useState(initialConfig?.bgMusicPreset || 'default_fun');
   const [isQuestionBankOpen, setIsQuestionBankOpen] = useState(false);
+  const [isPickerOpen, setIsPickerOpen] = useState(false);
 
   // Questions array
   const [questions, setQuestions] = useState<HeadTiltQuestion[]>(() => {
@@ -90,52 +92,11 @@ export const HeadTiltQuizEditorView: React.FC<HeadTiltQuizEditorViewProps> = ({
     setQuestions(prev => prev.map((q, i) => i === index ? { ...q, ...updates } : q));
   };
 
-  // Add questions from QuestionBankModal
-  const handleSelectFromBank = (selectedItems: QuestionItem[]) => {
-    if (!selectedItems || selectedItems.length === 0) return;
-
-    const convertedList: HeadTiltQuestion[] = selectedItems.map((item, idx) => {
-      // Pick 2 options (correct and 1 distractor)
-      let optA = 'Đáp án A';
-      let optB = 'Đáp án B';
-      let correct: 'A' | 'B' = 'A';
-
-      if (item.options && item.options.length >= 2) {
-        const correctIdx = item.correctOptionIndex ?? 0;
-        const correctText = item.options[correctIdx] || item.options[0];
-        const distractorIdx = correctIdx === 0 ? 1 : 0;
-        const distractorText = item.options[distractorIdx] || item.options[1];
-
-        // Randomize whether A or B is correct
-        if (Math.random() > 0.5) {
-          optA = correctText;
-          optB = distractorText;
-          correct = 'A';
-        } else {
-          optA = distractorText;
-          optB = correctText;
-          correct = 'B';
-        }
-      } else if (item.type === 'true_false') {
-        optA = 'Đúng';
-        optB = 'Sai';
-        correct = item.isTrue ? 'A' : 'B';
-      }
-
-      return {
-        id: `bank-q-${Date.now()}-${idx}`,
-        question: item.questionText,
-        image: item.image,
-        audio: item.audio,
-        optionA: optA,
-        optionB: optB,
-        correctAnswer: correct,
-        explanation: item.teacherAnswerKey
-      };
-    });
-
-    setQuestions(prev => [...prev, ...convertedList]);
-    setIsQuestionBankOpen(false);
+  // Add the questions picked in the bank picker; rows the teacher left empty are dropped
+  const handleAddPicked = (picked: HeadTiltQuestion[]) => {
+    if (picked.length === 0) return;
+    setQuestions(prev => [...prev.filter(q => q.question.trim() || q.optionA.trim() || q.optionB.trim()), ...picked]);
+    setIsPickerOpen(false);
   };
 
   // Quick excel sample generator
@@ -395,11 +356,11 @@ export const HeadTiltQuizEditorView: React.FC<HeadTiltQuizEditorViewProps> = ({
             <div className="flex flex-wrap items-center gap-1.5">
               <button
                 type="button"
-                onClick={() => setIsQuestionBankOpen(true)}
+                onClick={() => setIsPickerOpen(true)}
                 className="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer shadow-sm"
               >
                 <Sparkles className="w-3.5 h-3.5" />
-                Chọn từ Kho hoặc AI
+                Chọn câu hỏi từ Kho
               </button>
 
               <button
@@ -596,7 +557,16 @@ export const HeadTiltQuizEditorView: React.FC<HeadTiltQuizEditorViewProps> = ({
 
       </form>
 
-      {/* Question Bank Modal */}
+      {isPickerOpen && (
+        <HeadTiltBankPicker
+          bank={quizBank}
+          onClose={() => setIsPickerOpen(false)}
+          onAdd={handleAddPicked}
+          onOpenBank={() => setIsQuestionBankOpen(true)}
+        />
+      )}
+
+      {/* Question bank: write, import or generate questions (they then show up in the picker) */}
       {isQuestionBankOpen && (
         <QuestionBankModal
           isOpen={isQuestionBankOpen}
@@ -604,7 +574,7 @@ export const HeadTiltQuizEditorView: React.FC<HeadTiltQuizEditorViewProps> = ({
           questions={quizBank}
           onSaveQuestions={(updated) => {
             updateQuizBank(updated);
-            handleSelectFromBank(updated);
+            saveQuizBank(updated);
           }}
         />
       )}
