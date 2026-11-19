@@ -12,6 +12,7 @@ import { callGeminiAi } from '../../services/aiService';
 import { APP_AUTHOR_INFO } from '../../data/initialData';
 import { SubjectTeacherDashboard } from './dashboard/SubjectTeacherDashboard';
 import { DriveAttendanceStatsPanel } from './reports/DriveAttendanceStatsPanel';
+import { SchoolMealReportPanel } from './reports/SchoolMealReportPanel';
 import { getOfficialDisplayName } from '../../utils/accountIdentity';
 
 interface DashboardViewProps {
@@ -342,7 +343,10 @@ const HomeroomDashboard: React.FC<DashboardViewProps> = ({
 
       {/* 2b. BGH / Quản trị: thống kê chuyên cần & bán trú toàn trường từ Google Drive dùng chung */}
       {isManagementAccount && currentUser?.role !== 'guest_admin' && !currentUser?.isGuestAdmin && (
-        <DriveAttendanceStatsPanel schoolTotalStudents={homeroomStudents.length} />
+        <>
+          <DriveAttendanceStatsPanel schoolTotalStudents={homeroomStudents.length} />
+          <SchoolMealReportPanel />
+        </>
       )}
 
       {/* 3. 4 thẻ số liệu dạng thẻ màu hiện đại (số to, chữ trắng rõ, có thanh tiến độ) */}

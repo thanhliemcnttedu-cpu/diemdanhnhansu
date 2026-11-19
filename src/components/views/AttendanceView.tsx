@@ -89,7 +89,7 @@ export const AttendanceView: React.FC = () => {
   const { 
     currentClassStudents, students, attendanceRecords, setStudentAttendance: setStudentAttendanceRaw,
     batchSetAttendance: batchSetAttendanceRaw, activeClassId, classes, teacherProfile,
-    boardingRecords, setStudentBoarding: setStudentBoardingRaw, batchSetBoarding: batchSetBoardingRaw, syncDatabaseNow,
+    boardingRecords, setStudentBoarding: setStudentBoardingRaw, markBoardingConfirmed, batchSetBoarding: batchSetBoardingRaw, syncDatabaseNow,
     currentUser
   } = useClassroom();
   
@@ -352,6 +352,9 @@ export const AttendanceView: React.FC = () => {
       }
     });
 
+    // Time + name of the confirmation: shown on the school-wide meal report instead of a signed paper slip
+    markBoardingConfirmed(selectedDate);
+
     // ⚡ Lưu ngay dữ liệu vào CSDL máy chủ để BGH & Quản trị trường tổng hợp số liệu chuẩn xác 100%
     try { syncDatabaseNow(); } catch (_) {}
 
@@ -359,7 +362,9 @@ export const AttendanceView: React.FC = () => {
     const boardingRecord = {
       classId: activeClassId,
       date: selectedDate,
-      records: finalBoardingRecords
+      records: finalBoardingRecords,
+      confirmedAt: Date.now(),
+      confirmedBy: currentUser?.fullName || currentUser?.username || ''
     };
     databaseService.broadcastAttendanceConfirmed({
       type: 'BOARDING_CONFIRMED',

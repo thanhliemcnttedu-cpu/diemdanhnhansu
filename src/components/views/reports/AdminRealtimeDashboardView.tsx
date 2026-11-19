@@ -15,6 +15,7 @@ import {
 import * as XLSX from 'xlsx';
 import { playPointClink } from '../../../utils/audio';
 import { DriveAttendanceStatsPanel } from './DriveAttendanceStatsPanel';
+import { SchoolMealReportPanel } from './SchoolMealReportPanel';
 
 export type ReportTimeframe = 'day' | 'week' | 'month';
 
@@ -1314,6 +1315,9 @@ export const AdminRealtimeDashboardView: React.FC = () => {
 
       {/* 2b. Thống kê toàn trường từ Google Drive dùng chung (hôm nay / hôm qua / tuần / tháng) */}
       <DriveAttendanceStatsPanel schoolTotalStudents={schoolTotalStudents} />
+
+      {/* 2c. Daily meal report for the boarding team (replaces the paper slips) */}
+      <SchoolMealReportPanel />
 
       {/* 4. Biểu Đồ Tròn Trực Quan Sinh Động (Realtime Donut Charts) */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

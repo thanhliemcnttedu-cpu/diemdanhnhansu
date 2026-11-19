@@ -284,6 +284,8 @@ export interface DailyBoardingMeal {
   classId: string;
   records: Record<string, BoardingStatus>; // studentId -> status (ăn bán trú / không ăn / báo cắt suất)
   notes?: string;
+  confirmedAt?: number;   // when the homeroom teacher pressed "Xác nhận điểm danh bán trú" (ms)
+  confirmedBy?: string;   // full name (or username) of the account that confirmed
 }
 
 export interface DeskPosition {

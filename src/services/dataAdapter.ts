@@ -137,7 +137,8 @@ export const dataAdapter = {
           registered,
           actual,
           canceledStudentIds,
-          details
+          details,
+          ...(rec.confirmedAt ? { confirmedAt: rec.confirmedAt, confirmedBy: rec.confirmedBy } : {})
         };
 
         if (!dailyRecords[date]) {
@@ -303,7 +304,8 @@ export const dataAdapter = {
             date,
             classId,
             records: rec.boarding.details as any,
-            notes: rec.notes
+            notes: rec.notes,
+            ...(rec.boarding.confirmedAt ? { confirmedAt: rec.boarding.confirmedAt, confirmedBy: rec.boarding.confirmedBy } : {})
           });
         }
       }
@@ -585,7 +587,8 @@ export const dataAdapter = {
             date,
             classId: incomingJson.classInfo?.id || localData.activeClassId,
             records: rec.boarding.details as any,
-            notes: rec.notes
+            notes: rec.notes,
+            ...(rec.boarding.confirmedAt ? { confirmedAt: rec.boarding.confirmedAt, confirmedBy: rec.boarding.confirmedBy } : {})
           });
         }
       }
@@ -604,7 +607,10 @@ export const dataAdapter = {
             ...existing.records,
             ...inBm.records
           },
-          notes: inBm.notes || existing.notes
+          notes: inBm.notes || existing.notes,
+          ...((existing.confirmedAt || 0) > (inBm.confirmedAt || 0)
+            ? { confirmedAt: existing.confirmedAt, confirmedBy: existing.confirmedBy }
+            : {})
         });
       }
     }

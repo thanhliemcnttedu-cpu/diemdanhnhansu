@@ -122,6 +122,8 @@ interface ClassroomContextType {
   boardingRecords: DailyBoardingMeal[];
   currentDateBoarding: Record<string, BoardingStatus>;
   setStudentBoarding: (studentId: string, status: BoardingStatus, date?: string) => void;
+  /** Stamp the active class's boarding sheet of that day as confirmed by the homeroom teacher (time + name) */
+  markBoardingConfirmed: (date?: string) => DailyBoardingMeal | null;
   batchSetBoarding: (status: BoardingStatus, date?: string) => void;
 
   timetable: TimetableSlot[];
@@ -4358,6 +4360,18 @@ export const ClassroomProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }
   };
 
+  const markBoardingConfirmed = (date = todayStr): DailyBoardingMeal | null => {
+    if (!checkAttendancePermission()) return null;
+    const stamp = { confirmedAt: Date.now(), confirmedBy: currentUser?.fullName || currentUser?.username || '' };
+    let target: DailyBoardingMeal | null = null;
+    setBoardingRecords(prev => prev.map(r => {
+      if (r.date !== date || r.classId !== activeClassId) return r;
+      target = { ...r, ...stamp };
+      return target;
+    }));
+    return target;
+  };
+
   const batchSetBoarding = (status: BoardingStatus, date = todayStr) => {
     const map: Record<string, BoardingStatus> = {};
     currentClassStudents.forEach(s => {
@@ -5000,6 +5014,7 @@ export const ClassroomProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       boardingRecords,
       currentDateBoarding,
       setStudentBoarding,
+      markBoardingConfirmed,
       batchSetBoarding,
 
       timetable,

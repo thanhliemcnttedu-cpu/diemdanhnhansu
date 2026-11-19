@@ -62,6 +62,8 @@ export interface StandardDailyBoardingRecord {
   actual: number;
   canceledStudentIds: string[];
   details?: Record<string, string>; // studentId -> status ('eating', 'not_eating')
+  confirmedAt?: number;  // homeroom teacher's confirmation time (ms)
+  confirmedBy?: string;
 }
 
 export interface StandardDailyRecord {

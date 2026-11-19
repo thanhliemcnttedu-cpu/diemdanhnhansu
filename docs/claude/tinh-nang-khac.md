@@ -40,3 +40,9 @@
 - Đặt link: Quản trị cao nhất và Quản trị nhà trường (không gồm BGH), ở **Hướng dẫn sử dụng › Bộ cài đặt cho máy tính**. Chỉ nhận link `https://`; phiên bản tự lấy từ tên tệp dạng `…_V_1.2.0.exe`.
 - Nút "Tải file cài đặt trên máy tính" hiện ở màn đăng nhập (dưới hàng "ĐIỂM DANH GV – NV") và ở trang Hướng dẫn sử dụng; trong bản cài đặt (có `window.lhhpDesktop`) nút tải ẩn, ô cấu hình vẫn có.
 - Tệp này không có lớp bảo vệ quyền ghi ở Apps Script (giống `phanhieu_truong.json`, `huongdan_sudung.json`).
+
+## Biểu tổng hợp báo ăn bán trú toàn trường (11/2026)
+- `components/views/reports/SchoolMealReportPanel.tsx`, hiện ngay dưới `DriveAttendanceStatsPanel` ở Trang chủ của tài khoản quản lý và ở màn báo cáo quản trị. Thay phiếu báo ăn giấy của từng lớp: mỗi lớp chủ nhiệm một dòng (GVCN, sĩ số, số ăn, không ăn, họ tên học sinh vắng, giờ xác nhận, tình trạng), đánh dấu lớp chưa báo; chọn được ngày.
+- Số ăn = học sinh không vắng chuyên cần và không bị tích "không ăn"; lớp chưa có bản ghi bán trú của ngày đó = "Chưa báo" và không cộng vào tổng.
+- Giờ xác nhận: `DailyBoardingMeal.confirmedAt` / `confirmedBy` (tùy chọn), do `markBoardingConfirmed(date)` của `ClassroomContext` ghi khi GVCN bấm "Xác nhận điểm danh bán trú"; `dataAdapter` giữ hai trường này khi đổi sang / từ tệp chuẩn trên Drive. Bản ghi cũ không có giờ thì hiện "Đã báo".
+- Xuất Excel: cột "Không ăn" và dòng tổng là công thức (`D-E`, `SUM`, `COUNTIF`). "In biểu có chỗ ký": in qua iframe ẩn, khổ A4 ngang, một ô ký "Ban quản lý bán trú".
