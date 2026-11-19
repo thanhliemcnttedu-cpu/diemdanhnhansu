@@ -143,6 +143,8 @@ interface ClassroomContextType {
   seedSample20SubjectClasses: () => void;
   loadSampleTimetableByImage: (autoCreateClasses?: boolean) => void;
   initSubjectClasses: (items: InitSubjectClassItem[], replaceExisting?: boolean) => void;
+  /** GV bộ môn: lấy danh sách học sinh thật từ lớp của giáo viên chủ nhiệm trên Drive của trường (chỉ thêm, không xóa) */
+  syncSubjectRosters?: (targets?: Array<{ id: string; name: string }>) => Promise<{ added: number; updated: number; classes: number; missing: string[] }>;
   applySubjectTimetableSlots: (slots: SubjectTimetableSlot[]) => void;
 
   quickLinks: QuickLink[];
@@ -4549,7 +4551,7 @@ export const ClassroomProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         grade,
         color: ['#3B82F6', '#EC4899', '#06B6D4', '#6366F1', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6'][idx % 8],
         academicYear: teacherProfile.academicYear || '2026–2027',
-        teacherName: item.teacherName || `GVCN Lớp ${trimmedName}`,
+        teacherName: (item.teacherName && !/^GVCN Lớp /i.test(item.teacherName) ? item.teacherName : (currentUser?.fullName || `GVCN Lớp ${trimmedName}`)),
         slogan: item.slogan || `Tập thể ${trimmedName} chăm ngoan, đoàn kết, học tốt môn ${currentSubjectName}!`,
         avatar: `https://api.dicebear.com/7.x/shapes/svg?seed=Class${trimmedName}&backgroundColor=3b82f6`,
         // Lớp dạy bộ môn: của riêng giáo viên, không tính vào số lớp / học sinh tổng hợp của trường
@@ -4575,10 +4577,13 @@ export const ClassroomProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       if (trialMode && studentCount > 10) {
         studentCount = 10;
       }
-      // Remove any existing students of this class
-      newStudentsList = newStudentsList.filter(s => s.classId !== classId);
+      // Bản KHÔNG dùng Drive: sinh lại học sinh mẫu của lớp. Bản dùng Drive của trường: giữ nguyên học sinh đang có
+      // (học sinh thật kèm số xu) — khởi tạo lại lớp không được làm mất danh sách.
+      if (!schoolDriveDbService.isConfigured()) newStudentsList = newStudentsList.filter(s => s.classId !== classId);
       
-      const generated = generateStudentsForClass(classId, trimmedName, studentCount, grade, currentSubjectName);
+      // Bản dùng Google Drive của trường không giữ học sinh MẪU (utils/sampleData.ts xóa chúng ở lần mở sau):
+      // sinh ra rồi biến mất cùng số xu đã chấm là mất dữ liệu trong mắt giáo viên → chỉ tạo lớp, học sinh nhập từ Excel.
+      const generated = schoolDriveDbService.isConfigured() ? [] : generateStudentsForClass(classId, trimmedName, studentCount, grade, currentSubjectName);
       newStudentsList.push(...generated);
     });
 
@@ -4587,6 +4592,66 @@ export const ClassroomProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     if (newClassesList.length > 0) {
       setActiveClassId(newClassesList[0].id);
     }
+  };
+
+  const syncSubjectRosters = async (targets?: Array<{ id: string; name: string }>) => {
+    const result = { added: 0, updated: 0, classes: 0, missing: [] as string[] };
+    if (!schoolDriveDbService.isConfigured() || isViewOnly()) return result;
+    const list = (targets && targets.length ? targets : classes.filter(c => !(c.isHomeroom === true || c.teacherRole === 'homeroom' || c.teacherRole === 'GVCN')))
+      .map(c => ({ id: c.id, name: c.name }));
+    const rosters: Array<{ cls: { id: string; name: string }; items: Array<{ id: string; name: string; gender: 'Nam' | 'Nữ'; birthDate: string }> }> = [];
+    for (const cls of list) {
+      const r = await googleDriveService.fetchHomeroomRoster(cls.name);
+      if (r.success && r.students.length) rosters.push({ cls, items: r.students }); else result.missing.push(cls.name);
+    }
+    if (!rosters.length) return result;
+    const norm = (t: string) => String(t || '').normalize('NFC').replace(/\s+/g, ' ').trim().toLowerCase();
+    const trial = isDemo || !licenseService.isActivated();
+    let next: Student[] = [...(studentsRef.current || students)];
+    rosters.forEach(({ cls, items }) => {
+      const mine = next.filter(s => s.classId === cls.id);
+      let stt = mine.reduce((m, s) => Math.max(m, Number(s.stt) || 0), 0);
+      let count = mine.length;
+      let touched = false;
+      items.forEach(it => {
+        const linked = mine.find(s => s.homeroomStudentId === it.id)
+          || mine.find(s => !s.homeroomStudentId && norm(s.name) === norm(it.name) && (!it.birthDate || !s.birthDate || s.birthDate === it.birthDate));
+        if (linked) {
+          // Đã có: gắn liên kết, cập nhật họ tên / ngày sinh / giới tính theo danh sách gốc; xu và tổ của GV bộ môn giữ nguyên
+          if (linked.homeroomStudentId !== it.id || linked.name !== it.name || (it.birthDate && linked.birthDate !== it.birthDate) || linked.gender !== it.gender) {
+            next = next.map(s => (s.id === linked.id ? { ...s, homeroomStudentId: it.id, name: it.name, gender: it.gender, birthDate: it.birthDate || s.birthDate } : s));
+            result.updated++; touched = true;
+          }
+          return;
+        }
+        if (trial && count >= 10) return;
+        next.push({
+          id: `bm-${cls.id}-${it.id}`,
+          homeroomStudentId: it.id,
+          classId: cls.id,
+          stt: ++stt,
+          name: it.name,
+          birthDate: it.birthDate || '',
+          gender: it.gender,
+          avatar: getStudentRealAvatar(count, cls.id),
+          avatarScale: 1,
+          avatarPosition: { x: 0, y: 0 },
+          points: 0,
+          subjectPoints: {},
+          group: `Tổ ${Math.floor(count / 8) + 1}`,
+          role: '',
+          roles: [],
+        } as Student);
+        count++; result.added++; touched = true;
+      });
+      if (touched) result.classes++;
+    });
+    if (result.added || result.updated) {
+      setStudents(next);
+      studentsRef.current = next;
+      logUserActivity('BATCH_STUDENTS', `Lấy danh sách học sinh từ lớp chủ nhiệm: thêm ${result.added}, cập nhật ${result.updated} (${result.classes} lớp)`);
+    }
+    return result;
   };
 
   const applySubjectTimetableSlots = (slots: SubjectTimetableSlot[]) => {
@@ -5033,6 +5098,7 @@ export const ClassroomProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       seedSample20SubjectClasses,
       loadSampleTimetableByImage,
       initSubjectClasses,
+      syncSubjectRosters,
       applySubjectTimetableSlots,
 
       quickLinks,

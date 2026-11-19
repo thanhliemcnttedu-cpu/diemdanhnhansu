@@ -36,7 +36,7 @@ const Donut: React.FC<{ parts: Array<{ key: string; value: number; color: string
         return el;
       })}
       <text x="70" y="68" textAnchor="middle" className="fill-slate-900" style={{ fontSize: 24, fontWeight: 900 }}>{centerTop}</text>
-      <text x="70" y="88" textAnchor="middle" className="fill-slate-600" style={{ fontSize: 11, fontWeight: 700 }}>{centerSub}</text>
+      <text x="70" y="88" textAnchor="middle" className="fill-slate-600" style={{ fontSize: 12, fontWeight: 700 }}>{centerSub}</text>
     </svg>
   );
 };
@@ -53,7 +53,7 @@ const StackedBars: React.FC<{ daily: ReturnType<typeof aggregate>['daily'] }> = 
         {[0, 0.25, 0.5, 0.75, 1].map(t => (
           <g key={t}>
             <line x1={padL} x2={W - 4} y1={y(max * t)} y2={y(max * t)} stroke="#e2e8f0" />
-            <text x={padL - 6} y={y(max * t) + 4} textAnchor="end" style={{ fontSize: 10 }} className="fill-slate-500">{Math.round(max * t)}</text>
+            <text x={padL - 6} y={y(max * t) + 4} textAnchor="end" style={{ fontSize: 12 }} className="fill-slate-500">{Math.round(max * t)}</text>
           </g>
         ))}
         {daily.map((d, i) => {
@@ -68,8 +68,8 @@ const StackedBars: React.FC<{ daily: ReturnType<typeof aggregate>['daily'] }> = 
                 top -= h;
                 return <rect key={k} x={x} y={top} width={bw} height={h} rx={k === 'missing' ? 3 : 0} fill={STAFF_STATUS_META[k].color} opacity={k === 'missing' ? 0.35 : 1}><title>{`${shortDateLabel(d.date)} • ${STAFF_STATUS_META[k].label}: ${v}`}</title></rect>;
               })}
-              <text x={x + bw / 2} y={H - padB + 14} textAnchor="middle" style={{ fontSize: 10 }} className="fill-slate-600">{shortDateLabel(d.date)}</text>
-              <text x={x + bw / 2} y={H - padB + 26} textAnchor="middle" style={{ fontSize: 9 }} className="fill-slate-500">{weekdayShort(d.date)}</text>
+              <text x={x + bw / 2} y={H - padB + 14} textAnchor="middle" style={{ fontSize: 12 }} className="fill-slate-600">{shortDateLabel(d.date)}</text>
+              <text x={x + bw / 2} y={H - padB + 26} textAnchor="middle" style={{ fontSize: 11.5 }} className="fill-slate-500">{weekdayShort(d.date)}</text>
             </g>
           );
         })}

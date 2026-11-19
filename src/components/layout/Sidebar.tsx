@@ -71,7 +71,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onCloseMobile
 }) => {
   const { 
-    currentClassStudents, teacherProfile, teacherRole, setTeacherRole, 
+    currentClassStudents, students, teacherProfile, teacherRole, setTeacherRole, 
     subjectTeacherConfig, currentUser, allUsers, isAdmin, isBgh, isSchoolAdmin, canManageAccounts,
     setIsAuthModalOpen, setIsAccountManagerOpen, setIsRegistrationModalOpen,
     setIsGoogleDriveModalOpen, setIsDataStorageModalOpen, setIsCdKeyModalOpen, isCdKeyActivated
@@ -92,7 +92,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
       id: 'students',
       label: 'Học sinh',
       icon: Users,
-      badge: currentClassStudents.length.toString(), // sĩ số thật (trước đây hiện cứng '30' khi lớp chưa có học sinh)
+      // Giáo viên: sĩ số lớp đang mở. Quản trị / Ban giám hiệu: tổng học sinh toàn trường (không phải của một lớp)
+      badge: ((isAdmin || isBgh || isSchoolAdmin) ? students.length : currentClassStudents.length).toString(),
       badgeType: 'count'
     },
     {
@@ -325,12 +326,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   title="Chế độ Giáo viên bộ môn: Quản lý lớp dạy bộ môn, TKB bộ môn theo mẫu, chấm sao thi đua"
                 >
                   <span>💻</span>
-                  <span>GV BỘ MÔN</span>
+                  <span className="whitespace-nowrap">BỘ MÔN</span>
                 </button>
               </div>
               {teacherRole === 'subject' && (
                 <div className="mt-0.5 text-center">
-                  <span className="inline-block px-1.5 py-0.2 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-[11px] font-black uppercase tracking-wider">
+                  <span className="inline-block px-1.5 py-0.2 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-[12px] font-black uppercase tracking-wide">
                     Môn: {subjectTeacherConfig.subjectName}
                   </span>
                 </div>
@@ -361,7 +362,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <nav className="flex-1 overflow-y-auto px-2.5 py-2 scrollbar-thin" aria-label="Điều hướng chính">
           {(() => {
             const systemActions: Array<{ key: string; label: string; icon: React.ComponentType<{ className?: string }>; badge?: string; onClick: () => void }> = [
-              { key: 'accounts', label: canManageAccounts ? 'Tài khoản & CSDL' : 'Đăng nhập quản trị', icon: ShieldCheck, onClick: () => (canManageAccounts ? setIsAccountManagerOpen(true) : setIsAuthModalOpen(true)) },
+              // Giáo viên đã đăng nhập không có việc gì với "Đăng nhập quản trị" → chỉ hiện khi chưa đăng nhập hoặc có quyền quản lý tài khoản
+              ...((canManageAccounts || !currentUser) ? [{ key: 'accounts', label: canManageAccounts ? 'Tài khoản & CSDL' : 'Đăng nhập quản trị', icon: ShieldCheck, onClick: () => (canManageAccounts ? setIsAccountManagerOpen(true) : setIsAuthModalOpen(true)) }] : []),
               ...(!isMacroAdmin ? [{ key: 'quiz', label: 'Nơi lưu câu hỏi', icon: BookOpen, onClick: () => window.dispatchEvent(new Event(OPEN_QUIZ_STORAGE_EVENT)) }] : []),
               { key: 'password', label: 'Đổi mật khẩu', icon: Lock, onClick: () => window.dispatchEvent(new Event(OPEN_CHANGE_PASSWORD_EVENT)) },
             ];

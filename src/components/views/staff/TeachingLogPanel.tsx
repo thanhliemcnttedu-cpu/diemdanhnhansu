@@ -3,10 +3,10 @@ import { BookOpenCheck, ChevronLeft, ChevronRight, Loader2, Pencil, Plus, Save, 
 import {
   teachingLogService, TEACH_META, TeachKey, TeachProfile, WeekCounts, EMPTY_PROFILE, SUBJECT_PRESETS,
   monthWeeks, monthLabel, addMonths, enabledKeys, HSKT_SUBJECTS, subjectCodesOf, ktOf, MonthWeek, TeachMonthInfo, TEACH_KEYS, SHOWN_KEYS,
-  OVERTIME_SUBJECTS, otOf, subjectLabel,
+  OVERTIME_SUBJECTS, otOf, subjectLabel, foldWeeks, englishQuotaOf, englishOvertimeOf, ENGLISH_WEEK_QUOTA,
 } from '../../../services/teachingLogService';
 
-type GridRow = { id: string; label: string; hint: string; get: (wk: string) => number; set: (wk: string, v: string) => void };
+type GridRow = { id: string; label: string; hint: string; get: (wk: string) => number; set: (wk: string, v: string) => void; readOnly?: boolean; strong?: boolean };
 const dm = (k: string) => `${k.slice(8, 10)}/${k.slice(5, 7)}`;
 
 /** Bảng nhập số tiết: dòng = mục / môn, cột = Tuần 1…5 của tháng (giống mẫu bảng kê của nhà trường) */
@@ -48,12 +48,13 @@ const WeekGrid: React.FC<{ title: React.ReactNode; color: string; wks: MonthWeek
                 <td className="py-1 lg:py-1.5 pl-2 pr-1 lg:pl-4 font-bold text-slate-900 leading-tight" title={r.hint}>{r.label}</td>
                 {wks.map(w => (
                   <td key={w.key} className="py-1 px-0.5 lg:py-2 lg:px-2 text-center lg:border-l lg:border-slate-100">
+                    {r.readOnly ? <span className={`tabular-nums ${r.strong ? 'text-base lg:text-lg font-black' : 'text-sm font-bold text-slate-600'}`} style={r.strong ? { color } : undefined}>{r.get(w.key)}</span> :
                     <input type="text" inputMode="numeric" value={r.get(w.key) ? String(r.get(w.key)) : ''} disabled={locked}
                       onChange={(e) => r.set(w.key, e.target.value)} placeholder="0" aria-label={`${r.hint} – Tuần ${w.index}`}
-                      className="w-9 sm:w-10 h-10 lg:w-full lg:max-w-[7rem] lg:h-11 px-0.5 rounded-lg border border-slate-300 text-center text-base lg:text-lg font-bold tabular-nums disabled:bg-slate-100 focus:border-indigo-600 focus:ring-2 focus:ring-indigo-200 outline-none" />
+                      className="w-9 sm:w-10 h-10 lg:w-full lg:max-w-[7rem] lg:h-11 px-0.5 rounded-lg border border-slate-300 text-center text-base lg:text-lg font-bold tabular-nums disabled:bg-slate-100 focus:border-indigo-600 focus:ring-2 focus:ring-indigo-200 outline-none" />}
                   </td>
                 ))}
-                <td className="py-1 px-1 text-center font-black tabular-nums lg:text-lg lg:border-l lg:border-slate-100" style={{ color }}>{rowTotal(r)}</td>
+                <td className={`py-1 px-1 text-center tabular-nums lg:border-l lg:border-slate-100 ${r.readOnly && !r.strong ? 'text-sm font-bold text-slate-600' : 'font-black lg:text-lg'}`} style={r.readOnly && !r.strong ? undefined : { color }}>{rowTotal(r)}</td>
               </tr>
             ))}
             {showTotalRow && rows.length > 1 && (
@@ -78,7 +79,7 @@ const WeekGrid: React.FC<{ title: React.ReactNode; color: string; wks: MonthWeek
 const LIST_FIELDS: Array<{ key: 'classesPE' | 'classesDisabled' | 'classesEnglish'; label: string; hint: string }> = [
   { key: 'classesPE', label: 'Lớp dạy Giáo dục thể chất', hint: 'Ví dụ: 3A1, 3A2, 4A1' },
   { key: 'classesDisabled', label: 'Lớp dạy có học sinh khuyết tật', hint: 'Ví dụ: 2A3, 5A1' },
-  { key: 'classesEnglish', label: 'Lớp dạy thừa giờ Tiếng Anh', hint: 'Ví dụ: 3A1, 3A2, 4A1, 4A2' },
+  { key: 'classesEnglish', label: 'Lớp dạy Tiếng Anh', hint: 'Ví dụ: 3A1, 3A2, 4A1, 4A2' },
 ];
 /** Tách danh sách lớp; tên lớp tự viết hoa và bỏ khoảng trắng thừa: "3a4,  4 a6" → ["3A4", "4A6"] */
 const splitList = (t: string) => t.split(/[,;\n]/).map(s => s.replace(/\s+/g, '').toUpperCase()).filter(Boolean);
@@ -110,6 +111,7 @@ export const TeachingLogPanel: React.FC<{ cccd: string; pin: string; today: stri
   const [lockMessage, setLockMessage] = useState('');
   const [months, setMonths] = useState<TeachMonthInfo[]>([]);
   const logRef = React.useRef<HTMLElement | null>(null);
+  const [enTaught, setEnTaught] = useState<Record<string, number>>({});
 
   const load = async (m: string) => {
     setLoading(true); setMsg(null);
@@ -117,7 +119,19 @@ export const TeachingLogPanel: React.FC<{ cccd: string; pin: string; today: stri
     setLoading(false);
     if (!r?.success) { setMsg({ ok: false, text: r?.message || 'Không tải được dữ liệu kê khai.' }); return; }
     setProfile(r.profile || null);
-    setWeeks(r.log?.weeks || {});
+    // Dồn số đã kê theo khóa tuần cũ về đúng cột (ngày lẻ đầu tháng gộp vào tuần kế tiếp)
+    const folded = foldWeeks(r.log?.weeks || {}, monthWeeks(m));
+    setWeeks(folded);
+    // Số tiết Tiếng Anh đã dạy: máy chủ chỉ lưu số thừa giờ → lấy lại số đã nhập trên máy này nếu còn khớp
+    let mem: Record<string, number> = {};
+    try { mem = JSON.parse(localStorage.getItem(`lhhp_en_taught_${cccd}_${m}`) || '{}') || {}; } catch { /* ignore */ }
+    const taught: Record<string, number> = {};
+    monthWeeks(m).forEach(w => {
+      const ot = Number(folded[w.key]?.english) || 0;
+      if (Number(mem[w.key]) > 0 && englishOvertimeOf(Number(mem[w.key]), w) === ot) taught[w.key] = Number(mem[w.key]);
+      else if (ot > 0) taught[w.key] = ot + englishQuotaOf(w);
+    });
+    setEnTaught(taught);
     setNote(r.log?.note || '');
     setSavedAt(r.log?.updatedAt || '');
     setLocked(!!r.locked);
@@ -161,6 +175,13 @@ export const TeachingLogPanel: React.FC<{ cccd: string; pin: string; today: stri
     // Tiết GDTC = tiết dạy ngoài trời: lưu kèm outdoor bằng đúng số GDTC
     setWeeks(prev => ({ ...prev, [wk]: { ...(prev[wk] || {}), [k]: n, ...(k === 'pe' ? { outdoor: n } : {}) } }));
   };
+  // Tiếng Anh: giáo viên nhập TỔNG số tiết đã dạy trong tuần; thừa giờ = số đã dạy − định mức (23 tiết / tuần)
+  const setTaught = (w: MonthWeek, v: string) => {
+    const n = Math.max(0, Math.min(120, Math.round(Number(v.replace(/\D/g, '')) || 0)));
+    setEnTaught(prev => ({ ...prev, [w.key]: n }));
+    setWeeks(prev => ({ ...prev, [w.key]: { ...(prev[w.key] || {}), english: Math.min(80, englishOvertimeOf(n, w)) } }));
+  };
+  const wkOf = (key: string) => wks.find(w => w.key === key)!;
   const [allSubjects, setAllSubjects] = useState(false);
   const ktCodes = useMemo(() => {
     const mine = subjectCodesOf(profile?.subjects);
@@ -205,6 +226,7 @@ export const TeachingLogPanel: React.FC<{ cccd: string; pin: string; today: stri
       return;
     }
     setSavedAt(r.log?.updatedAt || new Date().toISOString());
+    try { localStorage.setItem(`lhhp_en_taught_${cccd}_${month}`, JSON.stringify(enTaught)); } catch { /* ignore */ }
     setMsg({ ok: true, text: `Đã lưu kê khai ${monthLabel(month)}.` });
     // Cập nhật danh sách tháng đã kê
     const t = { outdoor: 0, pe: 0, disabled: 0, english: 0, overtime: 0 } as TeachMonthInfo['totals'];
@@ -292,7 +314,7 @@ export const TeachingLogPanel: React.FC<{ cccd: string; pin: string; today: stri
                 ['Môn dạy được phân công', profile.subjects, '#eef2ff', '#3730a3', '#4f46e5'],
                 ['Lớp dạy Giáo dục thể chất', upperList(profile.classesPE), TEACH_META.pe.soft, TEACH_META.pe.text, TEACH_META.pe.color],
                 ['Lớp dạy có học sinh khuyết tật', upperList(profile.classesDisabled), TEACH_META.disabled.soft, TEACH_META.disabled.text, TEACH_META.disabled.color],
-                ['Lớp dạy thừa giờ Tiếng Anh', upperList(profile.classesEnglish), TEACH_META.english.soft, TEACH_META.english.text, TEACH_META.english.color],
+                ['Lớp dạy Tiếng Anh', upperList(profile.classesEnglish), TEACH_META.english.soft, TEACH_META.english.text, TEACH_META.english.color],
                 ['Dạy thừa giờ các môn khác', (profile.overtimeSubjects || []).map(subjectLabel), TEACH_META.overtime.soft, TEACH_META.overtime.text, TEACH_META.overtime.color],
               ] as Array<[string, string[], string, string, string]>).map(([label, items, bg, fg, dot]) => (
                 <div key={label} className="px-5 py-3">
@@ -361,7 +383,7 @@ export const TeachingLogPanel: React.FC<{ cccd: string; pin: string; today: stri
                   <Lock className="w-4 h-4 mt-0.5 shrink-0" /> {lockMessage || 'Bảng kê tháng này đã được khóa chốt số liệu.'}
                 </p>
               ) : (
-                <p className="text-xs lg:text-sm text-slate-600"><span className="lg:hidden">T1…T{wks.length}: các tuần trong tháng (ngày ghi dưới là ngày đầu tuần). </span>Kê hoặc sửa được bất cứ lúc nào cho tới khi nhà trường khóa chốt.</p>
+                <p className="text-xs lg:text-sm text-slate-600"><span className="lg:hidden">T1…T{wks.length}: các tuần trong tháng (ngày ghi dưới là ngày đầu tuần). </span>Ngày lẻ đầu tháng được gộp vào tuần kế tiếp. Kê hoặc sửa được bất cứ lúc nào cho tới khi nhà trường khóa chốt.</p>
               )}
               {keys.includes('pe') && (
                 <WeekGrid title="Giáo dục thể chất (dạy ngoài trời)" color={TEACH_META.pe.text} wks={wks} locked={locked}
@@ -382,7 +404,12 @@ export const TeachingLogPanel: React.FC<{ cccd: string; pin: string; today: stri
               )}
               {keys.includes('english') && (
                 <WeekGrid title="Tiếng Anh" color={TEACH_META.english.text} wks={wks} locked={locked}
-                  rows={[{ id: 'english', label: 'Thừa giờ', hint: TEACH_META.english.label, get: (wk) => Number(weeks[wk]?.english) || 0, set: (wk, v) => setCell(wk, 'english', v) }]} />
+                  warn={`Nhập tổng số tiết Tiếng Anh đã dạy trong tuần (tất cả các lớp). Thừa giờ = số tiết đã dạy − định mức ${ENGLISH_WEEK_QUOTA} tiết/tuần; tuần gộp ngày lẻ hoặc tuần lẻ cuối tháng tính định mức theo số ngày làm việc.`}
+                  rows={[
+                    { id: 'en-taught', label: 'Đã dạy', hint: 'Tổng số tiết Tiếng Anh đã dạy trong tuần', get: (wk) => Number(enTaught[wk]) || 0, set: (wk, v) => setTaught(wkOf(wk), v) },
+                    { id: 'en-quota', label: 'Định mức', hint: 'Định mức tiết dạy của tuần', readOnly: true, get: (wk) => englishQuotaOf(wkOf(wk)), set: () => undefined },
+                    { id: 'english', label: 'Thừa giờ', hint: TEACH_META.english.label, readOnly: true, strong: true, get: (wk) => Number(weeks[wk]?.english) || 0, set: () => undefined },
+                  ]} />
               )}
               {(keys.includes('overtime') || otCodes.length > 0) && (
                 <WeekGrid title="Thừa giờ các môn khác" color={TEACH_META.overtime.text} wks={wks} locked={locked} showTotalRow

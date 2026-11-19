@@ -1121,7 +1121,7 @@ export const CertificateView: React.FC = () => {
                     Thư Viện Ảnh Mẫu Quét Động
                   </h3>
                   <p className="text-[11px] text-slate-500 font-medium">
-                    Lưu tại thư mục <code className="text-indigo-600 font-mono font-bold">public/certificates/</code>
+                    Bấm vào một mẫu để dùng làm nền thư khen
                   </p>
                 </div>
                 <button

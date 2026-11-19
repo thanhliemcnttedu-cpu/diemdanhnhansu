@@ -936,7 +936,7 @@ export const DuckRaceGame: React.FC = () => {
                 <div className="absolute right-0 top-0 bottom-0 w-12 border-l-2 border-dashed border-red-500 bg-gradient-to-r from-red-500/80 to-red-600/90 flex items-center justify-center font-black text-white text-xs pointer-events-none z-10">
                   <div className="flex flex-col items-center">
                     <span className="text-sm">🏁</span>
-                    <span className="text-[11px] font-black text-white uppercase tracking-tighter">ĐÍCH</span>
+                    <span className="text-[12px] font-black text-white uppercase tracking-tighter">ĐÍCH</span>
                   </div>
                 </div>
 

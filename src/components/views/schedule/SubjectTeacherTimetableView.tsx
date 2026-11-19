@@ -1,3 +1,4 @@
+import { readableBg } from '../../../utils/colorContrast';
 import React, { useState, useRef } from 'react';
 import { writeReportXlsx } from '../../../utils/licensedExport';
 import * as XLSX from 'xlsx';
@@ -45,7 +46,7 @@ export const SubjectTeacherTimetableView: React.FC<{ onNavigate?: (view: any) =>
   const [customClassName, setCustomClassName] = useState('');
   const [slotSubject, setSlotSubject] = useState<string>('TIN HỌC');
   const [newTaughtSubjectInput, setNewTaughtSubjectInput] = useState('');
-  const [slotRoom, setSlotRoom] = useState(subjectTeacherConfig.roomDefault || 'Phòng máy Tin học');
+  const [slotRoom, setSlotRoom] = useState(subjectTeacherConfig.roomDefault || 'Phòng học bộ môn');
   const [slotNote, setSlotNote] = useState('');
   const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
   const [isClearConfirmOpen, setIsClearConfirmOpen] = useState(false);
@@ -60,7 +61,7 @@ export const SubjectTeacherTimetableView: React.FC<{ onNavigate?: (view: any) =>
   const [configSubject2, setConfigSubject2] = useState(subjectTeacherConfig.subject2 ?? (subjectTeacherConfig.taughtSubjects?.[1] || 'CÔNG NGHỆ'));
   const [configSubject3, setConfigSubject3] = useState(subjectTeacherConfig.subject3 ?? (subjectTeacherConfig.taughtSubjects?.[2] || ''));
   const [configSubject4, setConfigSubject4] = useState(subjectTeacherConfig.subject4 ?? (subjectTeacherConfig.taughtSubjects?.[3] || ''));
-  const [configRoom, setConfigRoom] = useState(subjectTeacherConfig.roomDefault || 'Phòng máy Tin học');
+  const [configRoom, setConfigRoom] = useState(subjectTeacherConfig.roomDefault || 'Phòng học bộ môn');
   const [configPeriodName, setConfigPeriodName] = useState(subjectTeacherConfig.periodName || 'Học kì I (Từ ngày 05/9/2026)');
   const [configMorningPeriods, setConfigMorningPeriods] = useState(subjectTeacherConfig.morningPeriods || 4);
   const [configAfternoonPeriods, setConfigAfternoonPeriods] = useState(subjectTeacherConfig.afternoonPeriods || 3);
@@ -73,7 +74,7 @@ export const SubjectTeacherTimetableView: React.FC<{ onNavigate?: (view: any) =>
       setConfigSubject2(subjectTeacherConfig.subject2 !== undefined ? subjectTeacherConfig.subject2 : (subjectTeacherConfig.taughtSubjects?.[1] || 'CÔNG NGHỆ'));
       setConfigSubject3(subjectTeacherConfig.subject3 !== undefined ? subjectTeacherConfig.subject3 : (subjectTeacherConfig.taughtSubjects?.[2] || ''));
       setConfigSubject4(subjectTeacherConfig.subject4 !== undefined ? subjectTeacherConfig.subject4 : (subjectTeacherConfig.taughtSubjects?.[3] || ''));
-      setConfigRoom(subjectTeacherConfig.roomDefault || 'Phòng máy Tin học');
+      setConfigRoom(subjectTeacherConfig.roomDefault || 'Phòng học bộ môn');
       setConfigPeriodName(subjectTeacherConfig.periodName || 'Học kì I (Từ ngày 05/9/2026)');
       setConfigMorningPeriods(subjectTeacherConfig.morningPeriods || 4);
       setConfigAfternoonPeriods(subjectTeacherConfig.afternoonPeriods || 3);
@@ -133,7 +134,7 @@ export const SubjectTeacherTimetableView: React.FC<{ onNavigate?: (view: any) =>
       setSelectedClassId(classes[0]?.id || '');
       setCustomClassName(classes[0]?.name || '');
       setSlotSubject(subjectTeacherConfig.taughtSubjects?.[0] || subjectTeacherConfig.subjectName || 'TIN HỌC');
-      setSlotRoom(subjectTeacherConfig.roomDefault || 'Phòng máy Tin học');
+      setSlotRoom(subjectTeacherConfig.roomDefault || 'Phòng học bộ môn');
       setSlotNote('');
     }
   };
@@ -676,7 +677,7 @@ export const SubjectTeacherTimetableView: React.FC<{ onNavigate?: (view: any) =>
                                     </span>
                                     <span 
                                       className="px-2 py-0.5 rounded-lg text-xs font-black text-white shadow-2xs uppercase truncate"
-                                      style={{ backgroundColor: matchingClass?.color || '#4F46E5' }}
+                                      style={{ backgroundColor: readableBg(matchingClass?.color, '#4F46E5') }}
                                     >
                                       {slot.className}
                                     </span>
@@ -770,7 +771,7 @@ export const SubjectTeacherTimetableView: React.FC<{ onNavigate?: (view: any) =>
                                     </span>
                                     <span 
                                       className="px-2 py-0.5 rounded-lg text-xs font-black text-white shadow-2xs uppercase truncate"
-                                      style={{ backgroundColor: matchingClass?.color || '#0D9488' }}
+                                      style={{ backgroundColor: readableBg(matchingClass?.color, '#0D9488') }}
                                     >
                                       {slot.className}
                                     </span>
@@ -895,7 +896,7 @@ export const SubjectTeacherTimetableView: React.FC<{ onNavigate?: (view: any) =>
                     <div className="flex items-center justify-between gap-1 mb-2">
                       <span 
                         className="px-2.5 py-0.5 rounded-lg text-xs font-black text-white shadow-2xs uppercase"
-                        style={{ backgroundColor: cls.color || '#4F46E5' }}
+                        style={{ backgroundColor: readableBg(cls.color, '#4F46E5') }}
                       >
                         {cls.name}
                       </span>
@@ -1509,7 +1510,7 @@ export const SubjectTeacherTimetableView: React.FC<{ onNavigate?: (view: any) =>
                     subject3: sub3,
                     subject4: sub4,
                     taughtSubjects: taughtList.length > 0 ? taughtList : [mainSub],
-                    roomDefault: configRoom.trim() || 'Phòng máy Tin học',
+                    roomDefault: configRoom.trim() || 'Phòng học bộ môn',
                     periodName: configPeriodName.trim() || 'Học kì I (Từ ngày 05/9/2026)',
                     morningPeriods: configMorningPeriods,
                     afternoonPeriods: configAfternoonPeriods,

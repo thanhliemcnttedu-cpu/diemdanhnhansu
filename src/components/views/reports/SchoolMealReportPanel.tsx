@@ -14,6 +14,7 @@ import type { Classroom } from '../../../types';
  * the printed sheet has one signature block for the person in charge of boarding.
  */
 const ABSENT = new Set(['excused', 'unexcused', 'sick', 'other']);
+export const ABSENT_STATUSES = ABSENT;
 
 const formatVN = (key: string) => { const [y, m, d] = key.split('-'); return d && m ? `${d}/${m}/${y}` : key; };
 const two = (n: number) => String(n).padStart(2, '0');
@@ -25,7 +26,7 @@ const timeOf = (ms?: number, dateKey?: string) => {
 };
 const esc = (s: unknown) => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c] as string));
 
-const isHomeroomClass = (c: Classroom) => {
+export const isHomeroomClass = (c: Classroom) => {
   if (!c) return false;
   if (c.isHomeroom === true) return true;
   if (c.isHomeroom === false) return false;
@@ -61,8 +62,11 @@ export const SchoolMealReportPanel: React.FC = () => {
       .map(cls => {
         const list = students.filter(s => s.classId === cls.id);
         const att = attendanceRecords.find(r => r.date === date && r.classId === cls.id);
-        const meal = boardingRecords.find(r => r.date === date && r.classId === cls.id);
+        const sheet = boardingRecords.find(r => r.date === date && r.classId === cls.id);
         const isAbsent = (id: string) => ABSENT.has(String(att?.records?.[id] || ''));
+        // Marking a pupil absent creates a boarding entry for that pupil only: that is not a meal report.
+        // A class has reported when the teacher confirmed, or (older data) the sheet covers pupils who are present.
+        const meal = sheet && (sheet.confirmedAt || Object.keys(sheet.records || {}).some(id => !isAbsent(id))) ? sheet : undefined;
         const eating = meal ? list.filter(s => !isAbsent(s.id) && (meal.records?.[s.id] || 'eating') === 'eating').length : null;
         return {
           className: cls.name,

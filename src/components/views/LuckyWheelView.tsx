@@ -128,9 +128,9 @@ export const LuckyWheelView: React.FC = () => {
     ctx.stroke();
 
     ctx.fillStyle = '#f8fafc';
-    ctx.font = '700 11px "Be Vietnam Pro", sans-serif';
+    ctx.font = '800 14px "Be Vietnam Pro", sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText('QUAY', center, center + 4);
+    ctx.fillText('QUAY', center, center + 5);
   };
 
   useEffect(() => {

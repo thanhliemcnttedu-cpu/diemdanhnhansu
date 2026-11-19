@@ -288,12 +288,18 @@ export const schoolDriveDbService = {
   // ---------------- Mật khẩu vừa cấp (chỉ trên máy Quản trị) ----------------
   /** Đánh dấu tài khoản / trường vừa được Quản trị tạo hoặc sửa — chỉ những mục này được gửi lên Drive */
   markUserDirty(username: string) {
+    // Only a signed-in Quản trị may queue account / school changes. A view-only account (Ban giám hiệu) used to
+    // leave them here and they were sent under the NEXT Quản trị who signed in on this PC.
+    if (!this.getAdminAuth()) return;
     const d = readJson<{ users: string[]; schools: string[] }>(queue, DIRTY_KEY, { users: [], schools: [] });
     const key = String(username || '').trim().toLowerCase();
     if (key && !d.users.includes(key)) d.users.push(key);
     writeJson(queue, DIRTY_KEY, d);
   },
   markSchoolDirty(idOrName: string) {
+    // Only a signed-in Quản trị may queue account / school changes. A view-only account (Ban giám hiệu) used to
+    // leave them here and they were sent under the NEXT Quản trị who signed in on this PC.
+    if (!this.getAdminAuth()) return;
     const d = readJson<{ users: string[]; schools: string[] }>(queue, DIRTY_KEY, { users: [], schools: [] });
     const key = String(idOrName || '').trim();
     if (key && !d.schools.includes(key)) d.schools.push(key);
@@ -301,6 +307,9 @@ export const schoolDriveDbService = {
   },
 
   setPendingPassword(username: string, password: string) {
+    // Only a signed-in Quản trị may queue account / school changes. A view-only account (Ban giám hiệu) used to
+    // leave them here and they were sent under the NEXT Quản trị who signed in on this PC.
+    if (!this.getAdminAuth()) return;
     const key = username.trim().toLowerCase();
     if (!key || !password) return;
     this.markUserDirty(key);
@@ -312,12 +321,18 @@ export const schoolDriveDbService = {
     writeJson(session, ISSUED_CREDENTIALS_KEY, issued);
   },
   markUserDeleted(username: string) {
+    // Only a signed-in Quản trị may queue account / school changes. A view-only account (Ban giám hiệu) used to
+    // leave them here and they were sent under the NEXT Quản trị who signed in on this PC.
+    if (!this.getAdminAuth()) return;
     const d = readJson<{ users: string[]; schools: string[] }>(queue, PENDING_DELETES_KEY, { users: [], schools: [] });
     const key = username.trim().toLowerCase();
     if (key && !d.users.includes(key)) d.users.push(key);
     writeJson(queue, PENDING_DELETES_KEY, d);
   },
   markSchoolDeleted(schoolId: string) {
+    // Only a signed-in Quản trị may queue account / school changes. A view-only account (Ban giám hiệu) used to
+    // leave them here and they were sent under the NEXT Quản trị who signed in on this PC.
+    if (!this.getAdminAuth()) return;
     const d = readJson<{ users: string[]; schools: string[] }>(queue, PENDING_DELETES_KEY, { users: [], schools: [] });
     if (schoolId && !d.schools.includes(schoolId)) d.schools.push(schoolId);
     writeJson(queue, PENDING_DELETES_KEY, d);

@@ -1,3 +1,4 @@
+import { readableBg } from '../../utils/colorContrast';
 import React, { useState, useRef, useMemo } from 'react';
 import * as XLSX from 'xlsx';
 import { useClassroom } from '../../context/ClassroomContext';
@@ -10,6 +11,7 @@ import { ExportStudentListModal } from '../modals/ExportStudentListModal';
 import { AutoAssignAvatarModal } from '../modals/AutoAssignAvatarModal';
 import { GroupPhotoAvatarModal } from '../modals/GroupPhotoAvatarModal';
 import { InitSubjectClassesModal } from './classes/InitSubjectClassesModal';
+import { SyncHomeroomRosterButton } from './classes/SyncHomeroomRosterButton';
 import { AvatarSourceType, handleAvatarImgError } from '../../utils/avatarConfig';
 import { extractSchoolBranchesFromClasses } from '../../utils/schoolBranchHelper';
 import { 
@@ -21,7 +23,8 @@ import {
   Settings, BookOpen, Calculator, Globe, Atom, Map, Monitor, Palette, Music, Activity, Heart,
   Flame, HelpCircle, Layers, ZoomIn, Crown, Shield, ShieldCheck, SlidersHorizontal, Coins, Wand2,
   Building2, MapPin, ChevronDown, ChevronUp, Filter, Eye, BarChart3, Users2, User,
-  ArrowUpDown
+  ArrowUpDown,
+  MoreHorizontal,
 } from 'lucide-react';
 import { ClassDefaultBanner } from '../common/ClassDefaultBanner';
 import { playCoinSound, playDeductSound, playFanfareSound } from '../../utils/audio';
@@ -792,6 +795,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
   
   // Quick Role modal (Chỉ định tối đa 3 chức vụ cho 1 học sinh)
   const [quickRoleStudent, setQuickRoleStudent] = useState<Student | null>(null);
+  const [moreStudent, setMoreStudent] = useState<Student | null>(null);
   const [studentSelectedRoles, setStudentSelectedRoles] = useState<string[]>([]);
 
   // Bulk Role Modal (Gán chức vụ đồng loạt, tối đa 3 chức vụ)
@@ -2094,6 +2098,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                   <span>KHỞI TẠO LỚP DẠY BỘ MÔN</span>
                 </button>
               )}
+              <SyncHomeroomRosterButton />
               {/* Input file ẩn cho upload excel lớp học */}
               <input
                 type="file"
@@ -2965,7 +2970,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                         ) : (
                           <div className="mt-1">
                             <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-slate-100 text-[12px] font-bold text-slate-400 border border-slate-200">
-                              🏛️ Chưa gán phân hiệu (Null)
+                              🏛️ Chưa gán phân hiệu
                             </span>
                           </div>
                         )}
@@ -3717,6 +3722,15 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                       <div className="flex items-center gap-1">
                         {canEvaluateEmulation && (
                           <>
+                            {/* Quick +1: one tap, no dialog (same as the subject teacher's home page) */}
+                            <button
+                              onClick={() => awardPoints([student.id], 1, `Thưởng nhanh +1 xu${activeEvalSubject ? ` môn ${activeEvalSubject}` : ''}`, activeEvalSubject || undefined)}
+                              className="h-8 min-w-8 px-2 rounded-lg bg-amber-400 hover:bg-amber-500 text-amber-950 font-black text-xs flex items-center justify-center shadow-xs transition-all hover-zoom-btn shrink-0 whitespace-nowrap"
+                              title={`Cộng nhanh 1 xu${activeEvalSubject ? ` môn ${activeEvalSubject}` : ''} (không mở hộp thoại)`}
+                              aria-label={`Cộng nhanh 1 xu cho ${student.name}`}
+                            >
+                              +1
+                            </button>
                             <button
                               onClick={() => handleQuickAdd(student)}
                               className="w-7.5 h-7.5 rounded-lg bg-gradient-to-r from-emerald-700 to-teal-700 hover:from-emerald-800 hover:to-teal-800 text-white font-black text-xs flex items-center justify-center shadow-xs shadow-emerald-500/25 transition-all hover-zoom-btn shrink-0"
@@ -3733,81 +3747,24 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                               <Minus className="w-3.5 h-3.5" />
                             </button>
 
-                            {/* NÚT TẶNG SAO / KHEN THƯỞNG THEO MÔN (Yêu cầu 3) */}
-                            <button
-                              onClick={() => {
-                                setRewardingStudent(student);
-                                setRewardMode('sao');
-                                setCustomCoins(1);
-                                setSelectedSubjectForAward(activeEvalSubject || appliedSubjects[0]?.name || 'GHI CHUNG / NỀ NẾP');
-                              }}
-                              className="w-8 h-8 sm:w-8.5 sm:h-8.5 rounded-xl bg-gradient-to-r from-amber-700 to-yellow-700 hover:from-amber-800 hover:to-yellow-800 text-white font-black text-xs sm:text-sm flex items-center justify-center shadow-xs shadow-amber-500/30 transition-all hover-zoom-btn shrink-0"
-                              title="Tặng sao thi đua cho học sinh theo môn học"
-                            >
-                              <Star className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-white text-white" />
-                            </button>
                           </>
                         )}
 
-                        {/* NÚT GÁN CHỨC VỤ NHANH (Yêu cầu 2: Tối đa 3 chức vụ) */}
-                        {canAssignClassOfficer && (
-                          <button
-                            onClick={() => {
-                              setQuickRoleStudent(student);
-                              setStudentSelectedRoles(getStudentRolesList(student));
-                            }}
-                            className="w-8 h-8 sm:w-8.5 sm:h-8.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-black text-xs sm:text-sm flex items-center justify-center border border-indigo-200 transition-all hover-zoom-btn shrink-0"
-                            title="Chỉ định chức vụ cán bộ lớp (Tối đa 3 chức vụ)"
-                          >
-                            <Crown className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-indigo-600" />
-                          </button>
-                        )}
                       </div>
 
-                      <div className="flex items-center gap-1 sm:gap-1.5">
+                      {/* Less-used actions (star, class officer, edit, delete) live behind one button to keep the card calm */}
+                      {(canEvaluateEmulation || canAssignClassOfficer || !isSchoolAdminOrBgh) && (
                         <button
-                          {...(isSchoolAdminOrBgh ? { style: { display: 'none' } } : {})}
-                          onClick={() => {
-                            setEditingStudent(student);
-                            setEditingRoles(getStudentRolesList(student));
-                          }}
-                          className={`w-8 h-8 sm:w-8.5 sm:h-8.5 rounded-xl flex items-center justify-center transition-all hover-zoom-btn border shadow-2xs shrink-0 ${
-                            isSuperAdmin
-                              ? 'bg-indigo-100 text-indigo-700 hover:bg-indigo-200 border-indigo-300 ring-1 ring-indigo-300'
-                              : 'bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200/80'
-                          }`}
-                          title={isSuperAdmin ? "Quyền Quản Trị Tối Cao: Sửa thông tin học sinh này" : "Sửa thông tin học sinh"}
-                          aria-label={`Sửa thông tin học sinh ${student.name}`}
+                          type="button"
+                          onClick={() => setMoreStudent(student)}
+                          className="no-hover-fx h-8 px-2 rounded-lg bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 font-bold text-xs flex items-center gap-1 shrink-0 whitespace-nowrap"
+                          title="Tặng sao, gán chức vụ, sửa thông tin, xóa học sinh"
+                          aria-label={`Thao tác khác với học sinh ${student.name}`}
                         >
-                          <Edit3 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-indigo-600" />
+                          <MoreHorizontal className="w-4 h-4" />
+                          <span>Thêm</span>
                         </button>
-
-                        <button
-                          {...(isSchoolAdminOrBgh ? { style: { display: 'none' } } : {})}
-                          onClick={() => {
-                            const canEditOrDeleteStudent = isSuperAdmin || ((student as any).teacher_id === currentUser?.id) || ((student as any).teacherUsername === currentUser?.username) || (!isAdmin && !isSuperAdmin); // GVCN luôn sửa được data trong context của mình
-                            if (!canEditOrDeleteStudent) {
-                              alert("Bạn không có quyền thao tác trên học sinh này!");
-                              return;
-                            }
-                            const confirmMsg = isSuperAdmin
-                              ? `⚠️ BẠN ĐANG THỰC THI QUYỀN QUẢN TRỊ TỐI CAO:\n\nXác nhận xóa học sinh "${student.name}" khỏi toàn bộ hệ thống? Thao tác này sẽ xóa vĩnh viễn trên toàn bộ CSDL và không thể hoàn tác. Bạn có chắc chắn không?`
-                              : `Bạn có chắc muốn xóa học sinh "${student.name}" khỏi lớp?`;
-                            if (window.confirm(confirmMsg)) {
-                              deleteStudent(student.id);
-                            }
-                          }}
-                          className={`w-8 h-8 sm:w-8.5 sm:h-8.5 rounded-xl flex items-center justify-center transition-all hover-zoom-btn border shrink-0 ${
-                            isSuperAdmin
-                              ? 'bg-rose-100 hover:bg-rose-200 text-rose-700 border-rose-300 ring-1 ring-rose-300 font-bold shadow-xs'
-                              : 'bg-slate-100 hover:bg-rose-50 text-slate-400 hover:text-rose-600 border border-slate-200/70'
-                          }`}
-                          title={isSuperAdmin ? "Quyền Quản Trị Tối Cao: Xóa học sinh này trên toàn hệ thống" : "Xóa học sinh"}
-                          aria-label={`Xóa học sinh ${student.name}`}
-                        >
-                          <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                        </button>
-                      </div>
+                      )}
                     </div>
                   </div>
                 );
@@ -3816,6 +3773,57 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
           )}
         </div>
       )}
+
+      {/* Per-pupil "more actions" dialog (opened from the "Thêm" button on a pupil card) */}
+      {moreStudent && (() => {
+        const student = moreStudent;
+        const close = () => setMoreStudent(null);
+        const item = 'no-hover-fx w-full h-12 px-4 rounded-2xl border text-sm font-bold flex items-center gap-3 text-left';
+        return (
+          <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-sky-900/20 backdrop-blur-xs p-3 sm:p-4" onClick={close} role="dialog" aria-modal="true" aria-label={`Thao tác với học sinh ${student.name}`}>
+            <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-sm p-4 space-y-2" onClick={(e) => e.stopPropagation()}>
+              <div className="flex items-center justify-between gap-2 pb-2 border-b border-slate-100">
+                <div className="min-w-0">
+                  <p className="text-xs font-bold text-slate-500">Thao tác với học sinh</p>
+                  <p className="text-base font-black text-slate-900 truncate">{student.name}</p>
+                </div>
+                <button type="button" onClick={close} className="no-hover-fx w-9 h-9 rounded-full hover:bg-slate-100 flex items-center justify-center shrink-0" aria-label="Đóng"><X className="w-5 h-5 text-slate-600" /></button>
+              </div>
+              {canEvaluateEmulation && (
+                <button type="button" className={`${item} bg-amber-50 border-amber-200 text-amber-900 hover:bg-amber-100`}
+                  onClick={() => { close(); setRewardingStudent(student); setRewardMode('sao'); setCustomCoins(1); setSelectedSubjectForAward(activeEvalSubject || appliedSubjects[0]?.name || 'GHI CHUNG / NỀ NẾP'); }}>
+                  <Star className="w-5 h-5 text-amber-700 shrink-0" /> Tặng sao thi đua
+                </button>
+              )}
+              {canAssignClassOfficer && (
+                <button type="button" className={`${item} bg-indigo-50 border-indigo-200 text-indigo-900 hover:bg-indigo-100`}
+                  onClick={() => { close(); setQuickRoleStudent(student); setStudentSelectedRoles(getStudentRolesList(student)); }}>
+                  <Crown className="w-5 h-5 text-indigo-700 shrink-0" /> Gán chức vụ cán bộ lớp
+                </button>
+              )}
+              {!isSchoolAdminOrBgh && (
+                <button type="button" className={`${item} bg-white border-slate-300 text-slate-800 hover:bg-slate-50`}
+                  onClick={() => { close(); setEditingStudent(student); setEditingRoles(getStudentRolesList(student)); }}>
+                  <Edit3 className="w-5 h-5 text-indigo-600 shrink-0" /> Sửa thông tin học sinh
+                </button>
+              )}
+              {!isSchoolAdminOrBgh && (
+                <button type="button" className={`${item} bg-white border-rose-200 text-rose-700 hover:bg-rose-50`}
+                  onClick={() => {
+                    const canEditOrDeleteStudent = isSuperAdmin || ((student as any).teacher_id === currentUser?.id) || ((student as any).teacherUsername === currentUser?.username) || (!isAdmin && !isSuperAdmin);
+                    if (!canEditOrDeleteStudent) { alert('Bạn không có quyền thao tác trên học sinh này!'); return; }
+                    const confirmMsg = isSuperAdmin
+                      ? `⚠️ BẠN ĐANG THỰC THI QUYỀN QUẢN TRỊ TỐI CAO:\n\nXác nhận xóa học sinh "${student.name}" khỏi toàn bộ hệ thống? Thao tác này sẽ xóa vĩnh viễn trên toàn bộ CSDL và không thể hoàn tác. Bạn có chắc chắn không?`
+                      : `Bạn có chắc muốn xóa học sinh "${student.name}" khỏi lớp?`;
+                    if (window.confirm(confirmMsg)) { close(); deleteStudent(student.id); }
+                  }}>
+                  <Trash2 className="w-5 h-5 shrink-0" /> Xóa học sinh khỏi lớp
+                </button>
+              )}
+            </div>
+          </div>
+        );
+      })()}
 
       {/* ========================================================================= */}
       {/* MODAL: CẤU HÌNH NHẬN XU & MÔN HỌC ĐÁNH GIÁ (User Request: "CẤU HÌNH NHẬN XU") */}
@@ -4659,7 +4667,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                         }}
                         className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 focus:ring-2 focus:ring-indigo-500"
                       >
-                        <option value="">-- Chưa cấu hình phân hiệu (Null) --</option>
+                        <option value="">-- Chưa cấu hình phân hiệu --</option>
                         {effectiveSchoolBranches.map(b => (
                           <option key={b.id || b.name} value={b.name}>
                             🏛️ {b.name} ({b.campuses?.length || 0} điểm trường)
@@ -4713,7 +4721,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                           onChange={(e) => setNewClassCampus(e.target.value)}
                           className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 focus:ring-2 focus:ring-indigo-500"
                         >
-                          <option value="">-- Chưa cấu hình điểm trường (Null) --</option>
+                          <option value="">-- Chưa cấu hình điểm trường --</option>
                           {campusesList.map(c => (
                             <option key={c.id || c.name} value={c.name}>
                               📍 {c.name}
@@ -5204,7 +5212,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
               <div className="flex items-center gap-2.5">
                 <div 
                   className="w-8 h-8 rounded-xl flex items-center justify-center text-white shadow-xs"
-                  style={{ backgroundColor: editingClass.color || '#6366F1' }}
+                  style={{ backgroundColor: readableBg(editingClass.color, '#6366F1') }}
                 >
                   <School className="w-4 h-4" />
                 </div>
@@ -5213,7 +5221,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                     <h3 className="text-base font-black text-indigo-950">Sửa Thông Tin Lớp Học</h3>
                     <span 
                       className="px-2 py-0.5 rounded-lg text-[12px] font-black text-white"
-                      style={{ backgroundColor: editingClass.color || '#6366F1' }}
+                      style={{ backgroundColor: readableBg(editingClass.color, '#6366F1') }}
                     >
                       LỚP {editingClass.name}
                     </span>

@@ -46,3 +46,15 @@
 - Số ăn = học sinh không vắng chuyên cần và không bị tích "không ăn"; lớp chưa có bản ghi bán trú của ngày đó = "Chưa báo" và không cộng vào tổng.
 - Giờ xác nhận: `DailyBoardingMeal.confirmedAt` / `confirmedBy` (tùy chọn), do `markBoardingConfirmed(date)` của `ClassroomContext` ghi khi GVCN bấm "Xác nhận điểm danh bán trú"; `dataAdapter` giữ hai trường này khi đổi sang / từ tệp chuẩn trên Drive. Bản ghi cũ không có giờ thì hiện "Đã báo".
 - Xuất Excel: cột "Không ăn" và dòng tổng là công thức (`D-E`, `SUM`, `COUNTIF`). "In biểu có chỗ ký": in qua iframe ẩn, khổ A4 ngang, một ô ký "Ban quản lý bán trú".
+- Lớp chỉ điểm danh mà chưa xác nhận bán trú: tệp chuẩn ghi `boarding { registered: 0, actual: 0, pending: true }`; biểu báo ăn và `DriveAttendanceStatsPanel` coi là "Chưa báo" (xem `ERRORS.md` 2026-11-19).
+- Chạy thử đủ vai trò không cần dữ liệu thật: thư mục `e2e-harness/` (chỉ có ở máy, không commit) chạy mã Apps Script thật trên Drive giả trong trình duyệt — `npx vite --config e2e-harness/vite.config.ts --port 4175`; bộ công cụ `window.__t` (đăng nhập, nạp học sinh, đọc tệp Drive giả `window.__gas`).
+
+## Giáo viên bộ môn lấy học sinh từ lớp chủ nhiệm (11/2026)
+- `googleDriveService.fetchHomeroomRoster(tên lớp)` đọc `gvcn_<lớp>.json` (chỉ đọc); `syncSubjectRosters` trong ClassroomContext thêm học sinh còn thiếu vào lớp bộ môn (mã `bm-<mã lớp>-<mã gốc>`, trường `homeroomStudentId`), không xóa, không đổi xu. Tự chạy sau "Khởi tạo lớp dạy bộ môn" và có nút "Lấy học sinh từ lớp chủ nhiệm" ở màn Lớp học.
+- Khởi tạo lại lớp bộ môn ở bản dùng Drive không còn xóa học sinh đang có của lớp.
+- Nhãn chữ trắng trên màu lớp dùng `readableBg` (`utils/colorContrast.ts`): giữ sắc màu, làm đậm tới tương phản 4.5:1.
+
+## Báo cáo lãnh đạo và việc cần xử lý hôm nay (11/2026)
+- `reports/LeaderReportsPanel.tsx` (gắn sau biểu báo ăn ở trang chủ quản lý và màn Thống kê quản trị): 3 thẻ — báo cáo nhanh trong ngày, học sinh vắng nhiều trong tuần (ngưỡng chọn được, hoặc vắng không phép từ 2 buổi), tổng hợp tháng toàn trường (so với tháng trước). Một mô hình bảng chung (`Sheet`) dùng cho hiển thị, Excel (mọi ô tổng hợp là công thức) và bản in A4 ngang có chỗ ký Hiệu trưởng. Chỉ đọc số liệu điểm danh / bán trú trong context.
+- `dashboard/ManagerTodayTasks.tsx`: thẻ "Việc cần xử lý hôm nay" cho quản trị / BGH. Số chấm công và kê khai chỉ có khi đã nhập mật khẩu ở màn Chấm công (`staffAttendanceService.getViewerAuth()`).
+- Thẻ học sinh: +1, cộng, trừ, "Thêm" (tặng sao, chức vụ, sửa, xóa nằm trong hộp `moreStudent`).

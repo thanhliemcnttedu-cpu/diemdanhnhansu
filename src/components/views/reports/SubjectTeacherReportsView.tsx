@@ -1,3 +1,4 @@
+import { readableBg } from '../../../utils/colorContrast';
 import React, { useState, useRef } from 'react';
 import { writeReportXlsx } from '../../../utils/licensedExport';
 import * as XLSX from 'xlsx';
@@ -587,7 +588,7 @@ export const SubjectTeacherReportsView: React.FC<{ onNavigate?: (view: any) => v
                     </span>
                     <span 
                       className="px-2 py-0.5 rounded-md text-[12px] font-black text-white uppercase shadow-2xs"
-                      style={{ backgroundColor: matchingClass?.color || '#4F46E5' }}
+                      style={{ backgroundColor: readableBg(matchingClass?.color, '#4F46E5') }}
                     >
                       {matchingClass?.name || 'LỚP'}
                     </span>

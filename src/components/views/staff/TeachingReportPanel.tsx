@@ -5,6 +5,7 @@ import { StaffMember } from '../../../services/staffAttendanceService';
 import {
   teachingLogService, SHOWN_KEYS as TEACH_KEYS, TEACH_META, TeachKey, TeachLog, TeachProfile, monthWeeks, monthLabel, addMonths, enabledKeys, sumLog,
   HSKT_SUBJECTS, ktOf, TeachLock, isTeachLocked, subjectLabel, schoolYearOf,
+  weekCountsOf, MonthWeek,
 } from '../../../services/teachingLogService';
 import { exportTH1, exportTH2, exportTH3, exportOvertime, MonthPack, createdLabel, infoLines } from '../../../services/teachingReportExcel';
 
@@ -141,7 +142,7 @@ export const TeachingReportPanel: React.FC<{
     return useful;
   };
   const ktTable = useMemo(() => HSKT_SUBJECTS.map(h => ({
-    h, vals: wks.map(w => Object.values(logs).reduce((a, l) => a + ktOf(l?.weeks?.[w.key], h.code), 0)),
+    h, vals: wks.map(w => Object.values(logs).reduce((a, l) => a + ktOf(weekCountsOf(l?.weeks, w), h.code), 0)),
   })), [logs, wks]);
 
   const totals = useMemo(() => {
@@ -195,7 +196,7 @@ export const TeachingReportPanel: React.FC<{
   const declared = staff.filter(s => !s.disabled && enabledKeys(profiles[s.code]).length > 0);
   const submitted = declared.filter(s => logs[s.code]?.updatedAt).length;
 
-  const weekVal = (l: TeachLog | null, wk: string, k: TeachKey) => Number(l?.weeks?.[wk]?.[k]) || 0;
+  const weekVal = (l: TeachLog | null, w: MonthWeek, k: TeachKey) => Number(weekCountsOf(l?.weeks, w)?.[k]) || 0;
 
   const exportExcel = async (months: Awaited<ReturnType<typeof loadMonths>>, created: string) => {
     const wb = XLSX.utils.book_new();
@@ -219,8 +220,8 @@ export const TeachingReportPanel: React.FC<{
         .filter(x => enabledKeys(x.p).includes(k) || sumLog(x.log, k) > 0);
       const sh: any[][] = [[`${TEACH_META[k].label.toUpperCase()} – ${monthLabel(month)}`], ...info.map(l => [l]), [],
         ['STT', 'Họ và tên', 'Lớp', ...wks.map(w => w.label), 'Tổng tháng']];
-      list.forEach((x, i) => sh.push([i + 1, x.s.name, classesOf(x.p, k).join(', '), ...wks.map(w => weekVal(x.log, w.key, k)), sumLog(x.log, k)]));
-      sh.push(['', 'TỔNG CỘNG', '', ...wks.map(w => list.reduce((a, x) => a + weekVal(x.log, w.key, k), 0)), list.reduce((a, x) => a + sumLog(x.log, k), 0)]);
+      list.forEach((x, i) => sh.push([i + 1, x.s.name, classesOf(x.p, k).join(', '), ...wks.map(w => weekVal(x.log, w, k)), sumLog(x.log, k)]));
+      sh.push(['', 'TỔNG CỘNG', '', ...wks.map(w => list.reduce((a, x) => a + weekVal(x.log, w, k), 0)), list.reduce((a, x) => a + sumLog(x.log, k), 0)]);
       const ws = XLSX.utils.aoa_to_sheet(sh);
       ws['!cols'] = [{ wch: 5 }, { wch: 26 }, { wch: 22 }, ...wks.map(() => ({ wch: 20 })), { wch: 12 }];
       XLSX.utils.book_append_sheet(wb, ws, TEACH_META[k].short.replace(/[^A-Za-z0-9À-ỹ ]/g, '').slice(0, 28));
@@ -496,7 +497,7 @@ export const TeachingReportPanel: React.FC<{
                     ? TEACH_KEYS.map(k => <td key={k} className="py-2.5 px-2 text-center font-black tabular-nums" style={{ color: sumLog(x.log, k) ? TEACH_META[k].text : '#94a3b8' }}>{enabledKeys(x.p).includes(k) || sumLog(x.log, k) ? sumLog(x.log, k) : '—'}</td>)
                     : <>
                       <td className="py-2.5 pr-2 text-slate-700 text-xs max-w-[160px] truncate" title={classesOf(x.p, view).join(', ')}>{classesOf(x.p, view).join(', ') || '—'}</td>
-                      {wks.map(w => <td key={w.key} className="py-2.5 px-2 text-center tabular-nums">{weekVal(x.log, w.key, view) || <span className="text-slate-400">0</span>}</td>)}
+                      {wks.map(w => <td key={w.key} className="py-2.5 px-2 text-center tabular-nums">{weekVal(x.log, w, view) || <span className="text-slate-400">0</span>}</td>)}
                       <td className="py-2.5 px-2 text-center font-black tabular-nums" style={{ color: TEACH_META[view].text }}>{sumLog(x.log, view)}</td>
                     </>}
                   <td className="py-2.5 px-3 text-center whitespace-nowrap">

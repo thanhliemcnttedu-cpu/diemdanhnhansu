@@ -36,6 +36,8 @@ interface PeriodStats {
   boardingSchoolRate: number | null;
   boardingActual: number;
   boardingRegistered: number;
+  boardingPresent: number;   // pupils present in the classes that reported meals (denominator of boardingRate)
+  boardingStudents: number;  // enrolment of those classes (denominator of boardingSchoolRate)
 }
 
 const addDays = (d: Date, n: number) => {
@@ -69,13 +71,22 @@ const computePeriods = (data: DriveRangeAggregate | null, now: Date, schoolTotal
 
   // Boarding per day, counted only for classes that took attendance that day
   // (a class without an attendance sheet is left out of the boarding totals).
-  const boardingByDay: Record<string, { registered: number; actual: number }> = {};
+  // A class-day counts only when the teacher really reported meals: marking pupils absent writes 'not eating'
+  // for those pupils alone (registered = number absent, actual = 0, or 0 of 0 from newer versions) — that is
+  // "attendance taken, meals not reported yet", not "0 meals".
+  const boardingByDay: Record<string, { registered: number; actual: number; present: number; students: number }> = {};
   (data?.classes || []).forEach(c => {
     Object.entries(c.days || {}).forEach(([date, d]) => {
       if (!d?.att || !d?.brd) return;
-      const slot = boardingByDay[date] || (boardingByDay[date] = { registered: 0, actual: 0 });
-      slot.registered += Number(d.brd.registered) || 0;
-      slot.actual += Number(d.brd.actual) || 0;
+      const registered = Number(d.brd.registered) || 0;
+      const actual = Number(d.brd.actual) || 0;
+      const absent = (Number(d.att.excused) || 0) + (Number(d.att.unexcused) || 0);
+      if (registered === 0 || (actual === 0 && registered <= absent)) return;
+      const slot = boardingByDay[date] || (boardingByDay[date] = { registered: 0, actual: 0, present: 0, students: 0 });
+      slot.registered += registered;
+      slot.actual += actual;
+      slot.present += Number(d.att.present) || 0;
+      slot.students += Number(c.totalStudents) || Number(d.att.marked) || 0;
     });
   });
 
@@ -85,6 +96,8 @@ const computePeriods = (data: DriveRangeAggregate | null, now: Date, schoolTotal
       boardingClasses: 0, boardingRegistered: 0, boardingActual: 0
     };
     let days = 0;
+    let boardingPresent = 0;
+    let boardingStudents = 0;
     Object.entries(data?.days || {}).forEach(([date, t]) => {
       if (date < def.from || date > def.to) return;
       if (t.attendanceClasses > 0) days++;
@@ -97,6 +110,8 @@ const computePeriods = (data: DriveRangeAggregate | null, now: Date, schoolTotal
       if (date < def.from || date > def.to) return;
       acc.boardingRegistered += b.registered;
       acc.boardingActual += b.actual;
+      boardingPresent += b.present;
+      boardingStudents += b.students;
     });
     // Never below the reported headcount (class lists on this machine may lag behind Drive)
     const enrolment = days > 0 ? Math.max(schoolTotal * days, acc.students) : acc.students;
@@ -108,10 +123,12 @@ const computePeriods = (data: DriveRangeAggregate | null, now: Date, schoolTotal
       students: enrolment,
       absent: acc.excused + acc.unexcused,
       // Boarding: meals registered / students actually present; plus the share of the whole school
-      boardingRate: pct(acc.boardingActual, acc.present),
-      boardingSchoolRate: pct(acc.boardingActual, enrolment),
+      boardingRate: acc.boardingRegistered > 0 ? pct(acc.boardingActual, boardingPresent) : null,
+      boardingSchoolRate: acc.boardingRegistered > 0 ? pct(acc.boardingActual, boardingStudents) : null,
       boardingActual: acc.boardingActual,
-      boardingRegistered: acc.boardingRegistered
+      boardingRegistered: acc.boardingRegistered,
+      boardingPresent,
+      boardingStudents
     };
   });
 };
@@ -302,13 +319,13 @@ export const DriveAttendanceStatsPanel: React.FC<{ schoolTotalStudents?: number 
               </span>
               <span className="text-[12px] font-bold text-slate-500">
                 {p.boardingRegistered > 0
-                  ? (p.present > 0 ? `${p.boardingActual}/${p.present} HS đi học` : `${p.boardingActual} suất`)
+                  ? (p.boardingPresent > 0 ? `${p.boardingActual}/${p.boardingPresent} HS đi học` : `${p.boardingActual} suất`)
                   : 'chưa có số liệu'}
               </span>
             </div>
             {p.boardingRegistered > 0 && p.boardingSchoolRate !== null && (
               <p className="mt-1 text-sm font-bold text-violet-700 leading-snug" data-no-autofit="">
-                <span className="text-lg font-black font-mono">{p.boardingSchoolRate}%</span> trên tổng sĩ số trường ({p.boardingActual}/{p.students})
+                <span className="text-lg font-black font-mono">{p.boardingSchoolRate}%</span> trên sĩ số các lớp đã báo ăn ({p.boardingActual}/{p.boardingStudents})
               </p>
             )}
           </div>
@@ -342,7 +359,7 @@ export const DriveAttendanceStatsPanel: React.FC<{ schoolTotalStudents?: number 
                     <td className="px-2.5 py-1.5 text-right font-mono">{r.att ? r.att.present : '—'}</td>
                     <td className="px-2.5 py-1.5 text-right font-mono">{r.att ? `${r.att.excused}/${r.att.unexcused}` : '—'}</td>
                     <td className="px-2.5 py-1.5 text-right font-mono font-black">{rate === null ? '—' : `${rate}%`}</td>
-                    <td className="px-2.5 py-1.5 text-right font-mono">{r.att && r.brd ? `${r.brd.actual}/${r.brd.registered}` : '—'}</td>
+                    <td className="px-2.5 py-1.5 text-right font-mono">{r.att && r.brd && r.brd.registered > 0 && !(r.brd.actual === 0 && r.brd.registered <= (r.att.excused || 0) + (r.att.unexcused || 0)) ? `${r.brd.actual}/${r.brd.registered}` : r.att ? 'Chưa báo' : '—'}</td>
                     <td className="px-2.5 py-1.5 text-center">
                       {r.att ? (
                         <span className="inline-flex items-center gap-1 text-emerald-700 font-black"><CheckCircle2 className="w-3.5 h-3.5" />Đã báo cáo</span>

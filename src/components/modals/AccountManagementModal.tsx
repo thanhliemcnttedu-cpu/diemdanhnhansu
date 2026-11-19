@@ -69,6 +69,14 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
   const uidOf = (u?: { id?: string; username?: string } | null) => (u ? u.id || u.username || '' : '');
   const isSuperAdmin = currentUser?.role === 'admin' || currentUser?.username?.toLowerCase() === 'adminquantri';
   const isSchoolAdmin = currentUser?.role === 'school_admin' || Boolean(currentUser?.isSchoolAdmin) || currentUser?.role === 'bgh' || Boolean(currentUser?.isBgh);
+  // Ban giám hiệu: xem danh sách tài khoản, KHÔNG thêm / sửa / xóa / đặt lại mật khẩu (việc của Quản trị nhà trường)
+  const isViewOnlyBgh = !isSuperAdmin && (currentUser?.role === 'bgh' || Boolean(currentUser?.isBgh))
+    && currentUser?.role !== 'school_admin' && !currentUser?.isSchoolAdmin;
+  const denyViewOnly = (): boolean => {
+    if (!isViewOnlyBgh) return false;
+    alert('Tài khoản Ban giám hiệu chỉ được xem danh sách tài khoản. Việc thêm, sửa, xóa tài khoản và đặt lại mật khẩu do Quản trị nhà trường thực hiện.');
+    return true;
+  };
   const isGuestAdmin = !isSuperAdmin && (currentUser?.role === 'guest_admin' || Boolean(currentUser?.isGuestAdmin) || currentUser?.username?.toLowerCase() === 'admin');
   const currentSchoolScope = currentUser?.schoolName || 'TRƯỜNG HỌC HẠNH PHÚC';
 
@@ -662,6 +670,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
 
   // 🚀 Mở hộp thoại Di chuyển CSDL Giáo viên vào Nhà trường (Super Admin)
   const handleOpenTransferModal = (user: UserAccount) => {
+    if (denyViewOnly()) return;
     setUserToTransfer(user);
     const defaultTarget = schoolsList[0]?.name || 'TRƯỜNG HỌC HẠNH PHÚC';
     setTargetSchoolName(defaultTarget);
@@ -671,6 +680,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
 
   // 🚀 Thực thi di chuyển CSDL & phân vùng sang Nhà trường
   const handleConfirmTransfer = async (e?: React.FormEvent) => {
+    if (denyViewOnly()) return;
     if (e) e.preventDefault();
     if (!userToTransfer) return;
     const finalSchoolName = targetSchoolName === '__custom__' ? customSchoolName.trim() : targetSchoolName.trim();
@@ -721,6 +731,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
   };
 
   const handleImportScoped = (e: React.ChangeEvent<HTMLInputElement>, scope: 'school' | 'guest' | 'all') => {
+    if (denyViewOnly()) return;
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -839,6 +850,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
 
   // Bật / tắt quyền riêng của tài khoản: xem báo cáo chấm công, hoặc tài khoản Nhân viên (không quản lý lớp)
   const handleToggleAccountFlag = async (u: UserAccount, key: 'staffReportViewer' | 'nonTeaching') => {
+    if (denyViewOnly()) return;
     if (isSchoolAdmin && u.schoolName !== currentSchoolScope) { showNotify('error', 'Tài khoản này không thuộc trường của bạn.'); return; }
     const next = !u[key];
     const what = key === 'staffReportViewer'
@@ -858,6 +870,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
   };
 
   const handleStartCreate = () => {
+    if (denyViewOnly()) return;
     setEditingUser(null);
     const defaultSchool = isSchoolAdmin ? currentSchoolScope : (schoolsList[0]?.name || 'TRƯỜNG HỌC HẠNH PHÚC');
     const defaultTenant = isGuestAdmin ? 'guest' : 'school';
@@ -879,6 +892,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
   };
 
   const handleStartEdit = (user: UserAccount) => {
+    if (denyViewOnly()) return;
     if (isSchoolAdmin && (user.schoolName !== currentSchoolScope || user.role === 'admin' || user.isGuestAdmin)) {
       showNotify('error', 'Bạn chỉ có quyền chỉnh sửa tài khoản thuộc trường của mình.');
       return;
@@ -902,6 +916,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
   };
 
   const handleSaveUser = async (e: React.FormEvent) => {
+    if (denyViewOnly()) return;
     e.preventDefault();
     if (!formData.fullName.trim()) {
       showNotify('error', 'Vui lòng nhập họ và tên giáo viên.');
@@ -983,6 +998,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
   };
 
   const handleConfirmDeleteUser = async () => {
+    if (denyViewOnly()) return;
     if (!userToDelete) return;
     const user = userToDelete;
     setLoading(true);
@@ -1019,6 +1035,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
   };
 
   const handleBulkDeleteUsers = async () => {
+    if (denyViewOnly()) return;
     if (selectedUserIds.length === 0) return;
     const confirmed = window.confirm(
       `Bạn có chắc chắn muốn xóa ${selectedUserIds.length} tài khoản giáo viên đã chọn khỏi hệ thống? Dữ liệu của các tài khoản này sẽ bị mất.`
@@ -1044,6 +1061,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
   };
 
   const handleDeleteUser = (user: UserAccount) => {
+    if (denyViewOnly()) return;
     if (user.role === 'admin' || user.username.toLowerCase() === 'adminquantri') {
       showNotify('error', 'Không được phép xóa tài khoản quản trị tối cao.');
       return;
@@ -1056,6 +1074,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
   };
 
   const handleResetPassword = async (user: UserAccount) => {
+    if (denyViewOnly()) return;
     if (user.role === 'admin' || user.username.toLowerCase() === 'adminquantri') {
       if (!isSuperAdmin) {
         showNotify('error', 'Chỉ Quản trị tối cao mới có thể đặt lại mật khẩu cho tài khoản này.');
@@ -1098,6 +1117,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
   };
 
   const openBulkPassword = () => {
+    if (denyViewOnly()) return;
     setBulkPwScope(selectedUserIds.length > 0 ? 'selected' : 'all');
     setBulkPw(''); setBulkPw2(''); setBulkPwShow(false); setBulkPwDone(null);
     setBulkPwOpen(true);
@@ -1106,6 +1126,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
   const getBulkPwTargets = () => (bulkPwScope === 'selected' ? filteredUsers.filter(u => selectedUserIds.includes(uidOf(u))) : filteredUsers).filter(canAssignPasswordTo);
 
   const handleBulkAssignPassword = async () => {
+    if (denyViewOnly()) return;
     const problem = passwordProblem(bulkPw) || (bulkPw !== bulkPw2 ? 'Hai lần nhập mật khẩu chưa giống nhau.' : '');
     if (problem) { showNotify('error', problem); return; }
     const targets = getBulkPwTargets();
@@ -1132,6 +1153,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
   };
 
   const handleQuickSwitch = async (username: string, confirmed = false) => {
+    if (denyViewOnly()) return;
     const target = allUsers.find(u => u.username.toLowerCase() === username.toLowerCase());
     if (!confirmed && target && (target.role === 'homeroom' || target.role === 'subject')) {
       setViewConfirm({ username: target.username, fullName: target.fullName, role: target.role,
@@ -1236,6 +1258,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
   };
 
   const handleImportDatabase = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (denyViewOnly()) return;
     const file = e.target.files?.[0];
     if (!file) return;
     // Bản web đã kết nối Drive: mọi tệp (tệp tổng hay tệp lẻ) đều đi qua bộ nhận dạng
@@ -1397,6 +1420,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
 
   // 3. Đọc và phân tích file Excel import biểu mẫu
   const handleExcelFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (denyViewOnly()) return;
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -1502,6 +1526,7 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
 
   // 4. Xác nhận tạo đồng loạt tài khoản từ danh sách hợp lệ
   const handleConfirmBulkCreate = async () => {
+    if (denyViewOnly()) return;
     const validItems = importPreviewList.filter(item => item.isValid);
     if (validItems.length === 0) {
       showNotify('error', 'Không có tài khoản hợp lệ nào trong danh sách xem trước.');

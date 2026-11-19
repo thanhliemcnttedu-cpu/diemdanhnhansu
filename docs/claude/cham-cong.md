@@ -22,3 +22,7 @@
 ## Bảng chi tiết ngày: sắp xếp A–Z và xuất danh sách (11/2026)
 - Bảng "Chi tiết hôm nay / Chi tiết ngày" (`TodayDetail` trong `StaffAttendanceView`) tự xếp A–Z theo TÊN (từ cuối của họ tên, `localeCompare` tiếng Việt), trùng tên thì theo cả họ tên.
 - Nút **Xuất danh sách** (`exportDayList`): xuất Excel trạng thái điểm danh của ngày đang xem — các dòng đang tích chọn nếu có, không thì toàn bộ danh sách đang hiển thị theo bộ lọc trạng thái và ô tìm. Cột: STT, họ tên, chức vụ, tổ, số CCCD (theo trạng thái che / hiện trên màn hình), trạng thái, giờ, lần, ghi chú, khóa; 3 dòng đầu ghi ngày, phạm vi và số người theo từng trạng thái. Tên tệp `DiemDanh_NhanSu_<ngày>[_da_chon|_<trạng thái>].xlsx`.
+
+## Kê khai tiết dạy: tuần gộp và thừa giờ Tiếng Anh (11/2026)
+- `monthWeeks` (teachingLogService): tháng không bắt đầu vào Thứ Hai thì các ngày lẻ đầu tháng GỘP vào tuần kế tiếp (9/2026: Tuần 1 = 01/09–11/09). Cột gộp giữ khóa của tuần đủ; `keys` chứa cả khóa tuần lẻ. Mọi nơi đọc số theo tuần phải dùng `weekCountsOf(weeks, w)` (cộng các khóa), không đọc `weeks[w.key]` trực tiếp. Tuần lẻ CUỐI tháng vẫn là một cột riêng của tháng đó.
+- Thừa giờ Tiếng Anh: giáo viên nhập TỔNG số tiết đã dạy trong tuần (mọi lớp), phần mềm tính thừa giờ = đã dạy − định mức (`ENGLISH_WEEK_QUOTA` = 23 tiết/tuần; cột gộp hoặc tuần lẻ tính theo số ngày làm việc: `englishQuotaOf`). Máy chủ chỉ lưu số thừa giờ (`english`) nên Apps Script không đổi; số "đã dạy" nhớ trên máy (`lhhp_en_taught_<cccd>_<tháng>`), máy khác hiện lại bằng thừa giờ + định mức.

@@ -346,10 +346,10 @@ export const SeatingChartView: React.FC = () => {
     <div className={`${colSpan} h-full min-h-[90px] bg-[#e8d2b7] rounded-xl border-2 border-[#b89870] p-2 text-center shadow-sm relative overflow-hidden flex flex-col justify-between hover-zoom-interactive`}>
       <div className="flex items-center justify-between">
         <span className="text-[12px] font-black text-amber-900 uppercase">CỬA LỚP</span>
-        <span className="px-1 py-0.2 bg-blue-600 text-white rounded text-[11px] font-black">3D</span>
+        <span className="px-1 py-0.2 bg-blue-600 text-white rounded text-[12px] font-black">3D</span>
       </div>
       <div className="text-2xl my-0.5">🚪</div>
-      <span className="text-[11px] font-bold text-amber-800 block">
+      <span className="text-[12px] font-bold text-amber-800 block">
         {doorPos === 'left' ? '← Cửa Ra Vào (Trái)' : 'Cửa Ra Vào (Phải) →'}
       </span>
     </div>

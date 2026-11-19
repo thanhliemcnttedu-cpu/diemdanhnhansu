@@ -52,7 +52,14 @@ export interface TeachMonthInfo { month: string; updatedAt: string; totals: Reco
 export interface TeachLock { all?: boolean; codes?: Record<string, boolean>; at?: string; by?: string }
 export const isTeachLocked = (l: TeachLock | null | undefined, code: string) => !!l && (!!l.all || !!l.codes?.[code]);
 
-export interface MonthWeek { key: string; index: number; from: string; to: string; label: string }
+/** `keys` = mọi khóa tuần (ngày Thứ Hai) gộp trong cột này; `days` = số ngày làm việc (Thứ Hai – Thứ Sáu) của cột */
+export interface MonthWeek { key: string; index: number; from: string; to: string; label: string; keys?: string[]; days?: number }
+
+/** Định mức tiết dạy 1 tuần của giáo viên Tiếng Anh: dạy vượt số này mới tính thừa giờ */
+export const ENGLISH_WEEK_QUOTA = 23;
+/** Định mức của 1 cột tuần: tuần đủ 5 ngày = 23 tiết; tuần gộp ngày lẻ / tuần lẻ cuối tháng tính theo số ngày làm việc */
+export const englishQuotaOf = (w: MonthWeek) => Math.round(ENGLISH_WEEK_QUOTA * (w.days ?? 5) / 5);
+export const englishOvertimeOf = (taught: number, w: MonthWeek) => Math.max(0, (Number(taught) || 0) - englishQuotaOf(w));
 
 export const EMPTY_PROFILE: TeachProfile = { subjects: [], classesDisabled: [], classesPE: [], classesEnglish: [], overtimeSubjects: [] };
 /** Môn có thể kê thừa giờ ở mục "các môn khác" (Tiếng Anh đã có mục riêng theo mẫu TH3) */
@@ -65,6 +72,8 @@ const dm = (k: string) => `${k.slice(8, 10)}/${k.slice(5, 7)}`;
 /**
  * Các tuần làm việc của tháng YYYY-MM theo lịch dương: chỉ tính Thứ Hai – Thứ Sáu (Thứ Bảy, Chủ nhật là ngày nghỉ),
  * cắt theo tháng. Khóa tuần (`key`) vẫn là ngày Thứ Hai để giữ đúng dữ liệu đã kê.
+ * Tháng không bắt đầu vào Thứ Hai: các ngày lẻ đầu tháng được GỘP vào tuần kế tiếp (vd. 9/2026: Tuần 1 = 01/09–11/09);
+ * cột gộp giữ khóa của tuần đủ, `keys` ghi cả khóa tuần lẻ để số đã kê trước đây vẫn được cộng vào.
  */
 export function monthWeeks(ym: string): MonthWeek[] {
   const [y, m] = ym.split('-').map(Number);
@@ -72,15 +81,55 @@ export function monthWeeks(ym: string): MonthWeek[] {
   const last = toDateKey(new Date(y, m, 0));
   const dow = (fromDateKey(first).getDay() + 6) % 7; // 0 = Thứ Hai
   let monday = addDays(first, -dow);
-  const out: MonthWeek[] = [];
+  const raw: Array<{ key: string; from: string; to: string }> = [];
   while (monday <= last) {
     const friday = addDays(monday, 4);
     const from = monday < first ? first : monday;
     const to = friday > last ? last : friday; // không tính Thứ Bảy, Chủ nhật
     // Bỏ "tuần" không có ngày làm việc nào trong tháng (vd. tháng bắt đầu vào Thứ Bảy / Chủ nhật)
-    if (from <= to) out.push({ key: monday, index: out.length + 1, from, to, label: `Tuần ${out.length + 1} (${dm(from)}–${dm(to)})` });
+    if (from <= to) raw.push({ key: monday, from, to });
     monday = addDays(monday, 7);
   }
+  const span = (a: string, b: string) => Math.round((fromDateKey(b).getTime() - fromDateKey(a).getTime()) / 86400000) + 1;
+  const out: MonthWeek[] = [];
+  const push = (key: string, keys: string[], from: string, to: string, days: number) =>
+    out.push({ key, keys, days, index: out.length + 1, from, to, label: `Tuần ${out.length + 1} (${dm(from)}–${dm(to)})` });
+  let i = 0;
+  if (raw.length > 1 && raw[0].key < first) {
+    push(raw[1].key, [raw[0].key, raw[1].key], raw[0].from, raw[1].to, span(raw[0].from, raw[0].to) + span(raw[1].from, raw[1].to));
+    i = 2;
+  }
+  for (; i < raw.length; i++) push(raw[i].key, [raw[i].key], raw[i].from, raw[i].to, span(raw[i].from, raw[i].to));
+  return out;
+}
+
+/** Số tiết của 1 cột tuần: cộng mọi khóa tuần gộp trong cột (dữ liệu kê trước khi gộp vẫn được tính đủ) */
+export function weekCountsOf(weeks: Record<string, WeekCounts> | null | undefined, w: MonthWeek): WeekCounts | undefined {
+  const list = (w.keys || [w.key]).map(k => weeks?.[k]).filter(Boolean) as WeekCounts[];
+  if (list.length <= 1) return list[0];
+  const out: WeekCounts = {};
+  const addMap = (field: 'kt' | 'ot', src?: Record<string, number>) => {
+    if (!src) return;
+    const dst: Record<string, number> = { ...(out[field] || {}) };
+    Object.keys(src).forEach(c => { dst[c] = (dst[c] || 0) + (Number(src[c]) || 0); });
+    out[field] = dst;
+  };
+  list.forEach(x => {
+    TEACH_KEYS.forEach(k => { out[k] = (out[k] || 0) + (Number(x[k]) || 0); });
+    addMap('kt', x.kt); addMap('ot', x.ot);
+  });
+  return out;
+}
+
+/** Dồn số đã kê theo khóa tuần cũ về đúng cột tuần của tháng (dùng khi mở bảng kê để sửa) */
+export function foldWeeks(weeks: Record<string, WeekCounts> | null | undefined, wks: MonthWeek[]): Record<string, WeekCounts> {
+  const out: Record<string, WeekCounts> = { ...(weeks || {}) };
+  wks.forEach(w => {
+    if ((w.keys || []).length < 2) return;
+    const merged = weekCountsOf(weeks, w);
+    (w.keys || []).forEach(k => { delete out[k]; });
+    if (merged) out[w.key] = merged;
+  });
   return out;
 }
 

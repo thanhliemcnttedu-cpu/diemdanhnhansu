@@ -123,6 +123,19 @@ export const dataAdapter = {
         const canceledStudentIds: string[] = [];
         const details: Record<string, string> = {};
 
+        // Marking a pupil absent writes 'not_eating' for that pupil only. Until the teacher confirms the boarding
+        // sheet, such a record is NOT a meal report: publishing it would show the class as "0 meals of N".
+        const dayAttendance = (userData.attendanceRecords || []).find(r => r.date === date && (!r.classId || r.classId === activeClass.id));
+        const absentOnly = Object.keys(rec.records || {}).every(id => ['excused', 'unexcused', 'sick', 'other'].includes(String(dayAttendance?.records?.[id] || '')));
+        if (!rec.confirmedAt && absentOnly) {
+          // Explicit "not reported yet" (0 of 0, no details): the Apps Script would otherwise rebuild the day
+          // from the raw records and count it as 0 meals. The raw record itself stays in fullClassroomData.
+          const pending: StandardDailyBoardingRecord = { registered: 0, actual: 0, canceledStudentIds: [], pending: true };
+          if (!dailyRecords[date]) dailyRecords[date] = { boarding: pending, notes: rec.notes, updatedAt: new Date().toISOString() };
+          else dailyRecords[date].boarding = pending;
+          continue;
+        }
+
         for (const [studentId, status] of Object.entries(rec.records || {})) {
           details[studentId] = status;
           registered++;

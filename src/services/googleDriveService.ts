@@ -8,7 +8,7 @@ import { dataAdapter } from './dataAdapter';
 import { isViewOnly } from '../utils/viewOnlyMode';
 import { compactClassroomDataForDrive } from '../utils/driveCompact';
 import { getAppliedAdminEdits, mergeAppliedAdminEdits } from './adminEditsStore';
-import { getRoleScopedDataFileName } from './dataStorageService';
+import { getRoleScopedDataFileName, sanitizeSlug } from './dataStorageService';
 import appsScriptSource from '../../scripts/google_apps_script.js?raw';
 
 export const LOCAL_DRIVE_CONFIG_KEY = 'lop_hoc_google_drive_config_v2';
@@ -887,6 +887,52 @@ export const googleDriveService = {
    * Giúp tài khoản Quản trị & BGH tự động cập nhật số liệu mới nhất của tất cả giáo viên
    */
   /** Danh sách tệp trong thư mục dùng chung kèm giờ sửa (1 lệnh) — dùng cho vòng cập nhật 15 giây */
+  /**
+   * Danh sách học sinh THẬT của một lớp, đọc từ tệp lớp của giáo viên chủ nhiệm (gvcn_<lớp>.json) trên Drive của trường.
+   * Dùng cho giáo viên bộ môn: không phải nhập lại danh sách bằng Excel. Chỉ đọc, không ghi gì lên Drive.
+   */
+  async fetchHomeroomRoster(className: string): Promise<{ success: boolean; message: string; teacherName?: string; students: Array<{ id: string; name: string; gender: 'Nam' | 'Nữ'; birthDate: string; stt?: number }> }> {
+    const config = this.getConfig();
+    const scriptUrl = this.normalizeScriptUrl(config.scriptUrl);
+    const folderId = config.folderId?.trim() || '';
+    const slug = sanitizeSlug(String(className || ''));
+    if (!scriptUrl || !slug) return { success: false, message: 'Chưa kết nối Google Drive của trường.', students: [] };
+    const fileName = `gvcn_${slug}.json`;
+    try {
+      let json: any = null;
+      if (typeof window !== 'undefined' && (window as any).electronAPI?.proxyDrivePull) {
+        try { json = await (window as any).electronAPI.proxyDrivePull({ scriptUrl, folderId, fileName }); } catch (_) { json = null; }
+      }
+      if (!json || !Array.isArray(json.students)) {
+        try {
+          const baseUrl = typeof window !== 'undefined' && window.location.protocol === 'file:' ? 'http://127.0.0.1:3000' : '';
+          const proxyRes = await fetch(`${baseUrl}/api/drive/pull?scriptUrl=${encodeURIComponent(scriptUrl)}&folderId=${encodeURIComponent(folderId)}&fileName=${encodeURIComponent(fileName)}`);
+          if (proxyRes.ok) json = await proxyRes.json();
+        } catch (_) { /* fall through */ }
+      }
+      if (!json || !Array.isArray(json.students)) {
+        const res = await fetch(`${scriptUrl}${scriptUrl.includes('?') ? '&' : '?'}action=getLatest&strict=1&folderId=${encodeURIComponent(folderId)}&fileName=${encodeURIComponent(fileName)}`);
+        json = await res.json();
+      }
+      // Chỉ nhận tệp của lớp chủ nhiệm; tệp của giáo viên bộ môn không phải danh sách gốc
+      if (!json || !Array.isArray(json.students) || json.metadata?.teacherRole === 'subject') {
+        return { success: false, message: `Lớp ${className} chưa có danh sách của giáo viên chủ nhiệm trên Drive.`, students: [] };
+      }
+      const students = (json.students as any[])
+        .filter(s => s && s.id && String(s.fullName || s.name || '').trim())
+        .map(s => ({
+          id: String(s.id),
+          name: String(s.fullName || s.name).trim(),
+          gender: (/^(nữ|nu|female)$/i.test(String(s.gender || '').trim()) ? 'Nữ' : 'Nam') as 'Nam' | 'Nữ',
+          birthDate: String(s.dob || s.birthDate || ''),
+          stt: Number(s.stt) || undefined,
+        }));
+      return { success: true, message: 'OK', teacherName: json.metadata?.teacherName, students };
+    } catch (e: any) {
+      return { success: false, message: e?.message || 'Không đọc được danh sách lớp trên Drive.', students: [] };
+    }
+  },
+
   async listClassFilesMeta(): Promise<Array<{ name: string; updatedAt?: string }> | null> {
     const config = this.getConfig();
     const scriptUrl = this.normalizeScriptUrl(config.scriptUrl);
@@ -1062,7 +1108,7 @@ export const googleDriveService = {
       try {
         const { data, user, targetClassId } = getData();
         if (data && user) {
-          await this.pushClassData(data, user, targetClassId, false);
+          await this.pushAfterMergingRemote(data, user, targetClassId);
         }
       } catch (_) {}
     }, Math.max(config.debounceMs || DEFAULT_DEBOUNCE_MS, DRIVE_PUSH_BATCH_MS));
@@ -1131,7 +1177,7 @@ export const googleDriveService = {
       debounceTimer = setTimeout(async () => {
         debounceTimer = null;
         try {
-          await this.pushClassData(userData, currentUser, effectiveClassId, false);
+          await this.pushAfterMergingRemote(userData, currentUser, effectiveClassId);
         } catch (_) {}
       }, delay);
     }
@@ -1143,7 +1189,8 @@ export const googleDriveService = {
    * state nào (số liệu đã đúng sẵn), tự đẩy bản dữ liệu mới nhất sau 700ms.
    */
   /**
-   * Catch-up push after a failed push / an offline period. The class file is written as a whole, so pushing
+   * EVERY push of a teacher's class file goes through here (automatic, immediate, on sign-out and catch-up).
+   * The class file is written as a whole, so pushing
    * the local copy straight away would erase what another PC saved meanwhile. Read the Drive copy first and
    * merge it in (local changes win, see keepLocalEdits), then push the merged result.
    */
@@ -1173,7 +1220,9 @@ export const googleDriveService = {
     const result = await this.pushClassData(toPush, user, classId, false);
     // The merge brought in records another PC had saved → let the running app show them too
     if (result.success && toPush !== data
-      && ((toPush.students || []).length !== (data.students || []).length || (toPush.classes || []).length !== (data.classes || []).length)) {
+      && ((toPush.students || []).length !== (data.students || []).length || (toPush.classes || []).length !== (data.classes || []).length
+        || (toPush.attendanceRecords || []).length !== (data.attendanceRecords || []).length
+        || (toPush.boardingRecords || []).length !== (data.boardingRecords || []).length)) {
       try { window.dispatchEvent(new CustomEvent(DRIVE_MERGED_EVENT, { detail: { username: user.username, data: toPush } })); } catch (_) { /* ignore */ }
     }
     return result;
@@ -1185,7 +1234,7 @@ export const googleDriveService = {
     clearTimeout(debounceTimer);
     debounceTimer = null;
     const snap = latestSnapshot;
-    try { await this.pushClassData(snap.data, snap.user, snap.classId, false); } catch (_) { /* vòng thử lại xử lý */ }
+    try { await this.pushAfterMergingRemote(snap.data, snap.user, snap.classId); } catch (_) { /* vòng thử lại xử lý */ }
   },
 
   requestImmediatePush() {
@@ -1197,7 +1246,7 @@ export const googleDriveService = {
       if (!config.scriptUrl || config.autoSyncEnabled === false) return;
       const snap = latestSnapshot;
       if (debounceTimer) clearTimeout(debounceTimer);
-      this.pushClassData(snap.data, snap.user, snap.classId, false).catch(() => {});
+      this.pushAfterMergingRemote(snap.data, snap.user, snap.classId).catch(() => {});
     }, 700);
   },
 

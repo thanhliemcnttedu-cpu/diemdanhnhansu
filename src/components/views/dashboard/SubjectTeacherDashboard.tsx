@@ -1,3 +1,4 @@
+import { readableBg } from '../../../utils/colorContrast';
 import React, { useState } from 'react';
 import { useClassroom } from '../../../context/ClassroomContext';
 import { 
@@ -150,7 +151,7 @@ export const SubjectTeacherDashboard: React.FC<SubjectTeacherDashboardProps> = (
                 alt={teacherProfile.name}
                 className="w-10 h-10 sm:w-11 sm:h-11 rounded-lg object-cover ring-2 ring-white shadow-xs bg-white hover-zoom-interactive"
               />
-              <span className="absolute -bottom-1 -right-1 px-1 py-0.1 bg-emerald-700 text-white font-black text-[11px] rounded-full shadow-xs uppercase">
+              <span className="absolute -bottom-1 -right-1 px-1 py-0.1 bg-emerald-700 text-white font-black text-[12px] rounded-full shadow-xs uppercase">
                 GVBM
               </span>
             </div>
@@ -416,7 +417,7 @@ export const SubjectTeacherDashboard: React.FC<SubjectTeacherDashboardProps> = (
 
                       <span 
                         className="px-3 py-1 rounded-xl text-xs font-black text-white shadow-2xs uppercase"
-                        style={{ backgroundColor: matchingClass?.color || '#059669' }}
+                        style={{ backgroundColor: readableBg(matchingClass?.color, '#059669') }}
                       >
                         {slot.className}
                       </span>

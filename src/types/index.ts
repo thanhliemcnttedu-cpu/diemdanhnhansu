@@ -104,6 +104,7 @@ export interface Student {
   group?: string; // Tổ 1, Tổ 2, Tổ 3, Tổ 4
   role?: string;  // Chức vụ cán bộ lớp (chuỗi kết hợp ví dụ 'LỚP TRƯỞNG • TỔ TRƯỞNG TỔ 1')
   roles?: string[]; // Mảng tối đa 3 chức vụ trọng trách đảm nhiệm đồng thời (User Request)
+  homeroomStudentId?: string; // GV bộ môn: mã học sinh gốc ở lớp chủ nhiệm (lấy danh sách từ Drive của trường)
 }
 
 // Question types for Random Picker & Classroom Quiz Challenges

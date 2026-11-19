@@ -129,7 +129,7 @@ export const DEFAULT_SUBJECT_TEACHER_CONFIG: SubjectTeacherConfig = {
   subject3: '',
   subject4: '',
   taughtSubjects: ['TIN HỌC', 'CÔNG NGHỆ'],
-  roomDefault: 'Phòng máy Tin học',
+  roomDefault: 'Phòng học bộ môn',
   scheduleScope: 'semester',
   periodName: 'Học kì I (Từ ngày 05/9/2026)',
   morningPeriods: 4,

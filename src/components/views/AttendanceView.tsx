@@ -55,7 +55,7 @@ const STATUS_CONFIG: Record<AttendanceStatus, { label: string; short: string; ac
   late: {
     label: 'ĐI MUỘN',
     short: 'ĐI MUỘN',
-    activeClass: 'bg-amber-500 text-white font-black shadow-xs ring-2 ring-amber-500/30',
+    activeClass: 'bg-amber-700 text-white font-black shadow-xs ring-2 ring-amber-500/30',
     inactiveClass: 'bg-slate-100 text-slate-700 hover:bg-amber-50 hover:text-amber-800',
     badgeClass: 'bg-amber-100 text-amber-800 border-amber-200',
     icon: '⏰'

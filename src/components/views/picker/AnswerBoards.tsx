@@ -168,7 +168,7 @@ export const MatchingBoard: React.FC<MatchProps> = ({ left, right, leftOrder, ri
               className={`no-hover-fx relative z-[1] w-full text-left rounded-xl border-2 px-2.5 py-2 flex items-center gap-2 min-h-12 transition-colors ${
                 ok === true ? 'bg-emerald-50' : ok === false ? 'bg-rose-50' : selected === li ? 'border-indigo-600 bg-indigo-100 ring-2 ring-indigo-300' : matched ? 'bg-white' : 'border-slate-200 bg-white hover:border-indigo-400'
               }`}>
-              <span className="w-7 h-7 rounded-lg bg-amber-500 text-white text-xs font-black inline-flex items-center justify-center shrink-0">A{pos + 1}</span>
+              <span className="w-7 h-7 rounded-lg bg-amber-700 text-white text-xs font-black inline-flex items-center justify-center shrink-0">A{pos + 1}</span>
               <ItemBody item={left[li]} />
             </button>
           );

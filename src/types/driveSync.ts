@@ -64,6 +64,7 @@ export interface StandardDailyBoardingRecord {
   details?: Record<string, string>; // studentId -> status ('eating', 'not_eating')
   confirmedAt?: number;  // homeroom teacher's confirmation time (ms)
   confirmedBy?: string;
+  pending?: boolean;      // attendance taken but the boarding sheet is not confirmed yet (0 of 0)
 }
 
 export interface StandardDailyRecord {

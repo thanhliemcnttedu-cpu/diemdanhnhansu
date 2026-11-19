@@ -1,6 +1,6 @@
 import { CoinIcon } from '../../common/CoinIcon';
 import { writeReportXlsx } from '../../../utils/licensedExport';
-import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { useClassroom } from '../../../context/ClassroomContext';
 import { databaseService } from '../../../services/databaseService';
 import { googleDriveService } from '../../../services/googleDriveService';
@@ -16,6 +16,7 @@ import * as XLSX from 'xlsx';
 import { playPointClink } from '../../../utils/audio';
 import { DriveAttendanceStatsPanel } from './DriveAttendanceStatsPanel';
 import { SchoolMealReportPanel } from './SchoolMealReportPanel';
+import { LeaderReportsPanel } from './LeaderReportsPanel';
 
 export type ReportTimeframe = 'day' | 'week' | 'month';
 
@@ -617,17 +618,21 @@ export const AdminRealtimeDashboardView: React.FC = () => {
   }, [currentUser, soundEnabled]);
 
   // 🔄 TỰ ĐỘNG LÀM MỚI KHI VÀO MÀN HÌNH & CHU KỲ 20S (TỰ ĐỘNG NHẢY BÁO CÁO VỀ PHẦN MỀM)
+  // syncDatabaseNow is re-created on every render of the provider: depending on it re-ran this effect on each
+  // render → sync → setState → render … ("Maximum update depth exceeded" and a burst of Drive requests).
+  const syncDatabaseNowRef = useRef(syncDatabaseNow);
+  syncDatabaseNowRef.current = syncDatabaseNow;
   useEffect(() => {
     // 1. Quét CSDL máy chủ & các tệp gvcn_*.json ngay khi mở giao diện
-    syncDatabaseNow().catch(() => {});
+    syncDatabaseNowRef.current().catch(() => {});
 
     // 2. Tự động kiểm tra làm mới định kỳ mỗi 20 giây để số liệu tự nhảy về máy quản trị
     const interval = setInterval(() => {
-      syncDatabaseNow().catch(() => {});
+      syncDatabaseNowRef.current().catch(() => {});
     }, 20000);
 
     return () => clearInterval(interval);
-  }, [syncDatabaseNow]);
+  }, []);
 
   // Nút đồng bộ tức thì
   const handleManualSync = async () => {
@@ -1318,6 +1323,9 @@ export const AdminRealtimeDashboardView: React.FC = () => {
 
       {/* 2c. Daily meal report for the boarding team (replaces the paper slips) */}
       <SchoolMealReportPanel />
+
+      {/* 2d. Leadership reports: daily / weekly absentees / monthly summary */}
+      <LeaderReportsPanel />
 
       {/* 4. Biểu Đồ Tròn Trực Quan Sinh Động (Realtime Donut Charts) */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

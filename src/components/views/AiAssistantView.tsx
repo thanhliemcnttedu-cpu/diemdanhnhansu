@@ -795,11 +795,11 @@ QUY TẮC BẮT BUỘC:
                   if (isCorrect) {
                     btnClass = isFullscreen
                       ? 'bg-emerald-600 border-emerald-400 text-white font-black shadow-xl ring-2 ring-emerald-300 scale-[1.01]'
-                      : 'bg-emerald-500 border-emerald-600 text-white font-black shadow-md';
+                      : 'bg-emerald-700 border-emerald-700 text-white font-black shadow-md';
                   } else if (isSelected && !isCorrect) {
                     btnClass = isFullscreen
                       ? 'bg-rose-600 border-rose-400 text-white font-bold'
-                      : 'bg-rose-500 border-rose-600 text-white font-bold';
+                      : 'bg-rose-600 border-rose-600 text-white font-bold';
                   } else if (isFullscreen) {
                     btnClass = 'bg-white/5 border-white/10 text-white/50';
                   }
@@ -866,11 +866,11 @@ QUY TẮC BẮT BUỘC:
                   if (isCorrect) {
                     btnClass = isFullscreen
                       ? 'bg-emerald-600 border-emerald-400 text-white font-black shadow-xl ring-2 ring-emerald-300 scale-[1.01]'
-                      : 'bg-emerald-500 border-emerald-600 text-white font-black shadow-md';
+                      : 'bg-emerald-700 border-emerald-700 text-white font-black shadow-md';
                   } else if (isSelected && !isCorrect) {
                     btnClass = isFullscreen
                       ? 'bg-rose-600 border-rose-400 text-white font-bold'
-                      : 'bg-rose-500 border-rose-600 text-white font-bold';
+                      : 'bg-rose-600 border-rose-600 text-white font-bold';
                   } else if (isFullscreen) {
                     btnClass = 'bg-white/5 border-white/10 text-white/50';
                   }

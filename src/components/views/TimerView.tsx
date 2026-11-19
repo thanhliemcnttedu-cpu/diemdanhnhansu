@@ -765,7 +765,7 @@ export const TimerView: React.FC = () => {
                         }`}
                       >
                         {is30s && (
-                          <span className="absolute -top-1.5 -right-1 px-1 py-0.2 bg-red-600 text-[11px] text-white font-extrabold rounded-full">
+                          <span className="absolute -top-1.5 -right-1 px-1 py-0.2 bg-red-600 text-[12px] text-white font-extrabold rounded-full">
                             HOT
                           </span>
                         )}

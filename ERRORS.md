@@ -343,3 +343,81 @@
 - **Fix Applied**: (1) Bộ xử lý đóng trang dùng `currentDataGetterRef.current()` (luôn là state mới nhất), thêm `updatedAt`, không lưu khi dữ liệu tài khoản chưa nạp xong hoặc không có lớp. (2) Khi máy còn thay đổi chưa đẩy (`isPushPending`) và bản trên máy đúng là bản chứa thay đổi cuối (`storedCopyHasLastChange` hoặc state đang chạy), `pullClassData` chạy thêm `dataAdapter.keepLocalEdits`: bản ghi trên máy thắng, bản ghi chỉ có trên Drive được giữ trừ khi mã của nó từng có trên máy (`lhhp_seen_ids_<user>`) — tức là đã xóa ở máy này. (3) Vòng đẩy bù gọi `pushAfterMergingRemote`: kéo – gộp – rồi mới đẩy; phần gộp thêm được báo cho giao diện qua `DRIVE_MERGED_EVENT`.
 - **Prevention**: Bộ xử lý sự kiện đăng ký một lần (`useEffect` với `[]`) không được đọc state trực tiếp — đọc qua ref. Gộp dữ liệu hai chiều phải biết phía nào đang giữ thay đổi chưa đẩy; "không có ở một phía" chỉ được hiểu là xóa khi có bằng chứng bản ghi từng tồn tại ở phía đó. Kiểm chứng bằng `scratchpad/merge-test.mts` và kịch bản giả lập Apps Script trong bản xem thử (`lhhp-web-static`).
 - **Status**: Fixed
+
+---
+
+## [2026-11-19 18:00] - Lớp chỉ điểm danh (chưa báo bán trú) bị tính là "0 suất ăn"
+
+- **Type**: Data
+- **Severity**: High
+- **File**: `src/services/dataAdapter.ts` (đổi sang tệp chuẩn), `src/components/views/reports/DriveAttendanceStatsPanel.tsx` (`computePeriods`), `src/components/views/reports/SchoolMealReportPanel.tsx`
+- **Agent**: Claude Code
+- **Root Cause**: Đánh dấu một học sinh vắng tự ghi `not_eating` cho RIÊNG em đó vào bản ghi bán trú của ngày. Khi GVCN chỉ xác nhận điểm danh, bản ghi tự sinh này được đẩy lên Drive thành `boarding { registered: <số em vắng>, actual: 0 }`; Apps Script và bảng thống kê coi đó là báo ăn → "Ăn bán trú 0% (0/43)", tuần / tháng bị kéo xuống (59/128 thay vì 59/66), cột bán trú từng lớp hiện "0/1".
+- **Fix Applied**: (1) `dataAdapter`: bản ghi bán trú chưa có `confirmedAt` và chỉ chứa học sinh vắng → ghi `boarding { registered: 0, actual: 0, pending: true }` (không `details`) để Apps Script không tự dựng lại từ bản ghi gốc. (2) `computePeriods`: bỏ qua lớp-ngày có `registered = 0` hoặc `actual = 0 && registered <= số vắng` (nhận ra cả dữ liệu cũ đã nằm trên Drive); tỷ lệ bán trú chia cho số có mặt / sĩ số của CÁC LỚP ĐÃ BÁO ĂN. (3) Biểu báo ăn: lớp chỉ có bản ghi tự sinh = "Chưa báo".
+- **Prevention**: Phân biệt "chưa báo" với "báo 0": mọi số liệu tổng hợp phải có trạng thái đã báo riêng, không suy ra từ việc bản ghi có tồn tại. Chạy thử theo kịch bản thiếu bước (chỉ điểm danh, chưa báo bán trú) chứ không chỉ kịch bản đủ bước.
+- **Status**: Fixed (dữ liệu sai đã nằm trên Drive không bị sửa lại, nhưng không còn được tính)
+
+---
+
+## [2026-11-19 18:05] - Màn Thống kê của quản trị lặp đồng bộ liên tục ("Maximum update depth exceeded")
+
+- **Type**: Logic
+- **Severity**: Medium
+- **File**: `src/components/views/reports/AdminRealtimeDashboardView.tsx`
+- **Agent**: Claude Code
+- **Root Cause**: `useEffect(..., [syncDatabaseNow])` — `syncDatabaseNow` của `ClassroomContext` là hàm tạo mới ở MỖI lần vẽ, nên effect chạy lại sau mỗi lần vẽ → gọi đồng bộ → `setState` → vẽ lại → lặp, tới khi React chặn; kèm một loạt yêu cầu Drive thừa.
+- **Fix Applied**: Giữ hàm mới nhất trong `useRef`, effect chạy một lần khi mở màn (`[]`) và gọi qua ref; chu kỳ 20 giây giữ nguyên.
+- **Prevention**: Không đưa hàm lấy từ `useClassroom()` vào mảng phụ thuộc của `useEffect` (chúng không ổn định giữa các lần vẽ) — gọi qua ref. Khi chạy thử phải đọc cả `console.error`, không chỉ lỗi `window.onerror`.
+- **Status**: Fixed
+
+---
+
+## [2026-11-19 19:05] - Máy giáo viên đẩy bản cũ đè lên tệp lớp trên Drive, mất dữ liệu máy khác đã lưu
+
+- **Type**: Data
+- **Severity**: High
+- **File**: `src/services/googleDriveService.ts` (`triggerAutoPushDebounced`, `autoSyncCurrentData`, `flushPendingPush`, `requestImmediatePush`)
+- **Agent**: Claude Code
+- **Root Cause**: Tệp lớp `gvcn_*.json` được ghi NGUYÊN TỆP. Chỉ đường "đẩy bù sau khi mất mạng" (`pushAfterMergingRemote`) đọc bản trên Drive để gộp trước; bốn đường đẩy thường ngày gọi thẳng `pushClassData`. Máy đang mở sẵn (chưa kéo bản mới) đẩy lên → 56 ngày điểm danh máy khác đã ghi biến mất (58 ngày còn 1).
+- **Fix Applied**: Cả bốn đường đẩy đều đi qua `pushAfterMergingRemote` (đọc Drive → gộp, bản trên máy thắng ở bản ghi trùng → đẩy). Sự kiện `DRIVE_MERGED_EVENT` phát cả khi số ngày điểm danh / bán trú thay đổi.
+- **Prevention**: Tệp ghi nguyên khối thì MỌI lần ghi phải đọc-gộp-ghi; không có "đường tắt" ghi thẳng. Kịch bản thử bắt buộc: hai máy cùng một tài khoản, máy A mở sẵn, máy B ghi thêm dữ liệu, máy A lưu.
+- **Status**: Fixed (đã thử lại: Drive giữ đủ 58 ngày)
+
+---
+
+## [2026-11-19 19:10] - Ban giám hiệu (chỉ xem) đổi được mật khẩu giáo viên qua hàng chờ trên máy
+
+- **Type**: Security
+- **Severity**: High
+- **File**: `src/services/schoolDriveDbService.ts` (`markUserDirty`, `setPendingPassword`, `markUserDeleted`…), `src/components/modals/AccountManagementModal.tsx`
+- **Agent**: Claude Code
+- **Root Cause**: Hộp quản lý tài khoản coi BGH như Quản trị trường (`isSchoolAdmin` gồm cả `bgh`) nên hiện đủ nút thêm / sửa / xóa / đặt lại mật khẩu. Thay đổi không gửi được (BGH không có phiên Quản trị) nhưng vẫn nằm trong hàng chờ bền `lhhp_q:*`; khi Quản trị trường đăng nhập trên CÙNG MÁY, hàng chờ được gửi dưới phiên của Quản trị → mật khẩu giáo viên bị đổi thật.
+- **Fix Applied**: (1) Các hàm ghi hàng chờ chỉ chạy khi đang có phiên Quản trị (`getAdminAuth()`). (2) `denyViewOnly()` chặn 17 thao tác trong hộp quản lý tài khoản với tài khoản BGH thuần, kèm thông báo.
+- **Prevention**: Kiểm tra quyền ở tầng dữ liệu (nơi ghi hàng chờ / gọi máy chủ), không chỉ ẩn nút. Hàng chờ bền phải gắn với quyền của người tạo ra nó.
+- **Status**: Fixed
+
+---
+
+## [2026-11-19 19:15] - Học sinh của lớp bộ môn biến mất sau khi tải lại trang
+
+- **Type**: Data
+- **Severity**: High
+- **File**: `src/context/ClassroomContext.tsx` (`initSubjectClasses`), `src/components/views/classes/InitSubjectClassesModal.tsx`, `src/utils/sampleData.ts`
+- **Agent**: Claude Code
+- **Root Cause**: Hai quy tắc trái nhau: hộp "Khởi tạo lớp dạy bộ môn" sinh học sinh MẪU (mã `hs-<mã lớp>-<STT>`), còn bản dùng Drive xóa học sinh mẫu mỗi lần nạp dữ liệu (`stripSampleData`). Giáo viên thấy đủ sĩ số, chấm xu, tải lại trang là mất hết.
+- **Fix Applied**: Khi đã cấu hình Drive, `initSubjectClasses` chỉ tạo lớp (0 học sinh); hộp thoại nói rõ học sinh nhập từ Excel.
+- **Prevention**: Tính năng sinh dữ liệu mẫu và quy tắc dọn dữ liệu mẫu phải dùng chung một điều kiện. Thử "tạo → tải lại trang → còn không" cho mọi luồng tạo dữ liệu.
+- **Status**: Fixed
+
+---
+
+## [2026-11-19 19:20] - Chữ nhỏ còn 9–10px trên laptop 1366×768; màn hình 2K/3K bỏ trống nửa màn
+
+- **Type**: UI
+- **Severity**: Medium
+- **File**: `src/index.css`
+- **Agent**: Claude Code
+- **Root Cause**: Màn hình cao ≤ 850px hạ cỡ chữ gốc xuống 13,5px (≤ 750px: 12,5px) → mọi cỡ tính bằng rem co theo: `text-xs` còn 10,1px, nút `.btn-3d-sm` còn 9,3px. Ngược lại màn hình 2K/3K ở tỷ lệ 100% giữ gốc 16px, cột nội dung 1.280px giữa vùng 2.300–2.700px.
+- **Fix Applied**: Trong hai media query màn hình thấp đặt sàn `--text-xs: 12px`, `--text-sm: 13px / 12,5px`; `.btn-3d-sm` dùng `max(0.6875rem, 12px)`. Thêm gốc 18px (rộng ≥ 2.200px) và 20px (rộng ≥ 2.800px).
+- **Prevention**: Đổi cỡ chữ gốc phải kèm sàn cho chữ nhỏ. Thử giao diện theo ma trận: 1366×768, 1920×1080, 2560×1440, 3000×2000, máy tính bảng, điện thoại.
+- **Status**: Fixed

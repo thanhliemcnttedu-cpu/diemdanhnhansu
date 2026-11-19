@@ -13,6 +13,8 @@ import { APP_AUTHOR_INFO } from '../../data/initialData';
 import { SubjectTeacherDashboard } from './dashboard/SubjectTeacherDashboard';
 import { DriveAttendanceStatsPanel } from './reports/DriveAttendanceStatsPanel';
 import { SchoolMealReportPanel } from './reports/SchoolMealReportPanel';
+import { LeaderReportsPanel } from './reports/LeaderReportsPanel';
+import { ManagerTodayTasks } from './dashboard/ManagerTodayTasks';
 import { getOfficialDisplayName } from '../../utils/accountIdentity';
 
 interface DashboardViewProps {
@@ -299,6 +301,9 @@ const HomeroomDashboard: React.FC<DashboardViewProps> = ({
         );
       })()}
 
+      {/* 1b. Quản trị / Ban giám hiệu: việc còn thiếu hôm nay, bấm vào đi thẳng tới chỗ xử lý */}
+      {(isBgh || isSchoolAdmin || currentUser?.role === 'admin') && <ManagerTodayTasks onNavigate={onNavigate} />}
+
       {/* 2. CLASS SELECTOR SWITCHER: Chỉ dành cho Giáo viên khi có nhiều lớp. Quản trị viên quản trị vĩ mô toàn trường nên loại bỏ */}
       {!isManagementAccount && classes.length > 1 && (
         <div className="bg-white rounded-xl p-2.5 px-3 border border-indigo-100 shadow-2xs flex flex-col md:flex-row md:items-center justify-between gap-2">
@@ -346,6 +351,7 @@ const HomeroomDashboard: React.FC<DashboardViewProps> = ({
         <>
           <DriveAttendanceStatsPanel schoolTotalStudents={homeroomStudents.length} />
           <SchoolMealReportPanel />
+          <LeaderReportsPanel />
         </>
       )}
 

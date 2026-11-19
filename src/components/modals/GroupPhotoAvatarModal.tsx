@@ -897,7 +897,7 @@ export const GroupPhotoAvatarModal: React.FC<GroupPhotoAvatarModalProps> = ({
                               e.stopPropagation();
                               handleRemoveAssignment(st.id);
                             }}
-                            className="w-3.5 h-3.5 rounded-full bg-white/20 hover:bg-red-500 text-white flex items-center justify-center transition-colors ml-0.5"
+                            className="w-3.5 h-3.5 rounded-full bg-white/20 hover:bg-red-600 text-white flex items-center justify-center transition-colors ml-0.5"
                             title="Hủy gán khuôn mặt này"
                           >
                             <X className="w-2.5 h-2.5" />

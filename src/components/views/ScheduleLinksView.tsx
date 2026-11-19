@@ -27,12 +27,12 @@ import { SubjectTeacherTimetableView } from './schedule/SubjectTeacherTimetableV
 import { ModernTimetable, MODERN_TIMETABLE_THEMES, type ModernTimetableTheme } from './schedule/ModernTimetableTemplates';
 
 export const DAYS_OF_WEEK = [
-  { day: 2, label: 'Thứ Hai', short: 'T2', badgeColor: 'bg-sky-500 text-white', pastelBg: 'bg-sky-50 border-sky-200 text-sky-900', icon: '☀️' },
-  { day: 3, label: 'Thứ Ba', short: 'T3', badgeColor: 'bg-emerald-500 text-white', pastelBg: 'bg-emerald-50 border-emerald-200 text-emerald-900', icon: '🌱' },
-  { day: 4, label: 'Thứ Tư', short: 'T4', badgeColor: 'bg-amber-500 text-white', pastelBg: 'bg-amber-50 border-amber-200 text-amber-900', icon: '⭐' },
-  { day: 5, label: 'Thứ Năm', short: 'T5', badgeColor: 'bg-purple-500 text-white', pastelBg: 'bg-purple-50 border-purple-200 text-purple-900', icon: '🚀' },
-  { day: 6, label: 'Thứ Sáu', short: 'T6', badgeColor: 'bg-pink-500 text-white', pastelBg: 'bg-pink-50 border-pink-200 text-pink-900', icon: '🎈' },
-  { day: 7, label: 'Thứ Bảy', short: 'T7', badgeColor: 'bg-orange-500 text-white', pastelBg: 'bg-orange-50 border-orange-200 text-orange-900', icon: '🎨' }
+  { day: 2, label: 'Thứ Hai', short: 'T2', badgeColor: 'bg-sky-700 text-white', pastelBg: 'bg-sky-50 border-sky-200 text-sky-900', icon: '☀️' },
+  { day: 3, label: 'Thứ Ba', short: 'T3', badgeColor: 'bg-emerald-700 text-white', pastelBg: 'bg-emerald-50 border-emerald-200 text-emerald-900', icon: '🌱' },
+  { day: 4, label: 'Thứ Tư', short: 'T4', badgeColor: 'bg-amber-700 text-white', pastelBg: 'bg-amber-50 border-amber-200 text-amber-900', icon: '⭐' },
+  { day: 5, label: 'Thứ Năm', short: 'T5', badgeColor: 'bg-purple-600 text-white', pastelBg: 'bg-purple-50 border-purple-200 text-purple-900', icon: '🚀' },
+  { day: 6, label: 'Thứ Sáu', short: 'T6', badgeColor: 'bg-pink-600 text-white', pastelBg: 'bg-pink-50 border-pink-200 text-pink-900', icon: '🎈' },
+  { day: 7, label: 'Thứ Bảy', short: 'T7', badgeColor: 'bg-orange-700 text-white', pastelBg: 'bg-orange-50 border-orange-200 text-orange-900', icon: '🎨' }
 ];
 
 export type TimetableTemplateId = 

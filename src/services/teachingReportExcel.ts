@@ -12,7 +12,7 @@
  * Cột Tổng và dòng Tổng là công thức SUM như tệp gốc (có sẵn giá trị tính trước, Excel tự tính lại khi mở).
  */
 import JSZip from 'jszip';
-import { MonthWeek, HSKT_SUBJECTS, ktOf, otOf, subjectLabel, OVERTIME_SUBJECTS, TeachLog, WeekCounts, schoolYearOf } from './teachingLogService';
+import { MonthWeek, HSKT_SUBJECTS, ktOf, otOf, subjectLabel, OVERTIME_SUBJECTS, TeachLog, WeekCounts, schoolYearOf, weekCountsOf } from './teachingLogService';
 
 export interface ExcelHeader { org: string; school: string; month: string; wks: MonthWeek[] }
 type Entry = { name: string; log: TeachLog | null };
@@ -189,7 +189,7 @@ async function download(book: TplBook, sheets: Array<{ name: string; xml: string
 }
 
 const weekOf = (h: ExcelHeader, log: TeachLog | null, k: number): WeekCounts | undefined | null =>
-  (h.wks[k] ? log?.weeks?.[h.wks[k].key] : null);
+  (h.wks[k] ? weekCountsOf(log?.weeks, h.wks[k]) : null);
 const base = (h: ExcelHeader) => ({ org: h.org, school: h.school, year: schoolYearOf(h.month) });
 const codeOfRow = (row: TplRow) => {
   const label = row.cells.find(c => c.c === 'C')?.text || '';

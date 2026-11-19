@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { schoolDriveDbService } from '../../../services/schoolDriveDbService';
+import { rosterResultText } from './SyncHomeroomRosterButton';
 import { useClassroom } from '../../../context/ClassroomContext';
 import { InitSubjectClassItem } from '../../../types';
 import { SAMPLE_SUBJECT_CLASSES_BY_IMAGE } from '../../../data/initialData';
@@ -24,6 +26,7 @@ export const InitSubjectClassesModal: React.FC<InitSubjectClassesModalProps> = (
   const { 
     classes, 
     initSubjectClasses, 
+    syncSubjectRosters,
     subjectTeacherConfig, 
     teacherProfile,
     setActiveClassId 
@@ -36,7 +39,7 @@ export const InitSubjectClassesModal: React.FC<InitSubjectClassesModalProps> = (
   const [classesPerGrade, setClassesPerGrade] = useState<number>(4);
   const [namingSuffix, setNamingSuffix] = useState<'A' | 'number'>('A'); // A1, A2... or 1, 2...
   const [defaultStudentCount, setDefaultStudentCount] = useState<number>(35);
-  const [defaultRoom, setDefaultRoom] = useState<string>(subjectTeacherConfig.roomDefault || 'Phòng máy Tin học');
+  const [defaultRoom, setDefaultRoom] = useState<string>(subjectTeacherConfig.roomDefault || 'Phòng học bộ môn');
   const [bulkApplyCount, setBulkApplyCount] = useState<number>(35);
 
   // Detailed items state (preview / edit table) - initialized with 18 sample classes from timetable template
@@ -45,7 +48,7 @@ export const InitSubjectClassesModal: React.FC<InitSubjectClassesModalProps> = (
       name: c.name,
       grade: c.grade,
       studentCount: c.studentCount,
-      room: subjectTeacherConfig.roomDefault || 'Phòng máy Tin học',
+      room: subjectTeacherConfig.roomDefault || 'Phòng học bộ môn',
       teacherName: c.teacherName
     }));
   });
@@ -253,6 +256,15 @@ export const InitSubjectClassesModal: React.FC<InitSubjectClassesModalProps> = (
     }
 
     initSubjectClasses(validItems, replaceExisting);
+    // Trường dùng Drive chung: lấy luôn danh sách học sinh thật từ lớp của giáo viên chủ nhiệm
+    if (schoolDriveDbService.isConfigured() && syncSubjectRosters) {
+      const targets = validItems.map(item => {
+        const name = item.name.trim();
+        return { id: `class-${name.toLowerCase().replace(/[^a-z0-9]/g, '-')}`, name };
+      });
+      // Chờ lớp mới được ghi vào trạng thái rồi mới thêm học sinh
+      setTimeout(() => { syncSubjectRosters(targets).then(r => alert(rosterResultText(r))).catch(() => undefined); }, 400);
+    }
     playFanfareSound();
     confetti({ particleCount: 80, spread: 80 });
 
@@ -359,7 +371,7 @@ export const InitSubjectClassesModal: React.FC<InitSubjectClassesModalProps> = (
                 <div>
                   <p className="font-bold">Phương thức khởi tạo nhanh chóng và tiện lợi nhất:</p>
                   <p className="text-emerald-800 mt-1">
-                    Chọn các khối lớp bạn đang giảng dạy, chọn số lượng lớp mỗi khối và điền số lượng học sinh. Hệ thống sẽ lập tức tạo danh sách lớp và sinh đầy đủ học sinh theo sĩ số!
+                    Chọn các khối lớp bạn đang giảng dạy, chọn số lượng lớp mỗi khối và điền số lượng học sinh. {schoolDriveDbService.isConfigured() ? 'Hệ thống tạo danh sách lớp rồi tự lấy học sinh thật từ lớp của giáo viên chủ nhiệm trên Drive của trường. Lớp nào giáo viên chủ nhiệm chưa có danh sách thì nhập bằng tệp Excel ở mục Học sinh.' : 'Hệ thống sẽ lập tức tạo danh sách lớp và sinh đầy đủ học sinh theo sĩ số!'}
                   </p>
                 </div>
               </div>
@@ -468,7 +480,7 @@ export const InitSubjectClassesModal: React.FC<InitSubjectClassesModalProps> = (
                     <span className="text-xs text-slate-600 font-bold">học sinh / lớp</span>
                   </div>
                   <p className="text-[12px] text-slate-500 mt-2 font-medium">
-                    Tự động tạo danh sách học sinh theo đúng sĩ số này
+                    {schoolDriveDbService.isConfigured() ? 'Sĩ số dự kiến. Danh sách thật lấy từ lớp của giáo viên chủ nhiệm sau khi tạo lớp.' : 'Tự động tạo danh sách học sinh theo đúng sĩ số này'}
                   </p>
                 </div>
 

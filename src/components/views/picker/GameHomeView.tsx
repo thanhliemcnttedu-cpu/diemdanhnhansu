@@ -109,7 +109,7 @@ export const GameHomeView: React.FC<GameHomeViewProps> = ({
       subtitle: '(MYSTERY GIFT BOX)',
       description: 'Hàng loạt hộp quà 3D rực rỡ sắc màu ẩn chứa phần thưởng điểm thưởng và câu hỏi bí ẩn kích thích tò mò.',
       badge: 'HOT',
-      badgeColor: 'bg-rose-500 text-white',
+      badgeColor: 'bg-rose-600 text-white',
       gradient: 'from-amber-500 via-orange-500 to-rose-600',
       ringColor: 'ring-orange-400',
       visualComponent: (

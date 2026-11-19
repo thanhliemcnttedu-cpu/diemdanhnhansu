@@ -268,7 +268,7 @@ export const StaffCheckInPage: React.FC<{ embedded?: boolean; presetCccd?: strin
             <div className="flex gap-1 bg-slate-200/70 p-1 rounded-2xl lg:w-[28rem] lg:shrink-0" role="tablist" aria-label="Chức năng">
               <button type="button" role="tab" aria-selected={mainTab === 'checkin'} onClick={() => setMainTab('checkin')}
                 className={`no-hover-fx flex-1 h-11 rounded-xl text-sm font-black inline-flex items-center justify-center gap-1.5 ${mainTab === 'checkin' ? 'bg-white text-emerald-800 shadow-xs' : 'text-slate-700'}`}><UserCheck className="w-4 h-4" /> Điểm danh</button>
-              {!teachMsg && <button type="button" role="tab" aria-selected={mainTab === 'teach'} onClick={() => setMainTab('teach')}
+              {!teachMsg && !/bảo vệ|kế toán|văn thư|thủ quỹ|y tế|thư viện|thiết bị|phục vụ|cấp dưỡng|tạp vụ|lao công/i.test(staff.position || '') && <button type="button" role="tab" aria-selected={mainTab === 'teach'} onClick={() => setMainTab('teach')}
                 className={`no-hover-fx flex-1 h-11 rounded-xl text-sm font-black inline-flex items-center justify-center gap-1.5 ${mainTab === 'teach' ? 'bg-white text-indigo-800 shadow-xs' : 'text-slate-700'}`}><BookOpenCheck className="w-4 h-4" /> Kê khai tiết dạy</button>}
             </div>
           </div>
