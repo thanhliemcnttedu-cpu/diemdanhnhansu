@@ -48,10 +48,12 @@ const HubGroup: React.FC<{ id?: string; open: boolean; onToggle: () => void; ico
     <button type="button" onClick={onToggle} aria-expanded={open} className="no-hover-fx w-full px-3 py-2.5 flex items-center gap-2.5 text-left cursor-pointer rounded-2xl hover:bg-slate-50">
       <span className="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-700 flex items-center justify-center shrink-0"><Icon className="w-5 h-5" /></span>
       <span className="flex-1 min-w-0">
-        <span className="block text-sm font-black text-slate-900">{title}</span>
+        <span className="block text-sm font-black text-slate-900 leading-snug">{title}</span>
         <span className="block text-xs text-slate-600 truncate">{hint}</span>
+        {/* Phone: the status badge sits under the title so the title keeps the full row */}
+        {badge ? <span className="sm:hidden mt-1 block">{badge}</span> : null}
       </span>
-      {badge}
+      {badge ? <span className="max-sm:hidden shrink-0">{badge}</span> : null}
       <HubDown className={`w-5 h-5 text-slate-600 shrink-0 transition-transform ${open ? 'rotate-180' : ''}`} />
     </button>
     {open && <div className="px-3 pb-3 pt-1">{children}</div>}
@@ -291,6 +293,9 @@ export const ReportsDataView: React.FC<ReportsDataViewProps> = ({ defaultTab = '
   const [parentSavedToast, setParentSavedToast] = useState(false);
   const [allSettingsSavedToast, setAllSettingsSavedToast] = useState(false);
 
+  // Slogan / parent committee inputs are reset only when the selected class or its SAVED slogan/committee changes.
+  // Resetting on every `classes` change wiped unsaved typing when another card (e.g. teacher profile) was saved first.
+  const savedCommitteeKey = JSON.stringify([currentSettingsClass?.id, currentSettingsClass?.slogan || '', currentSettingsClass?.parentCommittee || null]);
   React.useEffect(() => {
     if (currentSettingsClass) {
       setClassSlogan(currentSettingsClass.slogan || '');
@@ -302,7 +307,11 @@ export const ReportsDataView: React.FC<ReportsDataViewProps> = ({ defaultTab = '
       setParentMember1Phone(currentSettingsClass.parentCommittee?.member1?.phone || '');
       setParentMember2Name(currentSettingsClass.parentCommittee?.member2?.name || '');
       setParentMember2Phone(currentSettingsClass.parentCommittee?.member2?.phone || '');
+    }
+  }, [selectedSettingsClassId, savedCommitteeKey]);
 
+  React.useEffect(() => {
+    if (currentSettingsClass) {
       // Tự động đồng bộ tên giáo viên và năm học nếu lớp học có thông tin mới (CHỈ DÀNH CHO GIÁO VIÊN, KHÔNG ĐÈ TÊN ADMIN)
       if (!isCurrentUserSuperAdmin && currentSettingsClass.teacherName && !isSubjectTeacher && currentSettingsClass.teacherName !== profileName) {
         setProfileName(currentSettingsClass.teacherName);
@@ -1458,7 +1467,7 @@ export const ReportsDataView: React.FC<ReportsDataViewProps> = ({ defaultTab = '
                   open={hubOpen.drive}
                   onToggle={() => toggleHub('drive')}
                   icon={HubCloud}
-                  title="Google Drive của trường & Apps Script"
+                  title="Drive của trường & Apps Script"
                   hint="Kết nối thư mục dùng chung, gửi lên / nạp lại dữ liệu, tự động đồng bộ, trình cài đặt Apps Script"
                   badge={hubDriveBadge}
                 >

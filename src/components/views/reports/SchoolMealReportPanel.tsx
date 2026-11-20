@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import * as XLSX from 'xlsx';
 import { AlertCircle, CheckCircle2, Clock, FileSpreadsheet, Printer, Utensils } from 'lucide-react';
-import { useClassroom } from '../../../context/ClassroomContext';
+import { useClassroomOptional } from '../../../context/ClassroomContext';
 import { toLocalDateKey } from '../../../services/googleDriveService';
 import { writeReportXlsx } from '../../../utils/licensedExport';
 import type { Classroom } from '../../../types';
@@ -51,10 +51,24 @@ interface Row {
 
 const STATUS_TEXT: Record<Row['status'], string> = { confirmed: 'Đã xác nhận', reported: 'Đã báo', missing: 'Chưa báo' };
 
-export const SchoolMealReportPanel: React.FC = () => {
-  const { classes, students, attendanceRecords, boardingRecords, teacherProfile, currentUser } = useClassroom();
-  const [date, setDate] = useState(() => toLocalDateKey(new Date()));
-  const schoolName = currentUser?.schoolName || teacherProfile.schoolName || 'Trường học';
+/** Data handed in from outside the app context (staff member with the boarding duty on the check-in page) */
+export interface MealReportData {
+  classes: Classroom[]; students: Array<{ id: string; name: string; classId: string }>;
+  attendanceRecords: Array<{ date: string; classId: string; records: Record<string, string> }>;
+  boardingRecords: Array<{ date: string; classId: string; records: Record<string, string>; confirmedAt?: number; confirmedBy?: string }>;
+  schoolName?: string;
+}
+
+export const SchoolMealReportPanel: React.FC<{ data?: MealReportData; date?: string; onDateChange?: (d: string) => void }> = ({ data, date: dateProp, onDateChange }) => {
+  const ctx = useClassroomOptional();
+  const classes = (data?.classes ?? ctx?.classes ?? []) as Classroom[];
+  const students = (data?.students ?? ctx?.students ?? []) as Array<{ id: string; name: string; classId: string }>;
+  const attendanceRecords = (data?.attendanceRecords ?? ctx?.attendanceRecords ?? []) as Array<{ date: string; classId: string; records: Record<string, string> }>;
+  const boardingRecords = (data?.boardingRecords ?? ctx?.boardingRecords ?? []) as Array<{ date: string; classId: string; records: Record<string, string>; confirmedAt?: number; confirmedBy?: string }>;
+  const [ownDate, setOwnDate] = useState(() => toLocalDateKey(new Date()));
+  const date = dateProp ?? ownDate;
+  const setDate = (d: string) => { if (onDateChange) onDateChange(d); else setOwnDate(d); };
+  const schoolName = data?.schoolName || ctx?.currentUser?.schoolName || ctx?.teacherProfile.schoolName || 'Trường học';
 
   const rows = useMemo<Row[]>(() => {
     return classes.filter(isHomeroomClass)
@@ -181,7 +195,7 @@ tfoot td { font-weight: 700; background: #f1f5f9; }
       <div className="flex flex-wrap items-start gap-3">
         <span className="w-10 h-10 rounded-2xl bg-emerald-100 text-emerald-800 flex items-center justify-center shrink-0"><Utensils className="w-5 h-5" aria-hidden="true" /></span>
         <div className="flex-1 min-w-[220px]">
-          <h2 id="meal-report-title" className="text-base font-black text-slate-900">Biểu tổng hợp báo ăn bán trú toàn trường</h2>
+          <h2 id="meal-report-title" className="text-base font-black text-slate-900"><span className="sm:hidden">Báo ăn bán trú toàn trường</span><span className="max-sm:hidden">Biểu tổng hợp báo ăn bán trú toàn trường</span></h2>
           <p className="text-sm text-slate-700">Số liệu lấy từ phần "Ăn bán trú" các giáo viên chủ nhiệm đã xác nhận, thay cho phiếu báo ăn giấy của từng lớp.</p>
         </div>
         <div className="flex flex-wrap items-end gap-2">

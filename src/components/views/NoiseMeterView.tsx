@@ -478,7 +478,7 @@ export const NoiseMeterView: React.FC = () => {
         <div className="bg-white rounded-3xl p-6 border border-slate-200/90 shadow-xs space-y-4 hover-zoom-card">
           <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
             <Bell className="w-4 h-4 text-amber-500" />
-            Cảnh Báo Tức Thì (Phóng to thu nhỏ 20s)
+            <span className="whitespace-nowrap">Cảnh báo tức thì</span> <span className="text-xs font-bold normal-case whitespace-nowrap">(phóng to 20 giây)</span>
           </h3>
 
           <div className="grid grid-cols-2 gap-3.5">
@@ -506,7 +506,7 @@ export const NoiseMeterView: React.FC = () => {
               className="p-5 rounded-3xl bg-rose-100 hover:bg-rose-200 border-2 border-rose-400 text-rose-950 font-black text-xs md:text-sm flex flex-col items-center justify-center gap-2 shadow-xs hover-zoom-btn"
             >
               <span className="text-3xl">🛑</span>
-              <span>DỪNG LẠI NGAY!</span>
+              <span className="whitespace-nowrap">DỪNG LẠI!</span>
             </button>
 
             {/* 4. TUYỆT VỜI! */}
@@ -515,7 +515,7 @@ export const NoiseMeterView: React.FC = () => {
               className="p-5 rounded-3xl bg-emerald-50 hover:bg-emerald-100 border-2 border-emerald-300 text-emerald-950 font-black text-xs md:text-sm flex flex-col items-center justify-center gap-2 shadow-xs hover-zoom-btn"
             >
               <span className="text-3xl">👏</span>
-              <span>TUYỆT VỜI! (Vỗ tay)</span>
+              <span className="text-center whitespace-nowrap">TUYỆT VỜI!<span className="block text-xs font-bold normal-case">Vỗ tay</span></span>
             </button>
           </div>
         </div>

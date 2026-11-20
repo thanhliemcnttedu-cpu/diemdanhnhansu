@@ -2,20 +2,24 @@ import { STAFF_SYNC_MS, startJitteredLoop } from '../../../utils/liveSync';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import * as XLSX from 'xlsx';
 import {
-  UserCheck, RefreshCw, Download, Upload, Users, Link2, Copy, Check, Plus, KeyRound, Lock, Unlock, Trash2, Search, Loader2, ShieldAlert, TrendingUp, TrendingDown, Minus, Pencil, MapPin, CheckCircle2, Info, Eye, EyeOff, BookOpenCheck, ChevronLeft, ChevronRight, Save,
+  ClipboardCheck, UserCheck, RefreshCw, Download, Upload, Users, Link2, Copy, Check, Plus, KeyRound, Lock, Unlock, Trash2, Search, Loader2, ShieldAlert, TrendingUp, TrendingDown, Minus, Pencil, MapPin, CheckCircle2, Info, Eye, EyeOff, BookOpenCheck, ChevronLeft, ChevronRight, Save,
 } from 'lucide-react';
-import { useClassroom } from '../../../context/ClassroomContext';
+import { useClassroomOptional } from '../../../context/ClassroomContext';
+import { StaffDutiesPanel } from './StaffDutiesPanel';
 import {
   staffAttendanceService, STAFF_STATUS_META, aggregate, toDateKey, addDays, fromDateKey, shortDateLabel, longDateLabel, weekdayLabel, dateRangeKeys,
   parseStaffSheet, STAFF_TEMPLATE_HEADERS, isLockedFor, StaffDayLock, composeTripNote, randomPin, weekdayShort, attemptOf, attemptsOf, systemNoteOf, timeHMS, StaffMember, StaffRecord, StaffStatus, StaffUpsert, ParsedStaffRow,
+  StaffDuties,
 } from '../../../services/staffAttendanceService';
 import { StaffCheckInQrCard } from './StaffCheckInQr';
 import { TeachingReportPanel } from './TeachingReportPanel';
 import { appsScriptSetupService, compareVersions, versionLabel } from '../../../services/appsScriptSetupService';
 import { openReinitSchoolDb } from '../../modals/ReinitSchoolDbModal';
 import { readTeacherAuth } from '../../../utils/teacherAuth';
+import { List as ListIcon } from 'lucide-react';
+import { StaffSplitView } from './StaffSplitView';
 
-type Tab = 'summary' | 'roster' | 'teach' | 'link';
+type Tab = 'summary' | 'roster' | 'teach' | 'link' | 'duty';
 type Period = 'today' | 'yesterday' | 'week' | 'month' | 'custom';
 type DaysMap = Record<string, Record<string, StaffRecord>>;
 
@@ -69,7 +73,7 @@ const StackedBars: React.FC<{ daily: ReturnType<typeof aggregate>['daily'] }> = 
                 return <rect key={k} x={x} y={top} width={bw} height={h} rx={k === 'missing' ? 3 : 0} fill={STAFF_STATUS_META[k].color} opacity={k === 'missing' ? 0.35 : 1}><title>{`${shortDateLabel(d.date)} • ${STAFF_STATUS_META[k].label}: ${v}`}</title></rect>;
               })}
               <text x={x + bw / 2} y={H - padB + 14} textAnchor="middle" style={{ fontSize: 12 }} className="fill-slate-600">{shortDateLabel(d.date)}</text>
-              <text x={x + bw / 2} y={H - padB + 26} textAnchor="middle" style={{ fontSize: 11.5 }} className="fill-slate-500">{weekdayShort(d.date)}</text>
+              <text x={x + bw / 2} y={H - padB + 26} textAnchor="middle" style={{ fontSize: 12 }} className="fill-slate-500">{weekdayShort(d.date)}</text>
             </g>
           );
         })}
@@ -90,18 +94,27 @@ const Legend = () => (
 /** Người chỉ xem báo cáo bị Apps Script từ chối: sai mật khẩu, quyền đã thu hồi, hoặc Apps Script của trường còn bản cũ */
 const VIEWER_DENIED_MESSAGE = 'Chưa mở được báo cáo chấm công. Kiểm tra lại mật khẩu; nếu mật khẩu đúng thì Quản trị nhà trường cần cập nhật Apps Script lên phiên bản mới nhất, hoặc quyền xem báo cáo của tài khoản này đã được thu hồi.';
 
-export const StaffAttendanceView: React.FC = () => {
-  const { currentUser, isBgh, isSchoolAdmin } = useClassroom();
+export const StaffAttendanceView: React.FC<{
+  /** Staff member working under an assigned duty on the check-in page (no app account, no Provider): read + export only,
+   *  plus check-in for others when `proxy` is set. Requests are authorised by the duty session in staffAttendanceService. */
+  duty?: StaffDuties; dutySchoolName?: string; dutyName?: string;
+}> = ({ duty, dutySchoolName, dutyName }) => {
+  const ctx = useClassroomOptional();
+  const currentUser = duty ? null : (ctx?.currentUser ?? null);
+  const isBgh = duty ? false : Boolean(ctx?.isBgh);
+  const isSchoolAdmin = duty ? false : Boolean(ctx?.isSchoolAdmin);
   const canManage = Boolean(currentUser && (currentUser.role === 'admin' || currentUser.role === 'school_admin' || isSchoolAdmin));
-  const schoolName = currentUser?.schoolName || '';
+  const schoolName = dutySchoolName || currentUser?.schoolName || '';
 
   // 👁️ Tài khoản được Quản trị cấp quyền "Xem báo cáo chấm công" (vd. nhân viên kế toán): CHỈ XEM và XUẤT TỆP —
   // không có thẻ Danh sách nhân sự / Link điểm danh, không điểm danh hộ, không khóa / mở khóa (Apps Script 1.1.12)
-  const viewOnly = !canManage && !isBgh && currentUser?.role !== 'bgh' && Boolean(currentUser?.staffReportViewer);
+  const viewOnly = duty ? true : (!canManage && !isBgh && currentUser?.role !== 'bgh' && Boolean(currentUser?.staffReportViewer));
 
-  const [tab, setTab] = useState<Tab>('summary');
+  const [tab, setTab] = useState<Tab>(duty && !duty.attendance && !duty.proxy ? 'teach' : 'summary');
   // Phiên đã nhớ phải đúng tài khoản đang đăng nhập phần mềm
   const [auth, setAuth] = useState(() => {
+    // Duty mode: a placeholder keeps the screen unlocked; the real credentials travel as `staffAuth` in the service
+    if (duty) return { username: dutyName || 'người được giao nhiệm vụ', password: '' };
     const me = (currentUser?.username || '').trim().toLowerCase();
     const a = staffAttendanceService.getViewerAuth();
     if (a && (!me || a.username === me)) return a;
@@ -128,6 +141,11 @@ export const StaffAttendanceView: React.FC = () => {
   // Bảng chi tiết: ngày đang xem ('' = hôm nay). Quản trị / BGH chọn ngày đã qua để điểm danh bù cho nhân sự
   const [detailDate, setDetailDate] = useState('');
   const [detailLoading, setDetailLoading] = useState(false);
+  // Optional "list + detail" layout for the per-person table (per device, default off = table as before)
+  const [splitOn, setSplitOn] = useState(() => { try { return localStorage.getItem('lhhp_staff_split') === '1'; } catch { return false; } });
+  const toggleSplit = (on: boolean) => { setSplitOn(on); try { localStorage.setItem('lhhp_staff_split', on ? '1' : '0'); } catch { /* storage blocked: keep for this session only */ } };
+  // The list layout is read-only: hand over display fields only (no PIN, no CCCD number)
+  const splitStaff = useMemo<StaffMember[]>(() => staff.map(s => ({ code: s.code, name: s.name, position: s.position, dept: s.dept, order: s.order, disabled: s.disabled })), [staff]);
 
   const range = useMemo(() => {
     const d = fromDateKey(today);
@@ -150,6 +168,7 @@ export const StaffAttendanceView: React.FC = () => {
     try {
       const r = await staffAttendanceService.range(fetchFrom, fetchTo, auth);
       if (!r?.success) {
+        if (r?.code === 'UNAUTHORIZED' && duty) { setError('Thầy cô chưa được giao nhiệm vụ này, hoặc Apps Script của trường chưa cập nhật lên phiên bản 1.1.14.'); return; }
         if (r?.code === 'UNAUTHORIZED') {
           const d = await staffAttendanceService.diagnoseFailure();
           if (d.kind === 'no_db' || d.kind === 'dead') { setError(d.message); setErrorKind(d.kind); return; }
@@ -379,9 +398,9 @@ export const StaffAttendanceView: React.FC = () => {
             <p className="text-sm text-slate-600 truncate" title={`${longDateLabel(today)}${schoolName ? ` • ${schoolName}` : ''}`}>{longDateLabel(today)}{schoolName ? ` • ${schoolName}` : ''}</p>
           </div>
         </div>
-        <div className="grid grid-cols-4 sm:flex gap-1 sm:gap-1.5 bg-slate-100 p-1 rounded-2xl overflow-x-auto no-scrollbar max-w-full self-stretch sm:self-start 2xl:self-auto 2xl:shrink-0" role="tablist">
-          {([['summary', 'Tổng hợp', 'Tổng hợp', <TrendingUp key="i" className="w-4 h-4" />], ['roster', 'Danh sách nhân sự', 'Nhân sự', <Users key="i" className="w-4 h-4" />], ['teach', 'Kê khai tiết dạy', 'Tiết dạy', <BookOpenCheck key="i" className="w-4 h-4" />], ['link', 'Link điểm danh', 'Link', <Link2 key="i" className="w-4 h-4" />]] as const)
-            .filter(([id]) => !viewOnly || id === 'summary' || id === 'teach')
+        <div className="flex gap-1 sm:gap-1.5 bg-slate-100 p-1 rounded-2xl overflow-x-auto no-scrollbar max-w-full self-stretch sm:self-start 2xl:self-auto 2xl:shrink-0" role="tablist">
+          {([['summary', 'Tổng hợp', 'Tổng hợp', <TrendingUp key="i" className="w-4 h-4" />], ['roster', 'Danh sách nhân sự', 'Nhân sự', <Users key="i" className="w-4 h-4" />], ['teach', 'Kê khai tiết dạy', 'Tiết dạy', <BookOpenCheck key="i" className="w-4 h-4" />], ['link', 'Link điểm danh', 'Link', <Link2 key="i" className="w-4 h-4" />], ['duty', 'Phân công nhiệm vụ', 'Phân công', <ClipboardCheck key="i" className="w-4 h-4" />]] as const)
+            .filter(([id]) => (duty ? ((id === 'summary' && (duty.attendance || duty.proxy)) || (id === 'teach' && duty.teach)) : (!viewOnly || id === 'summary' || id === 'teach')))
             .map(([id, label, shortLabel, icon]) => (
             <button key={id} type="button" role="tab" aria-selected={tab === id} onClick={() => setTab(id)}
               className={`min-w-0 sm:flex-none justify-center px-1 sm:px-3.5 py-2 rounded-xl text-sm font-black inline-flex items-center gap-1.5 whitespace-nowrap sm:shrink-0 ${tab === id ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600 hover:text-slate-900'}`}>
@@ -391,7 +410,7 @@ export const StaffAttendanceView: React.FC = () => {
         </div>
       </div>
 
-      {viewOnly && (
+      {viewOnly && !duty && (
         <p className="rounded-2xl border border-sky-200 bg-sky-50 px-4 py-2.5 text-sm text-sky-950 flex items-start gap-2" role="status">
           <Eye className="w-4 h-4 mt-0.5 shrink-0 text-sky-700" />
           <span><strong>Chế độ xem báo cáo.</strong> Tài khoản của bạn được nhà trường cấp quyền xem số liệu và xuất tệp báo cáo chấm công, kê khai tiết dạy. Điểm danh hộ, khóa chốt số liệu và danh sách nhân sự do Quản trị nhà trường, Ban giám hiệu thực hiện.</span>
@@ -533,17 +552,28 @@ export const StaffAttendanceView: React.FC = () => {
               <ComparePanel staff={staff} auth={auth} today={today} liveDays={days} liveRange={loadedRange} />
 
               {/* Hôm nay: chi tiết từng người */}
-              <TodayDetail staff={staff} records={days[dd] || {}} today={today} date={dd} dayLock={locks[dd] || null} auth={auth} readOnly={viewOnly}
+              {splitOn ? (
+                <StaffSplitView staff={splitStaff} days={days} dateKeys={stats.workingDays} selectedDate={today} rangeLabel={range.label} onBackToTable={() => toggleSplit(false)} />
+              ) : (
+              <TodayDetail staff={staff} records={days[dd] || {}} today={today} date={dd} dayLock={locks[dd] || null} auth={auth} readOnly={viewOnly && !duty?.proxy} noLock={Boolean(duty)}
+                extraAction={(
+                  <button type="button" onClick={() => toggleSplit(true)} title="Xem danh sách nhân sự kèm chi tiết từng người (chỉ xem). Bấm Dạng bảng để quay lại."
+                    className="no-hover-fx h-10 px-3.5 rounded-xl border border-slate-300 bg-white text-sm font-semibold text-slate-800 hover:bg-slate-50 inline-flex items-center justify-center gap-2 whitespace-nowrap cursor-pointer">
+                    <ListIcon className="w-4 h-4" aria-hidden="true" /> Xem thử giao diện danh sách
+                  </button>
+                )}
                 loadingDate={detailLoading} onDateChange={(d) => setDetailDate(d >= today ? '' : d)}
                 onRecordsChanged={(date, recs) => setDays(prev => ({ ...prev, [date]: { ...(prev[date] || {}), ...recs } }))}
                 onLockChanged={(L) => setLocks(prev => { const next = { ...prev }; if (L) next[dd] = L; else delete next[dd]; return next; })} />
+              )}
             </>
           )}
         </>
       )}
 
       {tab === 'roster' && !viewOnly && <RosterPanel canManage={canManage} auth={auth} schoolName={schoolName} />}
-      {tab === 'teach' && auth && <TeachingReportPanel auth={auth} schoolName={schoolName} today={today} readOnly={viewOnly} />}
+      {tab === 'teach' && auth && (!duty || duty.teach) && <TeachingReportPanel auth={auth} schoolName={schoolName} today={today} readOnly={viewOnly} />}
+      {tab === 'duty' && !viewOnly && <StaffDutiesPanel auth={auth} />}
       {tab === 'link' && !viewOnly && <LinkPanel schoolName={schoolName} isBghOnly={Boolean(isBgh && !canManage)} />}
     </div>
   );
@@ -689,7 +719,11 @@ const TodayDetail: React.FC<{
   onRecordsChanged: (date: string, recs: Record<string, StaffRecord>) => void;
   /** Người chỉ xem báo cáo: không điểm danh hộ, không khóa / mở khóa */
   readOnly?: boolean;
-}> = ({ staff, records, today, date, loadingDate, onDateChange, dayLock, auth, onLockChanged, onRecordsChanged, readOnly }) => {
+  /** Duty holder: may check in for others but never lock / unlock a day */
+  noLock?: boolean;
+  /** Optional extra button shown at the end of the toolbar (e.g. switch to the list layout) */
+  extraAction?: React.ReactNode;
+}> = ({ staff, records, today, date, loadingDate, onDateChange, dayLock, auth, onLockChanged, onRecordsChanged, readOnly, noLock, extraAction }) => {
   const isPast = date < today;
   /** "hôm nay" hoặc "ngày 05/11" — dùng trong mọi câu thông báo của bảng */
   const dayText = isPast ? `ngày ${shortDateLabel(date)}/${date.slice(0, 4)}` : 'hôm nay';
@@ -830,6 +864,7 @@ Người bị khóa sẽ không điểm danh / sửa điểm danh được và n
           title={picked.length ? 'Xuất Excel các nhân sự đang tích chọn của ngày đang xem' : 'Xuất Excel danh sách đang hiển thị (theo bộ lọc và ô tìm) của ngày đang xem'}>
           <Download className="w-4 h-4" /> {rows.some(x => picked.includes(x.s.code)) ? `Xuất danh sách (${rows.filter(x => picked.includes(x.s.code)).length} đã chọn)` : `Xuất danh sách (${rows.length})`}
         </button>
+        {extraAction}
       </div>
       {isPast && readOnly && (
         <p className="mx-4 mt-3 rounded-2xl border border-amber-300 bg-amber-50 px-3 py-2.5 text-sm text-amber-950" role="status">
@@ -855,12 +890,12 @@ Người bị khóa sẽ không điểm danh / sửa điểm danh được và n
         {!readOnly && picked.length > 0 && <>
           <span className="text-sm font-bold text-slate-700">Đã chọn {picked.length}:</span>
           <button type="button" onClick={() => openProxy(picked)} className="no-hover-fx h-8 px-3 rounded-lg text-sm font-bold bg-indigo-600 hover:bg-indigo-700 text-white inline-flex items-center gap-1.5 whitespace-nowrap"><UserCheck className="w-4 h-4" /> {isPast ? 'Điểm danh bù' : 'Điểm danh hộ'} ({picked.length})</button>
-          <button type="button" disabled={lockBusy} onClick={() => applyLock(true, false, picked)} className="no-hover-fx h-8 px-3 rounded-lg text-sm font-bold bg-rose-600 hover:bg-rose-700 text-white inline-flex items-center gap-1.5 whitespace-nowrap disabled:opacity-50"><Lock className="w-4 h-4" /> Khóa ({picked.length})</button>
-          <button type="button" disabled={lockBusy} onClick={() => applyLock(false, false, picked)} className="no-hover-fx h-8 px-3 rounded-lg text-sm font-bold bg-emerald-700 hover:bg-emerald-800 text-white inline-flex items-center gap-1.5 whitespace-nowrap disabled:opacity-50"><Unlock className="w-4 h-4" /> Mở khóa ({picked.length})</button>
+          <button type="button" disabled={lockBusy} onClick={() => applyLock(true, false, picked)} {...(noLock ? { style: { display: 'none' } } : {})} className="no-hover-fx h-8 px-3 rounded-lg text-sm font-bold bg-rose-600 hover:bg-rose-700 text-white inline-flex items-center gap-1.5 whitespace-nowrap disabled:opacity-50"><Lock className="w-4 h-4" /> Khóa ({picked.length})</button>
+          <button type="button" disabled={lockBusy} onClick={() => applyLock(false, false, picked)} {...(noLock ? { style: { display: 'none' } } : {})} className="no-hover-fx h-8 px-3 rounded-lg text-sm font-bold bg-emerald-700 hover:bg-emerald-800 text-white inline-flex items-center gap-1.5 whitespace-nowrap disabled:opacity-50"><Unlock className="w-4 h-4" /> Mở khóa ({picked.length})</button>
           <button type="button" onClick={() => setPicked([])} className="no-hover-fx h-8 px-2.5 rounded-lg text-sm font-bold text-slate-700 hover:bg-white whitespace-nowrap">Bỏ chọn</button>
           <span className="w-px h-6 bg-slate-300 mx-0.5" aria-hidden="true" />
         </>}
-        {!readOnly && <>
+        {!readOnly && !noLock && <>
         <button type="button" disabled={lockBusy || Boolean(dayLock?.all)} onClick={() => applyLock(true, true)} className="no-hover-fx h-8 px-3 rounded-lg text-sm font-bold border border-rose-300 bg-white hover:bg-rose-50 text-rose-800 inline-flex items-center gap-1.5 whitespace-nowrap disabled:opacity-50">
           {lockBusy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Lock className="w-4 h-4" />} Khóa tất cả
         </button>
@@ -1002,7 +1037,7 @@ Người bị khóa sẽ không điểm danh / sửa điểm danh được và n
               )}
               <textarea value={pNote} onChange={(e) => setPNote(e.target.value.slice(0, 300))} rows={2} aria-label="Ghi chú"
                 placeholder="Ghi chú (ví dụ: báo qua điện thoại lúc 7h15)" className="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm" />
-              <p className="text-xs text-slate-600">Bản ghi được đánh dấu "Điểm danh hộ bởi {auth?.username}" và ghi vào <strong>{longDateLabel(date)}</strong>. Điểm danh hộ vẫn thực hiện được khi ngày đó đã khóa.</p>
+              <p className="text-xs text-slate-600">Bản ghi được đánh dấu "Điểm danh hộ bởi {auth?.username}" và ghi vào <strong>{longDateLabel(date)}</strong>. {noLock ? 'Ngày công đã khóa chốt thì không điểm danh hộ được.' : 'Điểm danh hộ vẫn thực hiện được khi ngày đó đã khóa.'}</p>
               {pErr && <p className="text-sm font-bold text-rose-700">{pErr}</p>}
               <div className="flex gap-2">
                 <button type="button" onClick={() => setProxyCodes(null)} className="no-hover-fx flex-1 h-11 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-sm font-black">Hủy</button>

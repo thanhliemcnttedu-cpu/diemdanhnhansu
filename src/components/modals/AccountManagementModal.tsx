@@ -1,5 +1,6 @@
 import { ACCOUNT_LIST_MS, startJitteredLoop } from '../../utils/liveSync';
 import { StaffToAccountsPanel } from './StaffToAccountsPanel';
+import { AccountsSplitView } from './AccountsSplitView';
 import React, { useState, useEffect } from 'react';
 import * as XLSX from 'xlsx';
 import { 
@@ -128,6 +129,14 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
   // Thanh công cụ gọn: bộ lọc và xuất / nhập nằm trong nút sổ xuống
   const [filterOpen, setFilterOpen] = useState(false);
   const [ioOpen, setIoOpen] = useState(false);
+  // Optional "list + detail" layout for the account list (per device, default = table)
+  const [accountsSplit, setAccountsSplit] = useState<boolean>(() => {
+    try { return localStorage.getItem('lhhp_accounts_split') === '1'; } catch { return false; }
+  });
+  const switchAccountsSplit = (on: boolean) => {
+    setAccountsSplit(on);
+    try { localStorage.setItem('lhhp_accounts_split', on ? '1' : '0'); } catch { /* storage unavailable: keep for this session only */ }
+  };
 
   // Academic Year Reset states
   const [schoolResetModalOpen, setSchoolResetModalOpen] = useState(false);
@@ -2659,6 +2668,13 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
               </div>
 
               <div className="ml-auto flex items-center gap-2">
+                {!accountsSplit && (
+                  <button type="button" onClick={() => switchAccountsSplit(true)}
+                    className="no-hover-fx h-10 px-3 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-sm font-bold text-slate-800 inline-flex items-center gap-1.5 whitespace-nowrap cursor-pointer"
+                    title="Xem danh sách tài khoản dạng danh sách kèm chi tiết. Có thể quay về dạng bảng bất cứ lúc nào.">
+                    <Layers className="w-4 h-4" aria-hidden="true" /> Xem thử giao diện danh sách
+                  </button>
+                )}
                 <span className="max-md:hidden text-sm text-slate-600 whitespace-nowrap" title={isSchoolAdmin ? `Phạm vi: ${currentSchoolScope}` : undefined}>
                   Hiển thị <strong className="text-indigo-700">{filteredUsers.length}</strong> / {scopedUsers.length}
                   <span className="text-slate-400"> · </span>GVCN <strong className="text-slate-800">{scopedUsers.filter(u => u.role === 'homeroom').length}</strong>
@@ -2693,8 +2709,29 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
               </div>
             </div>
 
+            {/* Optional list + detail layout (same list, same handlers and visibility rules as the table rows) */}
+            {accountsSplit && (
+              <AccountsSplitView
+                users={filteredUsers}
+                readOnly={isViewOnlyBgh}
+                currentUserKey={uidOf(currentUser)}
+                onOpenWorkspace={(u) => { void handleQuickSwitch(u.username); }}
+                onEdit={handleStartEdit}
+                onTransfer={handleOpenTransferModal}
+                canTransfer={(u) => Boolean(isSuperAdmin) && u.username.toLowerCase() !== 'admin' && (u.tenantType === 'guest' || !u.tenantType || u.role !== 'admin')}
+                onToggleFlag={(u, key) => { void handleToggleAccountFlag(u, key); }}
+                canToggleFlag={(u, key) => (key === 'staffReportViewer'
+                  ? (u.role === 'homeroom' || u.role === 'subject') && u.tenantType !== 'guest'
+                  : u.role === 'subject' && u.tenantType !== 'guest')}
+                onResetPassword={(u) => { void handleResetPassword(u); }}
+                onDelete={handleDeleteUser}
+                canDelete={(u) => u.username.toLowerCase() !== 'admin'}
+                onBackToTable={() => switchAccountsSplit(false)}
+              />
+            )}
+
             {/* Table of Users */}
-            <div className="flex-1 border border-slate-200 rounded-2xl overflow-hidden shadow-2xs bg-white">
+            <div style={accountsSplit ? { display: 'none' } : undefined} className="flex-1 border border-slate-200 rounded-2xl overflow-hidden shadow-2xs bg-white">
               <div className="overflow-x-auto h-full">
                 <table className="w-full text-left border-collapse text-sm min-w-[900px]">
                   <thead className="bg-slate-50 border-b border-slate-200 text-xs font-bold text-slate-600 uppercase tracking-wide sticky top-0 z-10 whitespace-nowrap">

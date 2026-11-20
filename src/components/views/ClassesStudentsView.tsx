@@ -12,6 +12,8 @@ import { AutoAssignAvatarModal } from '../modals/AutoAssignAvatarModal';
 import { GroupPhotoAvatarModal } from '../modals/GroupPhotoAvatarModal';
 import { InitSubjectClassesModal } from './classes/InitSubjectClassesModal';
 import { SyncHomeroomRosterButton } from './classes/SyncHomeroomRosterButton';
+import { StudentsSplitView } from './classes/StudentsSplitView';
+import { ClassesSplitView } from './classes/ClassesSplitView';
 import { AvatarSourceType, handleAvatarImgError } from '../../utils/avatarConfig';
 import { extractSchoolBranchesFromClasses } from '../../utils/schoolBranchHelper';
 import { 
@@ -796,6 +798,12 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
   // Quick Role modal (Chỉ định tối đa 3 chức vụ cho 1 học sinh)
   const [quickRoleStudent, setQuickRoleStudent] = useState<Student | null>(null);
   const [moreStudent, setMoreStudent] = useState<Student | null>(null);
+  // Sample layout switch (per device): flat list + detail instead of the card grid
+  const [splitLayout, setSplitLayout] = useState<boolean>(() => { try { return localStorage.getItem('lhhp_students_split') === '1'; } catch { return false; } });
+  const toggleSplitLayout = (on: boolean) => { setSplitLayout(on); try { localStorage.setItem('lhhp_students_split', on ? '1' : '0'); } catch { /* ignore */ } };
+  // Same switch for the classes tab (per device): list + detail instead of the class card grid
+  const [classesSplitLayout, setClassesSplitLayout] = useState<boolean>(() => { try { return localStorage.getItem('lhhp_classes_split') === '1'; } catch { return false; } });
+  const toggleClassesSplitLayout = (on: boolean) => { setClassesSplitLayout(on); try { localStorage.setItem('lhhp_classes_split', on ? '1' : '0'); } catch { /* ignore */ } };
   const [studentSelectedRoles, setStudentSelectedRoles] = useState<string[]>([]);
 
   // Bulk Role Modal (Gán chức vụ đồng loạt, tối đa 3 chức vụ)
@@ -2823,7 +2831,33 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                 </button>
               </div>
             </div>
+          ) : classesSplitLayout ? (
+            /* Flat list + detail layout for classes (toggle kept on this device); the card grid below is untouched.
+               Handlers and permission conditions are the ones the class cards use. */
+            <ClassesSplitView
+              classes={displayedClasses}
+              students={students}
+              activeClassId={activeClassId}
+              teacherNameOf={(c) => c.teacherName || allUsers.find(u => u.username?.toLowerCase() === c.teacherUsername?.toLowerCase())?.fullName || teacherProfile.name || ''}
+              canOpen
+              canSchedule={Boolean(onNavigate)}
+              canEdit
+              canDelete={!isSchoolAdminOrBgh}
+              onOpen={(c) => { setActiveClassId(c.id); setActiveTabMode('students'); }}
+              onSchedule={(c) => { setActiveClassId(c.id); if (onNavigate) onNavigate('schedule'); }}
+              onEdit={(c) => setEditingClass(c)}
+              onDelete={(c) => setDeleteConfirmClass(c)}
+              onBackToCards={() => toggleClassesSplitLayout(false)}
+            />
           ) : (
+          <>
+          <div className="flex justify-end mb-3">
+            <button type="button" onClick={() => toggleClassesSplitLayout(true)}
+              className="no-hover-fx h-10 px-3.5 rounded-xl border border-blue-600 bg-white text-blue-700 text-sm font-semibold hover:bg-blue-50 inline-flex items-center gap-2 cursor-pointer"
+              title="Xem thử bố cục mới: danh sách lớp bên trái, chi tiết lớp bên phải">
+              <Layers className="w-4 h-4" aria-hidden="true" /> Xem thử giao diện danh sách
+            </button>
+          </div>
           <div className={displayedClasses.length === 1 ? 'max-w-3xl mx-auto' : 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-5 lg:gap-6'}>
             {displayedClasses.map((cls) => {
               const isSelected = cls.id === activeClassId;
@@ -3060,6 +3094,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
               );
             })}
           </div>
+          </>
           )}
         </div>
       )}
@@ -3502,7 +3537,34 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                 </button>
               </div>
             </div>
+          ) : splitLayout ? (
+            /* Sample of the flat list + detail layout (toggle kept on this device); the card grid below is untouched */
+            <StudentsSplitView
+              students={filteredStudents}
+              className={activeClass?.name}
+              classColor={activeClass?.color}
+              activeSubject={activeEvalSubject || undefined}
+              canEvaluate={canEvaluateEmulation}
+              canAssignRole={canAssignClassOfficer}
+              canEdit={!isSchoolAdminOrBgh}
+              onPlusOne={(st) => awardPoints([st.id], 1, `Thưởng nhanh +1 xu${activeEvalSubject && !/ghi chung/i.test(activeEvalSubject) ? ` môn ${activeEvalSubject}` : ''}`, activeEvalSubject || undefined)}
+              onAdd={handleQuickAdd}
+              onDeduct={handleQuickDeduct}
+              onStar={(st) => { setRewardingStudent(st); setRewardMode('sao'); setCustomCoins(1); setSelectedSubjectForAward(activeEvalSubject || appliedSubjects[0]?.name || 'GHI CHUNG / NỀ NẾP'); }}
+              onRole={(st) => { setQuickRoleStudent(st); setStudentSelectedRoles(getStudentRolesList(st)); }}
+              onEdit={(st) => { setEditingStudent(st); setEditingRoles(getStudentRolesList(st)); }}
+              onDelete={(st) => { if (window.confirm(`Bạn có chắc muốn xóa học sinh "${st.name}" khỏi lớp?`)) deleteStudent(st.id); }}
+              onBackToCards={() => toggleSplitLayout(false)}
+            />
           ) : (
+            <>
+            <div className="flex justify-end mb-3">
+              <button type="button" onClick={() => toggleSplitLayout(true)}
+                className="no-hover-fx h-10 px-3.5 rounded-xl border border-blue-600 bg-white text-blue-700 text-sm font-semibold hover:bg-blue-50 inline-flex items-center gap-2 cursor-pointer"
+                title="Xem thử bố cục mới: danh sách bên trái, chi tiết học sinh bên phải">
+                <Layers className="w-4 h-4" aria-hidden="true" /> Xem thử giao diện danh sách
+              </button>
+            </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 3xl:grid-cols-5 gap-4 lg:gap-5">
               {filteredStudents.map((student) => {
                 const isChecked = selectedStudentIds.includes(student.id);
@@ -3724,7 +3786,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                           <>
                             {/* Quick +1: one tap, no dialog (same as the subject teacher's home page) */}
                             <button
-                              onClick={() => awardPoints([student.id], 1, `Thưởng nhanh +1 xu${activeEvalSubject ? ` môn ${activeEvalSubject}` : ''}`, activeEvalSubject || undefined)}
+                              onClick={() => awardPoints([student.id], 1, `Thưởng nhanh +1 xu${activeEvalSubject && !/ghi chung/i.test(activeEvalSubject) ? ` môn ${activeEvalSubject}` : ''}`, activeEvalSubject || undefined)}
                               className="h-8 min-w-8 px-2 rounded-lg bg-amber-400 hover:bg-amber-500 text-amber-950 font-black text-xs flex items-center justify-center shadow-xs transition-all hover-zoom-btn shrink-0 whitespace-nowrap"
                               title={`Cộng nhanh 1 xu${activeEvalSubject ? ` môn ${activeEvalSubject}` : ''} (không mở hộp thoại)`}
                               aria-label={`Cộng nhanh 1 xu cho ${student.name}`}
@@ -3770,6 +3832,7 @@ export const ClassesStudentsView: React.FC<ClassesStudentsViewProps> = ({
                 );
               })}
             </div>
+            </>
           )}
         </div>
       )}

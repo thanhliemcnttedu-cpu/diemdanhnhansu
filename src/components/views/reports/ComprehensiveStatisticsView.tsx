@@ -1101,7 +1101,7 @@ export const ComprehensiveStatisticsView: React.FC = () => {
       </div>
 
       {/* 4. CONTROL TOOLBAR: TIMEFRAME (NGÀY / TUẦN / THÁNG) & EXPORT ACTIONS */}
-      <div className="bg-white rounded-3xl border border-slate-200/90 p-3.5 sm:p-4 md:p-5 shadow-xs flex flex-col lg:flex-row lg:items-center justify-between gap-3 sm:gap-4 hover-zoom-card">
+      <div className="bg-white rounded-3xl border border-slate-200/90 p-3.5 sm:p-4 md:p-5 shadow-xs flex flex-col 2xl:flex-row 2xl:items-center justify-between gap-3 sm:gap-4 hover-zoom-card">
         {/* Left: View by NGÀY / TUẦN / THÁNG */}
         <div className="flex flex-wrap items-center gap-2 sm:gap-2.5 w-full lg:w-auto">
           <div className="grid grid-cols-3 sm:flex items-center gap-1 sm:gap-1.5 bg-slate-100 p-1 sm:p-1.5 rounded-2xl border border-slate-200 w-full sm:w-auto">
@@ -1242,7 +1242,7 @@ export const ComprehensiveStatisticsView: React.FC = () => {
         </div>
 
         {/* Right: Export Reports (PDF A4, EXCEL, PNG with DATA + CHARTS) */}
-        <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-1.5 sm:gap-2 w-full lg:w-auto shrink-0">
+        <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-1.5 sm:gap-2 w-full 2xl:w-auto 2xl:shrink-0">
           {/* 🤖 AI BỐ CỤC THÔNG MINH: TỰ ĐỘNG KHỔ NGANG A4 */}
           <div 
             className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-gradient-to-r from-indigo-50 via-purple-50 to-pink-50 border border-indigo-200/90 shadow-2xs text-indigo-950 col-span-2 sm:col-span-1"

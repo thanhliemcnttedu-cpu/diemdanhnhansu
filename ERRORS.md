@@ -421,3 +421,16 @@
 - **Fix Applied**: Trong hai media query màn hình thấp đặt sàn `--text-xs: 12px`, `--text-sm: 13px / 12,5px`; `.btn-3d-sm` dùng `max(0.6875rem, 12px)`. Thêm gốc 18px (rộng ≥ 2.200px) và 20px (rộng ≥ 2.800px).
 - **Prevention**: Đổi cỡ chữ gốc phải kèm sàn cho chữ nhỏ. Thử giao diện theo ma trận: 1366×768, 1920×1080, 2560×1440, 3000×2000, máy tính bảng, điện thoại.
 - **Status**: Fixed
+
+---
+
+## [2026-11-20 08:30] - Lưu Hồ sơ giáo viên làm mất chữ vừa nhập ở ô Khẩu hiệu / Ban phụ huynh
+
+- **Type**: Logic
+- **Severity**: Medium
+- **File**: `src/components/views/ReportsDataView.tsx`
+- **Agent**: Claude Code
+- **Root Cause**: `useEffect` nạp lại các ô khẩu hiệu và ban phụ huynh từ lớp có phụ thuộc `classes`. Bấm "Lưu hồ sơ" gọi `updateClass` → `classes` đổi → các ô chưa lưu bị đặt lại về giá trị cũ.
+- **Fix Applied**: Tách effect: chỉ nạp lại khi đổi lớp được chọn hoặc khi chính khẩu hiệu / ban phụ huynh ĐÃ LƯU của lớp đổi (khoá `savedCommitteeKey`).
+- **Prevention**: Effect đồng bộ ô nhập từ dữ liệu đã lưu không phụ thuộc cả mảng dữ liệu; chỉ phụ thuộc phần đúng của nó.
+- **Status**: Fixed

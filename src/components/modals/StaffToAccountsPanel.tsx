@@ -39,6 +39,9 @@ const SUBJECT_HINTS = ['my thuat', 'am nhac', 'tin hoc', 'tieng anh', 'the duc',
 function guessRole(s: StaffMember): { role: RoleChoice; cls: string } {
   const pos = norm(s.position || '');
   const dept = norm(s.dept || '');
+  // Hiệu trưởng / phó hiệu trưởng / cán bộ quản lý: gợi ý sẵn vai trò Ban giám hiệu cho tài khoản CÁ NHÂN (đăng nhập bằng CCCD),
+  // nhưng KHÔNG tích sẵn — cấp quyền xem toàn trường phải do người quản trị tự tích.
+  if (pos.includes('hieu truong') || pos.includes('can bo quan ly') || dept.includes('ban giam hieu')) return { role: 'bgh', cls: '' };
   if (!pos.includes('giao vien')) return { role: 'skip', cls: '' };
   if (SUBJECT_HINTS.some(h => dept.includes(h))) return { role: 'subject', cls: s.dept || '' };
   return { role: 'homeroom', cls: '' };
@@ -47,7 +50,7 @@ function guessRole(s: StaffMember): { role: RoleChoice; cls: string } {
 /** Tích tay người đang "Không cấp": cán bộ quản lý / hiệu trưởng → BGH, giáo viên → GV bộ môn, còn lại → Nhân viên (sửa được) */
 const manualRole = (s: StaffMember): RoleChoice => {
   const pos = norm(`${s.position || ''} ${s.dept || ''}`);
-  if (pos.includes('can bo quan ly') || pos.includes('hieu truong')) return 'bgh';
+  if (pos.includes('can bo quan ly') || pos.includes('hieu truong') || pos.includes('ban giam hieu')) return 'bgh';
   return norm(s.position || '').includes('giao vien') ? 'subject' : 'staff';
 };
 
@@ -107,7 +110,7 @@ export const StaffToAccountsPanel: React.FC<{
       setStaff(list);
       const next: Record<string, RowCfg> = {};
       // Chọn sẵn GIÁO VIÊN chưa có tài khoản; nhân viên / cán bộ quản lý để trống — muốn cấp thì tích tay
-      list.forEach(s => { const g = guessRole(s); next[s.code] = { pick: g.role !== 'skip' && !linkedUser(s), role: g.role, cls: g.cls }; });
+      list.forEach(s => { const g = guessRole(s); next[s.code] = { pick: g.role !== 'skip' && g.role !== 'bgh' && !linkedUser(s), role: g.role, cls: g.cls }; });
       setCfg(next);
       setAssign({}); setReport(null); setPendingBranches(null);
       setOpen(true);

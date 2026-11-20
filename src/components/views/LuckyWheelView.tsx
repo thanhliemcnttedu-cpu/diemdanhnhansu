@@ -102,7 +102,9 @@ export const LuckyWheelView: React.FC = () => {
       ctx.rotate(sliceAngle + arc / 2);
       ctx.textAlign = 'right';
       ctx.fillStyle = '#ffffff';
-      ctx.font = activeItems.length > 20 ? '700 10px "Be Vietnam Pro", sans-serif' : '700 13px "Be Vietnam Pro", sans-serif';
+      // Canvas is drawn at 460px but shown smaller on phones: scale fonts so the on-screen size stays readable (>= ~11px)
+      const k = Math.min(1.45, width / (canvas.clientWidth || width));
+      ctx.font = activeItems.length > 20 ? `700 ${Math.round(10 * k)}px "Be Vietnam Pro", sans-serif` : `700 ${Math.round(13 * k)}px "Be Vietnam Pro", sans-serif`;
       ctx.shadowColor = 'rgba(0,0,0,0.4)';
       ctx.shadowBlur = 3;
       
@@ -128,7 +130,8 @@ export const LuckyWheelView: React.FC = () => {
     ctx.stroke();
 
     ctx.fillStyle = '#f8fafc';
-    ctx.font = '800 14px "Be Vietnam Pro", sans-serif';
+    const kc = Math.min(1.45, width / (canvas.clientWidth || width));
+    ctx.font = `800 ${Math.round(14 * kc)}px "Be Vietnam Pro", sans-serif`;
     ctx.textAlign = 'center';
     ctx.fillText('QUAY', center, center + 5);
   };

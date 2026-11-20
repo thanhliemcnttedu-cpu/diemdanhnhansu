@@ -1420,7 +1420,7 @@ QUY TẮC BẮT BUỘC:
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
                   <HeartHandshake className="w-4 h-4 text-pink-600" />
-                  Thư Khen / Tin Nhắn Gửi Phụ Huynh Qua Zalo
+                  <span className="sm:hidden">Thư khen gửi phụ huynh</span><span className="max-sm:hidden">Thư Khen / Tin Nhắn Gửi Phụ Huynh Qua Zalo</span>
                 </h3>
                 {aiParentMessageResult && (
                   <button

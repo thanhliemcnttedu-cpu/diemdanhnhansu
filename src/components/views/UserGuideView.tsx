@@ -220,7 +220,7 @@ export const UserGuideView: React.FC = () => {
       <div className="bg-white rounded-2xl border border-slate-200 px-4 py-3 flex flex-wrap items-center gap-3">
         <span className="w-10 h-10 rounded-2xl bg-indigo-50 text-indigo-700 flex items-center justify-center shrink-0"><BookOpen className="w-5 h-5" /></span>
         <div className="min-w-0 flex-1">
-          <h2 className="text-base md:text-lg font-black text-slate-900">Hướng dẫn sử dụng</h2>
+          <h2 className="text-base md:text-lg font-black text-slate-900 whitespace-nowrap">Hướng dẫn sử dụng</h2>
           <p className="text-xs text-slate-600">Video, tài liệu hướng dẫn do nhà trường cung cấp • thông tin tác giả và liên hệ hỗ trợ.</p>
         </div>
         <button type="button" onClick={reload} disabled={loading} className={btnLight}>
@@ -348,7 +348,7 @@ export const UserGuideView: React.FC = () => {
               <KeyRound className={`w-5 h-5 shrink-0 ${isCdKeyActivated ? 'text-emerald-700' : 'text-amber-800'}`} />
               <span className="min-w-0">
                 <span className="block text-sm font-black text-slate-900">{isCdKeyActivated ? 'Bản quyền PRO' : 'Kích hoạt CDKEY'}</span>
-                <span className="block text-xs text-slate-700">{isCdKeyActivated ? 'Đã kích hoạt — xem thông tin bản quyền' : 'Nhập CDKEY để mở đầy đủ tính năng'}</span>
+                <span className="block text-xs text-slate-700">{isCdKeyActivated ? 'Đã kích hoạt — xem bản quyền' : 'Nhập CDKEY để mở đầy đủ tính năng'}</span>
               </span>
             </button>
             <button type="button" onClick={() => setIsRegistrationModalOpen(true)}

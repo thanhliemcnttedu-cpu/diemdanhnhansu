@@ -59,6 +59,12 @@ var REPORT_PREFIX = "bc_";
 // 1.1.13: ĐIỂM DANH BÁO RÕ NGUYÊN NHÂN khi nhân sự không vào được — tách 3 trường hợp thay cho một câu chung
 //         "Số CCCD hoặc mật khẩu điểm danh không đúng": số CCCD chưa có trong danh sách (`NOT_FOUND`), chưa được cấp
 //         mật khẩu (`NO_PIN`), sai mật khẩu (`WRONG_PIN`). Quản trị nhìn câu báo là biết sửa số CCCD hay cấp lại mật khẩu.
+// 1.1.14: PHÂN CÔNG NHIỆM VỤ CHO NHÂN SỰ (đăng nhập bằng số CCCD + mật khẩu điểm danh) — tệp `phancong_nhiemvu.json`.
+//         BGH / Quản trị giao cho từng mã nhân sự các nhiệm vụ: `attendance` (xem, xuất tổng hợp chấm công),
+//         `proxy` (điểm danh hộ, KHÔNG khóa / mở khóa, không ghi vào ngày đã khóa), `teach` (xem, xuất tổng hợp kê khai tiết dạy),
+//         `meal` (xem, xuất biểu báo ăn bán trú toàn trường — chỉ đọc). Lệnh mới: `staffDuties` (đọc / lưu phân công),
+//         `mealReport` (số liệu điểm danh + bán trú của MỘT ngày). `staffAttendanceRange`, `teachReport`, `staffProxyCheckIn`
+//         nhận thêm `staffAuth: {cccd, pin}`; `staffAuth` trả kèm `duties`. Người làm theo nhiệm vụ không thấy CCCD, số điện thoại.
 // 1.1.12: QUYỀN XEM BÁO CÁO CHẤM CÔNG — tài khoản được Quản trị bật `staffReportViewer` (ví dụ nhân viên kế toán)
 //         được XEM tổng hợp chấm công (`staffAttendanceRange`) và tổng hợp kê khai tiết dạy (`teachReport`) để xuất báo cáo.
 //         Chỉ đọc: không điểm danh hộ, không khóa / mở khóa, không xem danh sách nhân sự, mật khẩu hay số CCCD đầy đủ.
@@ -91,7 +97,7 @@ var REPORT_PREFIX = "bc_";
 //        rồi mã hóa lại (healStaffCccdHashes) — khi đăng nhập, khi Quản trị / BGH mở hoặc lưu danh sách nhân sự.
 // QUY TẮC ĐẶT TÊN PHIÊN BẢN (từ 11/2026): "Phiên bản A.B.C" — mỗi lần sửa mã tăng C thêm 1;
 // C tối đa 20: sau 1.1.20 là 1.2.1, sau 1.2.20 là 1.3.1… Các bản cũ dạng "4.x" (4.1 → 4.12) được coi là cũ hơn 1.1.2.
-var SCRIPT_VERSION = "1.1.13";
+var SCRIPT_VERSION = "1.1.14";
 // Thư mục của yêu cầu đang xử lý (để verifyUser đọc được danh sách nhân sự khi đăng nhập bằng CCCD)
 var CTX_FOLDER = null;
 
@@ -107,7 +113,7 @@ function doPost(e) {
     var folderId = payload.folderId || "";
     var action = payload.action || "saveClassData";
 
-    if (action === "staffAuth" || action === "staffCheckIn" || action === "getStaffRoster" || action === "saveStaffRoster" || action === "staffAttendanceRange" || action === "staffLock" || action === "staffProxyCheckIn"
+    if (action === "staffAuth" || action === "staffCheckIn" || action === "getStaffRoster" || action === "saveStaffRoster" || action === "staffAttendanceRange" || action === "staffLock" || action === "staffProxyCheckIn" || action === "staffDuties" || action === "mealReport"
         || action === "teachGet" || action === "teachSaveProfile" || action === "teachSaveLog" || action === "teachReport" || action === "teachLock" || action === "teachDeleteLog"
         || action === "teachSettings" || action === "restoreArchive") {
       var staffFolder = resolveFolder(folderId);
@@ -119,6 +125,8 @@ function doPost(e) {
       if (action === "saveStaffRoster") return createJsonResponse(handleSaveStaffRoster(staffFolder, payload));
       if (action === "staffLock") return createJsonResponse(handleStaffLock(staffFolder, payload));
       if (action === "staffProxyCheckIn") return createJsonResponse(handleStaffProxyCheckIn(staffFolder, payload));
+      if (action === "staffDuties") return createJsonResponse(handleStaffDuties(staffFolder, payload));
+      if (action === "mealReport") return createJsonResponse(handleMealReport(staffFolder, payload));
       if (action === "teachGet") return createJsonResponse(handleTeachGet(staffFolder, payload));
       if (action === "teachSaveProfile") return createJsonResponse(handleTeachSaveProfile(staffFolder, payload));
       if (action === "teachSaveLog") return createJsonResponse(handleTeachSaveLog(staffFolder, payload));
@@ -1341,6 +1349,126 @@ function reportStaff(s) {
   return p;
 }
 
+// ---------------------------------------------------------------- 1.1.14: PHÂN CÔNG NHIỆM VỤ CHO NHÂN SỰ
+// phancong_nhiemvu.json = { duties: { MÃ: { attendance, proxy, teach, meal } }, log: [{ at, by, code, duties }] }
+var DUTY_FILE = "phancong_nhiemvu.json";
+var DUTY_KEYS = ["attendance", "proxy", "teach", "meal"];
+
+function readDutyDb(folder) {
+  var db = readJsonFile(folder, DUTY_FILE, null);
+  if (!db || typeof db.duties !== "object" || !db.duties) db = { duties: {}, log: [] };
+  if (!Array.isArray(db.log)) db.log = [];
+  return db;
+}
+
+function cleanDuties(d) {
+  var out = {};
+  for (var i = 0; i < DUTY_KEYS.length; i++) if (d && d[DUTY_KEYS[i]] === true) out[DUTY_KEYS[i]] = true;
+  return out;
+}
+
+function dutiesOfStaff(folder, code) {
+  try { return cleanDuties(readDutyDb(folder).duties[code]); } catch (_) { return {}; }
+}
+
+/**
+ * Nhân sự làm theo nhiệm vụ được giao: xác thực bằng `payload.staffAuth = { cccd, pin }` và phải có nhiệm vụ `duty`.
+ * Trả về "người thao tác" giả (không phải Quản trị / BGH) — mọi nơi dùng đều coi là CHỈ XEM hồ sơ (không CCCD, số điện thoại).
+ */
+function dutyActor(folder, payload, duty) {
+  var a = payload && payload.staffAuth;
+  if (!a || !a.cccd || !a.pin) return null;
+  var v = verifyStaff(folder, a.cccd, a.pin);
+  if (!v.ok) return null;
+  if (!dutiesOfStaff(folder, v.staff.code)[duty]) return null;
+  return { username: v.staff.name + " (" + v.staff.code + ")", fullName: v.staff.name, role: "staff_duty", dutyOnly: true, staffCode: v.staff.code };
+}
+
+// BGH / Quản trị: đọc bảng phân công; có `set: { MÃ: { attendance, proxy, teach, meal } }` thì lưu (chỉ các mã gửi lên)
+function handleStaffDuties(folder, payload) {
+  var actor = staffActor(folder, payload.auth, false);
+  if (!actor) return { success: false, code: "UNAUTHORIZED", message: "Chỉ Ban giám hiệu / Quản trị được phân công nhiệm vụ." };
+  var sdb = readStaffDb(folder);
+  var known = {};
+  for (var i = 0; i < sdb.staff.length; i++) known[sdb.staff[i].code] = true;
+  var set = payload.set;
+  var lock = null;
+  if (set && typeof set === "object") { lock = LockService.getScriptLock(); try { lock.waitLock(20000); } catch (_) {} }
+  try {
+    var db = readDutyDb(folder);
+    if (set && typeof set === "object") {
+      var nowIso = new Date().toISOString(), changed = 0;
+      for (var raw in set) {
+        var code = normalizeStaffCode(raw);
+        if (!code || !known[code]) continue;
+        var next = cleanDuties(set[raw]);
+        if (JSON.stringify(next) === JSON.stringify(cleanDuties(db.duties[code]))) continue;
+        var has = false;
+        for (var k in next) has = true;
+        if (has) db.duties[code] = next; else delete db.duties[code];
+        db.log.push({ at: nowIso, by: actor.username, code: code, duties: next });
+        changed++;
+      }
+      if (changed) {
+        if (db.log.length > 200) db.log = db.log.slice(db.log.length - 200);
+        db.updatedAt = nowIso;
+        writeFileOverwrite(folder, DUTY_FILE, JSON.stringify(db));
+      }
+    }
+    var duties = {};
+    for (var c in db.duties) if (known[c]) duties[c] = cleanDuties(db.duties[c]);
+    return { success: true, duties: duties, log: db.log.slice(-30).reverse(), staff: sdb.staff.map(reportStaff),
+      message: set ? "Đã lưu phân công nhiệm vụ." : "" };
+  } finally {
+    if (lock) { try { lock.releaseLock(); } catch (_) {} }
+  }
+}
+
+// Biểu báo ăn bán trú: điểm danh + phiếu bán trú của MỘT ngày ở mọi lớp chủ nhiệm (chỉ đọc).
+// Quản trị / BGH (auth) hoặc nhân sự được giao nhiệm vụ `meal` (staffAuth).
+function handleMealReport(folder, payload) {
+  var actor = staffActor(folder, payload.auth, false) || dutyActor(folder, payload, "meal");
+  if (!actor) return { success: false, code: "UNAUTHORIZED", message: "Chỉ Ban giám hiệu / Quản trị hoặc người được giao nhiệm vụ bán trú mới xem được biểu báo ăn." };
+  var today = staffToday();
+  var date = String(payload.date || today).slice(0, 10);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || date > today) date = today;
+  var classes = [], students = [], attendanceRecords = [], boardingRecords = [];
+  var it = folder.getFiles();
+  while (it.hasNext()) {
+    var f = it.next();
+    if (!isClassFileName(f.getName())) continue;
+    var data = null;
+    try { data = JSON.parse(f.getBlob().getDataAsString()); } catch (_) { data = null; }
+    if (!data) continue;
+    var meta = data.metadata || {}, cInfo = data.classInfo || {};
+    if (meta.teacherRole === "subject") continue;
+    var classId = cInfo.id || ("class-" + f.getName());
+    classes.push({ id: classId, name: cInfo.name || meta.className || "", grade: cInfo.grade || meta.grade || "", teacherName: meta.teacherName || "", isHomeroom: true });
+    var list = Array.isArray(data.students) ? data.students : [];
+    for (var i = 0; i < list.length; i++) {
+      if (list[i] && list[i].id) students.push({ id: String(list[i].id), name: String(list[i].fullName || list[i].name || ""), classId: classId });
+    }
+    var full = data.fullClassroomData || {};
+    var day = (data.dailyRecords || {})[date] || {};
+    var att = null, brd = null;
+    var al = Array.isArray(full.attendanceRecords) ? full.attendanceRecords : [];
+    for (var a = 0; a < al.length; a++) if (al[a] && al[a].date === date && (!al[a].classId || al[a].classId === cInfo.id)) { att = al[a].records || {}; break; }
+    if (!att && day.attendance && day.attendance.details) att = day.attendance.details;
+    var bl = Array.isArray(full.boardingRecords) ? full.boardingRecords : [];
+    for (var b = 0; b < bl.length; b++) {
+      if (bl[b] && bl[b].date === date && (!bl[b].classId || bl[b].classId === cInfo.id)) { brd = { records: bl[b].records || {}, confirmedAt: bl[b].confirmedAt || 0, confirmedBy: bl[b].confirmedBy || "" }; break; }
+    }
+    if (!brd && day.boarding && day.boarding.details && !day.boarding.pending) {
+      brd = { records: day.boarding.details, confirmedAt: day.boarding.confirmedAt || 0, confirmedBy: day.boarding.confirmedBy || "" };
+    }
+    if (att) attendanceRecords.push({ date: date, classId: classId, records: att });
+    if (brd) boardingRecords.push({ date: date, classId: classId, records: brd.records, confirmedAt: brd.confirmedAt, confirmedBy: brd.confirmedBy });
+  }
+  var schoolName = "";
+  try { var sdb = readSchoolDb(folder); schoolName = (sdb && sdb.schools && sdb.schools[0] && sdb.schools[0].name) || ""; } catch (_) {}
+  return { success: true, date: date, today: today, schoolName: schoolName, classes: classes, students: students, attendanceRecords: attendanceRecords, boardingRecords: boardingRecords };
+}
+
 // --- Giáo viên/nhân viên: xác thực + xem trạng thái hôm nay
 function handleStaffAuth(folder, payload) {
   var v = verifyStaffReq(folder, payload);
@@ -1351,7 +1479,8 @@ function handleStaffAuth(folder, payload) {
   var locked = isStaffLocked(month, today, v.staff.code);
   var teachOff = teachBlocked(readTeachDb(folder), v.user);
   return { success: true, staff: publicStaff(v.staff), today: today, record: rec, locked: locked, lockMessage: locked ? STAFF_LOCK_MESSAGE : "",
-    teachAllowed: !teachOff, teachMessage: teachOff ? TEACH_HOMEROOM_OFF_MESSAGE : "", role: v.user ? v.user.role : "", serverTime: new Date().toISOString() };
+    teachAllowed: !teachOff, teachMessage: teachOff ? TEACH_HOMEROOM_OFF_MESSAGE : "", role: v.user ? v.user.role : "", serverTime: new Date().toISOString(),
+    duties: dutiesOfStaff(folder, v.staff.code) };
 }
 
 // ---------------------------------------------------------------- V4.5: khóa chốt số liệu điểm danh theo ngày
@@ -1592,7 +1721,7 @@ function handleTeachSaveLog(folder, payload) {
 
 // BGH / Quản trị: tổng hợp kê khai các tháng from..to (tối đa 12 tháng)
 function handleTeachReport(folder, payload) {
-  var actor = staffReportActor(folder, payload.auth);
+  var actor = staffReportActor(folder, payload.auth) || dutyActor(folder, payload, "teach");
   if (!actor) return { success: false, code: "UNAUTHORIZED", message: "Chỉ BGH / Quản trị hoặc tài khoản được cấp quyền xem báo cáo mới xem được tổng hợp kê khai." };
   var viewerOnly = isReportViewerOnly(actor);
   var from = cleanMonth(payload.from), to = cleanMonth(payload.to || payload.from);
@@ -1725,8 +1854,8 @@ function handleTeachLock(folder, payload) {
 
 // --- V4.7: BGH / Quản trị điểm danh HỘ (nhân sự báo qua điện thoại…): 1 / nhiều người, hôm nay hoặc ngày đã qua
 function handleStaffProxyCheckIn(folder, payload) {
-  var actor = staffActor(folder, payload.auth, false);
-  if (!actor) return { success: false, code: "UNAUTHORIZED", message: "Chỉ BGH / Quản trị được điểm danh hộ." };
+  var actor = staffActor(folder, payload.auth, false) || dutyActor(folder, payload, "proxy");
+  if (!actor) return { success: false, code: "UNAUTHORIZED", message: "Chỉ BGH / Quản trị hoặc người được giao nhiệm vụ điểm danh hộ mới điểm danh hộ được." };
   var status = String(payload.status || "");
   if (!STAFF_STATUSES[status]) return { success: false, message: "Trạng thái điểm danh không hợp lệ." };
   var today = staffToday();
@@ -1748,6 +1877,8 @@ function handleStaffProxyCheckIn(folder, payload) {
     for (var j = 0; j < codes.length; j++) {
       var code = codes[j];
       if (!byCode[code]) { errors.push(code + ": không có trong danh sách nhân sự."); continue; }
+      // Người làm theo nhiệm vụ không được ghi vào ngày công đã khóa chốt (khóa / mở khóa là việc của BGH, Quản trị)
+      if (actor.dutyOnly && isStaffLocked(month, date, code)) { errors.push(byCode[code].name + ": ngày công đã khóa chốt."); continue; }
       var prev = month.days[date][code];
       var history = (prev && prev.history) ? prev.history.slice(0, 19)
         : (prev ? [{ status: prev.status, note: prev.note || "", at: prev.at }] : []);
@@ -1957,7 +2088,7 @@ function handleGetStaffRosterResult(db, props, errors) {
 
 // --- BGH / Quản trị: dữ liệu điểm danh trong khoảng ngày (tối đa 400 ngày)
 function handleStaffAttendanceRange(folder, payload) {
-  var actor = staffReportActor(folder, payload.auth);
+  var actor = staffReportActor(folder, payload.auth) || dutyActor(folder, payload, "attendance") || dutyActor(folder, payload, "proxy");
   if (!actor) return { success: false, code: "UNAUTHORIZED", message: "Chỉ Quản trị / BGH hoặc tài khoản được cấp quyền xem báo cáo mới xem được tổng hợp chấm công." };
   var viewerOnly = isReportViewerOnly(actor);
   var today = staffToday();

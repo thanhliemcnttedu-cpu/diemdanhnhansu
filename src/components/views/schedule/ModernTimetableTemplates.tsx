@@ -71,7 +71,7 @@ const Header: React.FC<{ settings: TimetableDisplaySettings; theme: ModernTimeta
         <div>
           <p className="text-xs font-bold uppercase tracking-[0.2em] text-rose-700">{settings.schoolName}</p>
           <h2 className="text-3xl font-bold text-slate-900" style={{ fontFamily: '"Lora", serif' }}>
-            {settings.title} <span className="text-rose-700">• Lớp {settings.className}</span>
+            {settings.title} <span className="text-rose-700 whitespace-nowrap">• Lớp {settings.className}</span>
           </h2>
           {settings.showSlogan && <p className="text-sm italic text-slate-600" style={{ fontFamily: '"Lora", serif' }}>{settings.slogan}</p>}
         </div>
@@ -106,7 +106,7 @@ const Header: React.FC<{ settings: TimetableDisplaySettings; theme: ModernTimeta
       style={{ background: 'linear-gradient(120deg, #1d4ed8 0%, #4338ca 55%, #7e22ce 100%)' }}>
       <div>
         <p className="text-xs font-bold uppercase tracking-[0.2em] text-indigo-100">{settings.schoolName}</p>
-        <h2 className="text-3xl font-black uppercase tracking-tight">{settings.title} • Lớp {settings.className}</h2>
+        <h2 className="text-3xl font-black uppercase tracking-tight">{settings.title} <span className="whitespace-nowrap">• Lớp {settings.className}</span></h2>
         {settings.showSlogan && <p className="text-sm font-semibold text-indigo-50">« {settings.slogan} »</p>}
       </div>
       <div className="text-sm sm:text-right">

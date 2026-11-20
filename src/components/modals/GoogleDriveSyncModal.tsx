@@ -528,7 +528,7 @@ export const GoogleDriveSyncModal: React.FC<GoogleDriveSyncModalProps> = ({ isOp
                 )}
                 {(!isSetupAdmin || !config.scriptUrl || !config.folderId) && (
                   <section className={cardCls}>
-                    <h3 className={titleCls}><Link2 className="w-4 h-4 text-sky-700" /> Dán thông tin kết nối nhận từ Quản trị</h3>
+                    <h3 className={titleCls}><Link2 className="w-4 h-4 text-sky-700 shrink-0" /> <span className="min-w-0"><span className="sm:hidden">Dán thông tin kết nối</span><span className="max-sm:hidden">Dán thông tin kết nối nhận từ Quản trị</span></span></h3>
                     <div className="flex flex-col sm:flex-row gap-2">
                       <textarea value={connectionTextInput} onChange={(e) => setConnectionTextInput(e.target.value)} rows={2}
                         placeholder="Dán nguyên tin nhắn kết nối (link thư mục + link Apps Script)…" aria-label="Tin nhắn kết nối"

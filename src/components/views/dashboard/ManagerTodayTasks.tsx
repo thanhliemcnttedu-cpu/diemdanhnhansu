@@ -69,7 +69,7 @@ export const ManagerTodayTasks: React.FC<{ onNavigate: (viewId: any) => void }> 
       state: !staff ? 'unknown' : staff.missing.length ? 'todo' : 'done',
       detail: !staff ? 'Mở màn Chấm công và nhập mật khẩu để xem số liệu hôm nay' : staff.missing.length ? `${staff.missing.length}/${staff.total} người chưa điểm danh` : `Đủ ${staff.total}/${staff.total} người đã điểm danh`,
       names: staff?.missing },
-    { key: 'teach', title: `Kê khai tiết dạy ${monthLabel(month).toLowerCase()}`, view: 'staff_attendance', action: 'Xem kê khai',
+    { key: 'teach', title: `Kê khai tiết dạy ${Number(month.slice(5, 7))}/${month.slice(0, 4)}`, view: 'staff_attendance', action: 'Xem kê khai',
       state: !teach ? 'unknown' : teach.missing.length ? 'todo' : 'done',
       detail: !teach ? 'Mở màn Chấm công để xem ai chưa kê khai' : teach.total === 0 ? 'Chưa có giáo viên nào khai báo phân công' : teach.missing.length ? `${teach.missing.length}/${teach.total} giáo viên chưa kê khai` : `Đủ ${teach.total}/${teach.total} giáo viên đã kê khai`,
       names: teach?.missing },

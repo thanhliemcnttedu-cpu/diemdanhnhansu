@@ -215,7 +215,7 @@ export const teachingLogService = {
     profiles?: Record<string, TeachProfile>; logs?: Record<string, Record<string, TeachLog>>; staff?: StaffMember[];
     locks?: Record<string, TeachLock>; settings?: TeachSettings;
   }> {
-    return safeCall({ action: 'teachReport', auth: auth ?? staffAttendanceService.getViewerAuth(), from, to }, 45000);
+    return safeCall({ action: 'teachReport', ...(staffAttendanceService.hasDutySession() ? { staffAuth: staffAttendanceService.dutyAuth() } : { auth: auth ?? staffAttendanceService.getViewerAuth() }), from, to }, 45000);
   },
   /** BGH / Quản trị: khóa (lock = true) hoặc mở khóa kê khai tháng `month` cho cả trường (all) hoặc các mã `codes` */
   lock(month: string, lock: boolean, target: { all?: boolean; codes?: string[] }, auth?: { username: string; password: string } | null): Promise<{ success: boolean; message?: string; lock?: TeachLock | null }> {

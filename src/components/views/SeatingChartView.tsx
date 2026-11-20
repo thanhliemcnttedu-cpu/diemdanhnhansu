@@ -425,9 +425,9 @@ export const SeatingChartView: React.FC = () => {
               <Grid3X3 className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-base sm:text-lg font-black text-slate-900 tracking-tight flex items-center gap-2">
-                <span>Sơ Đồ Lớp Học Không Gian</span>
-                <span className="text-[12px] font-bold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
+              <h2 className="text-base sm:text-lg font-black text-slate-900 tracking-tight flex flex-wrap items-center gap-x-2 gap-y-1">
+                <span className="whitespace-nowrap">Sơ Đồ Lớp Học Không Gian</span>
+                <span className="text-[12px] font-bold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200 whitespace-nowrap">
                   {seatingColumns} Dãy Bàn • {totalDesks} Bàn ({totalSeats} Chỗ)
                 </span>
               </h2>
@@ -887,7 +887,7 @@ export const SeatingChartView: React.FC = () => {
           >
             {/* 1. HEADER KHUNG TIÊU ĐỀ */}
             <div className={`relative overflow-hidden rounded-2xl ${currentTheme.headerBg} p-3.5 sm:p-4 text-center shadow-md`}>
-              <h1 className="text-base sm:text-xl md:text-2xl font-black tracking-wide uppercase drop-shadow-sm">
+              <h1 className="text-base sm:text-lg md:text-lg lg:text-2xl font-black tracking-wide uppercase drop-shadow-sm">
                 SƠ ĐỒ LỚP HỌC - KHÔNG GIAN BỤC GIẢNG CHÍNH
               </h1>
               <p className="text-xs sm:text-sm font-bold opacity-90 tracking-wider mt-0.5 uppercase">
@@ -1009,7 +1009,7 @@ export const SeatingChartView: React.FC = () => {
                                         className="w-11 h-11 rounded-full object-cover object-center border-2 border-amber-300 bg-sky-100 shadow-xs" 
                                       />
                                     </div>
-                                    <span className="text-[12px] font-black text-slate-900 line-clamp-2 leading-tight text-center px-0.5">
+                                    <span className="text-[12px] font-black text-slate-900 line-clamp-3 leading-tight text-center px-0.5 break-words">
                                       {studentLeft.name}
                                     </span>
                                   </>
@@ -1042,7 +1042,7 @@ export const SeatingChartView: React.FC = () => {
                                         className="w-11 h-11 rounded-full object-cover object-center border-2 border-amber-300 bg-sky-100 shadow-xs" 
                                       />
                                     </div>
-                                    <span className="text-[12px] font-black text-slate-900 line-clamp-2 leading-tight text-center px-0.5">
+                                    <span className="text-[12px] font-black text-slate-900 line-clamp-3 leading-tight text-center px-0.5 break-words">
                                       {studentRight.name}
                                     </span>
                                   </>

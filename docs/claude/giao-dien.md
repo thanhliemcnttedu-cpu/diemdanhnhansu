@@ -26,3 +26,8 @@
 - Không thêm lại thẻ số liệu gradient đậm hay thẻ tiêu đề "Danh sách không gian lớp học".
 - Lọc theo giáo viên trong bảng Lọc chi tiết là **một ô chọn** (`#class-teacher-filter`, tên A–Z kèm số lớp), thay bảng nút tên giáo viên cũ (trùng với thông tin trên thẻ lớp). Bảng tổng hợp sĩ số luôn xếp theo khối rồi tên lớp (so số tự nhiên: 1A2 trước 1A10).
 - Ô **Lọc theo giáo viên** (`#class-teacher-filter`) là ô gõ tìm (combobox): danh sách xếp theo lớp của giáo viên (khối nhỏ trước, tên lớp so số tự nhiên), giáo viên chưa có lớp xếp cuối; gõ tên giáo viên hoặc tên lớp, không cần dấu (`foldVi`); Enter chọn dòng đầu, Esc đóng. Số lớp đếm theo tài khoản, không theo họ tên (tránh cộng nhầm người trùng tên).
+
+## Giao diện "danh sách + chi tiết" cho các màn quản lý (11/2026, đang xem thử)
+- Ngôn ngữ thiết kế cho màn quản lý: phẳng, MỘT màu nhấn xanh dương (`blue-600`), chữ thường (`normal-case`), nút phụ viền mảnh, nhãn trạng thái thống nhất; thẻ lọc dạng viên thuốc; từ `lg` là hai cột, dưới `lg` chi tiết mở thành trang toàn màn hình có nút quay lại. Các màn hoạt động trên lớp giữ phong cách sinh động cũ.
+- Mẫu gốc: `views/classes/StudentsSplitView.tsx`. Cùng kiểu: `views/classes/ClassesSplitView.tsx`, `views/staff/StaffSplitView.tsx` (chỉ xem), `modals/AccountsSplitView.tsx` (không bao giờ hiện mật khẩu; `readOnly` cho Ban giám hiệu).
+- Mỗi màn có công tắc theo từng máy (localStorage `lhhp_students_split`, `lhhp_classes_split`, `lhhp_staff_split`, `lhhp_accounts_split`); giao diện cũ vẫn là mặc định và không đổi mã.

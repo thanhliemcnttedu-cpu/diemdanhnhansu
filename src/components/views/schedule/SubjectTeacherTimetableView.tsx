@@ -328,7 +328,7 @@ export const SubjectTeacherTimetableView: React.FC<{ onNavigate?: (view: any) =>
                 }`}
               >
                 <span>📅</span>
-                <span>Dùng chung cả học kì</span>
+                <span className="whitespace-nowrap"><span className="sm:hidden">Cả học kì</span><span className="max-sm:hidden">Dùng chung cả học kì</span></span>
               </button>
               <button
                 onClick={() => updateSubjectTeacherConfig({ scheduleScope: 'period' })}
@@ -339,7 +339,7 @@ export const SubjectTeacherTimetableView: React.FC<{ onNavigate?: (view: any) =>
                 }`}
               >
                 <span>⏱️</span>
-                <span>Theo thời điểm / tuần</span>
+                <span className="whitespace-nowrap"><span className="sm:hidden">Theo tuần</span><span className="max-sm:hidden">Theo thời điểm / tuần</span></span>
               </button>
             </div>
 
@@ -844,7 +844,7 @@ export const SubjectTeacherTimetableView: React.FC<{ onNavigate?: (view: any) =>
             <div className="flex items-center gap-2 flex-wrap">
               <h3 className="text-sm font-black text-slate-900 uppercase flex items-center gap-2">
                 <School className="w-5 h-5 text-indigo-600" />
-                <span>DANH SÁCH {classes.length} LỚP DẠY MÔN {subjectTeacherConfig.subjectName}</span>
+                <span className="truncate min-w-0" title={`DANH SÁCH ${classes.length} LỚP DẠY MÔN ${subjectTeacherConfig.subjectName}`}>DANH SÁCH {classes.length} LỚP • {subjectTeacherConfig.subjectName}</span>
               </h3>
               <span className="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 text-[12px] font-black uppercase flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />

@@ -647,7 +647,7 @@ export const InfographicView: React.FC = () => {
         <div className="flex items-center gap-1.5 pl-2 font-black text-amber-600">
           <GripVertical className="w-3.5 h-3.5 text-slate-500" />
           <span className="truncate max-w-[140px]">{layer.title}</span>
-          <span className="px-1.5 py-0.2 rounded bg-indigo-500/40 text-[10px] text-white">
+          <span className="px-1.5 py-0.2 rounded bg-indigo-700 text-xs text-white">
             Trang {layer.page} • {Math.round(layer.scale * 100)}%
           </span>
         </div>
@@ -680,7 +680,7 @@ export const InfographicView: React.FC = () => {
                   type="button"
                   onClick={() => moveLayerToPage(layer.id, p as 1 | 2 | 3)}
                   title={`Chuyển sang Trang ${p}`}
-                  className={`px-1.5 py-0.5 rounded text-[10px] font-black transition-all ${
+                  className={`px-1.5 py-0.5 rounded text-xs font-black transition-all ${
                     layer.page === p ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-white'
                   }`}
                 >
@@ -713,7 +713,7 @@ export const InfographicView: React.FC = () => {
             type="button"
             onClick={() => adjustLayerWidth(layer.id, layer.width === '100%' ? '75%' : layer.width === '75%' ? '50%' : '100%')}
             title={`Đổi chiều rộng khung (Hiện tại: ${layer.width})`}
-            className="px-1.5 py-0.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-[10px] font-bold text-slate-700 transition-all cursor-pointer"
+            className="px-1.5 py-0.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-xs font-bold text-slate-700 transition-all cursor-pointer"
           >
             {layer.width}
           </button>
@@ -748,7 +748,7 @@ export const InfographicView: React.FC = () => {
                   <h4 className="text-xs font-black text-amber-600 uppercase tracking-wide">
                     ĐIỀU CHỈNH KÍCH THƯỚC & VỊ TRÍ SƠ ĐỒ CHỖ NGỒI (TRANG 2 / 3)
                   </h4>
-                  <p className="text-[10px] text-slate-500">
+                  <p className="text-xs text-slate-500">
                     Kéo dãn ngang/dọc, thiết đặt số kích thước cụ thể, kéo di chuyển căn chỉnh vị trí trên trang
                   </p>
                 </div>
@@ -758,7 +758,7 @@ export const InfographicView: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setIsSeatingTransformPanelOpen(!isSeatingTransformPanelOpen)}
-                  className="px-2.5 py-1 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 text-[11px] font-bold flex items-center gap-1 cursor-pointer"
+                  className="px-2.5 py-1 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold flex items-center gap-1 cursor-pointer"
                 >
                   <Sliders className="w-3.5 h-3.5 text-indigo-600" />
                   <span>{isSeatingTransformPanelOpen ? 'Thu gọn bảng số' : 'Mở bảng số kích thước'}</span>
@@ -776,7 +776,7 @@ export const InfographicView: React.FC = () => {
                     offsetY: 0,
                     rowSpacing: config.orientation === 'landscape' ? 10 : 16
                   })}
-                  className="px-2.5 py-1 rounded-xl bg-slate-100 hover:bg-slate-200 text-amber-600 text-[11px] font-bold flex items-center gap-1 cursor-pointer"
+                  className="px-2.5 py-1 rounded-xl bg-slate-100 hover:bg-slate-200 text-amber-800 text-xs font-bold flex items-center gap-1 cursor-pointer"
                   title="Khôi phục về kích thước chuẩn ban đầu"
                 >
                   <RotateCcw className="w-3.5 h-3.5" />
@@ -787,7 +787,7 @@ export const InfographicView: React.FC = () => {
 
             {/* Quick stretch buttons */}
             <div className="flex flex-wrap items-center gap-1.5 text-xs">
-              <span className="text-[10px] font-bold text-slate-500 uppercase mr-1">Kéo dãn nhanh:</span>
+              <span className="text-xs font-bold text-slate-500 uppercase mr-1">Kéo dãn nhanh:</span>
               <button
                 type="button"
                 onClick={() => setSeatingTransform({
@@ -801,7 +801,7 @@ export const InfographicView: React.FC = () => {
                   offsetY: 0,
                   rowSpacing: config.orientation === 'landscape' ? 10 : 16
                 })}
-                className="px-2.5 py-1 rounded-lg bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-slate-950 text-[10px] font-black shadow-xs flex items-center gap-1 cursor-pointer"
+                className="px-2.5 py-1 rounded-lg bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-slate-950 text-xs font-black shadow-xs flex items-center gap-1 cursor-pointer"
                 title="Tự động mở rộng và dàn đều toàn bộ sơ đồ kín hết chiều cao và chiều rộng trang A4"
               >
                 <span>👑 Dàn Đều Vừa Khít Trang A4</span>
@@ -809,7 +809,7 @@ export const InfographicView: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setSeatingTransform(prev => ({ ...prev, isAutoWidth: true, scaleX: 1.0 }))}
-                className="px-2 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-[10px] font-bold"
+                className="px-2 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold"
               >
                 ↔ Chiều ngang 100%
               </button>
@@ -820,7 +820,7 @@ export const InfographicView: React.FC = () => {
                   isAutoWidth: false,
                   width: prev.isAutoWidth ? 820 : prev.width + 30
                 }))}
-                className="px-2 py-1 rounded-lg bg-indigo-600/60 hover:bg-indigo-800 text-white text-[10px] font-bold"
+                className="px-2 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-800 text-white text-xs font-bold"
               >
                 + Kéo rộng (+30px)
               </button>
@@ -831,7 +831,7 @@ export const InfographicView: React.FC = () => {
                   isAutoWidth: false,
                   width: Math.max(350, (prev.isAutoWidth ? 760 : prev.width) - 30)
                 }))}
-                className="px-2 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-[10px] font-bold"
+                className="px-2 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold"
               >
                 - Thu hẹp (-30px)
               </button>
@@ -843,7 +843,7 @@ export const InfographicView: React.FC = () => {
                   minHeight: (prev.isAutoHeight ? 520 : prev.minHeight) + 40,
                   rowSpacing: Math.min(24, prev.rowSpacing + 2)
                 }))}
-                className="px-2 py-1 rounded-lg bg-emerald-600/60 hover:bg-emerald-800 text-white text-[10px] font-bold"
+                className="px-2 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-800 text-white text-xs font-bold"
               >
                 ↕ Kéo cao (+40px)
               </button>
@@ -855,7 +855,7 @@ export const InfographicView: React.FC = () => {
                   minHeight: Math.max(250, (prev.isAutoHeight ? 520 : prev.minHeight) - 40),
                   rowSpacing: Math.max(4, prev.rowSpacing - 2)
                 }))}
-                className="px-2 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-[10px] font-bold"
+                className="px-2 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold"
               >
                 ↕ Thu ngắn (-40px)
               </button>
@@ -866,7 +866,7 @@ export const InfographicView: React.FC = () => {
                   scaleX: Number((prev.scaleX + 0.1).toFixed(2)),
                   scaleY: Number((prev.scaleY + 0.1).toFixed(2))
                 }))}
-                className="px-2 py-1 rounded-lg bg-purple-600/60 hover:bg-purple-800 text-white text-[10px] font-bold"
+                className="px-2 py-1 rounded-lg bg-purple-600 hover:bg-purple-800 text-white text-xs font-bold"
               >
                 ⤡ Phóng to cả 2 (+10%)
               </button>
@@ -877,7 +877,7 @@ export const InfographicView: React.FC = () => {
                   scaleX: Math.max(0.6, Number((prev.scaleX - 0.1).toFixed(2))),
                   scaleY: Math.max(0.6, Number((prev.scaleY - 0.1).toFixed(2)))
                 }))}
-                className="px-2 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-[10px] font-bold"
+                className="px-2 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold"
               >
                 ⤡ Thu nhỏ cả 2 (-10%)
               </button>
@@ -885,46 +885,46 @@ export const InfographicView: React.FC = () => {
 
             {/* Căn chỉnh vị trí trên trang */}
             <div className="flex flex-wrap items-center gap-1.5 text-xs pt-1 border-t border-slate-200">
-              <span className="text-[10px] font-bold text-slate-500 uppercase mr-1">Căn vị trí trên trang:</span>
+              <span className="text-xs font-bold text-slate-500 uppercase mr-1">Căn vị trí trên trang:</span>
               <button
                 type="button"
                 onClick={() => setSeatingTransform(prev => ({ ...prev, offsetX: -60 }))}
-                className="px-2 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-[10px] font-bold"
+                className="px-2 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold"
               >
                 ⬅ Căn Trái
               </button>
               <button
                 type="button"
                 onClick={() => setSeatingTransform(prev => ({ ...prev, offsetX: 0 }))}
-                className="px-2 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-[10px] font-bold"
+                className="px-2 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold"
               >
                 ↔ Căn Giữa Ngang
               </button>
               <button
                 type="button"
                 onClick={() => setSeatingTransform(prev => ({ ...prev, offsetX: 60 }))}
-                className="px-2 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-[10px] font-bold"
+                className="px-2 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold"
               >
                 ➡ Căn Phải
               </button>
               <button
                 type="button"
                 onClick={() => setSeatingTransform(prev => ({ ...prev, offsetY: -50 }))}
-                className="px-2 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-[10px] font-bold"
+                className="px-2 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold"
               >
                 ⬆ Dịch Lên Trên
               </button>
               <button
                 type="button"
                 onClick={() => setSeatingTransform(prev => ({ ...prev, offsetY: 0 }))}
-                className="px-2 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-[10px] font-bold"
+                className="px-2 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold"
               >
                 ↕ Giữa Dọc (Y=0)
               </button>
               <button
                 type="button"
                 onClick={() => setSeatingTransform(prev => ({ ...prev, offsetY: 60 }))}
-                className="px-2 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-[10px] font-bold"
+                className="px-2 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold"
               >
                 ⬇ Dịch Xuống Dưới
               </button>
@@ -932,10 +932,10 @@ export const InfographicView: React.FC = () => {
 
             {/* BẢNG THIẾT ĐẶT SỐ KÍCH THƯỚC CỤ THỂ (Inputs) */}
             {isSeatingTransformPanelOpen && (
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-2 border-t border-slate-200 text-[11px]">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-2 border-t border-slate-200 text-xs">
                 {/* 1. Chiều rộng cụ thể */}
                 <div className="bg-slate-100/80 p-2 rounded-xl border border-slate-200 space-y-1">
-                  <label className="text-slate-500 font-bold block text-[10px]">
+                  <label className="text-slate-500 font-bold block text-xs">
                     Chiều Ngang Rộng (px):
                   </label>
                   <div className="flex items-center gap-1">
@@ -951,13 +951,13 @@ export const InfographicView: React.FC = () => {
                       }}
                       className="w-full bg-white border border-slate-200 rounded-lg px-2 py-1 text-slate-800 font-mono font-bold text-xs"
                     />
-                    <span className="text-[10px] text-slate-500">px</span>
+                    <span className="text-xs text-slate-500">px</span>
                   </div>
                 </div>
 
                 {/* 2. Chiều dọc cụ thể */}
                 <div className="bg-slate-100/80 p-2 rounded-xl border border-slate-200 space-y-1">
-                  <label className="text-slate-500 font-bold block text-[10px]">
+                  <label className="text-slate-500 font-bold block text-xs">
                     Chiều Dọc Cao (px):
                   </label>
                   <div className="flex items-center gap-1">
@@ -973,13 +973,13 @@ export const InfographicView: React.FC = () => {
                       }}
                       className="w-full bg-white border border-slate-200 rounded-lg px-2 py-1 text-slate-800 font-mono font-bold text-xs"
                     />
-                    <span className="text-[10px] text-slate-500">px</span>
+                    <span className="text-xs text-slate-500">px</span>
                   </div>
                 </div>
 
                 {/* 3. Tỉ lệ dãn ngang Scale X */}
                 <div className="bg-slate-100/80 p-2 rounded-xl border border-slate-200 space-y-1">
-                  <label className="text-slate-500 font-bold block text-[10px]">
+                  <label className="text-slate-500 font-bold block text-xs">
                     Tỉ Lệ Dãn Ngang Scale X (%):
                   </label>
                   <div className="flex items-center gap-1">
@@ -995,13 +995,13 @@ export const InfographicView: React.FC = () => {
                       }}
                       className="w-full bg-white border border-slate-200 rounded-lg px-2 py-1 text-slate-800 font-mono font-bold text-xs"
                     />
-                    <span className="text-[10px] text-slate-500">%</span>
+                    <span className="text-xs text-slate-500">%</span>
                   </div>
                 </div>
 
                 {/* 4. Tỉ lệ dãn dọc Scale Y */}
                 <div className="bg-slate-100/80 p-2 rounded-xl border border-slate-200 space-y-1">
-                  <label className="text-slate-500 font-bold block text-[10px]">
+                  <label className="text-slate-500 font-bold block text-xs">
                     Tỉ Lệ Dãn Dọc Scale Y (%):
                   </label>
                   <div className="flex items-center gap-1">
@@ -1017,13 +1017,13 @@ export const InfographicView: React.FC = () => {
                       }}
                       className="w-full bg-white border border-slate-200 rounded-lg px-2 py-1 text-slate-800 font-mono font-bold text-xs"
                     />
-                    <span className="text-[10px] text-slate-500">%</span>
+                    <span className="text-xs text-slate-500">%</span>
                   </div>
                 </div>
 
                 {/* 5. Tọa độ X vị trí */}
                 <div className="bg-slate-100/80 p-2 rounded-xl border border-slate-200 space-y-1">
-                  <label className="text-slate-500 font-bold block text-[10px]">
+                  <label className="text-slate-500 font-bold block text-xs">
                     Độ Lệch Ngang X (px):
                   </label>
                   <div className="flex items-center gap-1">
@@ -1039,13 +1039,13 @@ export const InfographicView: React.FC = () => {
                       }}
                       className="w-full bg-white border border-slate-200 rounded-lg px-2 py-1 text-slate-800 font-mono font-bold text-xs"
                     />
-                    <span className="text-[10px] text-slate-500">px</span>
+                    <span className="text-xs text-slate-500">px</span>
                   </div>
                 </div>
 
                 {/* 6. Tọa độ Y vị trí */}
                 <div className="bg-slate-100/80 p-2 rounded-xl border border-slate-200 space-y-1">
-                  <label className="text-slate-500 font-bold block text-[10px]">
+                  <label className="text-slate-500 font-bold block text-xs">
                     Độ Lệch Dọc Y (px):
                   </label>
                   <div className="flex items-center gap-1">
@@ -1061,13 +1061,13 @@ export const InfographicView: React.FC = () => {
                       }}
                       className="w-full bg-white border border-slate-200 rounded-lg px-2 py-1 text-slate-800 font-mono font-bold text-xs"
                     />
-                    <span className="text-[10px] text-slate-500">px</span>
+                    <span className="text-xs text-slate-500">px</span>
                   </div>
                 </div>
 
                 {/* 7. Giãn khoảng cách các hàng bàn */}
                 <div className="col-span-2 bg-slate-100/80 p-2 rounded-xl border border-slate-200 space-y-1">
-                  <label className="text-slate-500 font-bold block text-[10px]">
+                  <label className="text-slate-500 font-bold block text-xs">
                     Độ Giãn Khoảng Cách Các Hàng Bàn (px):
                   </label>
                   <div className="flex items-center gap-2">
@@ -1116,26 +1116,26 @@ export const InfographicView: React.FC = () => {
             {isEditMode && (
               <div
                 onPointerDown={(e) => handleSeatingPointerDown(e, 'move')}
-                className="no-print no-pdf p-1.5 rounded-xl bg-white/90 hover:bg-slate-100 text-slate-800 text-[10px] font-bold flex items-center justify-between gap-2 cursor-grab active:cursor-grabbing border border-indigo-400/50 shadow-md select-none transition-all"
+                className="no-print no-pdf p-1.5 rounded-xl bg-white/90 hover:bg-slate-100 text-slate-800 text-xs font-bold flex items-center justify-between gap-2 cursor-grab active:cursor-grabbing border border-indigo-400/50 shadow-md select-none transition-all"
                 title="Bấm giữ chuột và kéo để di chuyển sơ đồ tới vị trí mong muốn trên trang"
               >
                 <div className="flex items-center gap-1.5 text-amber-600">
                   <Move className="w-3.5 h-3.5" />
                   <span>✥ GIỮ & KÉO ĐỂ DI CHUYỂN VỊ TRÍ SƠ ĐỒ TRÊN TRANG</span>
                 </div>
-                <div className="text-[9px] text-slate-600 font-mono">
+                <div className="text-xs text-slate-600 font-mono">
                   X: {seatingTransform.offsetX}px • Y: {seatingTransform.offsetY}px
                 </div>
               </div>
             )}
 
             {/* Tiêu đề & Thông tin Sơ đồ */}
-            <div className="flex items-center justify-between text-[10px] sm:text-xs font-black uppercase gap-1 flex-wrap">
+            <div className="flex items-center justify-between text-xs sm:text-xs font-black uppercase gap-1 flex-wrap">
               <div className="flex items-center gap-1 text-slate-900">
                 <Grid3X3 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-indigo-600 shrink-0" />
                 <span className="truncate">SƠ ĐỒ CHỖ NGỒI ({seatingColumns} DÃY BÀN)</span>
               </div>
-              <div className="flex items-center gap-1 text-[8.5px] sm:text-[10px] font-bold">
+              <div className="flex items-center gap-1 text-[8.5px] sm:text-xs font-bold">
                 <span className="px-1.5 py-0.2 rounded-md bg-indigo-50 border border-indigo-200 text-indigo-700 whitespace-nowrap">
                   {deskNumberingOrder === 'vertical' ? 'Đánh số dọc' : 'Đánh số ngang'}
                 </span>
@@ -1146,7 +1146,7 @@ export const InfographicView: React.FC = () => {
             </div>
 
             {/* BỤC GIẢNG CHÍNH ĐỒNG BỘ 100% VỚI MỤC SƠ ĐỒ LỚP */}
-            <div className="grid grid-cols-12 gap-1 sm:gap-2 items-center text-[8px] sm:text-[10px] font-bold">
+            <div className="grid grid-cols-12 gap-1 sm:gap-2 items-center text-[8px] sm:text-xs font-bold">
               {/* Cột Trái */}
               <div className={`col-span-3 py-1 sm:py-1.5 text-center rounded-lg sm:rounded-xl shadow-2xs border truncate ${
                 doorPos === 'left' 
@@ -1159,7 +1159,7 @@ export const InfographicView: React.FC = () => {
               </div>
 
               {/* Bảng Lớp Xanh Ở Giữa */}
-              <div className={`col-span-6 py-1.5 sm:py-2 text-center rounded-lg sm:rounded-xl font-black tracking-wide shadow-xs truncate text-[9px] sm:text-xs ${seatingStyleConfig.board}`}>
+              <div className={`col-span-6 py-1.5 sm:py-2 text-center rounded-lg sm:rounded-xl font-black tracking-wide shadow-xs truncate text-xs sm:text-xs ${seatingStyleConfig.board}`}>
                 ★ BẢNG LỚP HỌC HẠNH PHÚC ★
               </div>
 
@@ -1187,9 +1187,9 @@ export const InfographicView: React.FC = () => {
                 return (
                   <div key={colIdx} className="space-y-1 sm:space-y-2 p-1 sm:p-2.5 rounded-lg sm:rounded-xl bg-white/85 border border-slate-200 shadow-2xs flex flex-col justify-between flex-1 min-w-0">
                     {/* Column Badge */}
-                    <div className={`text-center py-0.5 sm:py-1 text-[8.5px] sm:text-[10px] font-black rounded-md sm:rounded-lg flex items-center justify-between px-1 sm:px-2 ${seatingStyleConfig.badge}`}>
+                    <div className={`text-center py-0.5 sm:py-1 text-[8.5px] sm:text-xs font-black rounded-md sm:rounded-lg flex items-center justify-between px-1 sm:px-2 ${seatingStyleConfig.badge}`}>
                       <span>DÃY {colIdx + 1}</span>
-                      <span className="text-[7.5px] sm:text-[9px] opacity-90">{colDeskCount} bàn</span>
+                      <span className="text-[7.5px] sm:text-xs opacity-90">{colDeskCount} bàn</span>
                     </div>
 
                     {/* Rows for this column with dynamic row spacing */}
@@ -1331,7 +1331,7 @@ export const InfographicView: React.FC = () => {
             <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
-                  <span className="px-2.5 py-0.5 rounded-full bg-amber-400 text-slate-950 font-black text-[10px] uppercase tracking-wider">
+                  <span className="px-2.5 py-0.5 rounded-full bg-amber-400 text-slate-950 font-black text-xs uppercase tracking-wider">
                     INFOGRAPHIC LỚP HỌC HẠNH PHÚC
                   </span>
                   <span className="text-white text-xs font-bold">
@@ -1355,7 +1355,7 @@ export const InfographicView: React.FC = () => {
                   <div className="text-2xl font-black text-amber-300 font-mono">
                     {classStudents.length}
                   </div>
-                  <div className="text-[10px] uppercase tracking-wider text-white font-bold">
+                  <div className="text-xs uppercase tracking-wider text-white font-bold">
                     Học sinh
                   </div>
                 </div>
@@ -1372,7 +1372,7 @@ export const InfographicView: React.FC = () => {
       case 'slogan':
         return (
           <div className="bg-gradient-to-r from-amber-50 via-yellow-50 to-orange-50 border-2 border-dashed border-amber-300 rounded-2xl p-3 text-center shadow-2xs group relative">
-            <div className="text-[11px] font-black uppercase text-amber-800 tracking-wider flex items-center justify-center gap-1.5">
+            <div className="text-xs font-black uppercase text-amber-800 tracking-wider flex items-center justify-center gap-1.5">
               <Sparkles className="w-3.5 h-3.5 text-amber-600" />
               <span>SLOGAN & PHƯƠNG CHÂM HÀNH ĐỘNG</span>
               <Sparkles className="w-3.5 h-3.5 text-amber-600" />
@@ -1424,7 +1424,7 @@ export const InfographicView: React.FC = () => {
                         value={customTeacherPhone}
                         onChange={(e) => setCustomTeacherPhone(e.target.value)}
                         placeholder="Số ĐT..."
-                        className="text-[10px] text-slate-600 w-full border border-indigo-200 rounded px-1.5 py-0.5"
+                        className="text-xs text-slate-600 w-full border border-indigo-200 rounded px-1.5 py-0.5"
                       />
                     </div>
                   ) : (
@@ -1432,11 +1432,11 @@ export const InfographicView: React.FC = () => {
                       <div className="text-sm font-black text-slate-900 truncate">
                         {customTeacherName ? (customTeacherName.startsWith('Cô ') ? customTeacherName : `Cô ${customTeacherName}`) : `Cô ${teacherProfile.name}`}
                       </div>
-                      <div className="text-[11px] text-indigo-700 font-bold">
+                      <div className="text-xs text-indigo-700 font-bold">
                         {teacherProfile.role || 'Giáo viên phụ trách lớp'}
                       </div>
                       {customTeacherPhone && (
-                        <div className="text-[11px] text-slate-600 flex items-center gap-1 mt-0.5">
+                        <div className="text-xs text-slate-600 flex items-center gap-1 mt-0.5">
                           <Phone className="w-3 h-3 text-slate-500" />
                           <span>{customTeacherPhone}</span>
                         </div>
@@ -1454,15 +1454,15 @@ export const InfographicView: React.FC = () => {
                   <Heart className="w-3.5 h-3.5 text-rose-600" />
                   <span>Ban Đại Diện Cha Mẹ Học Sinh Lớp</span>
                 </div>
-                <span className="text-[10px] text-rose-600 font-bold bg-white px-2 py-0.5 rounded-full border border-rose-200">
+                <span className="text-xs text-rose-600 font-bold bg-white px-2 py-0.5 rounded-full border border-rose-200">
                   {[parentCommittee.head, parentCommittee.deputy, parentCommittee.member1, parentCommittee.member2].filter(m => m.name).length || 4} Thành viên
                 </span>
               </div>
 
-              <div className="grid grid-cols-2 gap-2 text-[11px]">
+              <div className="grid grid-cols-2 gap-2 text-xs">
                 {/* Trưởng ban */}
                 <div className="bg-white p-2 rounded-xl border border-rose-100 shadow-2xs">
-                  <span className="text-[10px] font-black text-rose-700 uppercase block">Trưởng Ban PH:</span>
+                  <span className="text-xs font-black text-rose-700 uppercase block">Trưởng Ban PH:</span>
                   {isEditMode ? (
                     <input
                       type="text"
@@ -1475,12 +1475,12 @@ export const InfographicView: React.FC = () => {
                       ? <div className="font-bold text-slate-900 truncate">{parentCommittee.head.name}</div>
                       : <div className="mt-2 border-b border-dotted border-slate-400 h-3" aria-label="Chỗ ghi tên" />
                   )}
-                  {parentCommittee.head.phone && <div className="text-slate-600 font-mono text-[10px]">☎ {parentCommittee.head.phone}</div>}
+                  {parentCommittee.head.phone && <div className="text-slate-600 font-mono text-xs">☎ {parentCommittee.head.phone}</div>}
                 </div>
 
                 {/* Phó ban */}
                 <div className="bg-white p-2 rounded-xl border border-rose-100 shadow-2xs">
-                  <span className="text-[10px] font-black text-amber-700 uppercase block">Phó Ban PH:</span>
+                  <span className="text-xs font-black text-amber-700 uppercase block">Phó Ban PH:</span>
                   {isEditMode ? (
                     <input
                       type="text"
@@ -1493,12 +1493,12 @@ export const InfographicView: React.FC = () => {
                       ? <div className="font-bold text-slate-900 truncate">{parentCommittee.deputy.name}</div>
                       : <div className="mt-2 border-b border-dotted border-slate-400 h-3" aria-label="Chỗ ghi tên" />
                   )}
-                  {parentCommittee.deputy.phone && <div className="text-slate-600 font-mono text-[10px]">☎ {parentCommittee.deputy.phone}</div>}
+                  {parentCommittee.deputy.phone && <div className="text-slate-600 font-mono text-xs">☎ {parentCommittee.deputy.phone}</div>}
                 </div>
 
                 {/* Ủy viên 1 */}
                 <div className="bg-white p-2 rounded-xl border border-rose-100 shadow-2xs">
-                  <span className="text-[10px] font-black text-slate-600 uppercase block">Ủy Viên 1:</span>
+                  <span className="text-xs font-black text-slate-600 uppercase block">Ủy Viên 1:</span>
                   {isEditMode ? (
                     <input
                       type="text"
@@ -1511,12 +1511,12 @@ export const InfographicView: React.FC = () => {
                       ? <div className="font-bold text-slate-900 truncate">{parentCommittee.member1.name}</div>
                       : <div className="mt-2 border-b border-dotted border-slate-400 h-3" aria-label="Chỗ ghi tên" />
                   )}
-                  {parentCommittee.member1.phone && <div className="text-slate-600 font-mono text-[10px]">☎ {parentCommittee.member1.phone}</div>}
+                  {parentCommittee.member1.phone && <div className="text-slate-600 font-mono text-xs">☎ {parentCommittee.member1.phone}</div>}
                 </div>
 
                 {/* Ủy viên 2 */}
                 <div className="bg-white p-2 rounded-xl border border-rose-100 shadow-2xs">
-                  <span className="text-[10px] font-black text-slate-600 uppercase block">Ủy Viên 2:</span>
+                  <span className="text-xs font-black text-slate-600 uppercase block">Ủy Viên 2:</span>
                   {isEditMode ? (
                     <input
                       type="text"
@@ -1529,7 +1529,7 @@ export const InfographicView: React.FC = () => {
                       ? <div className="font-bold text-slate-900 truncate">{parentCommittee.member2.name}</div>
                       : <div className="mt-2 border-b border-dotted border-slate-400 h-3" aria-label="Chỗ ghi tên" />
                   )}
-                  {parentCommittee.member2.phone && <div className="text-slate-600 font-mono text-[10px]">☎ {parentCommittee.member2.phone}</div>}
+                  {parentCommittee.member2.phone && <div className="text-slate-600 font-mono text-xs">☎ {parentCommittee.member2.phone}</div>}
                 </div>
               </div>
             </div>
@@ -1565,7 +1565,7 @@ export const InfographicView: React.FC = () => {
           else if (subject.includes('Chào cờ') || subject.includes('Sinh hoạt')) colorClass = 'bg-red-100/90 text-red-900 border border-red-200/80 font-black';
 
           return (
-            <span className={`inline-block px-1.5 py-0.5 rounded text-[10px] leading-tight ${colorClass}`}>
+            <span className={`inline-block px-1.5 py-0.5 rounded text-xs leading-tight ${colorClass}`}>
               {subject}
             </span>
           );
@@ -1578,7 +1578,7 @@ export const InfographicView: React.FC = () => {
                 <Calendar className="w-3.5 h-3.5 text-blue-600" />
                 <span>Thời Khóa Biểu Học Tập Trong Tuần</span>
               </div>
-              <div className="flex items-center gap-2 text-[10px] font-bold text-slate-500">
+              <div className="flex items-center gap-2 text-xs font-bold text-slate-500">
                 <span className="hidden sm:inline-block px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 border border-blue-200">
                   Áp dụng Học Kỳ I
                 </span>
@@ -1593,7 +1593,7 @@ export const InfographicView: React.FC = () => {
               </div>
             ) : (
             <div className="overflow-x-auto rounded-xl border border-slate-200">
-              <table className="w-full text-[10px] text-center border-collapse">
+              <table className="w-full text-xs text-center border-collapse">
                 <thead>
                   <tr className={ttClasses.header}>
                     <th className="py-1 px-1 border-r border-white/20 w-12">Buổi</th>
@@ -1667,7 +1667,7 @@ export const InfographicView: React.FC = () => {
             )}
 
             {/* Dòng thời gian nề nếp sinh hoạt */}
-            <div className="pt-1.5 border-t border-slate-100 flex flex-wrap items-center justify-between text-[9px] sm:text-[10px] text-slate-500 font-medium px-1">
+            <div className="pt-1.5 border-t border-slate-100 flex flex-wrap items-center justify-between text-xs sm:text-xs text-slate-500 font-medium px-1">
               <div className="flex items-center gap-1.5 text-blue-800 font-bold">
                 <span>⏰ Nề nếp trong ngày:</span>
                 <span className="font-normal text-slate-600">Đón HS 07h00 • Truy bài 07h15-07h30 • Ra chơi 09h10-09h35 • Bán trú 11h30-13h30 • Tan học 16h30</span>
@@ -1695,7 +1695,7 @@ export const InfographicView: React.FC = () => {
                   <span>{classGoals.heading}</span>
                 )}
               </div>
-              <span className="text-[10px] font-bold text-amber-800 bg-amber-100/80 px-2 py-0.5 rounded-full border border-amber-200">
+              <span className="text-xs font-bold text-amber-800 bg-amber-100/80 px-2 py-0.5 rounded-full border border-amber-200">
                 4 Tiêu Chí Vàng
               </span>
             </div>
@@ -1716,10 +1716,10 @@ export const InfographicView: React.FC = () => {
                             items: prev.items.map((it, i) => i === idx ? { ...it, title: val } : it)
                           }));
                         }}
-                        className="font-black text-[10px] border border-slate-300 rounded px-1 w-full"
+                        className="font-black text-xs border border-slate-300 rounded px-1 w-full"
                       />
                     ) : (
-                      <span className="text-[10px] sm:text-[11px] font-black text-slate-900 uppercase tracking-tight">{item.title}</span>
+                      <span className="text-xs sm:text-xs font-black text-slate-900 uppercase tracking-tight">{item.title}</span>
                     )}
                   </div>
                   {isEditMode ? (
@@ -1733,10 +1733,10 @@ export const InfographicView: React.FC = () => {
                         }));
                       }}
                       rows={2}
-                      className="text-[9px] border border-slate-300 rounded p-1 w-full"
+                      className="text-xs border border-slate-300 rounded p-1 w-full"
                     />
                   ) : (
-                    <p className="text-[9px] sm:text-[10px] text-slate-600 leading-snug">{item.desc}</p>
+                    <p className="text-xs sm:text-xs text-slate-600 leading-snug">{item.desc}</p>
                   )}
                 </div>
               ))}
@@ -1751,7 +1751,7 @@ export const InfographicView: React.FC = () => {
             <div className="rounded-2xl bg-gradient-to-r from-emerald-700 via-teal-700 to-blue-500 text-white p-4 shadow-md relative overflow-hidden">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
-                  <span className="px-2.5 py-0.5 rounded-full bg-amber-300 text-slate-950 font-black text-[10px] uppercase tracking-wider">
+                  <span className="px-2.5 py-0.5 rounded-full bg-amber-300 text-slate-950 font-black text-xs uppercase tracking-wider">
                     HỒ SƠ HỌC SINH LỚP HỌC
                   </span>
                   <h2 className="text-xl sm:text-2xl font-black tracking-tight text-white mt-1">
@@ -1766,7 +1766,7 @@ export const InfographicView: React.FC = () => {
                   <div className="font-black text-amber-300">
                     TỔNG SỐ: {classStudents.length} HỌC SINH
                   </div>
-                  <div className="text-[11px] text-white mt-0.5">
+                  <div className="text-xs text-white mt-0.5">
                     Nam: {maleCount} • Nữ: {femaleCount}
                   </div>
                 </div>
@@ -1775,9 +1775,9 @@ export const InfographicView: React.FC = () => {
 
             {/* Bảng Chi Tiết 100% Học Sinh */}
             <div className="rounded-2xl border border-slate-200 overflow-hidden shadow-2xs">
-              <table className="w-full text-[11px] text-left border-collapse">
+              <table className="w-full text-xs text-left border-collapse">
                 <thead>
-                  <tr className="bg-slate-100 text-slate-900 border-b border-slate-200 text-[10px] uppercase font-black">
+                  <tr className="bg-slate-100 text-slate-900 border-b border-slate-200 text-xs uppercase font-black">
                     <th className="py-2 px-1.5 text-center w-8 border-r border-slate-200">STT</th>
                     <th className="py-2 px-1 text-center w-10 border-r border-slate-200">Ảnh</th>
                     <th className="py-2 px-2 text-center w-16 border-r border-slate-200">Mã HS</th>
@@ -1823,33 +1823,33 @@ export const InfographicView: React.FC = () => {
                             }}
                           />
                         </td>
-                        <td className="py-1.5 px-2 text-center font-mono font-bold text-slate-600 text-[10px] border-r border-slate-100">
+                        <td className="py-1.5 px-2 text-center font-mono font-bold text-slate-600 text-xs border-r border-slate-100">
                           HS{String(st.stt).padStart(2, '0')}
                         </td>
                         <td className="py-1.5 px-2.5 font-bold text-slate-900 border-r border-slate-100">
                           {st.name}
                         </td>
-                        <td className="py-1.5 px-2 text-center text-slate-600 font-mono text-[10px] border-r border-slate-100">
+                        <td className="py-1.5 px-2 text-center text-slate-600 font-mono text-xs border-r border-slate-100">
                           {st.birthDate || '—'}
                         </td>
                         <td className="py-1.5 px-1.5 text-center border-r border-slate-100">
-                          <span className={`inline-block px-1.5 py-0.5 rounded text-[9px] font-black ${
+                          <span className={`inline-block px-1.5 py-0.5 rounded text-xs font-black ${
                             st.gender === 'Nam' ? 'bg-blue-100 text-blue-800' : 'bg-pink-100 text-pink-800'
                           }`}>
                             {st.gender}
                           </span>
                         </td>
-                        <td className="py-1.5 px-1.5 text-center text-slate-700 font-medium border-r border-slate-100 text-[10px]">
+                        <td className="py-1.5 px-1.5 text-center text-slate-700 font-medium border-r border-slate-100 text-xs">
                           {groupName}
                         </td>
-                        <td className="py-1.5 px-2 text-slate-700 border-r border-slate-100 text-[10px]">
+                        <td className="py-1.5 px-2 text-slate-700 border-r border-slate-100 text-xs">
                           <span className={`font-semibold ${
                             role !== 'Thành viên' ? 'text-indigo-700 font-bold' : 'text-slate-600'
                           }`}>
                             {role}
                           </span>
                         </td>
-                        <td className="py-1.5 px-2 text-center text-[10px] font-bold">
+                        <td className="py-1.5 px-2 text-center text-xs font-bold">
                           <span className={`px-1.5 py-0.5 rounded ${
                             ranking === 'Xuất sắc'
                               ? 'bg-emerald-100 text-emerald-800'
@@ -1875,10 +1875,10 @@ export const InfographicView: React.FC = () => {
             <div className="grid grid-cols-3 gap-4 text-center text-xs">
               {/* Ban Phụ Huynh */}
               <div className="space-y-1">
-                <div className="font-bold text-slate-600 uppercase text-[10px]">
+                <div className="font-bold text-slate-600 uppercase text-xs">
                   ĐẠI DIỆN BAN PHỤ HUYNH
                 </div>
-                <div className="text-[10px] text-slate-400 italic">
+                <div className="text-xs text-slate-400 italic">
                   (Ký và ghi rõ họ tên)
                 </div>
                 <div className="h-12"></div>
@@ -1889,10 +1889,10 @@ export const InfographicView: React.FC = () => {
 
               {/* Ban Giám Hiệu */}
               <div className="space-y-1">
-                <div className="font-bold text-slate-600 uppercase text-[10px]">
+                <div className="font-bold text-slate-600 uppercase text-xs">
                   BAN GIÁM HIỆU NHÀ TRƯỜNG
                 </div>
-                <div className="text-[10px] text-slate-400 italic">
+                <div className="text-xs text-slate-400 italic">
                   (Ký duyệt và đóng dấu)
                 </div>
                 <div className="h-12"></div>
@@ -1903,10 +1903,10 @@ export const InfographicView: React.FC = () => {
 
               {/* Giáo viên chủ nhiệm */}
               <div className="space-y-1">
-                <div className="font-bold text-slate-600 uppercase text-[10px]">
+                <div className="font-bold text-slate-600 uppercase text-xs">
                   GIÁO VIÊN CHỦ NHIỆM
                 </div>
-                <div className="text-[10px] text-slate-400 italic">
+                <div className="text-xs text-slate-400 italic">
                   (Ký và ghi rõ họ tên)
                 </div>
                 <div className="h-12"></div>
@@ -1916,7 +1916,7 @@ export const InfographicView: React.FC = () => {
               </div>
             </div>
 
-            <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[10px] text-slate-400">
+            <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs text-slate-400">
               <div>Hệ sinh thái quản lý lớp học • Hồ sơ nội bộ</div>
               <div>Phát hành: {new Date().toLocaleDateString('vi-VN')}</div>
             </div>
@@ -2039,7 +2039,7 @@ export const InfographicView: React.FC = () => {
         )}
 
         {/* Footer ghi chú của trang */}
-        <div className="pt-2.5 border-t border-slate-200 flex flex-wrap items-center justify-between text-[10px] text-slate-500 font-semibold no-print no-pdf mt-auto">
+        <div className="pt-2.5 border-t border-slate-200 flex flex-wrap items-center justify-between text-xs text-slate-500 font-semibold no-print no-pdf mt-auto">
           <div>
             Infographic Lớp {targetClass?.name} • Năm học {targetClass?.academicYear || teacherProfile.academicYear}
           </div>
@@ -2076,9 +2076,9 @@ export const InfographicView: React.FC = () => {
               <Sparkles className="w-5 h-5 text-amber-300" />
             </div>
             <div>
-              <h2 className="text-xl sm:text-2xl font-black text-indigo-950 tracking-tight flex items-center gap-2 uppercase">
-                <span>TRÌNH CHỈNH SỬA & XUẤT INFOGRAPHIC</span>
-                <span className="text-xs px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 font-bold border border-indigo-200">
+              <h2 className="text-lg sm:text-xl xl:text-2xl font-black text-indigo-950 tracking-tight flex flex-wrap items-center gap-x-2 gap-y-1 uppercase">
+                <span className="whitespace-nowrap">TRÌNH CHỈNH SỬA & XUẤT INFOGRAPHIC</span>
+                <span className="text-xs px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 font-bold border border-indigo-200 whitespace-nowrap">
                   {config.pageCount} TRANG A4 {config.orientation === 'landscape' ? 'NGANG' : 'DỌC'}
                 </span>
               </h2>
@@ -2190,7 +2190,7 @@ export const InfographicView: React.FC = () => {
               {items.map(it => (
                 <div key={it.label} className={`rounded-xl border px-2.5 py-2 ${it.ok ? 'border-emerald-200 bg-emerald-50/60' : 'border-amber-300 bg-amber-50/70'}`}>
                   <div className="flex items-center gap-1.5 text-xs font-black text-slate-900">
-                    <span className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] text-white ${it.ok ? 'bg-emerald-700' : 'bg-amber-700'}`}>{it.ok ? '✓' : '!'}</span>
+                    <span className={`w-4 h-4 rounded-full flex items-center justify-center text-xs text-white ${it.ok ? 'bg-emerald-700' : 'bg-amber-700'}`}>{it.ok ? '✓' : '!'}</span>
                     {it.label}
                   </div>
                   <div className="text-xs text-slate-700 mt-0.5 truncate" title={it.detail}>{it.detail}</div>
@@ -2281,7 +2281,7 @@ export const InfographicView: React.FC = () => {
 
           {/* Khổ giấy: Dọc / Ngang */}
           <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200 text-xs font-bold">
-            <span className="text-[10px] text-slate-500 uppercase px-1.5">Khổ giấy:</span>
+            <span className="text-xs text-slate-500 uppercase px-1.5">Khổ giấy:</span>
             <button
               type="button"
               onClick={() => setConfig(prev => ({ ...prev, orientation: 'portrait' }))}
@@ -2304,7 +2304,7 @@ export const InfographicView: React.FC = () => {
 
           {/* Chọn số trang: 1, 2, 3 */}
           <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200 text-xs font-bold">
-            <span className="text-[10px] text-slate-500 uppercase px-1.5">Bố cục trang:</span>
+            <span className="text-xs text-slate-500 uppercase px-1.5">Bố cục trang:</span>
             <button
               type="button"
               onClick={() => handlePageCountChange(1)}
@@ -2336,7 +2336,7 @@ export const InfographicView: React.FC = () => {
 
           {/* Căn lề / Mật độ dàn A4 */}
           <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200 text-xs font-bold">
-            <span className="text-[10px] text-slate-500 uppercase px-1.5">Mật độ:</span>
+            <span className="text-xs text-slate-500 uppercase px-1.5">Mật độ:</span>
             <button
               type="button"
               onClick={() => setPageDensity('fit')}
@@ -2461,7 +2461,7 @@ export const InfographicView: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => handleExportPng('page1')}
-                  className="text-indigo-600 hover:underline flex items-center gap-1 text-[11px]"
+                  className="text-indigo-600 hover:underline flex items-center gap-1 text-xs"
                 >
                   <Download className="w-3 h-3" />
                   <span>Tải ảnh Trang 1</span>
@@ -2483,7 +2483,7 @@ export const InfographicView: React.FC = () => {
               <button
                 type="button"
                 onClick={() => handleExportPng('page2')}
-                className="text-emerald-600 hover:underline flex items-center gap-1 text-[11px]"
+                className="text-emerald-600 hover:underline flex items-center gap-1 text-xs"
               >
                 <Download className="w-3 h-3" />
                 <span>Tải ảnh Trang 2</span>
@@ -2504,7 +2504,7 @@ export const InfographicView: React.FC = () => {
               <button
                 type="button"
                 onClick={() => handleExportPng('page3')}
-                className="text-purple-600 hover:underline flex items-center gap-1 text-[11px]"
+                className="text-purple-600 hover:underline flex items-center gap-1 text-xs"
               >
                 <Download className="w-3 h-3" />
                 <span>Tải ảnh Trang 3</span>
@@ -2553,7 +2553,7 @@ export const InfographicView: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => addCustomTextLayer(p as 1 | 2 | 3)}
-                        className="text-[10px] text-indigo-600 hover:underline flex items-center gap-1 font-bold"
+                        className="text-xs text-indigo-600 hover:underline flex items-center gap-1 font-bold"
                       >
                         <Plus className="w-3 h-3" />
                         <span>Thêm ghi chú</span>
@@ -2622,7 +2622,7 @@ export const InfographicView: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setLayers(prev => prev.map(l => ({ ...l, visible: true })))}
-                    className="text-[10px] text-amber-700 underline font-bold"
+                    className="text-xs text-amber-700 underline font-bold"
                   >
                     Hiện lại tất cả
                   </button>
@@ -2715,7 +2715,7 @@ export const InfographicView: React.FC = () => {
                     <span className="text-2xl">📄</span>
                     <div>
                       <div className="font-black text-slate-900 text-xs">Khổ A4 Dọc (Portrait)</div>
-                      <div className="text-[10px] text-slate-500">210mm × 297mm • Tiêu chuẩn in ấn</div>
+                      <div className="text-xs text-slate-500">210mm × 297mm • Tiêu chuẩn in ấn</div>
                     </div>
                   </button>
                   <button
@@ -2730,7 +2730,7 @@ export const InfographicView: React.FC = () => {
                     <span className="text-2xl">📑</span>
                     <div>
                       <div className="font-black text-slate-900 text-xs">Khổ A4 Ngang (Landscape)</div>
-                      <div className="text-[10px] text-slate-500">297mm × 210mm • Rộng rãi cho sơ đồ</div>
+                      <div className="text-xs text-slate-500">297mm × 210mm • Rộng rãi cho sơ đồ</div>
                     </div>
                   </button>
                 </div>
@@ -2743,7 +2743,7 @@ export const InfographicView: React.FC = () => {
                     <Layers className="w-4 h-4 text-emerald-600" />
                     <span>2. Chọn trình bày theo số trang A4:</span>
                   </span>
-                  <span className="text-[10px] font-bold text-emerald-700 bg-white px-2 py-0.5 rounded-md border border-emerald-200">
+                  <span className="text-xs font-bold text-emerald-700 bg-white px-2 py-0.5 rounded-md border border-emerald-200">
                     Tùy chọn linh hoạt
                   </span>
                 </div>
@@ -2760,7 +2760,7 @@ export const InfographicView: React.FC = () => {
                     }`}
                   >
                     <div className="font-black text-slate-900 text-xs">1 Trang A4</div>
-                    <div className="text-[10px] text-slate-600">
+                    <div className="text-xs text-slate-600">
                       Gói gọn tổng quan trong 1 trang duy nhất để dán cửa lớp.
                     </div>
                   </button>
@@ -2779,7 +2779,7 @@ export const InfographicView: React.FC = () => {
                       <span>2 Trang A4</span>
                       <span className="px-1 py-0.2 bg-emerald-600 text-white rounded text-[8px] font-black">Chuẩn</span>
                     </div>
-                    <div className="text-[10px] text-slate-600">
+                    <div className="text-xs text-slate-600">
                       T1: Thông tin lớp, GVCN, Ban PH, TKB & Mục tiêu. T2: Ảnh sơ đồ lớp nguyên bản & Chữ ký.
                     </div>
                   </button>
@@ -2798,7 +2798,7 @@ export const InfographicView: React.FC = () => {
                       <span>3 Trang A4</span>
                       <span className="px-1 py-0.2 bg-purple-600 text-white rounded text-[8px] font-black">Toàn diện</span>
                     </div>
-                    <div className="text-[10px] text-slate-600">
+                    <div className="text-xs text-slate-600">
                       T1: Thông tin + TKB. T2: Ảnh sơ đồ lớp nguyên bản. T3: Danh sách HS.
                     </div>
                   </button>
@@ -2812,7 +2812,7 @@ export const InfographicView: React.FC = () => {
                     <Grid3X3 className="w-4 h-4 text-blue-600" />
                     <span>3. Chọn phong cách Sơ đồ chỗ ngồi:</span>
                   </span>
-                  <span className="text-[10px] text-blue-600 font-bold">5 chủ đề</span>
+                  <span className="text-xs text-blue-600 font-bold">5 chủ đề</span>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -2836,7 +2836,7 @@ export const InfographicView: React.FC = () => {
                       <span className="text-lg">{style.icon}</span>
                       <div>
                         <div className="font-black text-slate-900 text-xs">{style.label}</div>
-                        <div className="text-[10px] text-slate-500">{style.desc}</div>
+                        <div className="text-xs text-slate-500">{style.desc}</div>
                       </div>
                     </button>
                   ))}
@@ -2850,7 +2850,7 @@ export const InfographicView: React.FC = () => {
                     <Calendar className="w-4 h-4 text-indigo-600" />
                     <span>4. Chọn mẫu trình bày Thời khóa biểu:</span>
                   </span>
-                  <span className="text-[10px] text-indigo-600 font-bold">5 màu sắc</span>
+                  <span className="text-xs text-indigo-600 font-bold">5 màu sắc</span>
                 </div>
 
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
@@ -2872,7 +2872,7 @@ export const InfographicView: React.FC = () => {
                       }`}
                     >
                       <span className="text-base">{style.icon}</span>
-                      <span className="text-[11px] font-bold text-slate-800">{style.label}</span>
+                      <span className="text-xs font-bold text-slate-800">{style.label}</span>
                     </button>
                   ))}
                 </div>

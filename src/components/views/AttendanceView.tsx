@@ -728,7 +728,7 @@ export const AttendanceView: React.FC = () => {
           </div>
           <div>
             <h2 className="text-sm sm:text-base font-black text-slate-900 leading-tight uppercase flex items-center gap-2">
-              <span>ĐIỂM DANH & CHUYÊN CẦN LỚP {activeClass?.name}</span>
+              <span className="whitespace-nowrap"><span className="sm:hidden">ĐIỂM DANH LỚP {activeClass?.name}</span><span className="max-sm:hidden">ĐIỂM DANH & CHUYÊN CẦN LỚP {activeClass?.name}</span></span>
               <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[12px] font-black">
                 {currentClassStudents.length} học sinh
               </span>

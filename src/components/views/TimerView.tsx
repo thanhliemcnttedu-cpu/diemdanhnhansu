@@ -276,7 +276,7 @@ export const TimerView: React.FC = () => {
             </div>
             <div>
               <h2 className="text-base md:text-lg font-black text-slate-900 flex items-center gap-2">
-                <span>Đồng Hồ Lớp Học & Đếm Ngược</span>
+                <span className="whitespace-nowrap"><span className="lg:hidden">Đồng hồ & Đếm ngược</span><span className="max-lg:hidden">Đồng Hồ Lớp Học & Đếm Ngược</span></span>
                 <span className="px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 text-[12px] font-bold border border-indigo-200">
                   Thời Gian Thực
                 </span>

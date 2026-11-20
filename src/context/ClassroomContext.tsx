@@ -5224,6 +5224,9 @@ export const ClassroomProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   );
 };
 
+/** Same context, but undefined outside the Provider (the standalone /diemdanh page renders shared panels without it) */
+export const useClassroomOptional = () => useContext(ClassroomContext);
+
 export const useClassroom = () => {
   const context = useContext(ClassroomContext);
   if (!context) {

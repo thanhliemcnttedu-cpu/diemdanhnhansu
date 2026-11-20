@@ -1,6 +1,10 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { CheckCircle2, Eye, EyeOff, LogOut, ShieldCheck, Stethoscope, Briefcase, CalendarDays, Loader2, AlertTriangle, PencilLine, Lock, Plane, UserCheck, BookOpenCheck } from 'lucide-react';
+import { CheckCircle2, Eye, EyeOff, LogOut, ShieldCheck, Stethoscope, Briefcase, CalendarDays, Loader2, AlertTriangle, PencilLine, Lock, Plane, UserCheck, BookOpenCheck, ClipboardCheck, Utensils } from 'lucide-react';
 import { TeachingLogPanel } from './TeachingLogPanel';
+// Duty screens are loaded only for the few people who were given a duty, so the check-in page stays light
+const StaffAttendanceView = React.lazy(() => import('./StaffAttendanceView').then(m => ({ default: m.StaffAttendanceView })));
+const DutyMealPanel = React.lazy(() => import('./DutyMealPanel').then(m => ({ default: m.DutyMealPanel })));
+import { StaffDuties, hasAnyDuty } from '../../../services/staffAttendanceService';
 import { readTeacherAuth, saveTeacherAuth } from '../../../utils/teacherAuth';
 import { staffAttendanceService, composeTripNote, parseTripNote, STAFF_STATUS_META, longDateLabel, StaffStatus, StaffMember, StaffRecord, attemptOf, attemptsOf, timeSpoken, timeHMS, isProxyRecord } from '../../../services/staffAttendanceService';
 
@@ -45,7 +49,9 @@ export const StaffCheckInPage: React.FC<{ embedded?: boolean; presetCccd?: strin
   const [tripContent, setTripContent] = useState('');
   const [done, setDone] = useState<StaffRecord | null>(null);
   // Sau khi đăng nhập: thẻ Điểm danh / Kê khai tiết dạy
-  const [mainTab, setMainTab] = useState<'checkin' | 'teach'>('checkin');
+  const [mainTab, setMainTab] = useState<'checkin' | 'teach' | 'dutyStaff' | 'dutyMeal'>('checkin');
+  // Duties assigned by the school's leaders to this staff member (Apps Script 1.1.14); empty for most people
+  const [duties, setDuties] = useState<StaffDuties>({});
   // Đã điểm danh hôm nay → phải bấm "Sửa điểm danh" mới mở lại phiếu
   const [editing, setEditing] = useState(false);
   // BGH / Quản trị đã khóa chốt số liệu điểm danh hôm nay (Apps Script 4.5)
@@ -80,6 +86,7 @@ export const StaffCheckInPage: React.FC<{ embedded?: boolean; presetCccd?: strin
   const reset = () => {
     // Trong phần mềm: "Thoát / Xong" = quay về Trang chủ, giữ phiên để lần sau mở lại không phải nhập
     if (embedded && onExit) { setDone(null); setEditing(false); setError(''); onExit(); return; }
+    staffAttendanceService.setDutySession(null); setDuties({});
     setStaff(null); setPin(''); setStatus(''); setNote(''); setExisting(null); setDone(null); setError(''); setEditing(false); setLockedMsg(''); setMainTab('checkin');
     if (!remember && !presetCccd) setCccd('');
   };
@@ -115,6 +122,10 @@ export const StaffCheckInPage: React.FC<{ embedded?: boolean; presetCccd?: strin
       setTeachMsg(r.teachAllowed === false ? (r.teachMessage || 'Nhà trường không áp dụng kê khai tiết dạy cho giáo viên chủ nhiệm.') : '');
       if (r.teachAllowed === false) setMainTab('checkin');
       if (!embedded) { try { if (remember) localStorage.setItem(REMEMBER_KEY, usedCccd); else localStorage.removeItem(REMEMBER_KEY); } catch (_) { /* ignore */ } }
+      // Assigned duties: keep the credentials in memory only, so report requests can be authorised as this person
+      const d: StaffDuties = r.duties || {};
+      setDuties(d);
+      staffAttendanceService.setDutySession(hasAnyDuty(d) && !viaAccount ? { cccd: usedCccd, pin: pinValue } : null);
       setStaff(r.staff); setToday(r.today); setExisting(r.record || null);
       setStatus(r.record?.status || '');
       if (r.record?.status === 'business_trip') { const t = parseTripNote(r.record.note || ''); setTripPlace(t.place); setTripContent(t.content); setNote(t.extra); }
@@ -171,7 +182,7 @@ export const StaffCheckInPage: React.FC<{ embedded?: boolean; presetCccd?: strin
   return (
     <div className={embedded ? 'flex flex-col items-center px-3 py-4 sm:px-6 sm:py-6' : 'min-h-screen bg-gradient-to-b from-sky-50 via-white to-emerald-50 flex flex-col items-center px-4 py-6 sm:py-10'}>
       {/* Điện thoại: khổ hẹp max-w-md. Máy tính (lg): sau khi đăng nhập mở rộng — điểm danh 4xl, kê khai tiết dạy 6xl */}
-      <div className={`w-full space-y-4 ${!staff ? 'max-w-md' : mainTab === 'teach' ? 'max-w-md lg:max-w-6xl' : 'max-w-md lg:max-w-4xl'}`}>
+      <div className={`w-full space-y-4 ${!staff ? 'max-w-md' : mainTab === 'dutyStaff' || mainTab === 'dutyMeal' ? 'max-w-md md:max-w-none' : mainTab === 'teach' ? 'max-w-md lg:max-w-6xl' : 'max-w-md lg:max-w-4xl'}`}>
         <header className="text-center space-y-1">
           {!embedded && <img src="/logo.svg" alt="Lớp Học Hạnh Phúc" className="mx-auto w-16 h-16 rounded-[22%] shadow-md" />}
           <h1 className="font-black text-slate-900 whitespace-nowrap text-[clamp(0.95rem,4.3vw,1.5rem)]">Điểm danh giáo viên – nhân viên</h1>
@@ -265,13 +276,28 @@ export const StaffCheckInPage: React.FC<{ embedded?: boolean; presetCccd?: strin
               <p className="text-sm lg:text-base text-slate-700 truncate">Xin chào <strong className="text-slate-900">{staff.name}</strong><span className="max-lg:hidden text-slate-500"> • {[staff.position, staff.dept].filter(Boolean).join(' • ')}</span></p>
               {!embedded && <button type="button" onClick={reset} className="shrink-0 text-sm font-bold text-slate-600 hover:text-slate-900 inline-flex items-center gap-1"><LogOut className="w-4 h-4" /> Thoát</button>}
             </div>
-            <div className="flex gap-1 bg-slate-200/70 p-1 rounded-2xl lg:w-[28rem] lg:shrink-0" role="tablist" aria-label="Chức năng">
+            <div className={`flex gap-1 bg-slate-200/70 p-1 rounded-2xl overflow-x-auto lg:shrink-0 ${staffAttendanceService.hasDutySession() && hasAnyDuty(duties) ? 'lg:max-w-[46rem]' : 'lg:w-[28rem]'}`} role="tablist" aria-label="Chức năng">
               <button type="button" role="tab" aria-selected={mainTab === 'checkin'} onClick={() => setMainTab('checkin')}
                 className={`no-hover-fx flex-1 h-11 rounded-xl text-sm font-black inline-flex items-center justify-center gap-1.5 ${mainTab === 'checkin' ? 'bg-white text-emerald-800 shadow-xs' : 'text-slate-700'}`}><UserCheck className="w-4 h-4" /> Điểm danh</button>
               {!teachMsg && !/bảo vệ|kế toán|văn thư|thủ quỹ|y tế|thư viện|thiết bị|phục vụ|cấp dưỡng|tạp vụ|lao công/i.test(staff.position || '') && <button type="button" role="tab" aria-selected={mainTab === 'teach'} onClick={() => setMainTab('teach')}
                 className={`no-hover-fx flex-1 h-11 rounded-xl text-sm font-black inline-flex items-center justify-center gap-1.5 ${mainTab === 'teach' ? 'bg-white text-indigo-800 shadow-xs' : 'text-slate-700'}`}><BookOpenCheck className="w-4 h-4" /> Kê khai tiết dạy</button>}
+              {staffAttendanceService.hasDutySession() && (duties.attendance || duties.proxy || duties.teach) && <button type="button" role="tab" aria-selected={mainTab === 'dutyStaff'} onClick={() => setMainTab('dutyStaff')}
+                className={`no-hover-fx flex-1 h-11 px-3 rounded-xl text-sm font-black inline-flex items-center justify-center gap-1.5 whitespace-nowrap ${mainTab === 'dutyStaff' ? 'bg-white text-blue-800 shadow-xs' : 'text-slate-700'}`}><ClipboardCheck className="w-4 h-4" /> {duties.attendance || duties.proxy ? 'Chấm công nhân sự' : 'Tổng hợp kê khai'}</button>}
+              {staffAttendanceService.hasDutySession() && duties.meal && <button type="button" role="tab" aria-selected={mainTab === 'dutyMeal'} onClick={() => setMainTab('dutyMeal')}
+                className={`no-hover-fx flex-1 h-11 px-3 rounded-xl text-sm font-black inline-flex items-center justify-center gap-1.5 whitespace-nowrap ${mainTab === 'dutyMeal' ? 'bg-white text-blue-800 shadow-xs' : 'text-slate-700'}`}><Utensils className="w-4 h-4" /> Bán trú</button>}
             </div>
           </div>
+        )}
+
+        {conn && staff && hasAnyDuty(duties) && !staffAttendanceService.hasDutySession() && (
+          <p className="rounded-2xl border border-sky-200 bg-sky-50 px-4 py-2.5 text-sm text-sky-950" role="note">Thầy cô có nhiệm vụ được nhà trường giao. Để mở các thẻ nhiệm vụ, hãy vào trang Điểm danh và đăng nhập bằng số căn cước công dân cùng mật khẩu điểm danh.</p>
+        )}
+
+        {conn && staff && mainTab === 'dutyStaff' && staffAttendanceService.hasDutySession() && (duties.attendance || duties.proxy || duties.teach) && (
+          <React.Suspense fallback={<p className="text-sm text-slate-600">Đang tải…</p>}><StaffAttendanceView duty={duties} dutySchoolName={schoolName} dutyName={staff.name} /></React.Suspense>
+        )}
+        {conn && staff && mainTab === 'dutyMeal' && staffAttendanceService.hasDutySession() && duties.meal && (
+          <React.Suspense fallback={<p className="text-sm text-slate-600">Đang tải…</p>}><DutyMealPanel today={today} /></React.Suspense>
         )}
 
         {conn && staff && teachMsg && (

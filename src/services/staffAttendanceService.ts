@@ -41,6 +41,24 @@ export interface StaffMember {
 }
 
 /** Khóa chốt số liệu điểm danh của 1 ngày (Apps Script 4.5): khóa tất cả hoặc từng mã GV */
+/** Nhiệm vụ giao cho nhân sự (Apps Script 1.1.14, tệp phancong_nhiemvu.json) */
+export type StaffDutyKey = 'attendance' | 'proxy' | 'teach' | 'meal';
+export type StaffDuties = Partial<Record<StaffDutyKey, boolean>>;
+export const STAFF_DUTY_KEYS: StaffDutyKey[] = ['attendance', 'proxy', 'teach', 'meal'];
+export const STAFF_DUTY_META: Record<StaffDutyKey, { label: string; short: string; hint: string }> = {
+  attendance: { label: 'Kiểm đếm chấm công', short: 'kiểm đếm chấm công', hint: 'Xem, xuất biểu chấm công' },
+  proxy: { label: 'Điểm danh hộ', short: 'điểm danh hộ', hint: 'Điểm danh thay người khác' },
+  teach: { label: 'Kê khai tiết dạy', short: 'kê khai tiết dạy', hint: 'Xem, xuất biểu kê khai và chế độ' },
+  meal: { label: 'Bán trú', short: 'bán trú', hint: 'Xem, xuất biểu báo ăn' },
+};
+export const hasAnyDuty = (d?: StaffDuties | null) => STAFF_DUTY_KEYS.some(k => Boolean(d?.[k]));
+
+/** Phiên "làm theo nhiệm vụ" của nhân sự đang đăng nhập trang Điểm danh bằng CCCD (chỉ giữ trong bộ nhớ, không lưu xuống máy) */
+let dutySession: { cccd: string; pin: string } | null = null;
+/** Trường xác thực gửi kèm lệnh đọc báo cáo / điểm danh hộ: phiên nhiệm vụ (nếu có) hoặc tài khoản Quản trị / BGH */
+const authFields = (auth?: { username: string; password: string } | null): Record<string, unknown> =>
+  (dutySession ? { staffAuth: dutySession } : { auth: auth ?? staffAttendanceService.getViewerAuth() });
+
 export interface StaffDayLock { all?: boolean; codes?: Record<string, boolean>; at?: string; by?: string }
 export const isLockedFor = (L: StaffDayLock | null | undefined, code: string) => Boolean(L && (L.all || L.codes?.[code]));
 
@@ -312,6 +330,18 @@ export const staffAttendanceService = {
     try { sessionStorage.setItem(VIEWER_KEY, JSON.stringify({ username: username.trim().toLowerCase(), password })); } catch (_) { /* ignore */ }
     saveManagerAuth(username, password, isAdmin);
   },
+  /** Bật / tắt phiên làm theo nhiệm vụ (trang Điểm danh gọi sau khi nhân sự đăng nhập; thoát thì truyền null) */
+  setDutySession(s: { cccd: string; pin: string } | null) { dutySession = s && s.cccd && s.pin ? { cccd: s.cccd, pin: s.pin } : null; },
+  hasDutySession(): boolean { return Boolean(dutySession); },
+  dutyAuth(): { cccd: string; pin: string } | null { return dutySession; },
+  /** BGH / Quản trị: đọc bảng phân công nhiệm vụ; truyền `set` (mã nhân sự → nhiệm vụ) để lưu */
+  duties(set?: Record<string, StaffDuties> | null, auth?: { username: string; password: string } | null) {
+    return this.call({ action: 'staffDuties', auth: auth ?? staffAttendanceService.getViewerAuth(), ...(set ? { set } : {}) }, null, 45000);
+  },
+  /** Biểu báo ăn bán trú của một ngày (BGH / Quản trị hoặc người được giao nhiệm vụ bán trú) */
+  mealReport(date: string, auth?: { username: string; password: string } | null) {
+    return this.call({ action: 'mealReport', ...authFields(auth), date }, null, 60000);
+  },
   getViewerAuth(): { username: string; password: string } | null {
     try {
       const s = JSON.parse(sessionStorage.getItem(VIEWER_KEY) || 'null');
@@ -412,7 +442,7 @@ export const staffAttendanceService = {
   /** BGH / Quản trị: khóa hoặc mở khóa điểm danh (codes = danh sách mã; all = toàn bộ) */
   /** BGH / Quản trị điểm danh hộ 1 / nhiều nhân sự (Apps Script 4.7) */
   proxyCheckIn(opts: { codes: string[]; status: StaffStatus; note?: string; date?: string }, auth?: { username: string; password: string } | null) {
-    return this.call({ action: 'staffProxyCheckIn', auth: auth ?? staffAttendanceService.getViewerAuth(), codes: opts.codes, status: opts.status, note: opts.note || '', date: opts.date });
+    return this.call({ action: 'staffProxyCheckIn', ...authFields(auth), codes: opts.codes, status: opts.status, note: opts.note || '', date: opts.date });
   },
 
   lockStaff(opts: { date?: string; lock: boolean; all?: boolean; codes?: string[] }, auth?: { username: string; password: string } | null) {
@@ -422,7 +452,7 @@ export const staffAttendanceService = {
   async range(from: string, to: string, auth?: { username: string; password: string } | null) {
     return this.withFullCccd(await this.readWithOfflineCopy(
       `cham_cong_${from}_${to}.json`,
-      () => this.call({ action: 'staffAttendanceRange', auth: auth ?? staffAttendanceService.getViewerAuth(), from, to }, null, 45000),
+      () => this.call({ action: 'staffAttendanceRange', ...authFields(auth), from, to }, null, 45000),
       res => (Array.isArray(res?.staff) ? { ...res, staff: res.staff.map(({ currentPin: _pin, ...rest }: any) => rest) } : res),
     ));
   },

@@ -557,7 +557,7 @@ export const ScheduleLinksView: React.FC<ScheduleLinksViewProps> = ({ defaultTab
                   }`}
                 >
                   <span>💻</span>
-                  <span>TKB BỘ MÔN ({classes.length} LỚP)</span>
+                  <span className="whitespace-nowrap">TKB BỘ MÔN ({classes.length} LỚP)</span>
                 </button>
                 <button
                   onClick={() => setSubjectScheduleMode('class_detail')}
@@ -568,7 +568,7 @@ export const ScheduleLinksView: React.FC<ScheduleLinksViewProps> = ({ defaultTab
                   }`}
                 >
                   <span>🎨</span>
-                  <span>XEM MẪU NGHỆ THUẬT TỪNG LỚP</span>
+                  <span className="whitespace-nowrap"><span className="sm:hidden">MẪU TỪNG LỚP</span><span className="max-sm:hidden">XEM MẪU NGHỆ THUẬT TỪNG LỚP</span></span>
                 </button>
               </div>
             </div>
@@ -645,8 +645,8 @@ export const ScheduleLinksView: React.FC<ScheduleLinksViewProps> = ({ defaultTab
                           </span>
                         )}
                       </div>
-                      <h4 className="text-xs font-black text-slate-800 leading-tight">
-                        {tmpl.name}
+                      <h4 className="text-xs font-black text-slate-800 leading-tight whitespace-nowrap truncate tracking-tight" title={tmpl.name}>
+                        {tmpl.name.replace(/^Mẫu (\d+) • /, '$1. ')}
                       </h4>
                       <p className="text-[12px] text-slate-400 font-medium line-clamp-1 mt-0.5">
                         {tmpl.description}

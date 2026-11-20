@@ -55,7 +55,7 @@ export const RandomStudentPickerView: React.FC<RandomStudentPickerViewProps> = (
                 GỌI TÊN HỌC SINH
               </h1>
               <p className="text-xs text-slate-500 font-semibold uppercase">
-                LỚP <span className="text-indigo-600 font-black">{activeClass?.name || '4A1'}</span> • SĨ SỐ: {currentClassStudents.length} HỌC SINH • 6 TRÒ CHƠI GỌI TÊN & QUIZ HÀO HỨNG!
+                LỚP <span className="text-indigo-600 font-black">{activeClass?.name || '4A1'}</span> • SĨ SỐ: {currentClassStudents.length} HỌC SINH • 7 TRÒ CHƠI GỌI TÊN & QUIZ HÀO HỨNG!
               </p>
             </div>
           </div>

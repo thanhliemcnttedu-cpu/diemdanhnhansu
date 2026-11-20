@@ -169,9 +169,9 @@ export const SubjectTeacherReportsView: React.FC<{ onNavigate?: (view: any) => v
               </span>
             </div>
 
-            <h1 className="text-xl md:text-2xl font-black tracking-tight uppercase flex items-center gap-2">
-              <Trophy className="w-7 h-7 text-amber-300" />
-              <span>BÁO CÁO THỐNG KÊ THI ĐUA VÀ TÍCH XU BỘ MÔN</span>
+            <h1 className="text-base sm:text-lg xl:text-xl 2xl:text-2xl font-black tracking-tight uppercase flex items-center gap-2">
+              <Trophy className="w-6 h-6 xl:w-7 xl:h-7 text-amber-300 shrink-0" />
+              <span className="truncate min-w-0"><span className="sm:hidden">Thống kê thi đua bộ môn</span><span className="max-sm:hidden">Thống kê thi đua và tích xu bộ môn</span></span>
             </h1>
 
             <p className="text-xs md:text-sm text-white max-w-2xl font-medium leading-relaxed">
@@ -314,7 +314,7 @@ export const SubjectTeacherReportsView: React.FC<{ onNavigate?: (view: any) => v
                   <th className="py-3 px-3 text-center w-14">Hạng</th>
                   <th className="py-3 px-4">Lớp Học</th>
                   <th className="py-3 px-3 text-center">Khối</th>
-                  <th className="py-3 px-3 text-center">Sĩ Số</th>
+                  <th className="py-3 px-3 text-center whitespace-nowrap">Sĩ số</th>
                   <th className="py-3 px-4 text-center">Tổng Sao/Xu Môn</th>
                   <th className="py-3 px-3 text-center">Điểm TB / HS</th>
                   <th className="py-3 px-4">Học Sinh Dẫn Đầu Lớp</th>
