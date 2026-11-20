@@ -6,6 +6,8 @@ import { parseHomeroomSheet, downloadHomeroomTemplate, resolvePlacements, looseK
 import { staffAttendanceService, StaffMember } from '../../services/staffAttendanceService';
 import { databaseService } from '../../services/databaseService';
 import { schoolDriveDbService } from '../../services/schoolDriveDbService';
+import { StaffGroupChips } from '../common/StaffGroupChips';
+import { staffGroupOf, StaffGroupFilter } from '../../utils/staffGroups';
 
 /**
  * 🔗 TẠO TÀI KHOẢN PHẦN MỀM TỪ DANH SÁCH NHÂN SỰ CHẤM CÔNG (tài khoản dùng chung, Apps Script 1.1.4)
@@ -75,6 +77,8 @@ export const StaffToAccountsPanel: React.FC<{
   const [staff, setStaff] = useState<StaffMember[]>([]);
   const [cfg, setCfg] = useState<Record<string, RowCfg>>({});
   const [q, setQ] = useState('');
+  const [groupFilter, setGroupFilter] = useState<StaffGroupFilter>('all');
+  const [onlyNoAccount, setOnlyNoAccount] = useState(false);
   const [pwMode, setPwMode] = useState<'pin' | 'common'>('pin');
   const [commonPw, setCommonPw] = useState('');
 
@@ -216,9 +220,22 @@ export const StaffToAccountsPanel: React.FC<{
     } finally { setApplyingOld(false); }
   };
 
-  const rows = useMemo(() => staff.filter(s => !q || norm(`${s.name} ${s.code} ${s.position || ''} ${s.dept || ''}`).includes(norm(q))), [staff, q]);
-  // Dòng được "chọn tất cả" tác động: giáo viên (vai trò khác "Không cấp") chưa có tài khoản
-  const selectable = rows.filter(s => !linkedUser(s) && !!cccdOf(s) && cfg[s.code]?.role !== 'skip');
+  // Nhóm vai trò của từng người (để lọc): ưu tiên tài khoản đã có, rồi danh sách phân công lớp, rồi chức vụ / tổ
+  const groupOfStaff = (s: StaffMember) => staffGroupOf(s, linkedUser(s), Boolean(assign[s.code]));
+  const groupCounts = useMemo(() => {
+    const m: Record<string, number> = {};
+    staff.forEach(s => { const g = groupOfStaff(s); m[g] = (m[g] || 0) + 1; });
+    return m;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [staff, assign, allUsers]);
+  const rows = useMemo(() => staff.filter(s =>
+    (!q || norm(`${s.name} ${s.code} ${s.position || ''} ${s.dept || ''}`).includes(norm(q)))
+    && (groupFilter === 'all' || groupOfStaff(s) === groupFilter)
+    && (!onlyNoAccount || !linkedUser(s))
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  ), [staff, q, groupFilter, onlyNoAccount, assign, allUsers]);
+  // Dòng được "chọn tất cả" tác động: đang xem "Tất cả" → chỉ giáo viên (vai trò khác "Không cấp"); đang lọc một nhóm → mọi người chưa có tài khoản trong nhóm đó
+  const selectable = rows.filter(s => !linkedUser(s) && !!cccdOf(s) && (groupFilter !== 'all' || cfg[s.code]?.role !== 'skip'));
   const picked = staff.filter(s => cfg[s.code]?.pick && cfg[s.code]?.role !== 'skip' && !linkedUser(s) && !!cccdOf(s));
   const setRow = (code: string, patch: Partial<RowCfg>) => setCfg(prev => ({ ...prev, [code]: { ...prev[code], ...patch } }));
 
@@ -387,14 +404,23 @@ export const StaffToAccountsPanel: React.FC<{
             <span className="ml-auto text-sm text-slate-600">Đã chọn <strong className="text-slate-900">{picked.length}</strong> / {staff.length} nhân sự</span>
           </div>
 
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+            <StaffGroupChips value={groupFilter} onChange={setGroupFilter} counts={groupCounts} total={staff.length} />
+            <label className="inline-flex items-center gap-2 text-sm text-slate-800 cursor-pointer min-h-10">
+              <input type="checkbox" className="w-4 h-4 accent-indigo-600" checked={onlyNoAccount} onChange={(e) => setOnlyNoAccount(e.target.checked)} />
+              Chỉ người chưa có tài khoản
+            </label>
+            <span className="text-sm text-slate-600">Đang hiện <strong className="text-slate-900">{rows.length}</strong> người</span>
+          </div>
+
           <div className="overflow-auto max-h-[28rem] rounded-2xl border border-slate-200">
             <table className="w-full text-sm min-w-[760px]">
               <thead className="sticky top-0 bg-slate-50 z-10">
                 <tr className="text-left text-xs text-slate-600 border-b border-slate-200">
                   <th className="py-2 pl-3 pr-1 w-8">
-                    <input type="checkbox" aria-label="Chọn tất cả giáo viên đang hiện" title="Chọn / bỏ chọn tất cả giáo viên (không gồm nhân viên, cán bộ quản lý)" className="w-4 h-4 accent-indigo-600"
+                    <input type="checkbox" aria-label="Chọn tất cả người đang hiện" title="Chọn / bỏ chọn tất cả người đang hiện chưa có tài khoản. Đang xem Tất cả: chỉ giáo viên; lọc theo nhóm: cả nhóm đó" className="w-4 h-4 accent-indigo-600"
                       checked={selectable.length > 0 && selectable.every(s => cfg[s.code]?.pick)}
-                      onChange={(e) => setCfg(prev => { const n = { ...prev }; selectable.forEach(s => { n[s.code] = { ...n[s.code], pick: e.target.checked }; }); return n; })} />
+                      onChange={(e) => setCfg(prev => { const n = { ...prev }; selectable.forEach(s => { const cur = n[s.code] || { pick: false, role: 'skip' as RoleChoice, cls: '' }; n[s.code] = { ...cur, pick: e.target.checked, role: e.target.checked && cur.role === 'skip' ? manualRole(s) : cur.role }; }); return n; })} />
                   </th>
                   <th className="py-2 pr-2">Nhân sự</th>
                   <th className="py-2 pr-2 w-40">Vai trò</th>

@@ -290,7 +290,9 @@ export const StaffCheckInPage: React.FC<{ embedded?: boolean; presetCccd?: strin
         )}
 
         {conn && staff && hasAnyDuty(duties) && !staffAttendanceService.hasDutySession() && (
-          <p className="rounded-2xl border border-sky-200 bg-sky-50 px-4 py-2.5 text-sm text-sky-950" role="note">Thầy cô có nhiệm vụ được nhà trường giao. Để mở các thẻ nhiệm vụ, hãy vào trang Điểm danh và đăng nhập bằng số căn cước công dân cùng mật khẩu điểm danh.</p>
+          <p className="rounded-2xl border border-sky-200 bg-sky-50 px-4 py-2.5 text-sm text-sky-950" role="note">Thầy cô có nhiệm vụ được nhà trường giao. {embedded
+            ? 'Hãy mở mục "Chấm công nhân sự" ở thanh bên (hoặc nút "Báo cáo" trên điện thoại) để làm nhiệm vụ, kể cả điểm danh hộ.'
+            : 'Để mở các thẻ nhiệm vụ, hãy vào trang Điểm danh và đăng nhập bằng số căn cước công dân cùng mật khẩu điểm danh.'}</p>
         )}
 
         {conn && staff && mainTab === 'dutyStaff' && staffAttendanceService.hasDutySession() && (duties.attendance || duties.proxy || duties.teach) && (

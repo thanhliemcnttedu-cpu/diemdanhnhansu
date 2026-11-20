@@ -1,4 +1,5 @@
 import { quizBankStore } from '../services/quizBankStore';
+import { isStatsViewerAccount } from '../utils/accountKinds';
 import { MANAGER_DATA_MS, TEACHER_SYNC_MS, ADMIN_EDITS_MS, LOCAL_EDIT_QUIET_MS, startJitteredLoop } from '../utils/liveSync';
 import { deriveVaultKey, sealJSON, openJSON, fingerprint } from '../utils/personalVault';
 import type { PersonalQuizVault } from '../types';
@@ -317,7 +318,7 @@ export const ClassroomProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const isSchoolAdmin = Boolean(currentUser?.role === 'school_admin' || currentUser?.isSchoolAdmin);
   const isGuestAdmin = Boolean(currentUser?.role === 'guest_admin' || currentUser?.isGuestAdmin);
   const isAdmin = Boolean(currentUser?.role === 'admin' || isBgh || isSchoolAdmin || isGuestAdmin);
-  const canManageAccounts = Boolean(currentUser?.role === 'admin' || isSchoolAdmin || isGuestAdmin || isBgh);
+  const canManageAccounts = Boolean(currentUser?.role === 'admin' || isSchoolAdmin || isGuestAdmin || (isBgh && !isStatsViewerAccount(currentUser)));
 
   // 🛡️ BẢO TOÀN TÔN TRỌNG QUYỀN GIÁO VIÊN CHỦ NHIỆM (GVCN AUTONOMY PROTOCOL)
   // Quản trị nhà trường, Ban Giám Hiệu và Admin Quản trị không được:

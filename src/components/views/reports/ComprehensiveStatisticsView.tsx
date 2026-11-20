@@ -375,7 +375,9 @@ export const ComprehensiveStatisticsView: React.FC = () => {
       totalAbsent,
       eating,
       attRate,
-      bRate
+      bRate,
+      // No attendance sheet yet: the 100% above is only a neutral default, the screen must say "no data"
+      hasData: totalSlots > 0
     };
   };
 
@@ -923,49 +925,7 @@ export const ComprehensiveStatisticsView: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* 1. 30-DAY BACKUP WARNING BANNER (User Request: Sau 30 ngày hiển thị cảnh báo sao lưu JSON) */}
-      {showBackupAlert && (
-        <div className="bg-gradient-to-r from-orange-700 via-rose-600 to-orange-700 text-white rounded-3xl p-4 md:p-5 shadow-lg border border-amber-300 flex flex-col md:flex-row md:items-center justify-between gap-4 animate-in fade-in duration-200">
-          <div className="flex items-center gap-3.5">
-            <div className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-md text-white flex items-center justify-center font-black shrink-0 shadow-inner">
-              <ShieldAlert className="w-7 h-7 text-amber-100" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="px-2.5 py-0.5 rounded-full bg-white text-rose-800 text-[12px] font-black uppercase tracking-wider">
-                  CẢNH BÁO QUAN TRỌNG
-                </span>
-                <span className="text-xs font-bold text-white">
-                  Đã {daysSinceBackup >= 30 ? `hơn ${daysSinceBackup}` : daysSinceBackup} ngày chưa sao lưu
-                </span>
-              </div>
-              <h3 className="text-sm md:text-base font-black uppercase tracking-wide mt-0.5">
-                HÃY SAO LƯU DỮ LIỆU ĐỊNH DẠNG .JSON ĐỂ BẢO VỆ DỮ LIỆU LỚP HỌC
-              </h3>
-              <p className="text-xs text-white font-medium">
-                Hệ thống đề xuất bạn nên tải về file .JSON định kỳ để phòng ngừa sự cố máy tính và bảo vệ toàn bộ điểm số, chuyên cần.
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2 self-start md:self-auto shrink-0">
-            <button
-              onClick={handleBackupJsonClick}
-              className="px-4 py-2.5 bg-white hover:bg-amber-50 text-rose-800 rounded-xl text-xs font-black shadow-md transition-all hover-zoom-btn uppercase flex items-center gap-1.5 cursor-pointer"
-            >
-              <Database className="w-4 h-4 text-rose-600" />
-              <span>SAO LƯU .JSON NGAY (1 CHẠM)</span>
-            </button>
-            <button
-              onClick={handleDismissBackupAlert}
-              className="px-3 py-2.5 bg-white/20 hover:bg-white/30 border border-white/70 text-white rounded-xl text-xs font-bold transition-colors cursor-pointer"
-              title="Tạm ẩn cảnh báo hôm nay"
-            >
-              Bỏ qua
-            </button>
-          </div>
-        </div>
-      )}
+      {/* The 30-day JSON backup warning was removed: data is saved online in real time. The manual backup button below stays. */}
 
       {/* 2. SAFE MONTH TRANSITION POLICY BANNER & PERMANENT BACKUP BUTTON */}
       <div className="bg-white rounded-3xl border border-slate-200/90 p-4 md:p-5 shadow-xs flex flex-col lg:flex-row lg:items-center justify-between gap-4 hover-zoom-card">
@@ -1330,17 +1290,17 @@ export const ComprehensiveStatisticsView: React.FC = () => {
           <div className="bg-emerald-50/70 p-2.5 rounded-xl border border-emerald-200 flex items-center justify-between">
             <div>
               <div className="text-[12px] font-black text-emerald-800 uppercase">CHUYÊN CẦN ({todayStr})</div>
-              <div className="text-base font-black text-emerald-700 font-mono">{todayStats.attRate}%</div>
+              <div className="text-base font-black text-emerald-700 font-mono">{todayStats.hasData ? `${todayStats.attRate}%` : '—'}</div>
             </div>
-            <div className="text-[12px] text-emerald-700 font-bold font-mono">{todayStats.present}/{totalStudents} HS</div>
+            <div className="text-[12px] text-emerald-700 font-bold font-mono">{todayStats.hasData ? `${todayStats.present}/${todayStats.present + todayStats.totalAbsent} HS đã điểm danh` : 'Chưa có dữ liệu'}</div>
           </div>
 
           <div className="bg-indigo-50/70 p-2.5 rounded-xl border border-indigo-200 flex items-center justify-between">
             <div>
               <div className="text-[12px] font-black text-indigo-800 uppercase">ĂN BÁN TRÚ HÔM NAY</div>
-              <div className="text-base font-black text-indigo-700 font-mono">{todayStats.bRate}%</div>
+              <div className="text-base font-black text-indigo-700 font-mono">{todayStats.hasData ? `${todayStats.bRate}%` : '—'}</div>
             </div>
-            <div className="text-[12px] text-indigo-600 font-bold font-mono">{todayStats.eating} suất</div>
+            <div className="text-[12px] text-indigo-600 font-bold font-mono">{todayStats.hasData ? `${todayStats.eating} suất` : 'Chưa có dữ liệu'}</div>
           </div>
 
           <div className="bg-amber-50/70 p-2.5 rounded-xl border border-amber-200 flex items-center justify-between">

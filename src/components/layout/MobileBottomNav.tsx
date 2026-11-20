@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import { isStatsViewerAccount } from '../../utils/accountKinds';
 import React from 'react';
 import { 
   Home, Users, BarChart3, Menu, Sparkles, CheckSquare, UserCheck
@@ -35,7 +36,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
     ? [
         { id: 'dashboard', label: 'Trang chủ', icon: Home, action: () => onNavigate('dashboard') },
         { id: 'staff_attendance', label: 'Chấm công', icon: UserCheck, action: () => onNavigate('staff_attendance') },
-        { id: 'students', label: 'Học sinh', icon: Users, action: () => onNavigate('students') },
+        ...(isStatsViewerAccount(currentUser) ? [] : [{ id: 'students' as NavigationMenuId, label: 'Học sinh', icon: Users, action: () => onNavigate('students') }]),
         { id: 'reports', label: 'Báo cáo', icon: BarChart3, action: () => onNavigate('reports') },
       ]
     : [

@@ -1,4 +1,5 @@
 import { STAFF_SYNC_MS, startJitteredLoop } from '../../../utils/liveSync';
+import { isStatsViewerAccount } from '../../../utils/accountKinds';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import * as XLSX from 'xlsx';
 import {
@@ -108,7 +109,7 @@ export const StaffAttendanceView: React.FC<{
 
   // 👁️ Tài khoản được Quản trị cấp quyền "Xem báo cáo chấm công" (vd. nhân viên kế toán): CHỈ XEM và XUẤT TỆP —
   // không có thẻ Danh sách nhân sự / Link điểm danh, không điểm danh hộ, không khóa / mở khóa (Apps Script 1.1.12)
-  const viewOnly = duty ? true : (!canManage && !isBgh && currentUser?.role !== 'bgh' && Boolean(currentUser?.staffReportViewer));
+  const viewOnly = duty ? true : (!canManage && (isStatsViewerAccount(currentUser) || (!isBgh && currentUser?.role !== 'bgh')) && Boolean(currentUser?.staffReportViewer));
 
   const [tab, setTab] = useState<Tab>(duty && !duty.attendance && !duty.proxy ? 'teach' : 'summary');
   // Phiên đã nhớ phải đúng tài khoản đang đăng nhập phần mềm
@@ -124,6 +125,25 @@ export const StaffAttendanceView: React.FC<{
   });
   const [authPassword, setAuthPassword] = useState('');
   const [authError, setAuthError] = useState('');
+
+  // Signed in to the software with a report-viewer account that was ALSO assigned "Điểm danh hộ": the assignment is stored
+  // per ID number, so ask Apps Script for this person's duties and, when proxy is on, authorise requests as that person
+  // (same session the check-in page uses) — otherwise the table stays read-only and the proxy call is refused.
+  const [myProxy, setMyProxy] = useState(false);
+  useEffect(() => {
+    if (duty || !viewOnly || !auth?.username || !auth.password) return;
+    const cccd = auth.username.replace(/\D/g, '');
+    if (cccd.length < 9) return;
+    let off = false;
+    staffAttendanceService.staffAuth(cccd, auth.password).then((r: any) => {
+      if (off) return;
+      const ok = Boolean(r?.success && r.duties?.proxy);
+      setMyProxy(ok);
+      staffAttendanceService.setDutySession(ok ? { cccd, pin: auth.password } : null);
+    }).catch(() => { /* old Apps Script: stay read-only */ });
+    return () => { off = true; };
+  }, [duty, viewOnly, auth?.username, auth?.password]);
+  useEffect(() => () => { if (!duty) staffAttendanceService.setDutySession(null); }, [duty]);
 
   const [today, setToday] = useState(() => toDateKey(new Date()));
   const [period, setPeriod] = useState<Period>('today');
@@ -413,7 +433,7 @@ export const StaffAttendanceView: React.FC<{
       {viewOnly && !duty && (
         <p className="rounded-2xl border border-sky-200 bg-sky-50 px-4 py-2.5 text-sm text-sky-950 flex items-start gap-2" role="status">
           <Eye className="w-4 h-4 mt-0.5 shrink-0 text-sky-700" />
-          <span><strong>Chế độ xem báo cáo.</strong> Tài khoản của bạn được nhà trường cấp quyền xem số liệu và xuất tệp báo cáo chấm công, kê khai tiết dạy. Điểm danh hộ, khóa chốt số liệu và danh sách nhân sự do Quản trị nhà trường, Ban giám hiệu thực hiện.</span>
+          <span><strong>Chế độ xem báo cáo.</strong> Tài khoản của bạn được nhà trường cấp quyền xem số liệu và xuất tệp báo cáo chấm công, kê khai tiết dạy. {myProxy ? 'Bạn được giao nhiệm vụ Điểm danh hộ: tích chọn người trong bảng chi tiết rồi bấm Điểm danh hộ. ' : 'Điểm danh hộ, '}Khóa chốt số liệu và danh sách nhân sự do Quản trị nhà trường, Ban giám hiệu thực hiện.</span>
         </p>
       )}
 
@@ -555,7 +575,7 @@ export const StaffAttendanceView: React.FC<{
               {splitOn ? (
                 <StaffSplitView staff={splitStaff} days={days} dateKeys={stats.workingDays} selectedDate={today} rangeLabel={range.label} onBackToTable={() => toggleSplit(false)} />
               ) : (
-              <TodayDetail staff={staff} records={days[dd] || {}} today={today} date={dd} dayLock={locks[dd] || null} auth={auth} readOnly={viewOnly && !duty?.proxy} noLock={Boolean(duty)}
+              <TodayDetail staff={staff} records={days[dd] || {}} today={today} date={dd} dayLock={locks[dd] || null} auth={auth} readOnly={viewOnly && !duty?.proxy && !myProxy} noLock={Boolean(duty) || myProxy}
                 extraAction={(
                   <button type="button" onClick={() => toggleSplit(true)} title="Xem danh sách nhân sự kèm chi tiết từng người (chỉ xem). Bấm Dạng bảng để quay lại."
                     className="no-hover-fx h-10 px-3.5 rounded-xl border border-slate-300 bg-white text-sm font-semibold text-slate-800 hover:bg-slate-50 inline-flex items-center justify-center gap-2 whitespace-nowrap cursor-pointer">
@@ -573,7 +593,7 @@ export const StaffAttendanceView: React.FC<{
 
       {tab === 'roster' && !viewOnly && <RosterPanel canManage={canManage} auth={auth} schoolName={schoolName} />}
       {tab === 'teach' && auth && (!duty || duty.teach) && <TeachingReportPanel auth={auth} schoolName={schoolName} today={today} readOnly={viewOnly} />}
-      {tab === 'duty' && !viewOnly && <StaffDutiesPanel auth={auth} />}
+      {tab === 'duty' && !viewOnly && <StaffDutiesPanel auth={auth} schoolName={schoolName} />}
       {tab === 'link' && !viewOnly && <LinkPanel schoolName={schoolName} isBghOnly={Boolean(isBgh && !canManage)} />}
     </div>
   );

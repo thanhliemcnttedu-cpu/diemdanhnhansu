@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import { isStatsViewerAccount } from '../../utils/accountKinds';
 import { useClassroom } from '../../context/ClassroomContext';
 import { Student, SchoolEntity } from '../../types';
 import { APP_AUTHOR_INFO, DEFAULT_TEACHER } from '../../data/initialData';
@@ -818,7 +819,7 @@ export const ReportsDataView: React.FC<ReportsDataViewProps> = ({ defaultTab = '
               ['stats', 'Thống kê', BarChart3],
               ['data', 'Dữ liệu', Download],
               ['profile', 'Cài đặt', User],
-            ] as Array<[typeof activeTab, string, React.ComponentType<{ className?: string }>]>).map(([id, label, Icon]) => (
+            ] as Array<[typeof activeTab, string, React.ComponentType<{ className?: string }>]>).filter(([id]) => !(id === 'profile' && isStatsViewerAccount(currentUser))).map(([id, label, Icon]) => (
               <button
                 key={id}
                 type="button"

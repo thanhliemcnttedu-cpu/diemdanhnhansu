@@ -6,6 +6,7 @@ import {
   ShieldCheck, LogIn, UserCheck, X, Award,
   HardDrive, Cloud, KeyRound, Lock, ChevronDown, Settings2, MessageCircle, QrCode
 } from 'lucide-react';
+import { isStatsViewerAccount } from '../../utils/accountKinds';
 import { useState } from 'react';
 import { appsScriptSetupService } from '../../services/appsScriptSetupService';
 import { useClassroom } from '../../context/ClassroomContext';
@@ -46,6 +47,8 @@ export const isNonTeachingAccount = (u?: { role?: string; nonTeaching?: boolean 
   Boolean(u && u.nonTeaching === true && (u.role === 'subject' || u.role === 'homeroom'));
 /** Các mục tài khoản Nhân viên được dùng (mục Chấm công nhân sự còn cần quyền xem báo cáo) */
 export const NON_TEACHING_MENU_IDS: NavigationMenuId[] = ['staff_attendance', 'my_checkin', 'qr', 'guide'];
+/** Staff given a report duty: school-wide dashboard + statistics (read-only) on top of the staff screens */
+export const STATS_VIEWER_MENU_IDS: NavigationMenuId[] = ['dashboard', 'reports', 'staff_attendance', 'my_checkin', 'qr', 'guide'];
 
 interface SidebarProps {
   currentView: NavigationMenuId;
@@ -221,6 +224,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     if (item.id === 'staff_attendance' && !isMacroAdmin && !currentUser?.staffReportViewer) return false;
     // Nhân sự không phải giáo viên: không có chức năng quản lý lớp học — chỉ còn chấm công, báo cáo được cấp và hướng dẫn
     if (isNonTeachingAccount(currentUser)) return NON_TEACHING_MENU_IDS.includes(item.id);
+    if (isStatsViewerAccount(currentUser)) return STATS_VIEWER_MENU_IDS.includes(item.id);
     // Giáo viên: tự điểm danh đi làm hằng ngày + kê khai tiết dạy (quản lý dùng màn Chấm công nhân sự)
     if (item.id === 'my_checkin' && isMacroAdmin) return false;
 

@@ -359,10 +359,20 @@ export const AdminRealtimeDashboardView: React.FC = () => {
     let excused = 0;
     let unexcused = 0;
     let sick = 0;
+    // Only classes that really reported count in the denominator (a class that has not reported yet is "no data", not "absent")
+    const sizeByClass = new Map<string, number>();
+    filteredStudents.forEach(st => sizeByClass.set(st.classId, (sizeByClass.get(st.classId) || 0) + 1));
+    const reportedKeys = new Set<string>();
+    const reportedClassIds = new Set<string>();
+    let reportedEnrolment = 0;
 
     recordsInPeriod.forEach(record => {
       if (!record.records) return;
       datesWithData.add(record.date);
+      if (Object.keys(record.records).length > 0) {
+        const key = `${record.classId}|${record.date}`;
+        if (!reportedKeys.has(key)) { reportedKeys.add(key); reportedEnrolment += sizeByClass.get(record.classId) || 0; reportedClassIds.add(record.classId); }
+      }
       Object.entries(record.records).forEach(([_, status]) => {
         // Late students are present; 'other' is treated as an excused absence
         if (status === 'present') present++;
@@ -377,13 +387,16 @@ export const AdminRealtimeDashboardView: React.FC = () => {
     const totalLogged = present + absentTotal;
     const daysCount = datesWithData.size;
 
-    // School-wide rate: students present / total enrolment of the whole school (per day with data).
-    // Classes that have not reported count against the rate instead of being left out.
-    const enrolmentSlots = totalStudents * daysCount;
+    // Rate = present / enrolment of the class-days that reported. Coverage (how many classes reported) is shown next to it.
+    const enrolmentSlots = reportedEnrolment;
     const rate = enrolmentSlots > 0
       ? Math.min(100, Math.round((present / enrolmentSlots) * 1000) / 10)
       : 0;
     const notReported = Math.max(0, enrolmentSlots - totalLogged);
+    const hasData = enrolmentSlots > 0;
+    const classesReported = reportedClassIds.size;
+    const classDaysReported = reportedKeys.size;
+    const classDaysExpected = filteredClasses.length * daysCount;
 
     const avgPresentPerDay = daysCount > 0 ? Math.round(present / daysCount) : 0;
     const avgAbsentPerDay = daysCount > 0 ? Math.round(absentTotal / daysCount) : 0;
@@ -401,9 +414,13 @@ export const AdminRealtimeDashboardView: React.FC = () => {
       rate,
       daysCount,
       avgPresentPerDay,
-      avgAbsentPerDay
+      avgAbsentPerDay,
+      hasData,
+      classesReported,
+      classDaysReported,
+      classDaysExpected
     };
-  }, [attendanceRecords, filteredClassIds, dateRange, totalStudents]);
+  }, [attendanceRecords, filteredClassIds, dateRange, filteredStudents, filteredClasses.length]);
 
   // =========================================================================
   // 🌟 TỔNG HỢP ĂN BÁN TRÚ THEO KỲ [startDate, endDate]
@@ -440,7 +457,8 @@ export const AdminRealtimeDashboardView: React.FC = () => {
     const rate = presentInPeriod > 0
       ? Math.round((eating / presentInPeriod) * 1000) / 10
       : 0;
-    const enrolmentSlots = totalStudents * daysCount;
+    // Same base as attendance: enrolment of the class-days that reported
+    const enrolmentSlots = periodAttendance.enrolmentSlots;
     const schoolRate = enrolmentSlots > 0
       ? Math.round((eating / enrolmentSlots) * 1000) / 10
       : 0;
@@ -459,7 +477,76 @@ export const AdminRealtimeDashboardView: React.FC = () => {
       daysCount,
       avgEatingPerDay
     };
-  }, [boardingRecords, filteredClassIds, dateRange, periodAttendance.present, totalStudents, attendedClassDays]);
+  }, [boardingRecords, filteredClassIds, dateRange, periodAttendance.present, periodAttendance.enrolmentSlots, attendedClassDays]);
+
+  // =========================================================================
+  // 📈 XU HƯỚNG: chuỗi 14 ngày kết thúc ở ngày đang xem + so với kỳ liền trước
+  // Rate of a day = present / enrolment of the classes that reported that day (same rule as the cards).
+  // =========================================================================
+  const trendInfo = useMemo(() => {
+    const sizeByClass = new Map<string, number>();
+    filteredStudents.forEach(st => sizeByClass.set(st.classId, (sizeByClass.get(st.classId) || 0) + 1));
+    const byDate = new Map<string, { present: number; enrol: number; eating: number; classes: Set<string> }>();
+    const seen = new Set<string>();
+    attendanceRecords.forEach(r => {
+      if (!r || !r.records || !filteredClassIds.has(r.classId) || Object.keys(r.records).length === 0) return;
+      let e = byDate.get(r.date);
+      if (!e) { e = { present: 0, enrol: 0, eating: 0, classes: new Set<string>() }; byDate.set(r.date, e); }
+      const key = `${r.classId}|${r.date}`;
+      if (!seen.has(key)) { seen.add(key); e.enrol += sizeByClass.get(r.classId) || 0; e.classes.add(r.classId); }
+      Object.values(r.records).forEach(stt => { if (stt === 'present' || stt === 'late') e!.present++; });
+    });
+    boardingRecords.forEach(r => {
+      if (!r || !r.records || !filteredClassIds.has(r.classId) || !seen.has(`${r.classId}|${r.date}`)) return;
+      const e = byDate.get(r.date);
+      if (!e) return;
+      Object.values(r.records).forEach(stt => { if (stt === 'eating') e.eating++; });
+    });
+    const addDays = (d: string, n: number) => {
+      const [y, m, dd] = d.split('-').map(Number);
+      return toLocalDateString(new Date(y, m - 1, dd + n));
+    };
+    const rangeRate = (a: string, b: string) => {
+      let p = 0, en = 0, eat = 0;
+      byDate.forEach((v, d) => { if (d >= a && d <= b) { p += v.present; en += v.enrol; eat += v.eating; } });
+      if (en <= 0) return null;
+      return { att: Math.min(100, Math.round((p / en) * 1000) / 10), board: p > 0 ? Math.round((eat / p) * 1000) / 10 : null };
+    };
+    const anchorDate = dateRange.endDate > todayStr ? todayStr : dateRange.endDate;
+    const points: Array<{ date: string; att: number; board: number | null; reported: number }> = [];
+    for (let i = 13; i >= 0; i--) {
+      const d = addDays(anchorDate, -i);
+      const e = byDate.get(d);
+      const r = e ? rangeRate(d, d) : null;
+      if (e && r) points.push({ date: d, att: r.att, board: r.board, reported: e.classes.size });
+    }
+    // Previous comparable period
+    let prev: { att: number; board: number | null } | null = null;
+    let prevLabel = '';
+    if (timeframe === 'day') {
+      for (let i = 1; i <= 14; i++) {
+        const d = addDays(dateRange.startDate, -i);
+        const r = byDate.has(d) ? rangeRate(d, d) : null;
+        if (r) { prev = r; prevLabel = `so với ${formatDateVN(d)}`; break; }
+      }
+    } else if (timeframe === 'week') {
+      prev = rangeRate(addDays(dateRange.startDate, -7), addDays(dateRange.startDate, -1));
+      prevLabel = 'so với tuần trước';
+    } else {
+      const pe = addDays(dateRange.startDate, -1);
+      prev = rangeRate(pe.slice(0, 8) + '01', pe);
+      prevLabel = 'so với tháng trước';
+    }
+    return { points, prev, prevLabel, anchorDate, classCount: filteredClasses.length };
+  }, [attendanceRecords, boardingRecords, filteredClassIds, filteredStudents, filteredClasses.length, dateRange, timeframe, todayStr]);
+
+  /** "▲ +1.2 điểm so với …" / "▼ -0.8 …" / "= 0 …" under a rate; null when there is nothing to compare */
+  const deltaLine = (cur: number | null | undefined, prevRate: number | null | undefined, hasCur: boolean) => {
+    if (!hasCur || cur == null || prevRate == null) return null;
+    const d = Math.round((cur - prevRate) * 10) / 10;
+    const tone = d > 0 ? 'text-emerald-700' : d < 0 ? 'text-rose-700' : 'text-slate-600';
+    return <div className={`text-[12px] font-bold ${tone}`}>{d > 0 ? '▲ +' : d < 0 ? '▼ ' : '= '}{d} điểm {trendInfo.prevLabel}</div>;
+  };
 
   // Tổng hợp Xu thi đua & Điểm thưởng
   const totalCoins = useMemo(() => {
@@ -1206,11 +1293,11 @@ export const AdminRealtimeDashboardView: React.FC = () => {
           <div className="mt-2">
             <div className="flex items-baseline gap-2">
               <span className="text-2xl sm:text-3xl font-black text-emerald-950 font-mono">
-                {periodAttendance.rate}%
+                {periodAttendance.hasData ? `${periodAttendance.rate}%` : '—'}
               </span>
               <span className="text-xs font-bold text-emerald-700">
                 {timeframe === 'day' 
-                  ? `(${periodAttendance.present}/${totalStudents || 0})`
+                  ? (periodAttendance.hasData ? `(${periodAttendance.present}/${periodAttendance.enrolmentSlots})` : '(chưa có dữ liệu)')
                   : `(${periodAttendance.present} lượt / ${periodAttendance.daysCount} ngày)`}
               </span>
             </div>
@@ -1229,16 +1316,22 @@ export const AdminRealtimeDashboardView: React.FC = () => {
                 </>
               )}
             </div>
+            {deltaLine(periodAttendance.rate, trendInfo.prev?.att, periodAttendance.hasData)}
+            <div className={`mt-0.5 text-[12px] font-bold ${periodAttendance.classDaysReported < periodAttendance.classDaysExpected ? 'text-amber-700' : 'text-emerald-700'}`}>
+              {timeframe === 'day'
+                ? `Đã báo ${periodAttendance.classesReported}/${filteredClasses.length} lớp`
+                : `Đã báo ${periodAttendance.classDaysReported}/${periodAttendance.classDaysExpected} lượt lớp`}
+            </div>
             {periodAttendance.notReported > 0 && (
-              <div className="mt-0.5 text-[12px] font-bold text-amber-700 whitespace-nowrap">
+              <div className="text-[12px] font-bold text-amber-700 whitespace-nowrap">
                 Chưa điểm danh: {periodAttendance.notReported} {timeframe === 'day' ? 'học sinh' : 'lượt'}
               </div>
             )}
           </div>
           <div className="mt-2 pt-2 border-t border-emerald-100 text-[12px] text-slate-500 font-bold flex items-center justify-between">
             <span>Phép: {periodAttendance.excused + periodAttendance.sick} • K.Phép: {periodAttendance.unexcused}</span>
-            <span className={`font-black ${periodAttendance.rate >= 95 ? 'text-emerald-700' : 'text-amber-700'}`}>
-              {periodAttendance.rate >= 95 ? 'Đạt chuẩn' : 'Cần lưu ý'}
+            <span className={`font-black ${!periodAttendance.hasData ? 'text-slate-600' : periodAttendance.classDaysReported < periodAttendance.classDaysExpected ? 'text-amber-700' : periodAttendance.rate >= 95 ? 'text-emerald-700' : 'text-amber-700'}`}>
+              {!periodAttendance.hasData ? 'Chưa có dữ liệu' : periodAttendance.classDaysReported < periodAttendance.classDaysExpected ? 'Tạm tính' : periodAttendance.rate >= 95 ? 'Đạt chuẩn' : 'Cần lưu ý'}
             </span>
           </div>
         </div>
@@ -1263,7 +1356,7 @@ export const AdminRealtimeDashboardView: React.FC = () => {
                 {periodBoarding.eating}
               </span>
               <span className="text-xs font-bold text-amber-700">
-                suất ăn ({periodBoarding.rate}%)
+                {periodAttendance.hasData ? `suất ăn (${periodBoarding.rate}%)` : 'suất ăn (chưa có dữ liệu)'}
               </span>
             </div>
             <div className="flex items-center gap-1.5 mt-1 text-[12px] font-bold text-slate-600">
@@ -1281,16 +1374,17 @@ export const AdminRealtimeDashboardView: React.FC = () => {
                 </>
               )}
             </div>
+            {deltaLine(periodBoarding.rate, trendInfo.prev?.board, periodAttendance.hasData && periodBoarding.eating > 0)}
             {periodBoarding.eating > 0 && (
               <div className="mt-1 text-sm font-bold leading-snug space-y-0.5" data-no-autofit="">
                 <p className="text-blue-700"><span className="text-base font-black font-mono">{periodBoarding.rate}%</span> trên học sinh đi học ({periodBoarding.eating}/{periodBoarding.presentInPeriod})</p>
-                <p className="text-violet-700"><span className="text-base font-black font-mono">{periodBoarding.schoolRate}%</span> trên tổng sĩ số trường ({periodBoarding.eating}/{periodBoarding.enrolmentSlots})</p>
+                <p className="text-violet-700"><span className="text-base font-black font-mono">{periodBoarding.schoolRate}%</span> trên sĩ số các lớp đã báo ({periodBoarding.eating}/{periodBoarding.enrolmentSlots})</p>
               </div>
             )}
           </div>
           <div className="mt-2 pt-2 border-t border-amber-100 text-[12px] text-slate-500 font-bold flex items-center justify-between">
             <span>Cắt suất: {periodBoarding.absentMeal} lượt</span>
-            <span className="text-amber-700 font-black">Nhà bếp đã chốt</span>
+            <span className={`font-black ${periodAttendance.hasData ? 'text-amber-700' : 'text-slate-600'}`}>{periodAttendance.hasData ? 'Theo các lớp đã báo' : 'Chưa có dữ liệu'}</span>
           </div>
         </div>
 
@@ -1318,6 +1412,68 @@ export const AdminRealtimeDashboardView: React.FC = () => {
         </div>
       </div>
 
+      {/* 2a. Xu hướng 14 ngày: chuyên cần và bán trú theo ngày, điểm rỗng = còn lớp chưa báo */}
+      {(() => {
+        const pts = trendInfo.points;
+        const W = 640, H = 190, L = 40, R = 14, T = 14, B = 30;
+        const allV = pts.flatMap(q => [q.att, ...(q.board != null ? [q.board] : [])]);
+        const lo = allV.length ? Math.max(0, Math.floor(Math.min(...allV) / 5) * 5 - 5) : 0;
+        const hiRaw = allV.length ? Math.min(100, Math.ceil(Math.max(...allV) / 5) * 5) : 100;
+        const top = hiRaw <= lo ? lo + 10 : hiRaw;
+        const dayIdx = (d: string) => 13 - Math.round((new Date(trendInfo.anchorDate).getTime() - new Date(d).getTime()) / 86400000);
+        const x = (d: string) => L + (dayIdx(d) / 13) * (W - L - R);
+        const y = (v: number) => T + (1 - (v - lo) / (top - lo)) * (H - T - B);
+        const line = (key: 'att' | 'board') => pts.filter(q => q[key] != null).map((q, i) => `${i ? 'L' : 'M'}${x(q.date).toFixed(1)} ${y(q[key] as number).toFixed(1)}`).join(' ');
+        const avg = pts.length ? Math.round((pts.reduce((a, q) => a + q.att, 0) / pts.length) * 10) / 10 : 0;
+        const best = pts.length ? pts.reduce((a, q) => (q.att > a.att ? q : a)) : null;
+        const worst = pts.length ? pts.reduce((a, q) => (q.att < a.att ? q : a)) : null;
+        const grid = [0, 1, 2, 3].map(i => lo + ((top - lo) * i) / 3);
+        const ticks = [13, 9, 5, 0].map(i => { const dt = new Date(trendInfo.anchorDate); dt.setDate(dt.getDate() - i); return toLocalDateString(dt); });
+        return (
+          <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-sm space-y-3" aria-label="Xu hướng chuyên cần và bán trú 14 ngày">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <h4 className="text-xs sm:text-sm font-black text-indigo-950 uppercase">XU HƯỚNG CHUYÊN CẦN & BÁN TRÚ • 14 NGÀY ĐẾN {formatDateVN(trendInfo.anchorDate)}</h4>
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] font-bold text-slate-700">
+                <span className="inline-flex items-center gap-1.5"><span className="w-4 h-1 rounded bg-emerald-600" />Chuyên cần (%)</span>
+                <span className="inline-flex items-center gap-1.5"><span className="w-4 h-1 rounded bg-amber-600" />Bán trú trên HS đi học (%)</span>
+                <span className="inline-flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full border-2 border-slate-600 bg-white" />Còn lớp chưa báo</span>
+              </div>
+            </div>
+            {pts.length < 2 ? (
+              <p className="text-sm font-bold text-slate-600 py-6 text-center">Chưa đủ dữ liệu để vẽ xu hướng (cần ít nhất 2 ngày có lớp báo cáo trong 14 ngày gần nhất).</p>
+            ) : (
+              <>
+                <div className="overflow-x-auto"><svg viewBox={`0 0 ${W} ${H}`} className="w-full min-w-[520px] h-auto" role="img" aria-label={`Chuyên cần trung bình ${avg}%, cao nhất ${best ? `${best.att}% ngày ${formatDateVN(best.date)}` : ''}, thấp nhất ${worst ? `${worst.att}% ngày ${formatDateVN(worst.date)}` : ''}`}>
+                  {grid.map(v => (
+                    <g key={v}>
+                      <line x1={L} x2={W - R} y1={y(v)} y2={y(v)} stroke="#E2E8F0" strokeWidth="1" />
+                      <text x={L - 6} y={y(v) + 4} textAnchor="end" fontSize="11" fill="#475569">{Math.round(v)}%</text>
+                    </g>
+                  ))}
+                  {ticks.map(d => <text key={d} x={x(d)} y={H - 8} textAnchor="middle" fontSize="11" fill="#475569">{formatDateVN(d).slice(0, 5)}</text>)}
+                  <path d={line('board')} fill="none" stroke="#D97706" strokeWidth="2.5" strokeLinejoin="round" />
+                  <path d={line('att')} fill="none" stroke="#059669" strokeWidth="2.5" strokeLinejoin="round" />
+                  {pts.map(q => {
+                    const full = q.reported >= trendInfo.classCount;
+                    return (
+                      <g key={q.date}>
+                        {q.board != null && <circle cx={x(q.date)} cy={y(q.board)} r="3.5" fill={full ? '#D97706' : '#fff'} stroke="#D97706" strokeWidth="2"><title>{`${formatDateVN(q.date)}: bán trú ${q.board}%`}</title></circle>}
+                        <circle cx={x(q.date)} cy={y(q.att)} r="4" fill={full ? '#059669' : '#fff'} stroke="#059669" strokeWidth="2"><title>{`${formatDateVN(q.date)}: chuyên cần ${q.att}% (${q.reported}/${trendInfo.classCount} lớp đã báo)`}</title></circle>
+                      </g>
+                    );
+                  })}
+                </svg></div>
+                <p className="text-[12px] sm:text-sm font-bold text-slate-700 leading-snug">
+                  Chuyên cần trung bình <span className="text-emerald-700">{avg}%</span> trong {pts.length} ngày có số liệu
+                  {best && worst && best.date !== worst.date && <> • cao nhất <span className="text-emerald-700">{best.att}%</span> ({formatDateVN(best.date).slice(0, 5)}) • thấp nhất <span className="text-rose-700">{worst.att}%</span> ({formatDateVN(worst.date).slice(0, 5)})</>}.
+                  {' '}Ngày nghỉ và ngày chưa có lớp báo không được vẽ.
+                </p>
+              </>
+            )}
+          </div>
+        );
+      })()}
+
       {/* 2b. Thống kê toàn trường từ Google Drive dùng chung (hôm nay / hôm qua / tuần / tháng) */}
       <DriveAttendanceStatsPanel schoolTotalStudents={schoolTotalStudents} />
 
@@ -1337,7 +1493,7 @@ export const AdminRealtimeDashboardView: React.FC = () => {
               <span>CƠ CẤU CHUYÊN CẦN ({dateRange.shortLabel})</span>
             </h4>
             <span className="text-[12px] font-bold bg-emerald-50 text-emerald-800 px-2 py-0.5 rounded-full border border-emerald-200">
-              Tỷ lệ: {periodAttendance.rate}%
+              Tỷ lệ: {periodAttendance.hasData ? `${periodAttendance.rate}%` : 'chưa có dữ liệu'}
             </span>
           </div>
 
