@@ -1418,82 +1418,11 @@ export const AdminRealtimeDashboardView: React.FC = () => {
         </div>
       </div>
 
-      {/* 2a. Xu hướng 14 ngày: chuyên cần và bán trú theo ngày, điểm rỗng = còn lớp chưa báo */}
-      {(() => {
-        const pts = trendInfo.points;
-        const W = 640, H = 190, L = 40, R = 14, T = 14, B = 30;
-        const allV = pts.flatMap(q => [q.att, ...(q.board != null ? [q.board] : [])]);
-        const lo = allV.length ? Math.max(0, Math.floor(Math.min(...allV) / 5) * 5 - 5) : 0;
-        const hiRaw = allV.length ? Math.min(100, Math.ceil(Math.max(...allV) / 5) * 5) : 100;
-        const top = hiRaw <= lo ? lo + 10 : hiRaw;
-        const dayIdx = (d: string) => 13 - Math.round((new Date(trendInfo.anchorDate).getTime() - new Date(d).getTime()) / 86400000);
-        const x = (d: string) => L + (dayIdx(d) / 13) * (W - L - R);
-        const y = (v: number) => T + (1 - (v - lo) / (top - lo)) * (H - T - B);
-        const line = (key: 'att' | 'board') => pts.filter(q => q[key] != null).map((q, i) => `${i ? 'L' : 'M'}${x(q.date).toFixed(1)} ${y(q[key] as number).toFixed(1)}`).join(' ');
-        const avg = pts.length ? Math.round((pts.reduce((a, q) => a + q.att, 0) / pts.length) * 10) / 10 : 0;
-        const best = pts.length ? pts.reduce((a, q) => (q.att > a.att ? q : a)) : null;
-        const worst = pts.length ? pts.reduce((a, q) => (q.att < a.att ? q : a)) : null;
-        const grid = [0, 1, 2, 3].map(i => lo + ((top - lo) * i) / 3);
-        const ticks = [13, 9, 5, 0].map(i => { const dt = new Date(trendInfo.anchorDate); dt.setDate(dt.getDate() - i); return toLocalDateString(dt); });
-        return (
-          <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-sm space-y-3" aria-label="Xu hướng chuyên cần và bán trú 14 ngày">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <h4 className="text-xs sm:text-sm font-black text-indigo-950 uppercase">XU HƯỚNG CHUYÊN CẦN & BÁN TRÚ • 14 NGÀY ĐẾN {formatDateVN(trendInfo.anchorDate)}</h4>
-              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] font-bold text-slate-700">
-                <span className="inline-flex items-center gap-1.5"><span className="w-4 h-1 rounded bg-emerald-600" />Chuyên cần (%)</span>
-                <span className="inline-flex items-center gap-1.5"><span className="w-4 h-1 rounded bg-amber-600" />Bán trú trên HS đi học (%)</span>
-                <span className="inline-flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full border-2 border-slate-600 bg-white" />Còn lớp chưa báo</span>
-              </div>
-            </div>
-            {pts.length < 2 ? (
-              <p className="text-sm font-bold text-slate-600 py-6 text-center">Chưa đủ dữ liệu để vẽ xu hướng (cần ít nhất 2 ngày có lớp báo cáo trong 14 ngày gần nhất).</p>
-            ) : (
-              <>
-                <div className="overflow-x-auto"><svg viewBox={`0 0 ${W} ${H}`} className="w-full min-w-[520px] h-auto" role="img" aria-label={`Chuyên cần trung bình ${avg}%, cao nhất ${best ? `${best.att}% ngày ${formatDateVN(best.date)}` : ''}, thấp nhất ${worst ? `${worst.att}% ngày ${formatDateVN(worst.date)}` : ''}`}>
-                  {grid.map(v => (
-                    <g key={v}>
-                      <line x1={L} x2={W - R} y1={y(v)} y2={y(v)} stroke="#E2E8F0" strokeWidth="1" />
-                      <text x={L - 6} y={y(v) + 4} textAnchor="end" fontSize="11" fill="#475569">{Math.round(v)}%</text>
-                    </g>
-                  ))}
-                  {ticks.map(d => <text key={d} x={x(d)} y={H - 8} textAnchor="middle" fontSize="11" fill="#475569">{formatDateVN(d).slice(0, 5)}</text>)}
-                  <path d={line('board')} fill="none" stroke="#D97706" strokeWidth="2.5" strokeLinejoin="round" />
-                  <path d={line('att')} fill="none" stroke="#059669" strokeWidth="2.5" strokeLinejoin="round" />
-                  {pts.map(q => {
-                    const full = q.reported >= trendInfo.classCount;
-                    return (
-                      <g key={q.date}>
-                        {q.board != null && <circle cx={x(q.date)} cy={y(q.board)} r="3.5" fill={full ? '#D97706' : '#fff'} stroke="#D97706" strokeWidth="2"><title>{`${formatDateVN(q.date)}: bán trú ${q.board}%`}</title></circle>}
-                        <circle cx={x(q.date)} cy={y(q.att)} r="4" fill={full ? '#059669' : '#fff'} stroke="#059669" strokeWidth="2"><title>{`${formatDateVN(q.date)}: chuyên cần ${q.att}% (${q.reported}/${trendInfo.classCount} lớp đã báo)`}</title></circle>
-                      </g>
-                    );
-                  })}
-                </svg></div>
-                <p className="text-[12px] sm:text-sm font-bold text-slate-700 leading-snug">
-                  Chuyên cần trung bình <span className="text-emerald-700">{avg}%</span> trong {pts.length} ngày có số liệu
-                  {best && worst && best.date !== worst.date && <> • cao nhất <span className="text-emerald-700">{best.att}%</span> ({formatDateVN(best.date).slice(0, 5)}) • thấp nhất <span className="text-rose-700">{worst.att}%</span> ({formatDateVN(worst.date).slice(0, 5)})</>}.
-                  {' '}Ngày nghỉ và ngày chưa có lớp báo không được vẽ.
-                </p>
-              </>
-            )}
-          </div>
-        );
-      })()}
-
-      {/* 2b. Thống kê toàn trường từ Google Drive dùng chung (hôm nay / hôm qua / tuần / tháng) */}
-      <DriveAttendanceStatsPanel schoolTotalStudents={schoolTotalStudents} />
-
-      {/* 2c. Daily meal report for the boarding team (replaces the paper slips) */}
-      <SchoolMealReportPanel />
-
-      {/* 2d. Leadership reports: daily / weekly absentees / monthly summary */}
-      <LeaderReportsPanel />
-
       {/* 4. Biểu Đồ Tròn Trực Quan Sinh Động (Realtime Donut Charts) */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Biểu đồ 1: Tỷ lệ Chuyên cần */}
         <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-sm space-y-3">
-          <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+          <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5 pb-2 border-b border-slate-100">
             <h4 className="text-xs sm:text-sm font-black text-indigo-950 uppercase flex items-center gap-2">
               <CheckSquare className="w-4 h-4 text-emerald-600" />
               <span>CƠ CẤU CHUYÊN CẦN ({dateRange.shortLabel})</span>
@@ -1571,7 +1500,7 @@ export const AdminRealtimeDashboardView: React.FC = () => {
 
         {/* Biểu đồ 2: Cơ cấu Bán trú */}
         <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-sm space-y-3">
-          <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+          <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5 pb-2 border-b border-slate-100">
             <h4 className="text-xs sm:text-sm font-black text-indigo-950 uppercase flex items-center gap-2">
               <Utensils className="w-4 h-4 text-amber-600" />
               <span>CƠ CẤU BÁN TRÚ ({dateRange.shortLabel})</span>
@@ -1647,6 +1576,77 @@ export const AdminRealtimeDashboardView: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* 2a. Xu hướng 14 ngày: chuyên cần và bán trú theo ngày, điểm rỗng = còn lớp chưa báo */}
+      {(() => {
+        const pts = trendInfo.points;
+        const W = 640, H = 190, L = 40, R = 14, T = 14, B = 30;
+        const allV = pts.flatMap(q => [q.att, ...(q.board != null ? [q.board] : [])]);
+        const lo = allV.length ? Math.max(0, Math.floor(Math.min(...allV) / 5) * 5 - 5) : 0;
+        const hiRaw = allV.length ? Math.min(100, Math.ceil(Math.max(...allV) / 5) * 5) : 100;
+        const top = hiRaw <= lo ? lo + 10 : hiRaw;
+        const dayIdx = (d: string) => 13 - Math.round((new Date(trendInfo.anchorDate).getTime() - new Date(d).getTime()) / 86400000);
+        const x = (d: string) => L + (dayIdx(d) / 13) * (W - L - R);
+        const y = (v: number) => T + (1 - (v - lo) / (top - lo)) * (H - T - B);
+        const line = (key: 'att' | 'board') => pts.filter(q => q[key] != null).map((q, i) => `${i ? 'L' : 'M'}${x(q.date).toFixed(1)} ${y(q[key] as number).toFixed(1)}`).join(' ');
+        const avg = pts.length ? Math.round((pts.reduce((a, q) => a + q.att, 0) / pts.length) * 10) / 10 : 0;
+        const best = pts.length ? pts.reduce((a, q) => (q.att > a.att ? q : a)) : null;
+        const worst = pts.length ? pts.reduce((a, q) => (q.att < a.att ? q : a)) : null;
+        const grid = [0, 1, 2, 3].map(i => lo + ((top - lo) * i) / 3);
+        const ticks = [13, 9, 5, 0].map(i => { const dt = new Date(trendInfo.anchorDate); dt.setDate(dt.getDate() - i); return toLocalDateString(dt); });
+        return (
+          <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-sm space-y-3" aria-label="Xu hướng chuyên cần và bán trú 14 ngày">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <h4 className="text-xs sm:text-sm font-black text-indigo-950 uppercase">XU HƯỚNG CHUYÊN CẦN & BÁN TRÚ • 14 NGÀY ĐẾN {formatDateVN(trendInfo.anchorDate)}</h4>
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] font-bold text-slate-700">
+                <span className="inline-flex items-center gap-1.5"><span className="w-4 h-1 rounded bg-emerald-600" />Chuyên cần (%)</span>
+                <span className="inline-flex items-center gap-1.5"><span className="w-4 h-1 rounded bg-amber-600" />Bán trú trên HS đi học (%)</span>
+                <span className="inline-flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full border-2 border-slate-600 bg-white" />Còn lớp chưa báo</span>
+              </div>
+            </div>
+            {pts.length < 2 ? (
+              <p className="text-sm font-bold text-slate-600 py-6 text-center">Chưa đủ dữ liệu để vẽ xu hướng (cần ít nhất 2 ngày có lớp báo cáo trong 14 ngày gần nhất).</p>
+            ) : (
+              <>
+                <div className="overflow-x-auto"><svg viewBox={`0 0 ${W} ${H}`} className="w-full min-w-[520px] h-auto" role="img" aria-label={`Chuyên cần trung bình ${avg}%, cao nhất ${best ? `${best.att}% ngày ${formatDateVN(best.date)}` : ''}, thấp nhất ${worst ? `${worst.att}% ngày ${formatDateVN(worst.date)}` : ''}`}>
+                  {grid.map(v => (
+                    <g key={v}>
+                      <line x1={L} x2={W - R} y1={y(v)} y2={y(v)} stroke="#E2E8F0" strokeWidth="1" />
+                      <text x={L - 6} y={y(v) + 4} textAnchor="end" fontSize="11" fill="#475569">{Math.round(v)}%</text>
+                    </g>
+                  ))}
+                  {ticks.map(d => <text key={d} x={x(d)} y={H - 8} textAnchor="middle" fontSize="11" fill="#475569">{formatDateVN(d).slice(0, 5)}</text>)}
+                  <path d={line('board')} fill="none" stroke="#D97706" strokeWidth="2.5" strokeLinejoin="round" />
+                  <path d={line('att')} fill="none" stroke="#059669" strokeWidth="2.5" strokeLinejoin="round" />
+                  {pts.map(q => {
+                    const full = q.reported >= trendInfo.classCount;
+                    return (
+                      <g key={q.date}>
+                        {q.board != null && <circle cx={x(q.date)} cy={y(q.board)} r="3.5" fill={full ? '#D97706' : '#fff'} stroke="#D97706" strokeWidth="2"><title>{`${formatDateVN(q.date)}: bán trú ${q.board}%`}</title></circle>}
+                        <circle cx={x(q.date)} cy={y(q.att)} r="4" fill={full ? '#059669' : '#fff'} stroke="#059669" strokeWidth="2"><title>{`${formatDateVN(q.date)}: chuyên cần ${q.att}% (${q.reported}/${trendInfo.classCount} lớp đã báo)`}</title></circle>
+                      </g>
+                    );
+                  })}
+                </svg></div>
+                <p className="text-[12px] sm:text-sm font-bold text-slate-700 leading-snug">
+                  Chuyên cần trung bình <span className="text-emerald-700">{avg}%</span> trong {pts.length} ngày có số liệu
+                  {best && worst && best.date !== worst.date && <> • cao nhất <span className="text-emerald-700">{best.att}%</span> ({formatDateVN(best.date).slice(0, 5)}) • thấp nhất <span className="text-rose-700">{worst.att}%</span> ({formatDateVN(worst.date).slice(0, 5)})</>}.
+                  {' '}Ngày nghỉ và ngày chưa có lớp báo không được vẽ.
+                </p>
+              </>
+            )}
+          </div>
+        );
+      })()}
+
+      {/* 2b. Thống kê toàn trường từ Google Drive dùng chung (hôm nay / hôm qua / tuần / tháng) */}
+      <DriveAttendanceStatsPanel schoolTotalStudents={schoolTotalStudents} />
+
+      {/* 2c. Daily meal report for the boarding team (replaces the paper slips) */}
+      <SchoolMealReportPanel />
+
+      {/* 2d. Leadership reports: daily / weekly absentees / monthly summary */}
+      <LeaderReportsPanel />
 
       {/* 5. Bảng Giám Sát Chi Tiết Từng Lớp Trong Phân Hệ (Per-Class Grid) */}
       <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
