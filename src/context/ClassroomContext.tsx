@@ -3,6 +3,7 @@ import { MANAGER_DATA_MS, TEACHER_SYNC_MS, ADMIN_EDITS_MS, LOCAL_EDIT_QUIET_MS, 
 import { deriveVaultKey, sealJSON, openJSON, fingerprint } from '../utils/personalVault';
 import type { PersonalQuizVault } from '../types';
 import { stripSampleData } from '../utils/sampleData';
+import { readQrLocal, writeQrLocal, mergeQr } from '../utils/qrStore';
 import { isViewOnly, getViewAs, setViewAs, subscribeViewAs, ViewAsInfo } from '../utils/viewOnlyMode';
 import { saveTeacherAuth, clearTeacherAuth, readTeacherAuth } from '../utils/teacherAuth';
 import React, { createContext, useContext, useState, useEffect, useRef, useMemo } from 'react';
@@ -11,7 +12,7 @@ import JSZip from 'jszip';
 import { 
   Classroom, Student, Subject, PointCriterion, PointTransaction, 
   Reward, RewardRedemption, DailyAttendance, TimetableSlot, 
-  TimetableConfig, QuickLink, TeacherProfile, AttendanceStatus,
+  TimetableConfig, QuickLink, SavedQrCode, TeacherProfile, AttendanceStatus,
   SeatingColumnsCount, TeacherDeskPosition, DoorPosition, BlackboardPosition,
   DeskNumberingOrder, BoardingStatus, DailyBoardingMeal,
   TeacherRole, SubjectTimetableSlot, SubjectTeacherConfig, InitSubjectClassItem,
@@ -152,6 +153,11 @@ interface ClassroomContextType {
   deleteQuickLink: (id: string) => void;
   updateQuickLink: (id: string, data: Partial<Omit<QuickLink, 'id'>>) => void;
   reorderQuickLinks: (links: QuickLink[]) => void;
+
+  qrCodes: SavedQrCode[];
+  addQrCode: (data: Omit<SavedQrCode, 'id' | 'createdAt' | 'updatedAt'>) => string;
+  updateQrCode: (id: string, data: Partial<Omit<SavedQrCode, 'id' | 'createdAt' | 'updatedAt'>>) => void;
+  deleteQrCode: (id: string) => void;
 
   teacherProfile: TeacherProfile;
   updateTeacherProfile: (profile: Partial<TeacherProfile>) => void;
@@ -611,6 +617,27 @@ export const ClassroomProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [timetableConfig, setTimetableConfig] = useState<TimetableConfig>({ morningPeriods: 4, afternoonPeriods: 3, hasSaturday: false });
   const [timetable, setTimetable] = useState<TimetableSlot[]>(INITIAL_TIMETABLE);
   const [quickLinks, setQuickLinks] = useState<QuickLink[]>(INITIAL_QUICK_LINKS);
+  const [qrCodes, setQrCodes] = useState<SavedQrCode[]>([]);
+  const qrCodesRef = useRef<SavedQrCode[]>([]);
+  qrCodesRef.current = qrCodes;
+  // Saved QR codes also live in a per-account copy on this device (see utils/qrStore.ts): it is the only copy for
+  // executives (they never push a snapshot of their own) and a safety net for everyone else while account data loads.
+  const hydrateQrFromLocal = () => {
+    const owner = currentUserRef.current?.username;
+    if (!owner) return;
+    const local = readQrLocal(owner);
+    const merged = mergeQr(qrCodesRef.current, local.items, local.deleted);
+    const same = merged.length === qrCodesRef.current.length && merged.every((q, i) => q === qrCodesRef.current[i] || (q.id === qrCodesRef.current[i].id && q.updatedAt === qrCodesRef.current[i].updatedAt));
+    if (!same) { qrCodesRef.current = merged; setQrCodes(merged); }
+  };
+  useEffect(() => {
+    if (!currentUser?.username) return;
+    hydrateQrFromLocal();
+    // Account data arrives a little later and can replace the list: merge the device copy in again once it is in
+    let tries = 0;
+    const t = setInterval(() => { hydrateQrFromLocal(); if (++tries >= 20) clearInterval(t); }, 750);
+    return () => clearInterval(t);
+  }, [currentUser?.username]);
   const [teacherProfile, setTeacherProfile] = useState<TeacherProfile>(() => {
     if (currentUser?.username?.toLowerCase() === 'adminquantri' || currentUser?.role === 'admin') {
       return {
@@ -915,6 +942,7 @@ export const ClassroomProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     subjectTeacherConfig,
     subjectTimetable,
     quickLinks,
+    qrCodes,
     teacherProfile,
     quizBank,
     infographicConfig,
@@ -1112,6 +1140,13 @@ export const ClassroomProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         }
       } catch (_) { /* keep the saved list as is */ }
       setQuickLinks(links);
+    }
+    // Saved QR codes: only replaced when the saved data has them (cleared on logout, so no leak between accounts)
+    if (Array.isArray(data.qrCodes)) {
+      const local = readQrLocal(currentUserRef.current?.username);
+      const merged = mergeQr(data.qrCodes, local.items, local.deleted);
+      qrCodesRef.current = merged;
+      setQrCodes(merged);
     }
     if (data.teacherProfile) {
       setTeacherProfile(data.teacherProfile);
@@ -2078,7 +2113,7 @@ export const ClassroomProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     rewards, redemptions, seatingColumns, deskCountsPerColumn, deskNumberingOrder,
     teacherDeskPos, doorPos, blackboardPos, seatingAssignments, attendanceRecords,
     boardingRecords, timetable, timetableConfig, teacherRole, subjectTeacherConfig,
-    subjectTimetable, quickLinks, teacherProfile, quizBank, infographicConfig, vaultState,
+    subjectTimetable, quickLinks, qrCodes, teacherProfile, quizBank, infographicConfig, vaultState,
     schoolBranches, currentUser?.username
   ]);
 
@@ -2336,6 +2371,7 @@ export const ClassroomProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     databaseService.logout();
     if (currentUser) quizBankStore.setVaultKey(currentUser.username, null).catch(() => {});
     setVaultState({ owner: '' });
+    setQrCodes([]);
     setVaultKeyReady(false);
     // Không để bộ câu hỏi của tài khoản vừa đăng xuất nằm lại trong bộ nhớ chung của trình duyệt
     // (kho riêng của tài khoản vẫn còn nguyên trong IndexedDB / Drive cá nhân)
@@ -4690,6 +4726,28 @@ export const ClassroomProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     setQuickLinks(newLinks);
   };
 
+  // Saved QR codes (per account)
+  const commitQrCodes = (next: SavedQrCode[], removedId?: string) => {
+    qrCodesRef.current = next;
+    setQrCodes(next);
+    const owner = currentUserRef.current?.username;
+    const local = readQrLocal(owner);
+    if (removedId) local.deleted[removedId] = Date.now();
+    writeQrLocal(owner, next, local.deleted);
+  };
+  const addQrCode = (data: Omit<SavedQrCode, 'id' | 'createdAt' | 'updatedAt'>): string => {
+    const now = Date.now();
+    const id = `qr-${now}-${Math.random().toString(36).slice(2, 6)}`;
+    commitQrCodes([{ ...data, id, createdAt: now, updatedAt: now }, ...qrCodesRef.current]);
+    return id;
+  };
+  const updateQrCode = (id: string, data: Partial<Omit<SavedQrCode, 'id' | 'createdAt' | 'updatedAt'>>) => {
+    commitQrCodes(qrCodesRef.current.map(q => q.id === id ? { ...q, ...data, updatedAt: Date.now() } : q));
+  };
+  const deleteQrCode = (id: string) => {
+    commitQrCodes(qrCodesRef.current.filter(q => q.id !== id), id);
+  };
+
   // Teacher Profile
   const updateTeacherProfile = (data: Partial<TeacherProfile>) => {
     setTeacherProfile(prev => ({ ...prev, ...data }));
@@ -4775,6 +4833,7 @@ export const ClassroomProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       subjectTeacherConfig,
       subjectTimetable,
       quickLinks,
+      qrCodes,
       teacherProfile,
       quizBank,
       infographicConfig
@@ -4822,6 +4881,7 @@ export const ClassroomProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       subjectTeacherConfig,
       subjectTimetable,
       quickLinks,
+      qrCodes,
       teacherProfile,
       quizBank,
       infographicConfig
@@ -5106,6 +5166,11 @@ export const ClassroomProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       deleteQuickLink,
       updateQuickLink,
       reorderQuickLinks,
+
+      qrCodes,
+      addQrCode,
+      updateQrCode,
+      deleteQrCode,
 
       teacherProfile,
       updateTeacherProfile,

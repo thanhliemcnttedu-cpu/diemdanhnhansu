@@ -48,6 +48,7 @@ const SeatingChartView = lazy(() => import('./components/views/SeatingChartView'
 const AttendanceView = lazy(() => import('./components/views/AttendanceView').then(m => ({ default: m.AttendanceView })));
 const StaffCheckInPage = lazy(() => import('./components/views/staff/StaffCheckInPage').then(m => ({ default: m.StaffCheckInPage })));
 const StaffAttendanceView = lazy(() => import('./components/views/staff/StaffAttendanceView').then(m => ({ default: m.StaffAttendanceView })));
+const QrCodeView = lazy(() => import('./components/views/QrCodeView').then(m => ({ default: m.QrCodeView })));
 const ScheduleLinksView = lazy(() => import('./components/views/ScheduleLinksView').then(m => ({ default: m.ScheduleLinksView })));
 const ReportsDataView = lazy(() => import('./components/views/ReportsDataView').then(m => ({ default: m.ReportsDataView })));
 const UserGuideView = lazy(() => import('./components/views/UserGuideView').then(m => ({ default: m.UserGuideView })));
@@ -302,6 +303,8 @@ function ClassroomApp() {
         return <TimerView />;
       case 'links':
         return <ScheduleLinksView defaultTab="links" onNavigate={handleNavigate} />;
+      case 'qr':
+        return <QrCodeView />;
       case 'guide':
         return <UserGuideView />;
       case 'reports':

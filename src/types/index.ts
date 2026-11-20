@@ -356,6 +356,23 @@ export interface TimetableSlot {
   classId?: string; // Cố định theo từng lớp
 }
 
+/** QR code a user saved to their account (the link behind it can be edited later) */
+export interface SavedQrCode {
+  id: string;
+  title: string;
+  url: string;
+  /** error correction level: M (default) / Q / H */
+  level?: 'M' | 'Q' | 'H';
+  /** print the name under the code in the downloaded picture */
+  showCaption?: boolean;
+  /** small logo (PNG data URL) drawn on the code, and where / how big */
+  logo?: string;
+  logoPos?: 'center' | 'tl' | 'tr' | 'bl' | 'br';
+  logoSize?: 1 | 2 | 3;
+  createdAt: number;
+  updatedAt: number;
+}
+
 export interface QuickLink {
   id: string;
   title: string;
@@ -505,6 +522,8 @@ export interface UserClassroomData {
   subjectTeacherConfig: SubjectTeacherConfig;
   subjectTimetable: SubjectTimetableSlot[];
   quickLinks: QuickLink[];
+  /** QR codes saved on the account (optional: older accounts have none) */
+  qrCodes?: SavedQrCode[];
   teacherProfile: TeacherProfile;
   quizBank?: QuestionItem[];
   infographicConfig?: any;

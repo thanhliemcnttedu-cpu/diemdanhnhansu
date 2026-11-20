@@ -434,3 +434,16 @@
 - **Fix Applied**: Tách effect: chỉ nạp lại khi đổi lớp được chọn hoặc khi chính khẩu hiệu / ban phụ huynh ĐÃ LƯU của lớp đổi (khoá `savedCommitteeKey`).
 - **Prevention**: Effect đồng bộ ô nhập từ dữ liệu đã lưu không phụ thuộc cả mảng dữ liệu; chỉ phụ thuộc phần đúng của nó.
 - **Status**: Fixed
+
+---
+
+## [2026-11-20 10:00] - Mã QR chứa chữ có dấu bị hỏng; mã dày không quét được; mã vừa lưu mất sau khi tải lại trang
+
+- **Type**: Logic
+- **Severity**: High
+- **File**: `src/components/views/staff/StaffCheckInQr.tsx`, `src/utils/qrRender.ts`, `src/context/ClassroomContext.tsx`
+- **Agent**: Claude Code
+- **Root Cause**: (1) `qrcode-generator` mặc định nén mỗi ký tự thành 1 byte nên chữ có dấu (và link có dấu) quét ra ký tự rác. (2) Vẽ mỗi ô QR với kích thước lẻ để lại đường chỉ giữa các ô; mã độ chắc H (49 ô) không còn đọc được. (3) Tài khoản nhân viên mới tạo bị ghi đè bản ghi dữ liệu khi tải lại trang, mã QR đã lưu mất.
+- **Fix Applied**: Đặt `stringToBytes` = UTF-8; vẽ ô theo số điểm ảnh nguyên; thêm bản sao theo tài khoản trên máy (`qrStore.ts`) gộp theo id khi đăng nhập và khi nạp dữ liệu.
+- **Prevention**: Mọi tính năng sinh mã/ảnh phải kiểm chứng bằng bộ giải mã độc lập, không chỉ nhìn bằng mắt. Dữ liệu mới của tài khoản cần bản sao an toàn khi nạp dữ liệu có thể ghi đè.
+- **Status**: Fixed

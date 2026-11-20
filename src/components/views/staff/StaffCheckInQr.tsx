@@ -10,8 +10,12 @@ import { staffAttendanceService } from '../../../services/staffAttendanceService
  * - Tải ảnh QR (gửi nhóm Zalo) • Tải poster A4 • In poster dán phòng hội đồng / cổng trường.
  */
 
-export function buildQrMatrix(text: string): boolean[][] {
-  const qr = qrcode(0, 'M');
+// qrcode-generator packs each character into ONE byte by default, which turns Vietnamese text (and any non-ASCII
+// character) into garbage when scanned. Pack as UTF-8 instead (identical for plain ASCII links).
+(qrcode as any).stringToBytes = (qrcode as any).stringToBytesFuncs?.['UTF-8'] || (qrcode as any).stringToBytes;
+
+export function buildQrMatrix(text: string, level: 'L' | 'M' | 'Q' | 'H' = 'M'): boolean[][] {
+  const qr = qrcode(0, level);
   qr.addData(text, 'Byte');
   qr.make();
   const n = qr.getModuleCount();

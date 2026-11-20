@@ -4,7 +4,7 @@ import {
   Volume2, Timer, Link, BarChart3, Database, 
   Settings, Brain, ChevronLeft, ChevronRight, BookOpen,
   ShieldCheck, LogIn, UserCheck, X, Award,
-  HardDrive, Cloud, KeyRound, Lock, ChevronDown, Settings2, MessageCircle
+  HardDrive, Cloud, KeyRound, Lock, ChevronDown, Settings2, MessageCircle, QrCode
 } from 'lucide-react';
 import { useState } from 'react';
 import { appsScriptSetupService } from '../../services/appsScriptSetupService';
@@ -12,6 +12,7 @@ import { useClassroom } from '../../context/ClassroomContext';
 import { OPEN_CHANGE_PASSWORD_EVENT } from '../modals/ChangePasswordModal';
 import { OPEN_QUIZ_STORAGE_EVENT } from '../modals/QuizStorageModal';
 import { APP_AUTHOR_INFO } from '../../data/initialData';
+import { VersionBadge } from '../common/VersionBadge';
 import { OPEN_ZALO_QR_EVENT } from '../modals/ZaloQrModal';
 import { getOfficialDisplayName, getOfficialRoleTitle } from '../../utils/accountIdentity';
 
@@ -31,6 +32,7 @@ export type NavigationMenuId =
   | 'noise'
   | 'timer'
   | 'links'
+  | 'qr'
   | 'guide'
   | 'reports'
   | 'staff_attendance'
@@ -43,7 +45,7 @@ export type NavigationMenuId =
 export const isNonTeachingAccount = (u?: { role?: string; nonTeaching?: boolean } | null): boolean =>
   Boolean(u && u.nonTeaching === true && (u.role === 'subject' || u.role === 'homeroom'));
 /** Các mục tài khoản Nhân viên được dùng (mục Chấm công nhân sự còn cần quyền xem báo cáo) */
-export const NON_TEACHING_MENU_IDS: NavigationMenuId[] = ['staff_attendance', 'my_checkin', 'guide'];
+export const NON_TEACHING_MENU_IDS: NavigationMenuId[] = ['staff_attendance', 'my_checkin', 'qr', 'guide'];
 
 interface SidebarProps {
   currentView: NavigationMenuId;
@@ -157,6 +159,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
       icon: Link,
     },
     {
+      id: 'qr',
+      label: 'Tạo mã QR',
+      icon: QrCode,
+    },
+    {
       id: 'guide',
       label: 'Hướng dẫn sử dụng',
       icon: BookOpen,
@@ -236,7 +243,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const NAV_GROUPS: Array<{ key: string; label: string; icon: React.ComponentType<{ className?: string }>; tone: string; ids: NavigationMenuId[] }> = [
     { key: 'class', label: 'Lớp học', icon: School, tone: 'text-sky-600', ids: ['dashboard', 'classes', 'students', 'attendance', 'seating', 'schedule'] },
     { key: 'activity', label: 'Hoạt động', icon: Sparkles, tone: 'text-violet-600', ids: ['picker', 'rewards', 'certificate', 'infographic', 'noise', 'timer'] },
-    { key: 'manage', label: 'Quản lý & báo cáo', icon: BarChart3, tone: 'text-emerald-700', ids: ['reports', 'staff_attendance', 'my_checkin', 'data', 'links', 'guide', 'ai'] },
+    { key: 'manage', label: 'Quản lý & báo cáo', icon: BarChart3, tone: 'text-emerald-700', ids: ['reports', 'staff_attendance', 'my_checkin', 'data', 'links', 'qr', 'guide', 'ai'] },
   ];
   const [closedGroups, setClosedGroups] = useState<string[]>(() => {
     try { return JSON.parse(localStorage.getItem('lhhp_nav_closed_groups') || '[]'); } catch (_) { return []; }
@@ -463,9 +470,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
         {/* Tác giả ứng dụng (thông tin cố định, không lấy từ cài đặt) — gọn ở chân thanh bên */}
         {!isEffectivelyCollapsed && (
           <div className={`mx-2.5 pt-2 border-t border-slate-200/80 text-xs text-slate-600 leading-snug shrink-0 ${isMobileDrawer ? 'mb-10' : 'mb-2'}`}>
-            <p className="font-bold text-slate-800 truncate" title={APP_AUTHOR_INFO.name}>Tác giả: {APP_AUTHOR_INFO.name}</p>
-            <p className="truncate" title={APP_AUTHOR_INFO.schoolName}>{APP_AUTHOR_INFO.schoolName}</p>
-            <p className="flex flex-wrap items-center gap-x-1.5 mt-0.5">
+            <VersionBadge className="mb-1.5 pb-1.5 border-b border-slate-200/80" />
+            <p className="font-bold text-slate-800 whitespace-nowrap tracking-tight" title={APP_AUTHOR_INFO.name}>Tác giả: {APP_AUTHOR_INFO.name}</p>
+            <p className="whitespace-nowrap tracking-tight" title={APP_AUTHOR_INFO.schoolName}>{APP_AUTHOR_INFO.schoolName}</p>
+            <p className="flex flex-nowrap items-center gap-x-1.5 mt-0.5 whitespace-nowrap">
               <a href={APP_AUTHOR_INFO.zaloUrl} target="_blank" rel="noreferrer" className="font-bold text-sky-700 hover:underline">Zalo {APP_AUTHOR_INFO.zalo}</a>
               <span aria-hidden="true">•</span>
               <a href={APP_AUTHOR_INFO.facebook} target="_blank" rel="noreferrer" className="font-bold text-blue-700 hover:underline">Facebook</a>

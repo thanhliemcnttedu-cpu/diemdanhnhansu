@@ -4,6 +4,10 @@ import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
 
+// Shown in the app (web and desktop): version from package.json + the moment this bundle was built
+const APP_PKG = JSON.parse(fs.readFileSync(path.resolve(__dirname, 'package.json'), 'utf8'));
+const APP_BUILT_AT = new Date().toISOString();
+
 function avatarScannerPlugin() {
   return {
     name: 'avatar-scanner-plugin',
@@ -50,6 +54,10 @@ function avatarScannerPlugin() {
 export default defineConfig(() => {
   return {
     base: './',
+    define: {
+      __APP_VERSION__: JSON.stringify(APP_PKG.version),
+      __APP_BUILT_AT__: JSON.stringify(APP_BUILT_AT),
+    },
     plugins: [react(), tailwindcss(), avatarScannerPlugin()],
     resolve: {
       alias: {

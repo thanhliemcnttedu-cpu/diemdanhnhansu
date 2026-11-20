@@ -105,6 +105,11 @@ const VIEW_TITLES: Record<NavigationMenuId, { title: string; shortTitle: string;
     shortTitle: 'LIÊN KẾT',
     subtitle: 'KHO TÀI LIỆU, TRANG WEB HỌC TẬP VÀ HỌC LIỆU SỐ DÙNG CHUNG'
   },
+  qr: {
+    title: 'TẠO MÃ QR TỪ LINK',
+    shortTitle: 'MÃ QR',
+    subtitle: 'TẠO, LƯU VÀ SỬA MÃ QR CHO THƯ MỤC, TÀI LIỆU, TRANG WEB'
+  },
   guide: {
     title: 'HƯỚNG DẪN SỬ DỤNG',
     shortTitle: 'HƯỚNG DẪN',

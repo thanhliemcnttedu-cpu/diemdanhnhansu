@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { Upload as ConnUp } from 'lucide-react';
 import { ForgotPasswordModal } from './ForgotPasswordModal';
+import { VersionBadge } from '../common/VersionBadge';
 import { UserAccount, LoginRoleScope, SchoolEntity } from '../../types';
 import { useClassroom } from '../../context/ClassroomContext';
 import { databaseService } from '../../services/databaseService';
@@ -851,6 +852,7 @@ Sau đó dán link thư mục + Apps Script mới để khởi tạo.`)) return;
               background: 'linear-gradient(to right, rgba(245,158,11,0.15), rgba(234,179,8,0.1))',
               borderTop: '1px solid rgba(245,158,11,0.2)'
             }}>
+              <VersionBadge variant="line" className="basis-full text-white font-bold" />
               <span className="font-black text-white">Tác giả: NGUYỄN THANH LIÊM</span>
               <span className="font-bold text-white">TH Số 1 Tân Uyên</span>
               <a href="https://zalo.me/0888358363" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-white hover:text-amber-300">
