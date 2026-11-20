@@ -48,7 +48,7 @@ export const isNonTeachingAccount = (u?: { role?: string; nonTeaching?: boolean 
 /** Các mục tài khoản Nhân viên được dùng (mục Chấm công nhân sự còn cần quyền xem báo cáo) */
 export const NON_TEACHING_MENU_IDS: NavigationMenuId[] = ['staff_attendance', 'my_checkin', 'qr', 'guide'];
 /** Staff given a report duty: school-wide dashboard + statistics (read-only) on top of the staff screens */
-export const STATS_VIEWER_MENU_IDS: NavigationMenuId[] = ['dashboard', 'reports', 'staff_attendance', 'my_checkin', 'qr', 'guide'];
+export const STATS_VIEWER_MENU_IDS: NavigationMenuId[] = ['dashboard', 'reports', 'data', 'staff_attendance', 'my_checkin', 'qr', 'guide'];
 
 interface SidebarProps {
   currentView: NavigationMenuId;

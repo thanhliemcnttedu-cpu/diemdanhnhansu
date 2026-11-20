@@ -51,6 +51,11 @@ export const StaffDutiesPanel: React.FC<{ auth: { username: string; password: st
       return;
     }
     apply(r);
+    // People assigned before this feature (or whose account was made by hand) get their account created / upgraded now
+    const held = Object.keys(r.duties || {}).filter(c => REPORT_DUTIES.some(k => r.duties[c]?.[k]));
+    if (held.length) {
+      ensureAccounts(held, r.duties).then(note => { if (note) setMsg({ ok: true, text: `Đã cập nhật tài khoản theo phân công hiện tại.${note}` }); }).catch(() => { /* next open tries again */ });
+    }
   };
   useEffect(() => { load(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, []);
   useEffect(() => { databaseService.getUsers().then(setUsers).catch(() => { /* no account list: filter falls back to position text */ }); }, []);
@@ -60,8 +65,8 @@ export const StaffDutiesPanel: React.FC<{ auth: { username: string; password: st
    * (non-teaching staff account that may view the attendance reports, same sign-in as the check-in page) or switch the
    * report permission on for an existing teacher / staff account. Leaders (Ban giám hiệu, admins) already see everything.
    */
-  const ensureAccounts = async (codes: string[]): Promise<string> => {
-    const want = codes.filter(c => REPORT_DUTIES.some(k => draft[c]?.[k]));
+  const ensureAccounts = async (codes: string[], duties: Record<string, StaffDuties> = draft): Promise<string> => {
+    const want = codes.filter(c => REPORT_DUTIES.some(k => duties[c]?.[k]));
     if (!want.length) return '';
     let list = users;
     try { list = await databaseService.getUsers(); } catch { /* use the list we have */ }

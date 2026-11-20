@@ -4,6 +4,7 @@ import { AlertCircle, CheckCircle2, Clock, FileSpreadsheet, Printer, Utensils } 
 import { useClassroomOptional } from '../../../context/ClassroomContext';
 import { toLocalDateKey } from '../../../services/googleDriveService';
 import { writeReportXlsx } from '../../../utils/licensedExport';
+import { coverageOf, pct1 } from '../../../utils/reportStats';
 import type { Classroom } from '../../../types';
 
 /**
@@ -38,6 +39,7 @@ export const isHomeroomClass = (c: Classroom) => {
 };
 
 interface Row {
+  grade: string;
   className: string;
   teacher: string;
   total: number;
@@ -65,6 +67,7 @@ export const SchoolMealReportPanel: React.FC<{ data?: MealReportData; date?: str
   const students = (data?.students ?? ctx?.students ?? []) as Array<{ id: string; name: string; classId: string }>;
   const attendanceRecords = (data?.attendanceRecords ?? ctx?.attendanceRecords ?? []) as Array<{ date: string; classId: string; records: Record<string, string> }>;
   const boardingRecords = (data?.boardingRecords ?? ctx?.boardingRecords ?? []) as Array<{ date: string; classId: string; records: Record<string, string>; confirmedAt?: number; confirmedBy?: string }>;
+  const [showMissing, setShowMissing] = useState(false);
   const [ownDate, setOwnDate] = useState(() => toLocalDateKey(new Date()));
   const date = dateProp ?? ownDate;
   const setDate = (d: string) => { if (onDateChange) onDateChange(d); else setOwnDate(d); };
@@ -83,6 +86,7 @@ export const SchoolMealReportPanel: React.FC<{ data?: MealReportData; date?: str
         const meal = sheet && (sheet.confirmedAt || Object.keys(sheet.records || {}).some(id => !isAbsent(id))) ? sheet : undefined;
         const eating = meal ? list.filter(s => !isAbsent(s.id) && (meal.records?.[s.id] || 'eating') === 'eating').length : null;
         return {
+          grade: String(cls.grade || 'Khác'),
           className: cls.name,
           teacher: cls.teacherName || '',
           total: list.length,
@@ -98,6 +102,7 @@ export const SchoolMealReportPanel: React.FC<{ data?: MealReportData; date?: str
   }, [classes, students, attendanceRecords, boardingRecords, date]);
 
   const reported = rows.filter(r => r.status !== 'missing');
+  const coverage = coverageOf(reported.length, rows.length, reported.reduce((n, r) => n + r.total, 0), rows.reduce((n, r) => n + r.total, 0));
   const totalStudents = rows.reduce((n, r) => n + r.total, 0);
   const totalEating = reported.reduce((n, r) => n + (r.eating || 0), 0);
   const reportedStudents = reported.reduce((n, r) => n + r.total, 0);
@@ -127,8 +132,8 @@ export const SchoolMealReportPanel: React.FC<{ data?: MealReportData; date?: str
     const last = first + rows.length - 1;
     if (rows.length > 0) {
       aoa.push([
-        '', 'TỔNG CỘNG', '',
-        { t: 'n', f: `SUM(D${first}:D${last})`, v: totalStudents },
+        '', 'TỔNG (LỚP ĐÃ BÁO)', '',
+        { t: 'n', f: `SUMIF(I${first}:I${last},"<>Chưa báo",D${first}:D${last})`, v: reportedStudents },
         { t: 'n', f: `SUM(E${first}:E${last})`, v: totalEating },
         { t: 'n', f: `SUM(F${first}:F${last})`, v: reportedStudents - totalEating },
         '', '',
@@ -168,10 +173,10 @@ tfoot td { font-weight: 700; background: #f1f5f9; }
 </style></head><body>
 <div class="b">${esc(schoolName)}</div>
 <h1>BIỂU TỔNG HỢP BÁO ĂN BÁN TRÚ TOÀN TRƯỜNG</h1>
-<p class="sub">Ngày ${formatVN(date)} • ${reported.length}/${rows.length} lớp đã báo • Tổng số suất ăn: <strong>${totalEating}</strong></p>
+<p class="sub">Ngày ${formatVN(date)} • ${reported.length}/${rows.length} lớp đã báo (${coverage.studentPct}% học sinh) • Tổng số suất ăn: <strong>${totalEating}</strong>${reported.length < rows.length ? ' • Số liệu tạm tính, còn lớp chưa báo ăn' : ''}</p>
 <table><thead><tr><th>STT</th><th>Lớp</th><th>Giáo viên chủ nhiệm</th><th>Sĩ số</th><th>Số ăn</th><th>Không ăn</th><th>Học sinh vắng (họ tên)</th><th>Giờ xác nhận</th><th>Tình trạng</th></tr></thead>
 <tbody>${body}</tbody>
-<tfoot><tr><td></td><td class="c">TỔNG</td><td></td><td class="c">${totalStudents}</td><td class="c">${totalEating}</td><td class="c">${reportedStudents - totalEating}</td><td colspan="3">${reported.length}/${rows.length} lớp đã báo</td></tr></tfoot></table>
+<tfoot><tr><td></td><td class="c">TỔNG (lớp đã báo)</td><td></td><td class="c">${reportedStudents}</td><td class="c">${totalEating}</td><td class="c">${reportedStudents - totalEating}</td><td colspan="3">${reported.length}/${rows.length} lớp đã báo</td></tr></tfoot></table>
 <div class="sign"><div><div>Ngày ${formatVN(date)}</div><div class="b">BAN QUẢN LÝ BÁN TRÚ</div><div>(Ký và ghi rõ họ tên)</div><div class="space"></div></div></div>
 </body></html>`;
     const frame = document.createElement('iframe');
@@ -229,15 +234,44 @@ tfoot td { font-weight: 700; background: #f1f5f9; }
         ))}
       </div>
 
+      {rows.length > 0 && (
+        <div role="status" className={`rounded-2xl border px-4 py-3 space-y-2 ${coverage.complete ? 'border-emerald-200 bg-emerald-50' : 'border-amber-300 bg-amber-50'}`}>
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+            <span className="text-sm font-black text-slate-900">Độ đầy đủ: {coverage.reportedClasses}/{coverage.totalClasses} lớp đã báo ăn ({coverage.classPct}%)</span>
+            <span className="text-sm text-slate-800">{coverage.reportedStudents}/{coverage.totalStudents} học sinh ({coverage.studentPct}%)</span>
+            {reported.length > 0 && <span className="text-sm text-slate-800">Tỷ lệ ăn: <strong>{pct1(totalEating, coverage.reportedStudents) ?? 0}%</strong> sĩ số các lớp đã báo ({totalEating}/{coverage.reportedStudents})</span>}
+            {!coverage.complete && <span className="px-2 py-0.5 rounded-full bg-amber-200 text-amber-950 text-xs font-black uppercase">{coverage.empty ? 'Chưa có dữ liệu' : 'Tạm tính'}</span>}
+          </div>
+          <div className="h-2.5 rounded-full bg-white/80 border border-slate-200 overflow-hidden" aria-hidden="true">
+            <div className={`h-full ${coverage.complete ? 'bg-emerald-600' : 'bg-amber-500'}`} style={{ width: `${Math.min(100, coverage.classPct)}%` }} />
+          </div>
+          {!coverage.complete && !coverage.empty && <p className="text-xs text-slate-800">Số suất ăn và tỷ lệ chỉ tính các lớp đã báo. Lớp chưa báo không bị tính là không ăn.</p>}
+        </div>
+      )}
+
       {missing.length > 0 && (
-        <p role="status" className="text-sm font-bold text-amber-900 bg-amber-50 border border-amber-300 rounded-xl px-3 py-2 flex items-start gap-2">
-          <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" aria-hidden="true" />
-          <span>Chưa báo ăn ngày {formatVN(date)}: {missing.map(r => r.className).join(', ')}</span>
-        </p>
+        <div className="rounded-2xl border border-amber-200 bg-amber-50/60 px-4 py-3 space-y-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="text-sm font-black text-amber-950 flex-1 min-w-[12rem] flex items-center gap-2"><AlertCircle className="w-4 h-4 shrink-0" aria-hidden="true" />{missing.length} lớp chưa báo ăn ngày {formatVN(date)}</p>
+            {reported.length > 0 && (
+              <button type="button" onClick={() => setShowMissing(v => !v)} aria-expanded={showMissing}
+                className="no-hover-fx h-10 px-3 rounded-xl border border-amber-400 bg-white text-sm font-bold text-slate-900 cursor-pointer">
+                {showMissing ? 'Ẩn các lớp này khỏi bảng' : 'Hiện các lớp này trong bảng'}
+              </button>
+            )}
+          </div>
+          <ul className="space-y-1">
+            {[...missing.reduce((m, r) => m.set(r.grade, [...(m.get(r.grade) || []), r.className]), new Map<string, string[]>()).entries()]
+              .sort((a, b) => a[0].localeCompare(b[0], 'vi', { numeric: true }))
+              .map(([g, names]) => <li key={g} className="text-sm text-slate-800"><strong className="text-slate-900">{g} ({names.length}):</strong> {names.join(', ')}</li>)}
+          </ul>
+        </div>
       )}
 
       {rows.length === 0 ? (
         <p className="text-sm text-slate-700 bg-slate-50 border border-slate-200 rounded-xl px-3 py-4 text-center">Chưa có lớp chủ nhiệm nào có học sinh để tổng hợp.</p>
+      ) : reported.length === 0 && !showMissing ? (
+        <p className="text-sm font-bold text-slate-700 bg-slate-50 border border-slate-200 rounded-xl px-3 py-4 text-center">Chưa có lớp nào báo ăn ngày {formatVN(date)}.</p>
       ) : (
         <div className="overflow-x-auto rounded-2xl border border-slate-200">
           <table className="w-full min-w-[820px] text-sm text-slate-900">
@@ -255,7 +289,7 @@ tfoot td { font-weight: 700; background: #f1f5f9; }
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {rows.map((r, i) => (
+              {rows.filter(r => showMissing || r.status !== 'missing').map((r, i) => (
                 <tr key={r.className + i} className={r.status === 'missing' ? 'bg-amber-50' : 'bg-white'}>
                   <td className="px-3 py-2 text-center tabular-nums">{i + 1}</td>
                   <td className="px-3 py-2 font-black whitespace-nowrap">{r.className}</td>
@@ -278,8 +312,8 @@ tfoot td { font-weight: 700; background: #f1f5f9; }
             <tfoot>
               <tr className="bg-slate-100 font-black">
                 <td className="px-3 py-2" />
-                <td className="px-3 py-2" colSpan={2}>Tổng cộng</td>
-                <td className="px-3 py-2 text-center tabular-nums">{totalStudents}</td>
+                <td className="px-3 py-2" colSpan={2}>Tổng (lớp đã báo)</td>
+                <td className="px-3 py-2 text-center tabular-nums">{reportedStudents}</td>
                 <td className="px-3 py-2 text-center tabular-nums text-emerald-800">{totalEating}</td>
                 <td className="px-3 py-2 text-center tabular-nums">{reportedStudents - totalEating}</td>
                 <td className="px-3 py-2" colSpan={3}>{reported.length}/{rows.length} lớp đã báo</td>

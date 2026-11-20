@@ -1406,7 +1406,7 @@ export const ReportsDataView: React.FC<ReportsDataViewProps> = ({ defaultTab = '
 
             {/* TRANG DỮ LIỆU: 2 thẻ. Thẻ "Sao lưu & khôi phục" gom cả Google Drive, lưu trên máy, dung lượng — mỗi nhóm một dòng, bấm để mở */}
             <div className="bg-white rounded-2xl border border-slate-200 p-1.5 flex gap-1 overflow-x-auto" role="tablist" aria-label="Các phần của trang Dữ liệu">
-              {DATA_HUB_SECTIONS.map(sec => {
+              {DATA_HUB_SECTIONS.filter(sec => !(sec.id === 'newyear' && isStatsViewerAccount(currentUser))).map(sec => {
                 const Icon = sec.icon;
                 return (
                   <button
@@ -1463,7 +1463,7 @@ export const ReportsDataView: React.FC<ReportsDataViewProps> = ({ defaultTab = '
                   </div>
                 )}
 
-                <HubGroup
+                {!isStatsViewerAccount(currentUser) && <HubGroup
                   id="hub-group-drive"
                   open={hubOpen.drive}
                   onToggle={() => toggleHub('drive')}
@@ -1493,7 +1493,7 @@ export const ReportsDataView: React.FC<ReportsDataViewProps> = ({ defaultTab = '
                       </section>
                     )}
                   </div>
-                </HubGroup>
+                </HubGroup>}
 
                 <HubGroup
                   id="hub-group-quiz"
@@ -1542,7 +1542,7 @@ export const ReportsDataView: React.FC<ReportsDataViewProps> = ({ defaultTab = '
               </div>
             )}
 
-            {dataHub === 'newyear' && (
+            {dataHub === 'newyear' && !isStatsViewerAccount(currentUser) && (
               <div className="max-w-xl">
               {/* Card 4: Làm Mới Năm Học / Xóa Sạch */}
               <div className="bg-white rounded-3xl border border-slate-200/90 p-4 sm:p-6 shadow-xs flex flex-col justify-between space-y-4 sm:space-y-5 hover-zoom-card">
