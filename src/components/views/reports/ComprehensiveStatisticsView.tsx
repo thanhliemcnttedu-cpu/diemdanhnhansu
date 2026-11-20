@@ -77,6 +77,8 @@ export const ComprehensiveStatisticsView: React.FC = () => {
 
   // Selected Scope: 'all' (Toàn trường) or specific classId
   const [selectedClassId, setSelectedClassId] = useState<string>('all');
+  // A homeroom teacher has one class: the scope is that class, not "Toàn trường"
+  useEffect(() => { if (classes.length === 1 && selectedClassId !== classes[0].id) setSelectedClassId(classes[0].id); }, [classes, selectedClassId]);
 
   // Chart configuration: Type & Dataset (Mặc định biểu đồ tròn Donut / Pie theo chuẩn sư phạm)
   const [chartType, setChartType] = useState<'pie' | 'bar' | 'line'>('pie');
@@ -363,7 +365,8 @@ export const ComprehensiveStatisticsView: React.FC = () => {
     const totalAbsent = excused + unexcused + sick + other;
     const totalSlots = present + totalAbsent;
     const attRate = totalSlots > 0 ? Math.round((present / totalSlots) * 100) : 100;
-    const bRate = boardingRegistered > 0 ? Math.round((eating / boardingRegistered) * 100) : 0;
+    // Same rule as the school dashboard: meals ÷ pupils present (the meals counted here already exclude absent pupils)
+    const bRate = present > 0 ? Math.round((eating / present) * 100) : 0;
 
     return {
       sessions: relevantAtt.length,
@@ -377,7 +380,9 @@ export const ComprehensiveStatisticsView: React.FC = () => {
       attRate,
       bRate,
       // No attendance sheet yet: the 100% above is only a neutral default, the screen must say "no data"
-      hasData: totalSlots > 0
+      hasData: totalSlots > 0,
+      // No boarding sheet at all: the screen must say "no data", not 0%
+      hasBoarding: boardingRegistered > 0
     };
   };
 
@@ -556,7 +561,7 @@ export const ComprehensiveStatisticsView: React.FC = () => {
         ];
       case 'boarding':
         return [
-          { key: 'eating', label: 'Ăn bán trú tại trường', value: activeTimeframeStats.eating, color: '#6366F1', sub: `${activeTimeframeStats.bRate}%` },
+          { key: 'eating', label: 'Ăn bán trú tại trường', value: activeTimeframeStats.eating, color: '#6366F1', sub: `${bPct(activeTimeframeStats)}` },
           { key: 'not_eating', label: 'Không ăn / Về nhà', value: Math.max(0, (targetStudents.length * (activeTimeframeStats.sessions || 1)) - activeTimeframeStats.eating), color: '#94A3B8', sub: 'Tự túc' }
         ];
       case 'gender':
@@ -711,7 +716,7 @@ export const ComprehensiveStatisticsView: React.FC = () => {
         attRateStr: `${todayStats.attRate}%`,
         attChartVisual: generateAsciiBar(todayStats.attRate),
         eating: todayStats.eating,
-        bRateStr: `${todayStats.bRate}%`,
+        bRateStr: `${bPct(todayStats)}`,
         bChartVisual: generateAsciiBar(todayStats.bRate)
       },
       {
@@ -726,7 +731,7 @@ export const ComprehensiveStatisticsView: React.FC = () => {
         attRateStr: `${yesterdayStats.attRate}%`,
         attChartVisual: generateAsciiBar(yesterdayStats.attRate),
         eating: yesterdayStats.eating,
-        bRateStr: `${yesterdayStats.bRate}%`,
+        bRateStr: `${bPct(yesterdayStats)}`,
         bChartVisual: generateAsciiBar(yesterdayStats.bRate)
       },
       ...(selectedDate !== todayStr && selectedDate !== yesterdayOfTodayStr ? [{
@@ -741,7 +746,7 @@ export const ComprehensiveStatisticsView: React.FC = () => {
         attRateStr: `${selectedDayStats.attRate}%`,
         attChartVisual: generateAsciiBar(selectedDayStats.attRate),
         eating: selectedDayStats.eating,
-        bRateStr: `${selectedDayStats.bRate}%`,
+        bRateStr: `${bPct(selectedDayStats)}`,
         bChartVisual: generateAsciiBar(selectedDayStats.bRate)
       }] : []),
       {
@@ -756,7 +761,7 @@ export const ComprehensiveStatisticsView: React.FC = () => {
         attRateStr: `${weekStats.attRate}%`,
         attChartVisual: generateAsciiBar(weekStats.attRate),
         eating: weekStats.eating,
-        bRateStr: `${weekStats.bRate}%`,
+        bRateStr: `${bPct(weekStats)}`,
         bChartVisual: generateAsciiBar(weekStats.bRate)
       },
       {
@@ -771,7 +776,7 @@ export const ComprehensiveStatisticsView: React.FC = () => {
         attRateStr: `${monthStats.attRate}%`,
         attChartVisual: generateAsciiBar(monthStats.attRate),
         eating: monthStats.eating,
-        bRateStr: `${monthStats.bRate}%`,
+        bRateStr: `${bPct(monthStats)}`,
         bChartVisual: generateAsciiBar(monthStats.bRate)
       }
     ];
@@ -921,6 +926,7 @@ export const ComprehensiveStatisticsView: React.FC = () => {
     setTimeout(() => setExportToast(null), 3000);
   };
 
+  const bPct = (st: { bRate: number; hasBoarding: boolean }) => (st.hasBoarding ? `${st.bRate}%` : '—');
   const isExporting = isExportingPdf || isExportingPng;
 
   return (
@@ -950,7 +956,7 @@ export const ComprehensiveStatisticsView: React.FC = () => {
               </button>
             </div>
             <p className="text-xs text-slate-500 font-medium mt-0.5">
-              Khi bước sang tháng mới, hệ thống tự động làm mới số liệu thống kê chu kỳ mới mà tuyệt đối không xóa dữ liệu lớp, học sinh hay xu thi đua!
+              Chuyên cần và bán trú theo ngày, tuần, tháng, học kì. Tỷ lệ tính trên học sinh của các lớp đã điểm danh.
             </p>
           </div>
         </div>
@@ -1052,16 +1058,16 @@ export const ComprehensiveStatisticsView: React.FC = () => {
             </div>
           </div>
           <div className="text-2xl font-black font-mono text-indigo-900">
-            {activeTimeframeStats.bRate}%
+            {bPct(activeTimeframeStats)}
           </div>
           <div className="text-[12px] text-indigo-700 font-bold truncate">
-            {activeTimeframeStats.eating} suất ăn đăng ký
+            {activeTimeframeStats.eating} suất / {activeTimeframeStats.present} HS đi học
           </div>
         </div>
       </div>
 
       {/* 4. CONTROL TOOLBAR: TIMEFRAME (NGÀY / TUẦN / THÁNG) & EXPORT ACTIONS */}
-      <div className="bg-white rounded-3xl border border-slate-200/90 p-3.5 sm:p-4 md:p-5 shadow-xs flex flex-col 2xl:flex-row 2xl:items-center justify-between gap-3 sm:gap-4 hover-zoom-card">
+      <div className="bg-white rounded-3xl border border-slate-200/90 p-3.5 sm:p-4 md:p-5 shadow-xs flex flex-col lg:flex-row lg:flex-wrap lg:items-center justify-between gap-3 sm:gap-4 hover-zoom-card">
         {/* Left: View by NGÀY / TUẦN / THÁNG */}
         <div className="flex flex-wrap items-center gap-2 sm:gap-2.5 w-full lg:w-auto">
           <div className="grid grid-cols-3 sm:flex items-center gap-1 sm:gap-1.5 bg-slate-100 p-1 sm:p-1.5 rounded-2xl border border-slate-200 w-full sm:w-auto">
@@ -1185,8 +1191,8 @@ export const ComprehensiveStatisticsView: React.FC = () => {
             </div>
           )}
 
-          {/* Scope Selector: Toàn trường vs Lớp cụ thể */}
-          <div className="flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-2xl border border-slate-200 w-full sm:w-auto">
+          {/* Scope Selector: Toàn trường vs Lớp cụ thể (hidden when there is only one class) */}
+          {classes.length > 1 && <div className="flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-2xl border border-slate-200 w-full sm:w-auto">
             <span className="text-[12px] font-bold text-slate-500 uppercase">Phạm vi:</span>
             <select
               value={selectedClassId}
@@ -1198,11 +1204,11 @@ export const ComprehensiveStatisticsView: React.FC = () => {
                 <option key={c.id} value={c.id}>Lớp {c.name} ({c.grade || 'Khối 4'})</option>
               ))}
             </select>
-          </div>
+          </div>}
         </div>
 
         {/* Right: Export Reports (PDF A4, EXCEL, PNG with DATA + CHARTS) */}
-        <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-1.5 sm:gap-2 w-full 2xl:w-auto 2xl:shrink-0">
+        <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-1.5 sm:gap-2 w-full lg:w-auto min-w-0">
           {/* 🤖 AI BỐ CỤC THÔNG MINH: TỰ ĐỘNG KHỔ NGANG A4 */}
           <div 
             className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-gradient-to-r from-indigo-50 via-purple-50 to-pink-50 border border-indigo-200/90 shadow-2xs text-indigo-950 col-span-2 sm:col-span-1"
@@ -1298,7 +1304,7 @@ export const ComprehensiveStatisticsView: React.FC = () => {
           <div className="bg-indigo-50/70 p-2.5 rounded-xl border border-indigo-200 flex items-center justify-between">
             <div>
               <div className="text-[12px] font-black text-indigo-800 uppercase">ĂN BÁN TRÚ HÔM NAY</div>
-              <div className="text-base font-black text-indigo-700 font-mono">{todayStats.hasData ? `${todayStats.bRate}%` : '—'}</div>
+              <div className="text-base font-black text-indigo-700 font-mono">{todayStats.hasData ? `${bPct(todayStats)}` : '—'}</div>
             </div>
             <div className="text-[12px] text-indigo-600 font-bold font-mono">{todayStats.hasData ? `${todayStats.eating} suất` : 'Chưa có dữ liệu'}</div>
           </div>
@@ -1359,7 +1365,7 @@ export const ComprehensiveStatisticsView: React.FC = () => {
                   <td className="p-2 border-r border-slate-300">{todayStats.other}</td>
                   <td className="p-2 border-r border-slate-300 font-black text-emerald-800 bg-emerald-50/60">{todayStats.attRate}%</td>
                   <td className="p-2 border-r border-slate-300 font-bold text-indigo-700">{todayStats.eating}</td>
-                  <td className="p-2 font-black text-indigo-800 bg-indigo-50/60">{todayStats.bRate}%</td>
+                  <td className="p-2 font-black text-indigo-800 bg-indigo-50/60">{bPct(todayStats)}</td>
                 </tr>
 
                 {/* 2. HÔM QUA */}
@@ -1376,7 +1382,7 @@ export const ComprehensiveStatisticsView: React.FC = () => {
                   <td className="p-2 border-r border-slate-300">{yesterdayStats.other}</td>
                   <td className="p-2 border-r border-slate-300 font-black text-emerald-800 bg-emerald-50/60">{yesterdayStats.attRate}%</td>
                   <td className="p-2 border-r border-slate-300 font-bold text-indigo-700">{yesterdayStats.eating}</td>
-                  <td className="p-2 font-black text-indigo-800 bg-indigo-50/60">{yesterdayStats.bRate}%</td>
+                  <td className="p-2 font-black text-indigo-800 bg-indigo-50/60">{bPct(yesterdayStats)}</td>
                 </tr>
 
                 {/* 3. NGÀY ĐANG CHỌN (NẾU KHÁC HÔM NAY VÀ HÔM QUA) */}
@@ -1394,7 +1400,7 @@ export const ComprehensiveStatisticsView: React.FC = () => {
                     <td className="p-2 border-r border-slate-300">{selectedDayStats.other}</td>
                     <td className="p-2 border-r border-slate-300 font-black text-emerald-800 bg-emerald-50/60">{selectedDayStats.attRate}%</td>
                     <td className="p-2 border-r border-slate-300 font-bold text-indigo-700">{selectedDayStats.eating}</td>
-                    <td className="p-2 font-black text-indigo-800 bg-indigo-50/60">{selectedDayStats.bRate}%</td>
+                    <td className="p-2 font-black text-indigo-800 bg-indigo-50/60">{bPct(selectedDayStats)}</td>
                   </tr>
                 )}
 
@@ -1412,7 +1418,7 @@ export const ComprehensiveStatisticsView: React.FC = () => {
                   <td className="p-2 border-r border-slate-300">{weekStats.other}</td>
                   <td className="p-2 border-r border-slate-300 font-black text-emerald-800 bg-emerald-50/60">{weekStats.attRate}%</td>
                   <td className="p-2 border-r border-slate-300 font-bold text-indigo-700">{weekStats.eating}</td>
-                  <td className="p-2 font-black text-indigo-800 bg-indigo-50/60">{weekStats.bRate}%</td>
+                  <td className="p-2 font-black text-indigo-800 bg-indigo-50/60">{bPct(weekStats)}</td>
                 </tr>
 
                 {/* 5. THEO THÁNG */}
@@ -1429,7 +1435,7 @@ export const ComprehensiveStatisticsView: React.FC = () => {
                   <td className="p-2 border-r border-slate-300">{monthStats.other}</td>
                   <td className="p-2 border-r border-slate-300 font-black text-emerald-800 bg-emerald-50/60">{monthStats.attRate}%</td>
                   <td className="p-2 border-r border-slate-300 font-bold text-indigo-700">{monthStats.eating}</td>
-                  <td className="p-2 font-black text-indigo-800 bg-indigo-50/60">{monthStats.bRate}%</td>
+                  <td className="p-2 font-black text-indigo-800 bg-indigo-50/60">{bPct(monthStats)}</td>
                 </tr>
 
                 {/* 6. THEO HỌC KÌ */}
@@ -1446,7 +1452,7 @@ export const ComprehensiveStatisticsView: React.FC = () => {
                   <td className="p-2 border-r border-slate-300">{semesterStats.other}</td>
                   <td className="p-2 border-r border-slate-300 font-black text-emerald-800 bg-emerald-50/60">{semesterStats.attRate}%</td>
                   <td className="p-2 border-r border-slate-300 font-bold text-indigo-700">{semesterStats.eating}</td>
-                  <td className="p-2 font-black text-indigo-800 bg-indigo-50/60">{semesterStats.bRate}%</td>
+                  <td className="p-2 font-black text-indigo-800 bg-indigo-50/60">{bPct(semesterStats)}</td>
                 </tr>
               </tbody>
             </table>
@@ -1851,7 +1857,7 @@ export const ComprehensiveStatisticsView: React.FC = () => {
                         <td className="p-2 border-r border-slate-300 font-mono text-rose-800">{activeTimeframeStats.totalAbsent}</td>
                         <td className="p-2 border-r border-slate-300 bg-emerald-100 text-emerald-950 font-black">{activeTimeframeStats.attRate}%</td>
                         <td className="p-2 border-r border-slate-300 font-mono text-indigo-800">{activeTimeframeStats.eating}</td>
-                        <td className="p-2 bg-indigo-100 text-indigo-950 font-black">{activeTimeframeStats.bRate}%</td>
+                        <td className="p-2 bg-indigo-100 text-indigo-950 font-black">{bPct(activeTimeframeStats)}</td>
                       </tr>
                     )}
                   </tbody>
@@ -1958,7 +1964,7 @@ export const ComprehensiveStatisticsView: React.FC = () => {
                           <td className="p-2 border-r border-slate-300 font-mono text-rose-800">{activeTimeframeStats.totalAbsent}</td>
                           <td className="p-2 border-r border-slate-300 bg-emerald-100 text-emerald-950 font-black">{activeTimeframeStats.attRate}%</td>
                           <td className="p-2 border-r border-slate-300 font-mono text-indigo-800">{activeTimeframeStats.eating}</td>
-                          <td className="p-2 bg-indigo-100 text-indigo-950 font-black">{activeTimeframeStats.bRate}%</td>
+                          <td className="p-2 bg-indigo-100 text-indigo-950 font-black">{bPct(activeTimeframeStats)}</td>
                         </tr>
                       )}
                     </tbody>
@@ -2065,7 +2071,7 @@ export const ComprehensiveStatisticsView: React.FC = () => {
                         <td className="p-2 border-r border-slate-300 font-mono text-rose-800">{activeTimeframeStats.totalAbsent}</td>
                         <td className="p-2 border-r border-slate-300 bg-emerald-100 text-emerald-950 font-black">{activeTimeframeStats.attRate}%</td>
                         <td className="p-2 border-r border-slate-300 font-mono text-indigo-800">{activeTimeframeStats.eating}</td>
-                        <td className="p-2 bg-indigo-100 text-indigo-950 font-black">{activeTimeframeStats.bRate}%</td>
+                        <td className="p-2 bg-indigo-100 text-indigo-950 font-black">{bPct(activeTimeframeStats)}</td>
                       </tr>
                     </tbody>
                   </table>

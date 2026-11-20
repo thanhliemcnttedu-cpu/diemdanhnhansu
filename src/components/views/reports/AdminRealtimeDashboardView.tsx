@@ -540,6 +540,12 @@ export const AdminRealtimeDashboardView: React.FC = () => {
     return { points, prev, prevLabel, anchorDate, classCount: filteredClasses.length };
   }, [attendanceRecords, boardingRecords, filteredClassIds, filteredStudents, filteredClasses.length, dateRange, timeframe, todayStr]);
 
+  // Provisional sample: some classes have not reported, so the school-wide rate stands only for the classes that did
+  const sampleIncomplete = periodAttendance.hasData && periodAttendance.classDaysReported < periodAttendance.classDaysExpected;
+  const sampleLabel = timeframe === 'day'
+    ? `mẫu ${periodAttendance.classesReported}/${filteredClasses.length} lớp`
+    : `mẫu ${periodAttendance.classDaysReported}/${periodAttendance.classDaysExpected} lượt lớp`;
+
   /** "▲ +1.2 điểm so với …" / "▼ -0.8 …" / "= 0 …" under a rate; null when there is nothing to compare */
   const deltaLine = (cur: number | null | undefined, prevRate: number | null | undefined, hasCur: boolean) => {
     if (!hasCur || cur == null || prevRate == null) return null;
@@ -1316,7 +1322,7 @@ export const AdminRealtimeDashboardView: React.FC = () => {
                 </>
               )}
             </div>
-            {deltaLine(periodAttendance.rate, trendInfo.prev?.att, periodAttendance.hasData)}
+            {deltaLine(periodAttendance.rate, trendInfo.prev?.att, periodAttendance.hasData && !sampleIncomplete)}
             <div className={`mt-0.5 text-[12px] font-bold ${periodAttendance.classDaysReported < periodAttendance.classDaysExpected ? 'text-amber-700' : 'text-emerald-700'}`}>
               {timeframe === 'day'
                 ? `Đã báo ${periodAttendance.classesReported}/${filteredClasses.length} lớp`
@@ -1356,7 +1362,7 @@ export const AdminRealtimeDashboardView: React.FC = () => {
                 {periodBoarding.eating}
               </span>
               <span className="text-xs font-bold text-amber-700">
-                {periodAttendance.hasData ? `suất ăn (${periodBoarding.rate}%)` : 'suất ăn (chưa có dữ liệu)'}
+                {periodBoarding.totalLogged > 0 ? `suất ăn (${periodBoarding.rate}%)` : 'suất ăn (chưa có dữ liệu bán trú)'}
               </span>
             </div>
             <div className="flex items-center gap-1.5 mt-1 text-[12px] font-bold text-slate-600">
@@ -1374,7 +1380,7 @@ export const AdminRealtimeDashboardView: React.FC = () => {
                 </>
               )}
             </div>
-            {deltaLine(periodBoarding.rate, trendInfo.prev?.board, periodAttendance.hasData && periodBoarding.eating > 0)}
+            {deltaLine(periodBoarding.rate, trendInfo.prev?.board, periodAttendance.hasData && !sampleIncomplete && periodBoarding.eating > 0)}
             {periodBoarding.eating > 0 && (
               <div className="mt-1 text-sm font-bold leading-snug space-y-0.5" data-no-autofit="">
                 <p className="text-blue-700"><span className="text-base font-black font-mono">{periodBoarding.rate}%</span> trên học sinh đi học ({periodBoarding.eating}/{periodBoarding.presentInPeriod})</p>
@@ -1493,7 +1499,7 @@ export const AdminRealtimeDashboardView: React.FC = () => {
               <span>CƠ CẤU CHUYÊN CẦN ({dateRange.shortLabel})</span>
             </h4>
             <span className="text-[12px] font-bold bg-emerald-50 text-emerald-800 px-2 py-0.5 rounded-full border border-emerald-200">
-              Tỷ lệ: {periodAttendance.hasData ? `${periodAttendance.rate}%` : 'chưa có dữ liệu'}
+              Tỷ lệ: {periodAttendance.hasData ? `${periodAttendance.rate}%` : 'chưa có dữ liệu'}{sampleIncomplete ? ` • ${sampleLabel} • tạm tính` : ''}
             </span>
           </div>
 
@@ -1514,7 +1520,7 @@ export const AdminRealtimeDashboardView: React.FC = () => {
                   cy="50"
                   r="40"
                   fill="transparent"
-                  stroke="#10B981"
+                  stroke={sampleIncomplete ? '#94A3B8' : '#10B981'}
                   strokeWidth="12"
                   strokeDasharray={251.2}
                   strokeDashoffset={251.2 - (251.2 * (periodAttendance.rate || 0)) / 100}
@@ -1571,7 +1577,7 @@ export const AdminRealtimeDashboardView: React.FC = () => {
               <span>CƠ CẤU BÁN TRÚ ({dateRange.shortLabel})</span>
             </h4>
             <span className="text-[12px] font-bold bg-amber-50 text-amber-800 px-2 py-0.5 rounded-full border border-amber-200">
-              {periodBoarding.eating} suất ăn ({periodBoarding.rate}%)
+              {periodBoarding.totalLogged > 0 ? `${periodBoarding.eating} suất ăn • ${periodBoarding.rate}% học sinh đi học (${periodBoarding.eating}/${periodBoarding.presentInPeriod})${sampleIncomplete ? ` • ${sampleLabel} • tạm tính` : ''}` : 'chưa có dữ liệu'}
             </span>
           </div>
 
@@ -1622,7 +1628,7 @@ export const AdminRealtimeDashboardView: React.FC = () => {
               <div className="flex items-center justify-between gap-4 p-2 rounded-xl bg-slate-50 border border-slate-200">
                 <span className="flex items-center gap-1.5 font-bold text-slate-700">
                   <span className="w-2.5 h-2.5 rounded-full bg-slate-400" />
-                  Về nhà ăn cơm:
+                  Không ăn bán trú (kể cả em vắng):
                 </span>
                 <strong className="text-slate-900 font-mono">
                   {periodBoarding.notEating} {timeframe === 'day' ? 'em' : 'lượt'}

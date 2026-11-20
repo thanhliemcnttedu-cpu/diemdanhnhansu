@@ -5,6 +5,7 @@ import { useClassroom } from '../../../context/ClassroomContext';
 import { toLocalDateKey } from '../../../services/googleDriveService';
 import { staffAttendanceService } from '../../../services/staffAttendanceService';
 import { writeReportXlsx } from '../../../utils/licensedExport';
+import { coverageOf, coverageText, pct1 } from '../../../utils/reportStats';
 import { isHomeroomClass } from './SchoolMealReportPanel';
 import type { Classroom, Student } from '../../../types';
 
@@ -80,9 +81,11 @@ export const LeaderReportsPanel: React.FC = () => {
 
   // Staff check-in of the chosen day: only when the manager password was already entered on the staff screen
   const [staffLine, setStaffLine] = useState('');
+  const [staffInfo, setStaffInfo] = useState<{ total: number; present: number; off: string[]; missing: Array<{ name: string; dept: string }> } | null>(null);
+  const [showUnreported, setShowUnreported] = useState(false);
   useEffect(() => {
     let alive = true;
-    setStaffLine('');
+    setStaffLine(''); setStaffInfo(null);
     const auth = staffAttendanceService.getViewerAuth();
     if (tab !== 'day' || !auth) return;
     staffAttendanceService.range(date, date, auth).then(r => {
@@ -90,6 +93,7 @@ export const LeaderReportsPanel: React.FC = () => {
       const day = (r.days || {})[date] || {};
       const missing = r.staff.filter((s: any) => !day[s.code]).map((s: any) => s.name);
       const off = r.staff.filter((s: any) => day[s.code] && day[s.code].status !== 'present').map((s: any) => s.name);
+      setStaffInfo({ total: r.staff.length, present: r.staff.length - missing.length, off, missing: r.staff.filter((s: any) => !day[s.code]).map((s: any) => ({ name: s.name, dept: String(s.dept || s.position || 'Khác') })) });
       setStaffLine(`Nhân sự: ${r.staff.length - missing.length}/${r.staff.length} người đã điểm danh`
         + (off.length ? ` • Nghỉ / công tác: ${off.join(', ')}` : '')
         + (missing.length ? ` • Chưa điểm danh: ${missing.join(', ')}` : ''));
@@ -126,14 +130,14 @@ export const LeaderReportsPanel: React.FC = () => {
         title: 'BÁO CÁO NHANH TÌNH HÌNH TRONG NGÀY', subtitle: `Ngày ${vn(date)}`, file: `Bao_cao_nhanh_${date}.xlsx`, sheetName: 'Bao_cao_ngay',
         head: ['STT', 'Lớp', 'Giáo viên chủ nhiệm', 'Sĩ số', 'Có mặt', 'Vắng có phép', 'Vắng không phép', 'Đi muộn', 'Chuyên cần (%)', 'Suất ăn bán trú', 'Tình trạng'],
         rows, warnRows: warn, widths: [6, 10, 26, 8, 9, 13, 15, 9, 14, 15, 16],
-        foot: rows.length ? ['', 'TOÀN TRƯỜNG', '',
-          { f: `SUM(D${first}:D${last})`, v: sum(3) }, { f: `SUM(E${first}:E${last})`, v: sum(4) },
+        foot: rows.length ? ['', 'LỚP ĐÃ BÁO', '',
+          { f: `SUMIF(K${first}:K${last},"Đã điểm danh",D${first}:D${last})`, v: doneTotal }, { f: `SUM(E${first}:E${last})`, v: sum(4) },
           { f: `SUM(F${first}:F${last})`, v: sum(5) }, { f: `SUM(G${first}:G${last})`, v: sum(6) }, { f: `SUM(H${first}:H${last})`, v: sum(7) },
           { f: `IF(SUMIF(K${first}:K${last},"Đã điểm danh",D${first}:D${last})=0,0,ROUND(SUM(E${first}:E${last})/SUMIF(K${first}:K${last},"Đã điểm danh",D${first}:D${last})*100,1))`, v: pct(sum(4), doneTotal) },
           { f: `SUM(J${first}:J${last})`, v: sum(9) },
           { f: `COUNTIF(K${first}:K${last},"Đã điểm danh")&"/"&COUNTA(B${first}:B${last})&" lớp"`, v: `${done.length}/${rows.length} lớp` }] : undefined,
         notes: [staffLine || 'Nhân sự: mở màn Chấm công và nhập mật khẩu để có số liệu điểm danh giáo viên – nhân viên.',
-          'Tỷ lệ chuyên cần toàn trường tính trên sĩ số các lớp đã điểm danh. Ô suất ăn để trống là lớp chưa báo ăn.'],
+          `Dòng cuối chỉ cộng các lớp đã điểm danh (${coverageText(coverageOf(done.length, rows.length, doneTotal, sum(3)))}); tỷ lệ chuyên cần = có mặt ÷ sĩ số các lớp đã điểm danh. Lớp chưa báo không tính vào tỷ lệ. Ô suất ăn để trống là lớp chưa báo ăn.`],
       };
     }
 
@@ -287,6 +291,27 @@ ${(sheet.notes || []).map(n => `<p class="note">${esc(n)}</p>`).join('')}
     Promise.race([fonts?.ready ?? Promise.resolve(), new Promise(r => setTimeout(r, 1500))]).then(() => setTimeout(go, 100));
   };
 
+  // Day tab: how much of the school this figure stands for
+  const dayCoverage = useMemo(() => {
+    if (tab !== 'day') return null;
+    const done = sheet.rows.filter(r => r[10] === 'Đã điểm danh');
+    const sum = (arr: Cell[][]) => arr.reduce((a, r) => a + Number(val(r[3])), 0);
+    return coverageOf(done.length, sheet.rows.length, sum(done), sum(sheet.rows));
+  }, [tab, sheet]);
+  const unreportedByGrade = useMemo(() => {
+    if (tab !== 'day' || !sheet.warnRows) return [] as Array<{ grade: string; names: string[] }>;
+    const gradeOf = new Map(homerooms.map(c => [c.name, String(c.grade || 'Khác')]));
+    const m = new Map<string, string[]>();
+    sheet.rows.forEach((r, i) => { if (!sheet.warnRows!.has(i)) return; const g = gradeOf.get(String(r[1])) || 'Khác'; m.set(g, [...(m.get(g) || []), String(r[1])]); });
+    return [...m.entries()].sort((a, b) => a[0].localeCompare(b[0], 'vi', { numeric: true })).map(([grade, names]) => ({ grade, names }));
+  }, [tab, sheet, homerooms]);
+  const visibleRows = sheet.rows.map((r, i) => ({ r, i })).filter(x => tab !== 'day' || showUnreported || !sheet.warnRows?.has(x.i));
+  const staffByDept = useMemo(() => {
+    const m = new Map<string, number>();
+    (staffInfo?.missing || []).forEach(x => m.set(x.dept, (m.get(x.dept) || 0) + 1));
+    return [...m.entries()].sort((a, b) => b[1] - a[1]);
+  }, [staffInfo]);
+
   const input = 'h-10 px-3 rounded-xl border border-slate-300 bg-white text-sm font-bold text-slate-900 tabular-nums focus:outline-none focus:ring-2 focus:ring-sky-600';
   const isNum = (c: Cell) => typeof val(c) === 'number';
 
@@ -342,6 +367,20 @@ ${(sheet.notes || []).map(n => `<p class="note">${esc(n)}</p>`).join('')}
 
       <p className="text-sm font-bold text-slate-900">{sheet.subtitle}</p>
 
+      {dayCoverage && sheet.rows.length > 0 && (
+        <div className={`rounded-2xl border px-4 py-3 space-y-2 ${dayCoverage.complete ? 'border-emerald-200 bg-emerald-50' : 'border-amber-300 bg-amber-50'}`} role="status">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+            <span className="text-sm font-black text-slate-900">Độ đầy đủ: {dayCoverage.reportedClasses}/{dayCoverage.totalClasses} lớp đã báo ({dayCoverage.classPct}%)</span>
+            <span className="text-sm text-slate-800">{dayCoverage.reportedStudents}/{dayCoverage.totalStudents} học sinh ({dayCoverage.studentPct}%)</span>
+            {!dayCoverage.complete && <span className="px-2 py-0.5 rounded-full bg-amber-200 text-amber-950 text-xs font-black uppercase">{dayCoverage.empty ? 'Chưa có dữ liệu' : 'Tạm tính'}</span>}
+          </div>
+          <div className="h-2.5 rounded-full bg-white/80 border border-slate-200 overflow-hidden" aria-hidden="true">
+            <div className={`h-full ${dayCoverage.complete ? 'bg-emerald-600' : 'bg-amber-500'}`} style={{ width: `${Math.min(100, dayCoverage.classPct)}%` }} />
+          </div>
+          {!dayCoverage.complete && !dayCoverage.empty && <p className="text-xs text-slate-800">Tỷ lệ chuyên cần chỉ tính trên các lớp đã báo, chưa đại diện cho cả trường. Lớp chưa báo không bị tính là vắng.</p>}
+        </div>
+      )}
+
       <div className="overflow-x-auto rounded-2xl border border-slate-200">
         <table className="w-full text-sm min-w-[760px]" data-leader-report={tab}>
           <thead>
@@ -355,11 +394,15 @@ ${(sheet.notes || []).map(n => `<p class="note">${esc(n)}</p>`).join('')}
                 {tab === 'week' ? 'Không có học sinh nào vắng tới ngưỡng trong tuần này.' : 'Chưa có lớp chủ nhiệm nào có học sinh.'}
               </td></tr>
             )}
-            {sheet.rows.map((r, i) => (
+            {tab === 'day' && sheet.rows.length > 0 && visibleRows.length === 0 && (
+              <tr><td colSpan={sheet.head.length} className="px-3 py-6 text-center text-slate-700 font-bold">Chưa có lớp nào báo điểm danh ngày này.</td></tr>
+            )}
+            {visibleRows.map(({ r, i }) => (
               <tr key={i} className={`border-t border-slate-100 ${sheet.warnRows?.has(i) ? 'bg-amber-50' : ''}`}>
                 {r.map((c, j) => (
                   <td key={j} className={`px-2.5 py-2 ${isNum(c) ? 'tabular-nums text-right' : ''} ${j === 1 || j === 2 && tab === 'week' ? 'font-bold text-slate-900' : 'text-slate-800'} ${j === 3 || (j === 2 && tab !== 'week') ? 'whitespace-nowrap' : ''}`}>
-                    {tab === 'month' && j === 12 && typeof val(c) === 'number'
+                    {tab === 'day' && j === 8 && typeof val(c) === 'number' ? `${val(c)}%`
+                    : tab === 'month' && j === 12 && typeof val(c) === 'number'
                       ? <span className={Number(val(c)) < 0 ? 'font-bold text-rose-700' : 'font-bold text-emerald-700'}>{Number(val(c)) > 0 ? '+' : ''}{val(c)}</span>
                       : tab === 'week' && j >= 4 && j <= 8 && val(c)
                         ? <span className={`inline-block w-6 text-center rounded font-bold ${val(c) === 'K' ? 'bg-rose-100 text-rose-800' : 'bg-amber-100 text-amber-900'}`}>{val(c)}</span>
@@ -369,17 +412,60 @@ ${(sheet.notes || []).map(n => `<p class="note">${esc(n)}</p>`).join('')}
               </tr>
             ))}
           </tbody>
-          {sheet.foot && (
+          {sheet.foot && !(tab === 'day' && dayCoverage?.empty) && (
             <tfoot>
               <tr className="border-t-2 border-slate-300 bg-slate-50 font-black text-slate-900">
-                {sheet.foot.map((c, j) => <td key={j} className={`px-2.5 py-2 ${isNum(c) ? 'tabular-nums text-right' : ''}`}>{val(c)}</td>)}
+                {sheet.foot.map((c, j) => <td key={j} className={`px-2.5 py-2 ${isNum(c) ? 'tabular-nums text-right' : ''}`}>{tab === 'day' && j === 8 && typeof val(c) === 'number' ? `${val(c)}%` : val(c)}</td>)}
               </tr>
             </tfoot>
           )}
         </table>
       </div>
 
-      {(sheet.notes || []).map(n => <p key={n} className="text-xs text-slate-600">{n}</p>)}
+      {tab === 'day' && unreportedByGrade.length > 0 && (
+        <div className="rounded-2xl border border-amber-200 bg-amber-50/60 px-4 py-3 space-y-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="text-sm font-black text-slate-900 flex-1 min-w-[12rem]">{sheet.warnRows?.size} lớp chưa báo điểm danh</p>
+            <button type="button" onClick={() => setShowUnreported(v => !v)} aria-expanded={showUnreported}
+              className="no-hover-fx h-10 px-3 rounded-xl border border-amber-400 bg-white text-sm font-bold text-slate-900 cursor-pointer">
+              {showUnreported ? 'Ẩn các lớp này khỏi bảng' : 'Hiện các lớp này trong bảng'}
+            </button>
+          </div>
+          <ul className="space-y-1">
+            {unreportedByGrade.map(g => (
+              <li key={g.grade} className="text-sm text-slate-800"><strong className="text-slate-900">{g.grade} ({g.names.length}):</strong> {g.names.join(', ')}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {tab === 'day' && staffInfo && (
+        <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 space-y-2">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+            <span className="text-sm font-black text-slate-900">Nhân sự: {staffInfo.present}/{staffInfo.total} người đã điểm danh ({pct1(staffInfo.present, staffInfo.total) ?? 0}%)</span>
+            {staffInfo.off.length > 0 && <span className="text-sm text-slate-800">Nghỉ / công tác: {staffInfo.off.length}</span>}
+          </div>
+          <div className="h-2.5 rounded-full bg-white border border-slate-200 overflow-hidden" aria-hidden="true">
+            <div className="h-full bg-sky-600" style={{ width: `${Math.min(100, pct1(staffInfo.present, staffInfo.total) ?? 0)}%` }} />
+          </div>
+          {staffInfo.missing.length > 0 && (
+            <details className="text-sm text-slate-800">
+              <summary className="cursor-pointer font-bold text-slate-900 min-h-10 flex items-center">Chưa điểm danh: {staffInfo.missing.length} người{staffByDept.length > 1 ? ` (${staffByDept.slice(0, 4).map(([d, n]) => `${d} ${n}`).join(', ')}${staffByDept.length > 4 ? '…' : ''})` : ''} — bấm để xem tên</summary>
+              <p className="mt-1 leading-relaxed">{staffInfo.missing.map(x => x.name).join(', ')}</p>
+              <button type="button" onClick={() => { try { navigator.clipboard?.writeText(staffInfo.missing.map(x => x.name).join('\n')); } catch { /* clipboard blocked */ } }}
+                className="no-hover-fx mt-2 h-10 px-3 rounded-xl border border-slate-300 bg-white text-sm font-bold cursor-pointer">Chép danh sách</button>
+            </details>
+          )}
+          {staffInfo.off.length > 0 && (
+            <details className="text-sm text-slate-800">
+              <summary className="cursor-pointer font-bold text-slate-900 min-h-10 flex items-center">Nghỉ / công tác: {staffInfo.off.length} người — bấm để xem tên</summary>
+              <p className="mt-1 leading-relaxed">{staffInfo.off.join(', ')}</p>
+            </details>
+          )}
+        </div>
+      )}
+
+      {(sheet.notes || []).filter(n => !(tab === 'day' && staffInfo && n === staffLine)).map(n => <p key={n} className="text-xs text-slate-600">{n}</p>)}
     </section>
   );
 };
