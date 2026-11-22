@@ -690,3 +690,14 @@ img {
   --text-2xl: 24px; --text-3xl: 30px; --text-4xl: 36px; --text-5xl: 48px; --text-6xl: 60px;
   --radius-xs: 2px; --radius-sm: 4px; --radius-md: 6px; --radius-lg: 8px; --radius-xl: 12px; --radius-2xl: 16px; --radius-3xl: 24px; --radius-4xl: 32px;
 }
+
+
+/* Hiệu ứng biểu đồ thống kê: đường vẽ dần, điểm nổi lên lần lượt */
+@keyframes statDraw { to { stroke-dashoffset: 0; } }
+.stat-draw { stroke-dasharray: 1; stroke-dashoffset: 1; animation: statDraw 1.3s ease-out .1s forwards; }
+@keyframes statPop { from { opacity: 0; transform: scale(.4); } to { opacity: 1; transform: scale(1); } }
+.stat-pop { transform-box: fill-box; transform-origin: center; opacity: 0; animation: statPop .35s ease-out forwards; }
+@media (prefers-reduced-motion: reduce) {
+  .stat-draw { animation: none; stroke-dashoffset: 0; }
+  .stat-pop { animation: none; opacity: 1; }
+}

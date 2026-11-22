@@ -18,6 +18,7 @@ import { DriveAttendanceStatsPanel } from './DriveAttendanceStatsPanel';
 import { SchoolMealReportPanel } from './SchoolMealReportPanel';
 import { LeaderReportsPanel } from './LeaderReportsPanel';
 import { AttendanceBackfillToggle } from './AttendanceBackfillToggle';
+import { CountUp, RingArc, GrowBar, GrowSegment } from '../../common/AnimatedStats';
 
 export type ReportTimeframe = 'day' | 'week' | 'month';
 
@@ -1295,46 +1296,88 @@ export const AdminRealtimeDashboardView: React.FC = () => {
         </div>
       </div>
 
-      {/* 2o. DẢI SỐ LIỆU CHÍNH: một con số lớn + so kỳ trước + xu hướng nhỏ + vòng đồng hồ có mẫu số (tông sáng) */}
+      {/* 2o. DẢI SỐ LIỆU CHÍNH: tỷ lệ chuyên cần của kỳ + công thức + độ đầy đủ số liệu + vòng đồng hồ; số chạy và vòng đầy dần */}
       {(() => {
         const has = periodAttendance.hasData;
         const prov = sampleIncomplete;
         const ringColor = !has ? '#CBD5E1' : prov ? '#94A3B8' : '#059669';
-        const C = 2 * Math.PI * 44;
-        const periodName = timeframe === 'day' ? (selectedDate === todayStr ? 'hôm nay' : formatDateVN(selectedDate)) : timeframe === 'week' ? 'tuần này' : 'tháng này';
+        const isDay = timeframe === 'day';
+        const periodName = isDay ? (selectedDate === todayStr ? 'hôm nay' : formatDateVN(selectedDate)) : timeframe === 'week' ? 'tuần này' : 'tháng này';
+        const repN = isDay ? periodAttendance.classesReported : periodAttendance.classDaysReported;
+        const repD = isDay ? filteredClasses.length : periodAttendance.classDaysExpected;
+        const unit = isDay ? 'lớp' : 'lượt lớp';
+        const cover = repD > 0 ? Math.round((repN / repD) * 1000) / 10 : 0;
+        const full = repD > 0 && repN >= repD;
+        const slots = periodAttendance.enrolmentSlots;
+        const share = (n: number) => (slots > 0 ? Math.round((n / slots) * 1000) / 10 : 0);
+        const dec = (n: number) => (Number.isInteger(n) ? 0 : 1);
+        const hasBoard = periodBoarding.totalLogged > 0;
         return (
           <div className="rounded-3xl border border-sky-200 bg-gradient-to-br from-white via-sky-50/60 to-emerald-50/50 p-4 sm:p-6 shadow-sm grid gap-5 lg:grid-cols-[minmax(0,1fr)_auto] items-center" aria-label="Số liệu chính">
             <div className="min-w-0">
-              <p className="text-xs font-black text-slate-700 uppercase tracking-wide whitespace-nowrap">Chuyên cần {periodName}</p>
-              <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 mt-1">
-                <span className="text-4xl sm:text-5xl font-black font-mono text-emerald-950 leading-none">{has ? `${periodAttendance.rate}%` : '—'}</span>
-                {prov && <span className="px-2 py-0.5 rounded-full bg-amber-200 text-amber-950 text-xs font-black uppercase">Tạm tính</span>}
-                {!has && <span className="px-2 py-0.5 rounded-full bg-slate-200 text-slate-800 text-xs font-black uppercase">Chưa có dữ liệu</span>}
+              <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
+                <p className="text-xs font-black text-slate-700 uppercase tracking-wide whitespace-nowrap">Chuyên cần {periodName}</p>
+                {prov && <span className="px-2 py-0.5 rounded-full bg-amber-200 text-amber-950 text-xs font-black uppercase whitespace-nowrap">Tạm tính</span>}
+                {!has && <span className="px-2 py-0.5 rounded-full bg-slate-200 text-slate-800 text-xs font-black uppercase whitespace-nowrap">Chưa có dữ liệu</span>}
               </div>
-              <div className="mt-1.5">{deltaLine(periodAttendance.rate, trendInfo.prev?.att, has && !prov)}</div>
+              <p className="text-xs font-semibold text-slate-600 mt-0.5">{dateRange.label}</p>
+              <div className="mt-1.5">
+                <span className="text-4xl sm:text-5xl font-black font-mono text-emerald-950 leading-none">{has ? <CountUp value={periodAttendance.rate} decimals={dec(periodAttendance.rate)} suffix="%" /> : '—'}</span>
+              </div>
+              {has && (
+                <p className="mt-1.5 text-xs font-semibold text-slate-700 tabular-nums wrap-ok">
+                  = {periodAttendance.present} {isDay ? 'học sinh' : 'lượt'} có mặt ÷ {slots} {isDay ? 'sĩ số' : 'lượt sĩ số'} các lớp đã báo
+                </p>
+              )}
+              <div className="mt-1">{deltaLine(periodAttendance.rate, trendInfo.prev?.att, has && !prov)}</div>
+
               <div className="mt-4 grid grid-cols-3 gap-3">
-                <div><p className="text-2xl font-black font-mono text-emerald-900 leading-none">{has ? periodAttendance.present : '—'}</p><p className="text-xs font-bold text-slate-700 mt-1 whitespace-nowrap">{timeframe === 'day' ? 'Có mặt' : 'Lượt có mặt'}</p></div>
-                <div><p className="text-2xl font-black font-mono text-rose-800 leading-none">{has ? periodAttendance.absentTotal : '—'}</p><p className="text-xs font-bold text-slate-700 mt-1 whitespace-nowrap">{timeframe === 'day' ? 'Vắng' : 'Lượt vắng'}</p></div>
-                <div><p className="text-2xl font-black font-mono text-amber-800 leading-none">{periodBoarding.totalLogged > 0 ? periodBoarding.eating : '—'}</p><p className="text-xs font-bold text-slate-700 mt-1 whitespace-nowrap">{timeframe === 'day' ? 'Suất ăn' : 'Suất ăn'}</p></div>
+                <div>
+                  <p className="text-2xl font-black font-mono text-emerald-900 leading-none">{has ? <CountUp value={periodAttendance.present} /> : '—'}</p>
+                  <p className="text-xs font-bold text-slate-800 mt-1">{isDay ? 'Có mặt' : 'Lượt có mặt'}</p>
+                  {has && <p className="text-[12px] font-semibold text-slate-600 tabular-nums">{share(periodAttendance.present)}% sĩ số</p>}
+                </div>
+                <div>
+                  <p className="text-2xl font-black font-mono text-rose-800 leading-none">{has ? <CountUp value={periodAttendance.absentTotal} /> : '—'}</p>
+                  <p className="text-xs font-bold text-slate-800 mt-1">{isDay ? 'Vắng' : 'Lượt vắng'}</p>
+                  {has && <p className="text-[12px] font-semibold text-slate-600 tabular-nums">{share(periodAttendance.absentTotal)}% sĩ số</p>}
+                </div>
+                <div>
+                  <p className="text-2xl font-black font-mono text-amber-800 leading-none">{hasBoard ? <CountUp value={periodBoarding.eating} /> : '—'}</p>
+                  <p className="text-xs font-bold text-slate-800 mt-1">Suất ăn bán trú</p>
+                  {hasBoard && <p className="text-[12px] font-semibold text-slate-600 tabular-nums">{periodBoarding.rate}% HS đi học</p>}
+                </div>
               </div>
-              <p className={`mt-3 text-xs font-bold ${prov || !has ? 'text-amber-800' : 'text-emerald-800'}`}>
-                {timeframe === 'day' ? `Đã báo ${periodAttendance.classesReported}/${filteredClasses.length} lớp` : `Đã báo ${periodAttendance.classDaysReported}/${periodAttendance.classDaysExpected} lượt lớp`}
-              </p>
+
+              {repD > 0 && (
+                <div className={`mt-4 rounded-2xl border px-3 py-2.5 ${full ? 'bg-emerald-50 border-emerald-200' : 'bg-amber-50 border-amber-200'}`}>
+                  <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
+                    <span className="text-xs font-black uppercase text-slate-800">Độ đầy đủ số liệu</span>
+                    <span className="text-sm font-black tabular-nums text-slate-900">Đã báo {repN}/{repD} {unit} • <CountUp value={cover} decimals={dec(cover)} suffix="%" /></span>
+                  </div>
+                  <GrowBar percent={cover} className="mt-1.5" barClassName={full ? 'bg-emerald-600' : 'bg-amber-500'} />
+                  <p className="mt-1 text-xs font-semibold text-slate-800 wrap-ok">
+                    {full
+                      ? 'Các lớp đã báo đủ: đây là số liệu chính thức của kỳ.'
+                      : 'Tỷ lệ chuyên cần chỉ tính trên các lớp đã báo nên là số tạm tính; sẽ chính xác hơn khi các lớp báo đủ.'}
+                  </p>
+                </div>
+              )}
             </div>
 
             <div className="flex flex-col items-center justify-center mx-auto lg:mx-0">
-              <div className="relative w-32 h-32">
+              <div className="relative w-36 h-36">
                 <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90" aria-hidden="true">
                   <circle cx="50" cy="50" r="44" fill="transparent" stroke="#E2E8F0" strokeWidth="9" />
-                  <circle cx="50" cy="50" r="44" fill="transparent" stroke={ringColor} strokeWidth="9" strokeLinecap="round" strokeDasharray={C} strokeDashoffset={C - (C * Math.min(100, has ? periodAttendance.rate : 0)) / 100} className="transition-all duration-700" />
+                  <RingArc percent={has ? periodAttendance.rate : 0} r={44} color={ringColor} strokeWidth={9} />
                 </svg>
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <span className="text-2xl font-black font-mono text-slate-900">{has ? `${periodAttendance.rate}%` : '—'}</span>
+                  <span className="text-2xl font-black font-mono text-slate-900">{has ? <CountUp value={periodAttendance.rate} decimals={dec(periodAttendance.rate)} suffix="%" /> : '—'}</span>
                   <span className="text-[11px] font-bold text-slate-700">đi học</span>
                 </div>
               </div>
-              <p className="mt-2 text-xs font-bold text-slate-800 text-center tabular-nums">{has ? `${periodAttendance.present} / ${periodAttendance.enrolmentSlots}` : 'chưa có số liệu'}</p>
-              <p className="text-[11px] text-slate-700 text-center leading-tight">{timeframe === 'day' ? 'học sinh có mặt / sĩ số lớp đã báo' : 'lượt có mặt / lượt sĩ số các lớp đã báo'}</p>
+              <p className="mt-2 text-xs font-bold text-slate-800 text-center tabular-nums">{has ? `${periodAttendance.present} / ${slots}` : 'chưa có số liệu'}</p>
+              <p className="text-[11px] text-slate-700 text-center leading-tight max-w-[180px]">{isDay ? 'học sinh có mặt / sĩ số lớp đã báo' : 'lượt có mặt / lượt sĩ số các lớp đã báo'}</p>
             </div>
           </div>
         );
@@ -1352,7 +1395,7 @@ export const AdminRealtimeDashboardView: React.FC = () => {
           </div>
           <div className="mt-2">
             <div className="text-2xl sm:text-3xl font-black text-indigo-950 font-mono">
-              {totalStudents}
+              <CountUp value={totalStudents} />
             </div>
             <div className="flex items-center gap-2 mt-1 text-[12px] font-bold text-slate-600">
               <span className="text-blue-700">👦 {totalBoys} Nam</span>
@@ -1383,12 +1426,12 @@ export const AdminRealtimeDashboardView: React.FC = () => {
           <div className="mt-2">
             <div className="flex items-baseline gap-2">
               <span className="text-2xl sm:text-3xl font-black text-emerald-950 font-mono">
-                {periodAttendance.hasData ? `${periodAttendance.rate}%` : '—'}
+                {periodAttendance.hasData ? <CountUp value={periodAttendance.rate} decimals={Number.isInteger(periodAttendance.rate) ? 0 : 1} suffix="%" /> : '—'}
               </span>
               <span className="text-xs font-bold text-emerald-700">
                 {timeframe === 'day' 
                   ? (periodAttendance.hasData ? `(${periodAttendance.present}/${periodAttendance.enrolmentSlots})` : '(chưa có dữ liệu)')
-                  : `(${periodAttendance.present} lượt / ${periodAttendance.daysCount} ngày)`}
+                  : `(${periodAttendance.present} lượt • ${periodAttendance.daysCount} ngày)`}
               </span>
             </div>
             <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 mt-1 text-[12px] font-bold text-slate-600 [&>span]:whitespace-nowrap">
@@ -1443,7 +1486,7 @@ export const AdminRealtimeDashboardView: React.FC = () => {
           <div className="mt-2">
             <div className="flex items-baseline gap-2">
               <span className="text-2xl sm:text-3xl font-black text-amber-950 font-mono">
-                {periodBoarding.eating}
+                <CountUp value={periodBoarding.eating} />
               </span>
               <span className="text-xs font-bold text-amber-700">
                 {periodBoarding.totalLogged > 0 ? `suất ăn (${periodBoarding.rate}%)` : 'suất ăn (chưa có dữ liệu bán trú)'}
@@ -1488,7 +1531,7 @@ export const AdminRealtimeDashboardView: React.FC = () => {
           </div>
           <div className="mt-2">
             <div className="text-2xl sm:text-3xl font-black text-purple-950 font-mono whitespace-nowrap">
-              {totalCoins} <span className="text-sm font-bold text-amber-700"><CoinIcon /></span>
+              <CountUp value={Number(totalCoins) || 0} /> <span className="text-sm font-bold text-amber-700"><CoinIcon /></span>
             </div>
             <div className="flex items-center gap-1 mt-1 text-[12px] font-bold text-purple-700">
               <span>Trung bình:</span>
@@ -1535,22 +1578,11 @@ export const AdminRealtimeDashboardView: React.FC = () => {
                   stroke="#E2E8F0"
                   strokeWidth="12"
                 />
-                <circle
-                  cx="50"
-                  cy="50"
-                  r="40"
-                  fill="transparent"
-                  stroke={sampleIncomplete ? '#94A3B8' : '#10B981'}
-                  strokeWidth="12"
-                  strokeDasharray={251.2}
-                  strokeDashoffset={251.2 - (251.2 * (periodAttendance.rate || 0)) / 100}
-                  strokeLinecap="round"
-                  className="transition-all duration-700 ease-out"
-                />
+                <RingArc percent={periodAttendance.hasData ? periodAttendance.rate : 0} r={40} color={sampleIncomplete ? '#94A3B8' : '#10B981'} strokeWidth={12} />
               </svg>
               <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
                 <span className="text-2xl font-black text-slate-800 font-mono">
-                  {periodAttendance.hasData ? `${periodAttendance.rate}%` : '—'}
+                  {periodAttendance.hasData ? <CountUp value={periodAttendance.rate} decimals={Number.isInteger(periodAttendance.rate) ? 0 : 1} suffix="%" /> : '—'}
                 </span>
                 <span className="text-[12px] font-bold text-slate-500 uppercase">Có mặt</span>
               </div>
@@ -1622,22 +1654,11 @@ export const AdminRealtimeDashboardView: React.FC = () => {
                   stroke="#E2E8F0"
                   strokeWidth="12"
                 />
-                <circle
-                  cx="50"
-                  cy="50"
-                  r="40"
-                  fill="transparent"
-                  stroke="#F59E0B"
-                  strokeWidth="12"
-                  strokeDasharray={251.2}
-                  strokeDashoffset={251.2 - (251.2 * Math.min(100, periodBoarding.rate || 0)) / 100}
-                  strokeLinecap="round"
-                  className="transition-all duration-700 ease-out"
-                />
+                <RingArc percent={Math.min(100, periodBoarding.rate || 0)} r={40} color="#F59E0B" strokeWidth={12} />
               </svg>
               <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
                 <span className="text-2xl font-black text-slate-800 font-mono">
-                  {periodBoarding.eating}
+                  <CountUp value={periodBoarding.eating} />
                 </span>
                 <span className="text-[12px] font-bold text-slate-500 uppercase">Suất ăn</span>
               </div>
@@ -1708,7 +1729,7 @@ export const AdminRealtimeDashboardView: React.FC = () => {
               <p className="text-sm font-bold text-slate-600 py-6 text-center">Chưa đủ dữ liệu để vẽ xu hướng (cần ít nhất 2 ngày có lớp báo cáo trong 14 ngày gần nhất).</p>
             ) : (
               <>
-                <div className="overflow-x-auto"><svg viewBox={`0 0 ${W} ${H}`} className="w-full min-w-[520px] h-auto" role="img" aria-label={`Chuyên cần trung bình ${avg}%, cao nhất ${best ? `${best.att}% ngày ${formatDateVN(best.date)}` : ''}, thấp nhất ${worst ? `${worst.att}% ngày ${formatDateVN(worst.date)}` : ''}`}>
+                <div className="overflow-x-auto"><svg key={`${trendInfo.anchorDate}-${pts.length}`} viewBox={`0 0 ${W} ${H}`} className="w-full min-w-[520px] h-auto" role="img" aria-label={`Chuyên cần trung bình ${avg}%, cao nhất ${best ? `${best.att}% ngày ${formatDateVN(best.date)}` : ''}, thấp nhất ${worst ? `${worst.att}% ngày ${formatDateVN(worst.date)}` : ''}`}>
                   {grid.map(v => (
                     <g key={v}>
                       <line x1={L} x2={W - R} y1={y(v)} y2={y(v)} stroke="#E2E8F0" strokeWidth="1" />
@@ -1716,12 +1737,12 @@ export const AdminRealtimeDashboardView: React.FC = () => {
                     </g>
                   ))}
                   {ticks.map(d => <text key={d} x={x(d)} y={H - 8} textAnchor="middle" fontSize="11" fill="#475569">{formatDateVN(d).slice(0, 5)}</text>)}
-                  <path d={line('board')} fill="none" stroke="#D97706" strokeWidth="2.5" strokeLinejoin="round" />
-                  <path d={line('att')} fill="none" stroke="#059669" strokeWidth="2.5" strokeLinejoin="round" />
-                  {pts.map(q => {
+                  <path d={line('board')} fill="none" stroke="#D97706" strokeWidth="2.5" strokeLinejoin="round" pathLength={1} className="stat-draw" />
+                  <path d={line('att')} fill="none" stroke="#059669" strokeWidth="2.5" strokeLinejoin="round" pathLength={1} className="stat-draw" />
+                  {pts.map((q, qi) => {
                     const full = q.reported >= trendInfo.classCount;
                     return (
-                      <g key={q.date}>
+                      <g key={q.date} className="stat-pop" style={{ animationDelay: `${400 + qi * 70}ms` }}>
                         {q.board != null && <circle cx={x(q.date)} cy={y(q.board)} r="3.5" fill={full ? '#D97706' : '#fff'} stroke="#D97706" strokeWidth="2"><title>{`${formatDateVN(q.date)}: bán trú ${q.board}%`}</title></circle>}
                         <circle cx={x(q.date)} cy={y(q.att)} r="4" fill={full ? '#059669' : '#fff'} stroke="#059669" strokeWidth="2"><title>{`${formatDateVN(q.date)}: chuyên cần ${q.att}% (${q.reported}/${trendInfo.classCount} lớp đã báo)`}</title></circle>
                       </g>
@@ -1761,9 +1782,9 @@ export const AdminRealtimeDashboardView: React.FC = () => {
                     <span className="font-black font-mono text-emerald-900">{g.rate}%</span>
                   </div>
                   <div className="mt-1 flex h-4 rounded-full overflow-hidden bg-slate-100" role="img" aria-label={`${g.grade}: có mặt ${g.present}, vắng có phép ${g.excused}, vắng không phép ${g.unexcused}`}>
-                    <div className="bg-emerald-600" style={{ width: `${g.total ? (g.present / g.total) * 100 : 0}%` }} title={`Có mặt ${g.present}`} />
-                    <div className="bg-amber-500" style={{ width: `${g.total ? (g.excused / g.total) * 100 : 0}%` }} title={`Vắng có phép / ốm ${g.excused}`} />
-                    <div className="bg-rose-600" style={{ width: `${g.total ? (g.unexcused / g.total) * 100 : 0}%` }} title={`Vắng không phép ${g.unexcused}`} />
+                    <GrowSegment className="bg-emerald-600" pct={g.total ? (g.present / g.total) * 100 : 0} title={`Có mặt ${g.present}`} />
+                    <GrowSegment className="bg-amber-500" pct={g.total ? (g.excused / g.total) * 100 : 0} title={`Vắng có phép / ốm ${g.excused}`} />
+                    <GrowSegment className="bg-rose-600" pct={g.total ? (g.unexcused / g.total) * 100 : 0} title={`Vắng không phép ${g.unexcused}`} />
                   </div>
                   <p className="mt-0.5 text-xs text-slate-800 tabular-nums">Có mặt {g.present} • vắng có phép / ốm {g.excused} • không phép {g.unexcused}</p>
                 </li>
