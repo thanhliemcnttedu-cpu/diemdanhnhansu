@@ -258,8 +258,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { key: 'activity', label: 'Hoạt động', icon: Sparkles, tone: 'text-violet-600', ids: ['picker', 'rewards', 'certificate', 'infographic', 'noise', 'timer'] },
     { key: 'manage', label: 'Quản lý & báo cáo', icon: BarChart3, tone: 'text-emerald-700', ids: ['reports', 'weekly', 'staff_attendance', 'my_checkin', 'data', 'links', 'qr', 'guide', 'ai'] },
   ];
-  // Sidebar colour: "Sáng" (default, the app's light tone) or "Xanh đậm" (deep blue, white text). Remembered on this device only.
-  const [sbDark, setSbDark] = useState<boolean>(() => { try { return localStorage.getItem('lhhp_sidebar_theme') === 'dark'; } catch (_) { return false; } });
+  // Sidebar colour: "Xanh đậm" (default: deep blue, white text) or "Sáng". Only an explicit "light" choice is remembered on this device.
+  const [sbDark, setSbDark] = useState<boolean>(() => { try { return localStorage.getItem('lhhp_sidebar_theme') !== 'light'; } catch (_) { return true; } });
   const toggleSbTheme = () => setSbDark(v => { const n = !v; try { localStorage.setItem('lhhp_sidebar_theme', n ? 'dark' : 'light'); } catch (_) { /* blocked storage: lasts until reload */ } return n; });
   const [closedGroups, setClosedGroups] = useState<string[]>(() => {
     try { return JSON.parse(localStorage.getItem('lhhp_nav_closed_groups') || '[]'); } catch (_) { return []; }
