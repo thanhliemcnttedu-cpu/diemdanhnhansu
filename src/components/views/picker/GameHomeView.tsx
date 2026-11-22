@@ -1,11 +1,12 @@
 import React from 'react';
+import { ParticipationMap } from './ParticipationMap';
 import { 
   Sparkles, Play, Award, Film, Rocket, 
   Gift, Trophy, Camera, Users, ChevronRight,
   Flame, Zap, Star, ShieldCheck
 } from 'lucide-react';
 
-export type GameDashboardTarget = 'wheel' | 'reel' | 'rocket' | 'mystery_box' | 'duck_race' | 'head_tilt' | 'lucky_lens';
+export type GameDashboardTarget = 'wheel' | 'reel' | 'rocket' | 'mystery_box' | 'duck_race' | 'head_tilt' | 'lucky_lens' | 'bomb' | 'dice' | 'team_duel' | 'claw' | 'puzzle';
 
 interface GameItem {
   id: GameDashboardTarget;
@@ -204,6 +205,61 @@ export const GameHomeView: React.FC<GameHomeViewProps> = ({
           </div>
         </div>
       )
+    },
+    {
+      id: 'bomb',
+      title: 'BOM HẸN GIỜ',
+      subtitle: '(TÍCH TẮC... BÙM!)',
+      description: 'Châm ngòi quả bom, tên các bạn nhấp nháy ngày càng nhanh, bom nổ trúng bạn nào bạn đó trả lời câu hỏi.',
+      badge: 'MỚI',
+      badgeColor: 'bg-orange-600 text-white',
+      gradient: 'from-orange-500 to-rose-600',
+      ringColor: 'ring-orange-400',
+      visualComponent: <div className="w-44 h-44 sm:w-52 sm:h-52 rounded-full bg-gradient-to-tr from-orange-500 to-rose-600 shadow-2xl flex items-center justify-center text-7xl sm:text-8xl group-hover:scale-105 transition-transform duration-500">💣</div>
+    },
+    {
+      id: 'dice',
+      title: 'XÚC XẮC GỌI TÊN',
+      subtitle: '(XÚC XẮC 3D)',
+      description: 'Lắc và tung xúc xắc 3D sáu mặt, xúc xắc lăn xong là biết bạn nào được gọi tên.',
+      badge: 'MỚI',
+      badgeColor: 'bg-violet-600 text-white',
+      gradient: 'from-violet-500 to-indigo-600',
+      ringColor: 'ring-violet-400',
+      visualComponent: <div className="w-44 h-44 sm:w-52 sm:h-52 rounded-full bg-gradient-to-tr from-violet-500 to-indigo-600 shadow-2xl flex items-center justify-center text-7xl sm:text-8xl text-white group-hover:rotate-12 transition-transform duration-500">⚅</div>
+    },
+    {
+      id: 'puzzle',
+      title: 'LẬT MẢNH GHÉP',
+      subtitle: '(ĐOÁN BỨC ẢNH BÍ MẬT)',
+      description: 'Mỗi mảnh ghép là một câu hỏi. Trả lời đúng để lật mảnh, lộ dần bức ảnh bí mật rồi đoán xem đó là gì. Thầy cô tự soạn bộ câu hỏi.',
+      badge: 'MỚI',
+      badgeColor: 'bg-emerald-600 text-white',
+      gradient: 'from-emerald-500 to-sky-500',
+      ringColor: 'ring-emerald-400',
+      visualComponent: <div className="w-44 h-44 sm:w-52 sm:h-52 rounded-full bg-gradient-to-tr from-emerald-500 via-sky-500 to-indigo-500 shadow-2xl flex items-center justify-center text-7xl sm:text-8xl group-hover:scale-105 transition-transform duration-500">🧩</div>
+    },
+    {
+      id: 'claw',
+      title: 'MÁY GẮP THÚ GỌI TÊN',
+      subtitle: '(GẮP LÀ TRÚNG)',
+      description: 'Mỗi bạn là một chú thú trong máy gắp. Càng gắp trượt một lần rồi gắp lại, gắp được chú thú nào thì bạn đó được gọi tên.',
+      badge: 'MỚI',
+      badgeColor: 'bg-pink-600 text-white',
+      gradient: 'from-pink-500 to-orange-500',
+      ringColor: 'ring-pink-400',
+      visualComponent: <div className="w-44 h-44 sm:w-52 sm:h-52 rounded-full bg-gradient-to-tr from-pink-500 via-fuchsia-500 to-orange-500 shadow-2xl flex items-center justify-center text-7xl sm:text-8xl group-hover:scale-105 transition-transform duration-500">🧸</div>
+    },
+    {
+      id: 'team_duel',
+      title: 'ĐẤU TỔ ĐỐI KHÁNG',
+      subtitle: '(HAI TỔ - HAI BẠN)',
+      description: 'Chọn hai tổ, máy gọi mỗi tổ một bạn đối đầu một câu hỏi nhanh; tổ thắng được điểm và bạn thắng được xu.',
+      badge: 'MỚI',
+      badgeColor: 'bg-rose-600 text-white',
+      gradient: 'from-rose-500 to-orange-500',
+      ringColor: 'ring-rose-400',
+      visualComponent: <div className="w-44 h-44 sm:w-52 sm:h-52 rounded-full bg-gradient-to-tr from-sky-500 via-rose-500 to-amber-500 shadow-2xl flex items-center justify-center text-6xl sm:text-7xl group-hover:scale-105 transition-transform duration-500">⚔️</div>
     }
   ];
 
@@ -217,8 +273,12 @@ export const GameHomeView: React.FC<GameHomeViewProps> = ({
         <h1 className="text-2xl sm:text-4xl md:text-5xl font-black text-red-600 uppercase tracking-tight mb-2 drop-shadow-xs">
           GAME GỌI TÊN HỌC SINH
         </h1>
-        <p className="text-xs sm:text-sm font-bold uppercase tracking-wider text-slate-500">
-          LỚP <span className="text-indigo-600 font-black">{classNameName}</span> • SĨ SỐ: <span className="text-slate-800 font-black">{studentCount} HỌC SINH</span> • 7 TRÒ CHƠI GỌI TÊN & QUIZ TƯƠNG TÁC HÀO HỨNG!
+        <p className="flex flex-wrap items-center justify-center gap-x-2.5 gap-y-1 text-xs sm:text-sm font-bold uppercase tracking-wider text-slate-600">
+          <span className="whitespace-nowrap">LỚP <strong className="text-indigo-700 font-black">{classNameName}</strong></span>
+          <span aria-hidden className="text-slate-400">•</span>
+          <span className="whitespace-nowrap">SĨ SỐ <strong className="text-slate-900 font-black tabular-nums">{studentCount}</strong> HỌC SINH</span>
+          <span aria-hidden className="text-slate-400">•</span>
+          <span className="whitespace-nowrap">12 TRÒ CHƠI GỌI TÊN &amp; QUIZ</span>
         </p>
       </div>
 
@@ -276,6 +336,8 @@ export const GameHomeView: React.FC<GameHomeViewProps> = ({
           </div>
         ))}
       </div>
+
+      <ParticipationMap />
 
     </div>
   );

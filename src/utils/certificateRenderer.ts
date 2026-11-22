@@ -121,6 +121,16 @@ function drawTextEl(ctx: CanvasRenderingContext2D, el: CertLayoutElement) {
     const top = el.y + TEXT_PAD_Y + i * lh;
     const baseline = top + (lh - (asc + desc)) / 2 + asc;
     ctx.fillText(line, ax, baseline);
+    if (el.textDecoration === 'underline' && line.trim()) {
+      // canvas has no underline: draw it under the line (same colour, thickness follows the size)
+      const w = ctx.measureText(line).width + (('letterSpacing' in anyCtx) ? 0 : ls * line.length);
+      const x0 = align === 'left' ? ax : align === 'right' ? ax - w : ax - w / 2;
+      const ty = baseline + fs * 0.12;
+      ctx.save();
+      ctx.shadowColor = 'transparent';
+      ctx.fillRect(x0, ty, w, Math.max(2, fs * 0.055));
+      ctx.restore();
+    }
   });
   ctx.restore();
 }

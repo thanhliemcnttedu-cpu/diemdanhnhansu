@@ -13,7 +13,7 @@ import JSZip from 'jszip';
 import { 
   Classroom, Student, Subject, PointCriterion, PointTransaction, 
   Reward, RewardRedemption, DailyAttendance, TimetableSlot, 
-  TimetableConfig, QuickLink, SavedQrCode, TeacherProfile, AttendanceStatus,
+  TimetableConfig, QuickLink, SavedQrCode, WeeklyJournalEntry, CallLogEntry, TeacherProfile, AttendanceStatus,
   SeatingColumnsCount, TeacherDeskPosition, DoorPosition, BlackboardPosition,
   DeskNumberingOrder, BoardingStatus, DailyBoardingMeal,
   TeacherRole, SubjectTimetableSlot, SubjectTeacherConfig, InitSubjectClassItem,
@@ -154,6 +154,14 @@ interface ClassroomContextType {
   deleteQuickLink: (id: string) => void;
   updateQuickLink: (id: string, data: Partial<Omit<QuickLink, 'id'>>) => void;
   reorderQuickLinks: (links: QuickLink[]) => void;
+
+  weeklyJournal: WeeklyJournalEntry[];
+  callLog: CallLogEntry[];
+  callRounds: Record<string, number>;
+  recordCall: (classId: string, studentId: string, game: string) => void;
+  resetCallRound: (classId: string) => void;
+  saveWeeklyEntry: (entry: Omit<WeeklyJournalEntry, 'updatedAt'>) => void;
+  deleteWeeklyEntry: (id: string) => void;
 
   qrCodes: SavedQrCode[];
   addQrCode: (data: Omit<SavedQrCode, 'id' | 'createdAt' | 'updatedAt'>) => string;
@@ -619,6 +627,15 @@ export const ClassroomProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [timetable, setTimetable] = useState<TimetableSlot[]>(INITIAL_TIMETABLE);
   const [quickLinks, setQuickLinks] = useState<QuickLink[]>(INITIAL_QUICK_LINKS);
   const [qrCodes, setQrCodes] = useState<SavedQrCode[]>([]);
+  const [weeklyJournal, setWeeklyJournal] = useState<WeeklyJournalEntry[]>([]);
+  const [callLog, setCallLog] = useState<CallLogEntry[]>([]);
+  const callLogRef = useRef<CallLogEntry[]>([]);
+  callLogRef.current = callLog;
+  const [callRounds, setCallRounds] = useState<Record<string, number>>({});
+  const callRoundsRef = useRef<Record<string, number>>({});
+  callRoundsRef.current = callRounds;
+  const weeklyJournalRef = useRef<WeeklyJournalEntry[]>([]);
+  weeklyJournalRef.current = weeklyJournal;
   const qrCodesRef = useRef<SavedQrCode[]>([]);
   qrCodesRef.current = qrCodes;
   // Saved QR codes also live in a per-account copy on this device (see utils/qrStore.ts): it is the only copy for
@@ -944,6 +961,9 @@ export const ClassroomProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     subjectTimetable,
     quickLinks,
     qrCodes,
+    weeklyJournal,
+    callLog,
+    callRounds,
     teacherProfile,
     quizBank,
     infographicConfig,
@@ -1143,6 +1163,28 @@ export const ClassroomProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       setQuickLinks(links);
     }
     // Saved QR codes: only replaced when the saved data has them (cleared on logout, so no leak between accounts)
+    // Weekly review journal: newest edit of each week wins (merge by id, never drops weeks that exist only here)
+    // Call log: union by id (newest 4000 kept); round start = latest mark for each class
+    if (Array.isArray(data.callLog)) {
+      const byId = new Map<string, CallLogEntry>();
+      [...callLogRef.current, ...data.callLog].forEach(e => { if (e && e.id) byId.set(e.id, e); });
+      const merged = [...byId.values()].sort((a, b) => b.ts - a.ts).slice(0, 4000);
+      callLogRef.current = merged;
+      setCallLog(merged);
+    }
+    if (data.callRounds && typeof data.callRounds === 'object') {
+      const merged = { ...callRoundsRef.current };
+      Object.entries(data.callRounds as Record<string, number>).forEach(([k, v]) => { if (typeof v === 'number' && v > (merged[k] || 0)) merged[k] = v; });
+      callRoundsRef.current = merged;
+      setCallRounds(merged);
+    }
+    if (Array.isArray(data.weeklyJournal)) {
+      const byId = new Map<string, WeeklyJournalEntry>();
+      [...weeklyJournalRef.current, ...data.weeklyJournal].forEach(e => { const old = byId.get(e.id); if (!old || (e.updatedAt || 0) >= (old.updatedAt || 0)) byId.set(e.id, e); });
+      const merged = [...byId.values()].sort((a, b) => b.weekStart.localeCompare(a.weekStart));
+      weeklyJournalRef.current = merged;
+      setWeeklyJournal(merged);
+    }
     if (Array.isArray(data.qrCodes)) {
       const local = readQrLocal(currentUserRef.current?.username);
       const merged = mergeQr(data.qrCodes, local.items, local.deleted);
@@ -2114,7 +2156,7 @@ export const ClassroomProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     rewards, redemptions, seatingColumns, deskCountsPerColumn, deskNumberingOrder,
     teacherDeskPos, doorPos, blackboardPos, seatingAssignments, attendanceRecords,
     boardingRecords, timetable, timetableConfig, teacherRole, subjectTeacherConfig,
-    subjectTimetable, quickLinks, qrCodes, teacherProfile, quizBank, infographicConfig, vaultState,
+    subjectTimetable, quickLinks, qrCodes, weeklyJournal, callLog, callRounds, teacherProfile, quizBank, infographicConfig, vaultState,
     schoolBranches, currentUser?.username
   ]);
 
@@ -2373,6 +2415,12 @@ export const ClassroomProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     if (currentUser) quizBankStore.setVaultKey(currentUser.username, null).catch(() => {});
     setVaultState({ owner: '' });
     setQrCodes([]);
+    setWeeklyJournal([]);
+    weeklyJournalRef.current = [];
+    setCallLog([]);
+    callLogRef.current = [];
+    setCallRounds({});
+    callRoundsRef.current = {};
     setVaultKeyReady(false);
     // Không để bộ câu hỏi của tài khoản vừa đăng xuất nằm lại trong bộ nhớ chung của trình duyệt
     // (kho riêng của tài khoản vẫn còn nguyên trong IndexedDB / Drive cá nhân)
@@ -4727,6 +4775,33 @@ export const ClassroomProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     setQuickLinks(newLinks);
   };
 
+  // Weekly review journal (per account; travels with the class data like everything else)
+  // Call log (every picker game writes here; fair calling reads the current round)
+  const recordCall = (classId: string, studentId: string, game: string) => {
+    if (!classId || !studentId) return;
+    const entry: CallLogEntry = { id: `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`, classId, studentId, ts: Date.now(), game };
+    const next = [entry, ...callLogRef.current].slice(0, 4000);
+    callLogRef.current = next;
+    setCallLog(next);
+  };
+  const resetCallRound = (classId: string) => {
+    const next = { ...callRoundsRef.current, [classId]: Date.now() };
+    callRoundsRef.current = next;
+    setCallRounds(next);
+  };
+
+  const saveWeeklyEntry = (entry: Omit<WeeklyJournalEntry, 'updatedAt'>) => {
+    const next = [{ ...entry, updatedAt: Date.now() }, ...weeklyJournalRef.current.filter(e => e.id !== entry.id)]
+      .sort((a, b) => b.weekStart.localeCompare(a.weekStart));
+    weeklyJournalRef.current = next;
+    setWeeklyJournal(next);
+  };
+  const deleteWeeklyEntry = (id: string) => {
+    const next = weeklyJournalRef.current.filter(e => e.id !== id);
+    weeklyJournalRef.current = next;
+    setWeeklyJournal(next);
+  };
+
   // Saved QR codes (per account)
   const commitQrCodes = (next: SavedQrCode[], removedId?: string) => {
     qrCodesRef.current = next;
@@ -4835,6 +4910,9 @@ export const ClassroomProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       subjectTimetable,
       quickLinks,
       qrCodes,
+      weeklyJournal,
+      callLog,
+      callRounds,
       teacherProfile,
       quizBank,
       infographicConfig
@@ -4883,6 +4961,9 @@ export const ClassroomProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       subjectTimetable,
       quickLinks,
       qrCodes,
+      weeklyJournal,
+      callLog,
+      callRounds,
       teacherProfile,
       quizBank,
       infographicConfig
@@ -5167,6 +5248,14 @@ export const ClassroomProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       deleteQuickLink,
       updateQuickLink,
       reorderQuickLinks,
+
+      weeklyJournal,
+      callLog,
+      callRounds,
+      recordCall,
+      resetCallRound,
+      saveWeeklyEntry,
+      deleteWeeklyEntry,
 
       qrCodes,
       addQrCode,

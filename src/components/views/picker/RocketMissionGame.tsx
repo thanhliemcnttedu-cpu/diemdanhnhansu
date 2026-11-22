@@ -19,9 +19,37 @@ import { loadQuizBank, saveQuizBank } from '../../../utils/quizParser';
 
 import { handleAvatarImgError } from '../../../utils/avatarConfig';
 import { CalledStudentModal } from './CalledStudentModal';
+import { useFairCall } from './useFairCall';
 import { QuestionChallengeModal } from './QuestionChallengeModal';
 import { QuestionAudioButton } from './QuestionAudioButton';
 import { useQuizSelection, QuizSelectionChip } from './QuizSetPicker';
+// Planet positions on the stage (% of width / height); the launch pad is bottom centre
+const PLANET_SLOTS: Array<[number, number]> = [[14, 30], [34, 20], [56, 28], [78, 20], [90, 38], [22, 56], [44, 48], [68, 54], [86, 66]];
+const PLANET_RINGS = ['from-sky-400 to-indigo-500', 'from-amber-300 to-orange-500', 'from-emerald-300 to-teal-500', 'from-rose-300 to-pink-500', 'from-violet-300 to-purple-500', 'from-cyan-300 to-blue-500', 'from-lime-300 to-green-500', 'from-fuchsia-300 to-rose-500', 'from-yellow-300 to-amber-500'];
+
+const PLANET_SLOTS_SMALL: Array<[number, number]> = [[20, 28], [50, 20], [80, 28], [24, 56], [50, 48], [78, 58]];
+const slotsFor = (n: number) => (n <= 6 ? PLANET_SLOTS_SMALL : PLANET_SLOTS);
+
+/** Up to 9 students (6 on phones) that become planets on the stage (the called student is always one of them) */
+function samplePlanets(list: Student[], must?: Student): Student[] {
+  const rest = list.filter(s => !must || s.id !== must.id).sort(() => Math.random() - 0.5).slice(0, (typeof window !== 'undefined' && window.innerWidth < 640 ? 6 : 9) - (must ? 1 : 0));
+  return (must ? [...rest, must] : rest).sort(() => Math.random() - 0.5);
+}
+
+const ROCKET_CSS = `
+@keyframes rkFlame{0%,100%{transform:scaleY(1) scaleX(1)}50%{transform:scaleY(1.45) scaleX(.85)}}
+@keyframes rkShake{0%,100%{transform:translate(0,0)}25%{transform:translate(-2px,1px)}75%{transform:translate(2px,-1px)}}
+@keyframes rkFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+@keyframes rkPop{0%{transform:scale(.3);opacity:0}30%{transform:scale(1.25);opacity:1}100%{transform:scale(1);opacity:.95}}
+@keyframes rkRing{0%{box-shadow:0 0 0 0 rgba(251,191,36,.8)}100%{box-shadow:0 0 0 22px rgba(251,191,36,0)}}
+.rk-flame{transform-origin:top center;animation:rkFlame .12s linear infinite}
+.rk-shake{animation:rkShake .08s linear infinite}
+.rk-float{animation:rkFloat 3.2s ease-in-out infinite}
+.rk-pop{animation:rkPop .7s ease-out both}
+.rk-ring{animation:rkRing .7s ease-out infinite}
+@media (prefers-reduced-motion:reduce){.rk-flame,.rk-shake,.rk-float,.rk-pop,.rk-ring{animation:none}}
+`;
+
 export const RocketMissionGame: React.FC = () => {
   const { currentClassStudents, awardPoints, quizBank, updateQuizBank } = useClassroom();
 
@@ -31,7 +59,6 @@ export const RocketMissionGame: React.FC = () => {
 
   // Game state
   const [isLaunching, setIsLaunching] = useState(false);
-  const [currentPlanetIndex, setCurrentPlanetIndex] = useState(0);
   const [winner, setWinner] = useState<Student | null>(null);
   const [rewardXu, setRewardXu] = useState(2);
   const [hasAwarded, setHasAwarded] = useState(false);
@@ -50,13 +77,16 @@ export const RocketMissionGame: React.FC = () => {
 
   // Exclude option
   const [autoExclude, setAutoExclude] = useState(true);
-  const [excludedIds, setExcludedIds] = useState<string[]>([]);
+  // Shared fair-call log: students called in the current round (any game) are skipped while auto-exclude is on
+  const fair = useFairCall();
+  const excludedIds = autoExclude ? fair.calledIds : [];
 
   const pool = currentClassStudents.filter(s => !excludedIds.includes(s.id));
   const activeList = pool.length > 0 ? pool : currentClassStudents;
 
-  // Space Canvas Starfield animation
+  // Sky canvas: stars + drifting clouds; everything scrolls much faster while the rocket flies
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const flyRef = useRef(false);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -66,56 +96,64 @@ export const RocketMissionGame: React.FC = () => {
 
     let animId: number;
     const stars: Array<{ x: number; y: number; size: number; speed: number; opacity: number }> = [];
-    const numStars = 65;
+    const clouds: Array<{ x: number; y: number; w: number; speed: number }> = [];
 
     const resize = () => {
       canvas.width = canvas.parentElement?.clientWidth || 800;
-      canvas.height = 360;
+      canvas.height = canvas.parentElement?.clientHeight || 420;
     };
     resize();
     window.addEventListener('resize', resize);
 
-    for (let i = 0; i < numStars; i++) {
-      stars.push({
-        x: Math.random() * canvas.width,
-        y: Math.random() * canvas.height,
-        size: Math.random() * 2 + 0.5,
-        speed: Math.random() * 0.5 + 0.2,
-        opacity: Math.random() * 0.8 + 0.2
-      });
-    }
+    for (let i = 0; i < 70; i++) stars.push({ x: Math.random() * canvas.width, y: Math.random() * canvas.height, size: Math.random() * 2 + 0.6, speed: Math.random() * 0.5 + 0.2, opacity: Math.random() * 0.7 + 0.3 });
+    for (let i = 0; i < 6; i++) clouds.push({ x: Math.random() * canvas.width, y: Math.random() * canvas.height, w: 70 + Math.random() * 90, speed: 0.15 + Math.random() * 0.25 });
 
     const render = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      // Bầu trời ban ngày tươi sáng (hệ thống không dùng nền tối)
+      const boost = flyRef.current ? 9 : 1;
+      // Bright day-to-dusk sky (the app never uses dark backgrounds)
       const sky = ctx.createLinearGradient(0, 0, 0, canvas.height);
-      sky.addColorStop(0, '#38bdf8');
-      sky.addColorStop(0.55, '#7dd3fc');
-      sky.addColorStop(1, '#e0f2fe');
+      sky.addColorStop(0, '#6366f1');
+      sky.addColorStop(0.45, '#7dd3fc');
+      sky.addColorStop(1, '#fef3c7');
       ctx.fillStyle = sky;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      stars.forEach(s => {
-        s.y += s.speed;
-        if (s.y > canvas.height) {
-          s.y = 0;
-          s.x = Math.random() * canvas.width;
-        }
-        ctx.fillStyle = `rgba(255, 255, 255, ${s.opacity})`;
+      clouds.forEach(c => {
+        c.y += c.speed * boost;
+        if (c.y > canvas.height + 40) { c.y = -40; c.x = Math.random() * canvas.width; }
+        ctx.fillStyle = 'rgba(255,255,255,0.55)';
         ctx.beginPath();
-        ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
+        ctx.ellipse(c.x, c.y, c.w / 2, c.w / 5, 0, 0, Math.PI * 2);
+        ctx.ellipse(c.x - c.w / 4, c.y + 6, c.w / 3, c.w / 6, 0, 0, Math.PI * 2);
+        ctx.ellipse(c.x + c.w / 4, c.y + 6, c.w / 3, c.w / 6, 0, 0, Math.PI * 2);
         ctx.fill();
       });
-
+      stars.forEach(s => {
+        s.y += s.speed * boost;
+        if (s.y > canvas.height) { s.y = 0; s.x = Math.random() * canvas.width; }
+        ctx.fillStyle = `rgba(255, 255, 255, ${s.opacity})`;
+        if (boost > 1) ctx.fillRect(s.x, s.y, s.size, s.size * 6);   // streaks while flying
+        else { ctx.beginPath(); ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2); ctx.fill(); }
+      });
       animId = requestAnimationFrame(render);
     };
 
     render();
-    return () => {
-      cancelAnimationFrame(animId);
-      window.removeEventListener('resize', resize);
-    };
+    return () => { cancelAnimationFrame(animId); window.removeEventListener('resize', resize); };
   }, []);
+
+  // ---- Launch sequence: 3-2-1 countdown, lift-off, hop from planet to planet, land on the called student's planet
+  const timers = useRef<number[]>([]);
+  const later = (fn: () => void, ms: number) => { timers.current.push(window.setTimeout(fn, ms)); };
+  useEffect(() => () => { timers.current.forEach(t => window.clearTimeout(t)); flyRef.current = false; }, []);
+
+  const [planets, setPlanets] = useState<Student[]>(() => samplePlanets(currentClassStudents));
+  const [phase, setPhase] = useState<'idle' | 'count' | 'fly' | 'landed'>('idle');
+  const [count, setCount] = useState(0);
+  const [hot, setHot] = useState(-1);                       // planet the rocket has just reached
+  const [hopMs, setHopMs] = useState(0);
+  const [rocket, setRocket] = useState({ x: 50, y: 88, rot: 0 });
+  useEffect(() => { if (phase === 'idle' || phase === 'landed') setPlanets(samplePlanets(currentClassStudents)); }, [currentClassStudents.length]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const launchRocket = () => {
     if (isLaunching || activeList.length === 0) return;
@@ -125,47 +163,64 @@ export const RocketMissionGame: React.FC = () => {
     setShowWinnerPopup(false);
     setHasAwarded(false);
 
-    const targetWinner = activeList[Math.floor(Math.random() * activeList.length)];
-    const totalDurationMs = spinDuration * 1000;
-    const startTime = performance.now();
+    const target = activeList[Math.floor(Math.random() * activeList.length)];
+    const ps = samplePlanets(currentClassStudents, target); // decoys come from the whole class, only the target obeys the fair round
+    const tIdx = ps.findIndex(s => s.id === target.id);
+    setPlanets(ps); setHot(-1); setPhase('count'); setRocket({ x: 50, y: 88, rot: 0 }); setHopMs(0);
 
-    let stepCount = 0;
-    let currentIdx = Math.floor(Math.random() * activeList.length);
-
-    const sweep = (now: number) => {
-      const elapsed = now - startTime;
-      const progress = Math.min(elapsed / totalDurationMs, 1);
-
-      // Fast at start, progressively decelerate
-      currentIdx = (currentIdx + 1) % activeList.length;
-      setCurrentPlanetIndex(currentIdx);
-      stepCount++;
-
-      if (stepCount % 2 === 0) {
-        playTickSound(700 + (stepCount % 5) * 60);
-      }
-
-      if (progress < 1) {
-        const nextDelay = 35 + Math.pow(progress, 2.5) * 220;
-        setTimeout(() => {
-          requestAnimationFrame(sweep);
-        }, nextDelay);
-      } else {
-        // Land on target!
-        const finalWinnerIdx = activeList.findIndex(s => s.id === targetWinner.id);
-        setCurrentPlanetIndex(finalWinnerIdx >= 0 ? finalWinnerIdx : 0);
-        setWinner(targetWinner);
-        setShowWinnerPopup(true);
-        setIsLaunching(false);
-        triggerCorrectCelebration();
-
-        if (autoExclude) {
-          setExcludedIds(prev => [...prev, targetWinner.id]);
-        }
-      }
+    const land = () => {
+      flyRef.current = false;
+      setHot(tIdx); setPhase('landed'); setHopMs(600);
+      setRocket(r => ({ ...r, rot: Math.round(r.rot / 360) * 360 }));
+      setWinner(target); setIsLaunching(false);
+      triggerCorrectCelebration();
+      fair.markCalled(target.id, 'rocket');
+      confetti({ particleCount: 110, spread: 90, origin: { y: 0.45 } });
+      later(() => setShowWinnerPopup(true), 1000);
     };
 
-    requestAnimationFrame(sweep);
+    const liftoff = () => {
+      setPhase('fly'); flyRef.current = true;
+      try { playRocketLaunchSound(); } catch { /* ignore */ }
+      const T = spinDuration * 1000;
+      const H = Math.max(4, Math.min(9, Math.round(T / 650)));
+      const route: number[] = [];
+      for (let i = 0; i < H - 1; i++) {
+        let k = Math.floor(Math.random() * ps.length);
+        let guard = 0;
+        while (ps.length > 2 && guard++ < 30 && (k === route[route.length - 1] || k === tIdx)) k = Math.floor(Math.random() * ps.length);
+        route.push(k);
+      }
+      route.push(tIdx);
+      // hops get slower towards the end (suspense)
+      const w = route.map((_, i) => 1 + 1.8 * (i / Math.max(1, H - 1)));
+      const sum = w.reduce((a, b) => a + b, 0);
+      const dur = w.map(x => Math.max(260, (T * x) / sum));
+      let prev = { x: 50, y: 88 }; let prevRot = 0; let at = 0;
+      route.forEach((pi, i) => {
+        const d = dur[i]; const start = at; at += d;
+        later(() => {
+          const [px, py] = slotsFor(ps.length)[pi];
+          const ty = py + 9; // park just below the planet
+          let rot = (Math.atan2((px - prev.x) * 1.8, -(ty - prev.y)) * 180) / Math.PI;
+          while (rot - prevRot > 180) rot -= 360;
+          while (rot - prevRot < -180) rot += 360;
+          prevRot = rot; prev = { x: px, y: ty };
+          setHopMs(d); setRocket({ x: px, y: ty, rot });
+          if (i < route.length - 1) later(() => { setHot(pi); playTickSound(650 + i * 70); }, d * 0.82);
+        }, start);
+      });
+      later(land, at + 80);
+    };
+
+    let n = 3;
+    setCount(3); playTickSound(600);
+    const tick = () => {
+      n--;
+      if (n > 0) { setCount(n); playTickSound(600 + (3 - n) * 140); later(tick, 700); }
+      else { setCount(0); liftoff(); }
+    };
+    later(tick, 700);
   };
 
   const handleAwardCoins = (amount = rewardXu) => {
@@ -193,11 +248,11 @@ export const RocketMissionGame: React.FC = () => {
               <Rocket className="w-5 h-5 text-amber-300" />
             </span>
             <h2 className="text-base md:text-lg font-black uppercase tracking-wide">
-              TÀU VŨ TRỤ KHÁM PHÁ (ROCKET LAUNCH)
+              TÀU VŨ TRỤ KHÁM PHÁ
             </h2>
           </div>
           <p className="text-xs text-indigo-700 font-medium mt-0.5">
-            Phi thuyền lướt qua dải ngân hà đáp xuống trạm vũ trụ học sinh may mắn
+            Đếm ngược, phóng tàu, bay qua các hành tinh và hạ cánh xuống hành tinh của bạn may mắn
           </p>
         </div>
 
@@ -253,61 +308,79 @@ export const RocketMissionGame: React.FC = () => {
       </div>
 
       {/* 2. MAIN SPACE LAUNCH STAGE */}
-      <div className="bg-white rounded-3xl border-2 border-indigo-900/60 shadow-2xl relative overflow-hidden select-none p-4 md:p-6 min-h-[380px] flex flex-col justify-between">
-        {/* Background Starfield Canvas */}
-        <canvas ref={canvasRef} className="absolute inset-0 w-full h-full pointer-events-none" />
+      <div className="bg-white rounded-3xl border-2 border-indigo-300 shadow-xl overflow-hidden select-none">
+        <style>{ROCKET_CSS}</style>
+        <div className="relative h-[380px] md:h-[440px] overflow-hidden">
+          <canvas ref={canvasRef} className="absolute inset-0 w-full h-full pointer-events-none" />
 
-        {/* Top Space Station Header */}
-        <div className="relative z-10 flex items-center justify-between text-indigo-600 text-xs font-mono pb-2 border-b border-indigo-900/40">
-          <div className="flex items-center gap-2">
-            <Compass className="w-4 h-4 text-cyan-600 animate-spin" />
-            <span className="font-black text-cyan-700 tracking-wider">RADAR QUÉT TRẠM VŨ TRỤ LỚP HỌC</span>
-          </div>
-          <span>Sĩ số khả dụng: {activeList.length} học sinh</span>
-        </div>
-
-        {/* Center Space Visual: The Rocket and Orbit Planets */}
-        <div className="relative z-10 my-4 flex flex-col items-center justify-center">
-          {/* Main Central Rocket */}
-          <div className={`relative transition-all duration-300 ${isLaunching ? 'scale-110 -translate-y-2' : ''}`}>
-            <div className={`w-24 h-24 md:w-28 md:h-28 rounded-full bg-gradient-to-tr from-indigo-500 via-indigo-700 to-cyan-500 border-4 border-cyan-400/80 p-1 flex items-center justify-center shadow-[0_0_40px_rgba(6,182,212,0.6)] ${isLaunching ? 'animate-pulse' : ''}`}>
-              <Rocket className={`w-12 h-12 md:w-14 md:h-14 text-white -rotate-45 ${isLaunching ? 'animate-bounce' : ''}`} />
+          {/* Who the rocket has reached right now */}
+          <div className="absolute top-2 left-1/2 -translate-x-1/2 z-20 max-w-[92%]">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-white/95 border-2 border-indigo-300 rounded-full shadow-md text-sm font-black text-slate-900 whitespace-nowrap overflow-hidden">
+              <Rocket className="w-4 h-4 text-indigo-700 shrink-0" />
+              <span className="truncate">
+                {phase === 'idle' ? `Sẵn sàng khám phá • còn ${activeList.length} bạn chưa được gọi` : phase === 'count' ? 'Chuẩn bị phóng…' : planets[hot] ? (phase === 'landed' ? `Hạ cánh: ${planets[hot].name}` : `Đang bay qua: ${planets[hot].name}`) : 'Cất cánh!'}
+              </span>
             </div>
-            {/* Rocket Thruster Flame */}
-            {isLaunching && (
-              <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 w-8 h-8 bg-gradient-to-b from-amber-400 via-rose-500 to-transparent rounded-full blur-xs animate-ping" />
-            )}
           </div>
 
-          {/* Current Scanned Planet Banner */}
-          <div className="mt-5 text-center">
-            {activeList[currentPlanetIndex] && (
-              <div className="inline-flex items-center gap-3 px-5 py-2.5 bg-white/90 border-2 border-cyan-500/60 rounded-full shadow-xl backdrop-blur-md">
-                <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-cyan-300 shadow-md shadow-cyan-400/50 aspect-square shrink-0 ring-2 ring-cyan-500/30">
-                  <img
-                    src={activeList[currentPlanetIndex].avatar}
-                    alt={activeList[currentPlanetIndex].name}
-                    className="w-full h-full object-cover rounded-full"
-                  />
+          {/* Planets = students */}
+          {planets.map((st, i) => {
+            const [x, y] = slotsFor(planets.length)[i];
+            const isHot = hot === i;
+            const isWin = phase === 'landed' && isHot;
+            return (
+              <div key={st.id} className="absolute z-10" style={{ left: `${x}%`, top: `${y}%`, transform: 'translate(-50%,-50%)' }}>
+                <div className={`${phase === 'idle' ? 'rk-float' : ''}`} style={{ animationDelay: `${i * 0.35}s` }}>
+                  <div className={`relative mx-auto w-fit rounded-full p-1 bg-gradient-to-br ${PLANET_RINGS[i % PLANET_RINGS.length]} shadow-lg transition-transform duration-300 ${isWin ? 'scale-[1.6]' : isHot ? 'scale-125 rk-ring' : ''} ${phase !== 'idle' && !isHot ? 'opacity-70' : ''}`}>
+                    <img src={st.avatar} alt={st.name} referrerPolicy="no-referrer" onError={e => handleAvatarImgError(e, st.gender, st.name)}
+                      className="w-11 h-11 md:w-14 md:h-14 rounded-full object-cover border-2 border-white" />
+                    {isWin && <span className="absolute -top-5 -right-1 text-2xl" aria-hidden>🚩</span>}
+                  </div>
+                  <p className={`mt-1 mx-auto max-w-[88px] md:max-w-[110px] truncate text-center text-[12px] font-black leading-tight px-1.5 py-0.5 rounded-full ${isHot ? 'bg-amber-300 text-slate-900' : 'bg-white/85 text-slate-800'}`}>{st.name}</p>
                 </div>
-                <div className="text-left">
-                  <div className="text-[12px] text-cyan-700 font-mono font-bold">HÀNH TINH #{activeList[currentPlanetIndex].stt}</div>
-                  <div className="text-base font-black text-slate-800">{activeList[currentPlanetIndex].name}</div>
-                </div>
+              </div>
+            );
+          })}
+
+          {/* Launch pad */}
+          <div className="absolute z-10 left-1/2 -translate-x-1/2 bottom-2 w-28 h-3 rounded-full bg-gradient-to-r from-slate-300 via-slate-100 to-slate-300 shadow-md" aria-hidden />
+
+          {/* Rocket */}
+          <div className={`absolute z-30 ${phase === 'count' ? 'rk-shake' : ''}`}
+            style={{ left: `${rocket.x}%`, top: `${rocket.y}%`, transform: `translate(-50%,-50%) rotate(${rocket.rot}deg)`, transition: `left ${hopMs}ms cubic-bezier(.45,.05,.3,1), top ${hopMs}ms cubic-bezier(.45,.05,.3,1), transform ${Math.min(hopMs, 500)}ms ease-out` }}
+            aria-hidden>
+            <svg viewBox="0 0 48 72" className="w-10 h-14 md:w-12 md:h-[70px] drop-shadow-lg block">
+              <path d="M24 2 C34 14 38 30 36 52 H12 C10 30 14 14 24 2Z" fill="#ffffff" stroke="#4f46e5" strokeWidth="2" />
+              <path d="M24 2 C29 8 32 14 33 20 H15 C16 14 19 8 24 2Z" fill="#ef4444" />
+              <circle cx="24" cy="32" r="6" fill="#38bdf8" stroke="#4f46e5" strokeWidth="2" />
+              <path d="M12 40 L2 58 L12 54Z" fill="#f43f5e" />
+              <path d="M36 40 L46 58 L36 54Z" fill="#f43f5e" />
+              <rect x="18" y="52" width="12" height="6" rx="2" fill="#94a3b8" />
+            </svg>
+            {(phase === 'count' || phase === 'fly') && (
+              <div className="absolute left-1/2 -translate-x-1/2 top-[92%] pointer-events-none">
+                <div className={`rk-flame mx-auto rounded-b-full bg-gradient-to-b from-amber-200 via-orange-500 to-transparent ${phase === 'fly' ? 'w-6 h-14' : 'w-4 h-8'}`} />
               </div>
             )}
           </div>
+
+          {/* Countdown */}
+          {phase === 'count' && count > 0 && (
+            <div className="absolute inset-0 z-40 flex items-center justify-center pointer-events-none">
+              <span key={count} className="rk-pop text-[110px] leading-none font-black text-white drop-shadow-[0_6px_0_rgba(79,70,229,0.9)]" aria-live="assertive">{count}</span>
+            </div>
+          )}
         </div>
 
         {/* Launch Trigger Button */}
-        <div className="relative z-10 pt-2">
+        <div className="p-3 md:p-4 bg-gradient-to-b from-white to-indigo-50">
           <button
             onClick={launchRocket}
             disabled={isLaunching || activeList.length === 0}
-            className="w-full py-4 px-6 bg-gradient-to-r from-indigo-600 via-cyan-700 to-emerald-700 hover:from-indigo-700 hover:to-emerald-800 text-white font-black text-sm md:text-base rounded-2xl shadow-lg shadow-cyan-500/25 flex items-center justify-center gap-2.5 transition-all hover-zoom-btn disabled:opacity-50 uppercase cursor-pointer"
+            className="w-full py-4 px-6 bg-gradient-to-r from-indigo-600 via-sky-600 to-emerald-600 hover:from-indigo-700 hover:to-emerald-700 text-white font-black text-sm md:text-base rounded-2xl shadow-lg shadow-sky-500/25 flex items-center justify-center gap-2.5 transition-all hover-zoom-btn disabled:opacity-60 uppercase cursor-pointer"
           >
             <Play className={`w-5 h-5 fill-white ${isLaunching ? 'animate-spin' : ''}`} />
-            <span>{isLaunching ? `🚀 PHI THUYỀN ĐANG KHÁM PHÁ (${spinDuration}S)...` : `🚀 BẤM PHÓNG TÀU VŨ TRỤ (${spinDuration} GIÂY)`}</span>
+            <span>{phase === 'count' ? `ĐẾM NGƯỢC ${count || ''}…` : isLaunching ? '🚀 PHI THUYỀN ĐANG KHÁM PHÁ…' : `🚀 BẤM PHÓNG TÀU VŨ TRỤ (${spinDuration} GIÂY)`}</span>
           </button>
         </div>
       </div>

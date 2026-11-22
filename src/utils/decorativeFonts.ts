@@ -1,9 +1,11 @@
 /**
  * Phông trang trí (Thư khen, mẫu Thời khóa biểu sang trọng) chỉ nạp KHI CẦN, để màn hình khác mở nhanh hơn.
  * Giao diện chung chỉ dùng Be Vietnam Pro (nạp sẵn trong index.html).
+ * Các phông trang trí được ĐÓNG GÓI SẴN trong phần mềm (public/fonts/cert), không cần mạng, không cần cài vào máy.
  * Thẻ <link> có crossorigin để html-to-image đọc được CSS phông khi xuất ảnh/PDF.
  */
-const DECORATIVE_FONTS_HREF = 'https://fonts.googleapis.com/css2?family=Charm:wght@400;700&family=Dancing+Script:wght@500;600;700&family=Great+Vibes&family=Lora:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Merriweather:ital,wght@0,400;0,700;0,900;1,400&family=Montserrat:ital,wght@0,500;0,600;0,700;0,800;0,900;1,500&family=Pacifico&family=Pattaya&family=Playfair+Display:ital,wght@0,600;0,700;0,800;0,900;1,600;1,700&family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,600&display=swap';
+// Fonts are bundled with the app (public/fonts/cert, SIL Open Font License): they work offline and on any computer.
+const DECORATIVE_FONTS_HREF = `${(import.meta as any).env?.BASE_URL ?? './'}fonts/cert/fonts.css`;
 
 let loading: Promise<void> | null = null;
 

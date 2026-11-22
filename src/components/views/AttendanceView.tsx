@@ -11,12 +11,14 @@ import {
   Utensils, Copy, FileSpreadsheet, TrendingUp, BarChart3,
   ChevronLeft, ChevronRight, AlertTriangle, Users, Building2,
   FileText, CheckCircle2, Lock, ArrowRight, PieChart, History,
-  Image as ImageIcon
+  Image as ImageIcon, CalendarDays
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { AttendanceChartsView } from './attendance/AttendanceChartsView';
+import { AttendanceMonthGrid } from './attendance/AttendanceMonthGrid';
 import { AttendanceExportModal } from './attendance/AttendanceExportModal';
 import { handleAvatarImgError } from '../../utils/avatarConfig';
+import { useAttendanceBackfill } from '../../utils/useAttendanceBackfill';
 
 // 4 Trạng thái điểm danh trọng tâm theo yêu cầu của Bộ GD & người dùng
 const STATUS_CONFIG: Record<AttendanceStatus, { label: string; short: string; activeClass: string; inactiveClass: string; badgeClass: string; icon: string }> = {
@@ -96,7 +98,7 @@ export const AttendanceView: React.FC = () => {
   const activeClass = classes.find(c => c.id === activeClassId);
 
   // 3 Sub-tabs: 'daily' (Chuyên cần) | 'boarding' (Ăn bán trú) | 'charts' (Thống kê & Biểu đồ)
-  const [activeTab, setActiveTab] = useState<'daily' | 'boarding' | 'charts'>('daily');
+  const [activeTab, setActiveTab] = useState<'daily' | 'boarding' | 'charts' | 'month'>('daily');
 
   // Real Today String
   const realTodayStr = useMemo(() => {
@@ -111,12 +113,15 @@ export const AttendanceView: React.FC = () => {
 
   // 📅 QUY TRÌNH BÁO CÁO: GVCN chỉ điểm danh chuyên cần & bán trú cho HÔM NAY và tối đa 2 NGÀY TRƯỚC
   // (hôm qua, hôm kia) để tránh báo cáo chậm / sai số liệu. Ngoài khung này chỉ xem, không sửa.
+  // Quản trị tối cao có thể MỞ KHÓA điểm danh ngược (chuẩn hóa số liệu từ đầu năm học): khi bật, mọi ngày đã qua đều sửa được.
+  const { open: backfillOpen } = useAttendanceBackfill();
   const ATTENDANCE_EDIT_WINDOW_DAYS = 2;
   const minEditableDateStr = useMemo(() => {
+    if (backfillOpen) return '1970-01-01';
     const d = new Date();
     d.setDate(d.getDate() - ATTENDANCE_EDIT_WINDOW_DAYS);
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-  }, []);
+  }, [backfillOpen]);
   const isDateEditable = (dateStr?: string) => {
     const target = dateStr || realTodayStr;
     return target >= minEditableDateStr && target <= realTodayStr;
@@ -129,7 +134,7 @@ export const AttendanceView: React.FC = () => {
   };
   const setSelectedDate = (dateStr: string) => setSelectedDateRaw(clampToEditableWindow(dateStr));
   const notifyLockedDate = () => {
-    setSaveToast(`⛔ Chỉ được điểm danh hôm nay và 2 ngày trước (từ ${minEditableDateStr.split('-').reverse().join('/')}). Ngày này đã khóa số liệu.`);
+    setSaveToast(`⛔ Chỉ được điểm danh hôm nay và 2 ngày trước (từ ${minEditableDateStr.split('-').reverse().join('/')}). Ngày này đã khóa số liệu; cần chuẩn hóa số liệu cũ thì nhờ quản trị mở khóa điểm danh ngược.`);
     setTimeout(() => setSaveToast(null), 4000);
   };
   const setStudentAttendance: typeof setStudentAttendanceRaw = (studentId, status, date) => {
@@ -724,7 +729,7 @@ export const AttendanceView: React.FC = () => {
       <div className="bg-white p-3 sm:p-3.5 rounded-2xl border border-slate-200/90 shadow-xs flex flex-col lg:flex-row lg:items-center justify-between gap-3 hover-zoom-card">
         <div className="flex items-center gap-2.5">
           <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-gradient-to-br from-emerald-700 to-teal-700 text-white flex items-center justify-center font-bold shadow-md shadow-emerald-500/20 shrink-0">
-            {activeTab === 'daily' ? <CheckSquare className="w-5 h-5" /> : activeTab === 'boarding' ? <Utensils className="w-5 h-5" /> : <BarChart3 className="w-5 h-5" />}
+            {activeTab === 'daily' ? <CheckSquare className="w-5 h-5" /> : activeTab === 'boarding' ? <Utensils className="w-5 h-5" /> : activeTab === 'month' ? <CalendarDays className="w-5 h-5" /> : <BarChart3 className="w-5 h-5" />}
           </div>
           <div>
             <h2 className="text-sm sm:text-base font-black text-slate-900 leading-tight uppercase flex items-center gap-2">
@@ -775,6 +780,18 @@ export const AttendanceView: React.FC = () => {
           >
             <BarChart3 className="w-3.5 h-3.5 text-purple-600" />
             <span>3. THỐNG KÊ & BIỂU ĐỒ</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('month')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all flex items-center gap-1 hover-zoom-btn uppercase cursor-pointer ${
+              activeTab === 'month' 
+                ? 'bg-white text-sky-800 shadow-xs' 
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            <CalendarDays className="w-3.5 h-3.5 text-sky-600" />
+            <span>4. BẢNG THÁNG</span>
           </button>
         </div>
       </div>
@@ -868,7 +885,7 @@ export const AttendanceView: React.FC = () => {
               <input
                 type="date"
                 value={selectedDate}
-                min={minEditableDateStr}
+                min={backfillOpen ? undefined : minEditableDateStr}
                 max={realTodayStr}
                 onChange={(e) => setSelectedDate(e.target.value)}
                 className="bg-transparent font-black text-slate-900 focus:outline-none cursor-pointer text-xs"
@@ -884,6 +901,12 @@ export const AttendanceView: React.FC = () => {
             </button>
           </div>
         </div>
+
+        {backfillOpen && (
+          <div className="p-3 bg-emerald-50 border-2 border-emerald-300 rounded-2xl text-sm font-bold text-emerald-900">
+            Quản trị đang MỞ KHÓA điểm danh ngược: thầy cô được điểm danh chuyên cần và bán trú cho mọi ngày đã qua để chuẩn hóa số liệu. Chọn ngày ở ô lịch phía trên.
+          </div>
+        )}
 
         {/* Historical Mode Alert Banner */}
         {isPastDateSelected && (
@@ -1364,7 +1387,7 @@ export const AttendanceView: React.FC = () => {
             <div className="bg-gradient-to-br from-emerald-500/10 via-teal-500/5 to-transparent border border-emerald-200 rounded-2xl p-3.5 shadow-2xs flex items-center justify-between gap-3 hover-zoom-card">
               <div className="space-y-0.5 min-w-0">
                 <div className="flex items-center gap-1.5">
-                  <span className="text-[12px] font-black uppercase text-emerald-800 tracking-wider">
+                  <span className="text-[12px] font-black uppercase text-emerald-800 tracking-wider whitespace-nowrap">
                     Ăn bán trú tại trường
                   </span>
                   <span className="px-1.5 py-0.5 rounded-md bg-emerald-700 text-white text-[12px] font-mono font-bold">
@@ -1405,7 +1428,7 @@ export const AttendanceView: React.FC = () => {
             <div className="bg-rose-50/70 border border-rose-200 rounded-2xl p-3.5 shadow-2xs flex items-center justify-between gap-3 hover-zoom-card">
               <div className="space-y-0.5 min-w-0">
                 <div className="flex items-center gap-1">
-                  <span className="text-[12px] font-black uppercase text-rose-700 tracking-wider">
+                  <span className="text-[12px] font-black uppercase text-rose-700 tracking-wider whitespace-nowrap">
                     Vắng chuyên cần
                   </span>
                   <span className="px-1.5 py-0.5 rounded-md bg-rose-100 text-rose-700 border border-rose-200 text-[12px] font-bold">
@@ -1643,6 +1666,17 @@ export const AttendanceView: React.FC = () => {
       {/* ========================================================================= */}
       {/* 3. VIEW TAB: THỐNG KÊ & BIỂU ĐỒ ĐỐI CHIẾU (User Request) */}
       {/* ========================================================================= */}
+      {activeTab === 'month' && (
+        <AttendanceMonthGrid
+          students={currentClassStudents}
+          records={attendanceRecords.filter(r => r.classId === activeClassId)}
+          className={activeClass?.name || ''}
+          teacherName={activeClass?.teacherName || teacherProfile.name}
+          schoolName={currentUser?.schoolName || teacherProfile.schoolName}
+          today={realTodayStr}
+        />
+      )}
+
       {activeTab === 'charts' && (
         <AttendanceChartsView
           stats={periodStats}

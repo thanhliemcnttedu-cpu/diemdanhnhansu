@@ -849,7 +849,7 @@ export const ReportsDataView: React.FC<ReportsDataViewProps> = ({ defaultTab = '
         {/* TAB 1: THỐNG KÊ (User request 6 & New Comprehensive Dashboard) */}
         {/* ========================================================================= */}
         {activeTab === 'stats' && (
-          <div className="space-y-4">
+          <div data-report="" className="space-y-4">
             {statsSubMode === 'realtime_admin' ? (
               <AdminRealtimeDashboardView />
             ) : statsSubMode === 'subject_reports' ? (
@@ -915,8 +915,8 @@ export const ReportsDataView: React.FC<ReportsDataViewProps> = ({ defaultTab = '
                     <div className="text-3xl font-black font-mono text-rose-600 mt-2">
                       {lowCoinStudents.length} <span className="text-xs font-bold text-slate-400 uppercase">em (≤0 xu)</span>
                     </div>
-                    <div className="text-[12px] text-rose-600 mt-1 font-black uppercase">
-                      CẦN GIÁO VIÊN TẠO CƠ HỘI PHÁT BIỂU
+                    <div className="text-[12px] text-rose-600 mt-1 font-black uppercase wrap-ok leading-tight">
+                      GV TẠO CƠ HỘI PHÁT BIỂU
                     </div>
                   </div>
                 </div>
@@ -1016,7 +1016,7 @@ export const ReportsDataView: React.FC<ReportsDataViewProps> = ({ defaultTab = '
                                       className="w-3.5 h-3.5 rounded-full shrink-0 shadow-2xs"
                                       style={{ backgroundColor: item.color }}
                                     />
-                                    <span className="text-xs font-bold text-slate-800 truncate">
+                                    <span className="text-xs font-bold text-slate-800 wrap-ok break-words leading-tight">
                                       {item.label}
                                     </span>
                                   </div>
@@ -1139,7 +1139,7 @@ export const ReportsDataView: React.FC<ReportsDataViewProps> = ({ defaultTab = '
                                     style={{ backgroundColor: item.color }}
                                   />
                                   <div className="truncate">
-                                    <span className="text-xs font-bold text-slate-800 truncate block">
+                                    <span className="text-xs font-bold text-slate-800 wrap-ok break-words leading-tight block">
                                       {item.label}
                                     </span>
                                     <span className="text-[12px] text-slate-400 font-medium">
@@ -1234,7 +1234,7 @@ export const ReportsDataView: React.FC<ReportsDataViewProps> = ({ defaultTab = '
                           {/* X-axis labels */}
                           <div className="flex justify-between items-center pt-2 border-t border-slate-200 text-[12px] font-bold text-slate-500 overflow-x-auto">
                             {chartData.map((d, i) => (
-                              <div key={i} className="text-center truncate px-1">
+                              <div key={i} className="text-center wrap-ok break-words leading-tight px-1">
                                 <span className={hoveredDataIndex === i ? 'text-indigo-600 font-extrabold' : ''}>
                                   {d.label}
                                 </span>
@@ -1323,7 +1323,7 @@ export const ReportsDataView: React.FC<ReportsDataViewProps> = ({ defaultTab = '
                             className="w-9 h-9 rounded-xl object-cover bg-white border border-slate-200 shrink-0"
                           />
                           <div className="truncate">
-                            <div className="text-xs font-black text-slate-900 truncate">{st.name}</div>
+                            <div className="text-xs font-black text-slate-900 wrap-ok break-words leading-tight">{st.name}</div>
                             <div className="text-[12px] text-slate-500 font-medium">STT {st.stt} · {st.group || 'Tổ 1'}</div>
                           </div>
                         </div>
@@ -1388,7 +1388,7 @@ export const ReportsDataView: React.FC<ReportsDataViewProps> = ({ defaultTab = '
             {/* Banner Trial Mode trên View Dữ Liệu (Ảnh 3 & 8) */}
             {!isCdKeyActivated && (
               <div className="p-3.5 rounded-2xl bg-gradient-to-r from-amber-700 via-orange-700 to-amber-700 text-white flex items-center justify-between shadow-xs animate-in fade-in">
-                <div className="flex items-center gap-2.5 text-xs font-bold truncate">
+                <div className="flex items-center gap-2.5 text-xs font-bold wrap-ok break-words leading-tight">
                   <span className="text-lg">⚠️</span>
                   <span className="truncate">
                     Bản Dùng Thử: Giới hạn tối đa 01 lớp và 10 học sinh/lớp. Vui lòng nhập CDKEY bản quyền để mở khóa Full!
@@ -1907,7 +1907,7 @@ export const ReportsDataView: React.FC<ReportsDataViewProps> = ({ defaultTab = '
                                 className="w-10 h-10 rounded-xl object-cover"
                                 referrerPolicy="no-referrer"
                               />
-                              <span className="text-[12px] font-bold text-slate-700 truncate w-full text-center">
+                              <span className="text-[12px] font-bold text-slate-700 wrap-ok break-words leading-tight w-full text-center">
                                 {preset.label}
                               </span>
                             </button>

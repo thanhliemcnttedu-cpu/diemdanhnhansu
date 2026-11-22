@@ -316,7 +316,7 @@ ${(sheet.notes || []).map(n => `<p class="note">${esc(n)}</p>`).join('')}
   const isNum = (c: Cell) => typeof val(c) === 'number';
 
   return (
-    <section className="bg-white rounded-3xl border border-sky-200 shadow-sm p-4 sm:p-5 space-y-4" aria-labelledby="leader-report-title">
+    <section data-report="" className="bg-white rounded-3xl border border-sky-200 shadow-sm p-4 sm:p-5 space-y-4" aria-labelledby="leader-report-title">
       <div className="flex flex-wrap items-start gap-3">
         <span className="w-10 h-10 rounded-2xl bg-indigo-100 text-indigo-800 flex items-center justify-center shrink-0"><BarChart3 className="w-5 h-5" aria-hidden="true" /></span>
         <div className="flex-1 min-w-[220px]">

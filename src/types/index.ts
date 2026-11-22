@@ -524,6 +524,12 @@ export interface UserClassroomData {
   quickLinks: QuickLink[];
   /** QR codes saved on the account (optional: older accounts have none) */
   qrCodes?: SavedQrCode[];
+  /** Sổ tổng kết tuần (buổi sinh hoạt cuối tuần), mỗi tuần một mục theo lớp (và môn nếu là GV bộ môn) */
+  weeklyJournal?: WeeklyJournalEntry[];
+  /** Nhật ký gọi tên (mọi trò gọi tên ghi vào đây) để gọi công bằng và vẽ bản đồ tham gia */
+  callLog?: CallLogEntry[];
+  /** Mốc bắt đầu vòng gọi hiện tại của từng lớp (classId → ms); học sinh gọi trước mốc này được tính lại */
+  callRounds?: Record<string, number>;
   teacherProfile: TeacherProfile;
   quizBank?: QuestionItem[];
   infographicConfig?: any;
@@ -540,3 +546,24 @@ export interface PersonalQuizVault {
   cleared?: boolean;   // giáo viên đã Ngắt kết nối
 }
 
+/** One saved weekly review ("Tổng kết tuần"): the teacher's goals / notes / chosen awards plus a small snapshot used for monthly and term views */
+export interface WeeklyJournalEntry {
+  id: string;                 // `${classId}|${weekStart}|${subjectName || '*'}`
+  classId: string;
+  weekStart: string;          // Monday, YYYY-MM-DD
+  subjectName?: string;       // set when written by a subject teacher
+  goals: string[];            // goals for next week (up to 3)
+  note?: string;
+  awards: Array<{ key: string; title: string; reason: string; studentIds: string[] }>;
+  snapshot: { attendanceRate: number | null; attendanceDays: number; totalXu: number; topStudentName?: string; topGroup?: string };
+  updatedAt: number;
+}
+
+/** One "called by name" event, written by every picker game */
+export interface CallLogEntry {
+  id: string;
+  classId: string;
+  studentId: string;
+  ts: number;
+  game: string;   // wheel | reel | rocket | mystery_box | duck_race | lucky_lens | ...
+}

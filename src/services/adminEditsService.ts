@@ -406,6 +406,57 @@ export const schoolBranchesDrive = {
   }
 };
 
+// ─────────────────────────────────────────────────────────────────────────────
+// 🔓 CÔNG TẮC "ĐIỂM DANH NGƯỢC" (cauhinh_diemdanh.json)
+// Quản trị tối cao bật → GVCN được điểm danh chuyên cần & bán trú cho MỌI ngày đã qua (để chuẩn hóa số liệu
+// từ đầu năm học). Tắt → quay lại khung hôm nay + 2 ngày trước. Lưu 1 tệp nhỏ dùng chung trên Drive;
+// khi không có Drive (localhost / Electron) dùng localStorage của máy.
+// Cấu trúc: { version: 1, backfillOpen, updatedAt, by }
+// ─────────────────────────────────────────────────────────────────────────────
+export const ATTENDANCE_BACKFILL_FILE = 'cauhinh_diemdanh.json';
+const ATTENDANCE_BACKFILL_LS = 'lhhp_attendance_backfill_open';
+let backfillCache: { at: number; open: boolean } | null = null;
+
+export const attendanceBackfillFlag = {
+  /** true = đang mở khóa. Lỗi mạng → giữ giá trị gần nhất (không tự mở khóa). */
+  async load(maxAgeMs = 20000): Promise<boolean> {
+    const local = (() => { try { return localStorage.getItem(ATTENDANCE_BACKFILL_LS) === '1'; } catch { return false; } })();
+    if (!schoolBranchesDrive.isAvailable()) return local;
+    if (backfillCache && Date.now() - backfillCache.at < maxAgeMs) return backfillCache.open;
+    const t = driveTarget();
+    if (!t) return local;
+    try {
+      const res = await fetch(`${t.url}${t.url.includes('?') ? '&' : '?'}action=getLatest&strict=1&folderId=${encodeURIComponent(t.folderId)}&fileName=${encodeURIComponent(ATTENDANCE_BACKFILL_FILE)}`);
+      const json = await res.json();
+      const open = json && json.success !== false ? json.backfillOpen === true : false; // chưa có tệp = đang khóa
+      backfillCache = { at: Date.now(), open };
+      try { localStorage.setItem(ATTENDANCE_BACKFILL_LS, open ? '1' : '0'); } catch { /* ignore */ }
+      return open;
+    } catch {
+      return backfillCache ? backfillCache.open : local;
+    }
+  },
+
+  /** Chỉ tài khoản quản trị được ghi. Trả về true nếu đã lưu. */
+  async save(open: boolean): Promise<boolean> {
+    if (!isManagementUser(sessionUser())) return false;
+    try { localStorage.setItem(ATTENDANCE_BACKFILL_LS, open ? '1' : '0'); } catch { /* ignore */ }
+    window.dispatchEvent(new CustomEvent('lhhp-attendance-backfill', { detail: open }));
+    if (!schoolBranchesDrive.isAvailable()) return true;
+    const t = driveTarget();
+    if (!t) return true;
+    const res = await fetch(t.url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ action: 'saveClassData', folderId: t.folderId, fileName: ATTENDANCE_BACKFILL_FILE, data: { version: 1, backfillOpen: open, updatedAt: Date.now(), by: sessionUser()?.username || '' } })
+    });
+    const json = await res.json().catch(() => null);
+    if (!json || json.success === false) throw new Error(json?.message || 'Không lưu được công tắc điểm danh ngược lên Drive.');
+    backfillCache = { at: Date.now(), open };
+    return true;
+  }
+};
+
 // Adjustments stored from an earlier session / an offline period are sent on their own: when the network is
 // back, and once a minute while something is waiting and a management account is signed in.
 if (typeof window !== 'undefined') {

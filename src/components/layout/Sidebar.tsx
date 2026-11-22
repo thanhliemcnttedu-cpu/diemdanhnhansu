@@ -4,7 +4,7 @@ import {
   Volume2, Timer, Link, BarChart3, Database, 
   Settings, Brain, ChevronLeft, ChevronRight, BookOpen,
   ShieldCheck, LogIn, UserCheck, X, Award,
-  HardDrive, Cloud, KeyRound, Lock, ChevronDown, Settings2, MessageCircle, QrCode
+  HardDrive, Cloud, KeyRound, Lock, ChevronDown, Settings2, MessageCircle, QrCode, Palette, CalendarCheck
 } from 'lucide-react';
 import { isStatsViewerAccount } from '../../utils/accountKinds';
 import { useState } from 'react';
@@ -34,6 +34,8 @@ export type NavigationMenuId =
   | 'timer'
   | 'links'
   | 'qr'
+  | 'weekly'
+  | 'period'
   | 'guide'
   | 'reports'
   | 'staff_attendance'
@@ -162,6 +164,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
       icon: Link,
     },
     {
+      id: 'weekly',
+      label: 'Tổng kết',
+      icon: CalendarCheck,
+    },
+    {
       id: 'qr',
       label: 'Tạo mã QR',
       icon: QrCode,
@@ -213,7 +220,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const CLASSROOM_ONLY_IDS: NavigationMenuId[] = [
     'attendance', 'seating', 'schedule', 'infographic',
     'rewards', 'certificate', 'picker', 'wheel', 'reel',
-    'noise', 'timer'
+    'noise', 'timer', 'weekly', 'period'
   ];
 
   const MENU_ITEMS = ALL_MENU_ITEMS.filter(item => {
@@ -226,7 +233,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
     if (isNonTeachingAccount(currentUser)) return NON_TEACHING_MENU_IDS.includes(item.id);
     if (isStatsViewerAccount(currentUser)) return STATS_VIEWER_MENU_IDS.includes(item.id);
     // Giáo viên: tự điểm danh đi làm hằng ngày + kê khai tiết dạy (quản lý dùng màn Chấm công nhân sự)
-    if (item.id === 'my_checkin' && isMacroAdmin) return false;
+    // Hiệu trưởng / phó hiệu trưởng đăng nhập bằng chính số CCCD của mình (tài khoản tạo từ danh sách nhân sự) cũng chấm công
+    // bằng tài khoản đó: giữ mục "Chấm công của tôi" cho Ban giám hiệu và cho tài khoản có tên đăng nhập là số CCCD.
+    if (item.id === 'my_checkin' && isMacroAdmin && !(isBgh || /^\d{9,12}$/.test(String(currentUser?.username || '')))) return false;
 
     // Tài khoản quản lý vĩ mô: chỉ giữ menu quản trị cốt lõi
     if (isMacroAdmin) {
@@ -247,8 +256,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const NAV_GROUPS: Array<{ key: string; label: string; icon: React.ComponentType<{ className?: string }>; tone: string; ids: NavigationMenuId[] }> = [
     { key: 'class', label: 'Lớp học', icon: School, tone: 'text-sky-600', ids: ['dashboard', 'classes', 'students', 'attendance', 'seating', 'schedule'] },
     { key: 'activity', label: 'Hoạt động', icon: Sparkles, tone: 'text-violet-600', ids: ['picker', 'rewards', 'certificate', 'infographic', 'noise', 'timer'] },
-    { key: 'manage', label: 'Quản lý & báo cáo', icon: BarChart3, tone: 'text-emerald-700', ids: ['reports', 'staff_attendance', 'my_checkin', 'data', 'links', 'qr', 'guide', 'ai'] },
+    { key: 'manage', label: 'Quản lý & báo cáo', icon: BarChart3, tone: 'text-emerald-700', ids: ['reports', 'weekly', 'staff_attendance', 'my_checkin', 'data', 'links', 'qr', 'guide', 'ai'] },
   ];
+  // Sidebar colour: "Sáng" (default, the app's light tone) or "Xanh đậm" (deep blue, white text). Remembered on this device only.
+  const [sbDark, setSbDark] = useState<boolean>(() => { try { return localStorage.getItem('lhhp_sidebar_theme') === 'dark'; } catch (_) { return false; } });
+  const toggleSbTheme = () => setSbDark(v => { const n = !v; try { localStorage.setItem('lhhp_sidebar_theme', n ? 'dark' : 'light'); } catch (_) { /* blocked storage: lasts until reload */ } return n; });
   const [closedGroups, setClosedGroups] = useState<string[]>(() => {
     try { return JSON.parse(localStorage.getItem('lhhp_nav_closed_groups') || '[]'); } catch (_) { return []; }
   });
@@ -276,7 +288,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <div className="flex items-center gap-2.5 overflow-hidden">
               <img src="/logo.svg" alt="Lớp Học Hạnh Phúc" className="w-9 h-9 rounded-[22%] shadow-sm shrink-0" />
               <div className="min-w-0">
-                <p className="text-base font-black text-slate-900 tracking-tight leading-tight truncate">Lớp Học Hạnh Phúc</p>
+                <p className="text-sm font-black text-slate-900 tracking-tight leading-tight truncate">Lớp Học Hạnh Phúc</p>
                 <p className="text-xs text-slate-500 font-semibold leading-tight truncate" title={schoolLabel}>{schoolLabel}</p>
               </div>
             </div>
@@ -286,10 +298,22 @@ export const Sidebar: React.FC<SidebarProps> = ({
             </div>
           )}
 
+          {!isEffectivelyCollapsed && (
+            <button
+              type="button"
+              onClick={toggleSbTheme}
+              aria-pressed={sbDark}
+              className="p-0.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors ml-auto hover-zoom-btn shrink-0"
+              title={sbDark ? 'Đổi thanh bên sang màu sáng' : 'Đổi thanh bên sang màu xanh đậm'}
+              aria-label="Đổi màu thanh bên: sáng hoặc xanh đậm"
+            >
+              <Palette className="w-[15px] h-[15px]" />
+            </button>
+          )}
           {isMobileDrawer ? (
             <button
               onClick={onCloseMobile}
-              className="p-1 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors ml-auto hover-zoom-btn"
+              className="p-1 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors ml-1 hover-zoom-btn"
               title="Đóng menu"
             >
               <X className="w-4 h-4" />
@@ -297,7 +321,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           ) : (
             <button
               onClick={onToggleCollapse}
-              className="p-1 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors ml-auto hover-zoom-btn"
+              className={`p-1 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors hover-zoom-btn ${isEffectivelyCollapsed ? 'ml-auto' : 'ml-1'}`}
               title={collapsed ? 'Mở rộng bảng điều khiển' : 'Thu gọn bảng điều khiển'}
             >
               {collapsed ? <ChevronRight className="w-3.5 h-3.5" /> : <ChevronLeft className="w-3.5 h-3.5" />}
@@ -492,7 +516,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     <>
       {/* Desktop Persistent Sidebar */}
       <aside 
-        className={`hidden lg:flex h-full max-h-screen overflow-hidden bg-white/70 backdrop-blur-xl border-r border-white/80 shadow-[4px_0_24px_-12px_rgba(37,99,235,0.18)] flex-col transition-all duration-300 z-40 relative select-none shrink-0 ${
+        className={`${sbDark ? 'sb-dark ' : ''}hidden lg:flex h-full max-h-screen overflow-hidden bg-white/70 backdrop-blur-xl border-r border-white/80 shadow-[4px_0_24px_-12px_rgba(37,99,235,0.18)] flex-col transition-all duration-300 z-40 relative select-none shrink-0 ${
           collapsed ? 'w-20' : 'w-64'
         }`}
       >
@@ -506,7 +530,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             className="fixed inset-0 bg-sky-900/20 backdrop-blur-xs transition-opacity animate-in fade-in duration-200" 
             onClick={onCloseMobile} 
           />
-          <aside className="fixed inset-y-0 left-0 w-72 max-w-[85vw] bg-white z-50 shadow-2xl flex flex-col animate-in slide-in-from-left duration-250 select-none">
+          <aside className={`${sbDark ? 'sb-dark ' : ''}fixed inset-y-0 left-0 w-72 max-w-[85vw] bg-white z-50 shadow-2xl flex flex-col animate-in slide-in-from-left duration-250 select-none`}>
             {renderSidebarContent(true)}
           </aside>
         </div>

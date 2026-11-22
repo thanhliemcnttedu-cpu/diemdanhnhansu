@@ -329,7 +329,7 @@ export const AttendanceChartsView: React.FC<AttendanceChartsProps> = ({
   }, [stats.thisWeek, stats.today]);
 
   return (
-    <div className="bg-white rounded-3xl border border-slate-200/90 p-5 shadow-xs space-y-4 hover-zoom-card" ref={chartsPrintRef}>
+    <div data-report="" className="bg-white rounded-3xl border border-slate-200/90 p-5 shadow-xs space-y-4 hover-zoom-card" ref={chartsPrintRef}>
       {/* 1. Tiêu đề & Thông tin gọn gàng - Full width, không bị chèn ép */}
       <div className="pb-3 border-b border-slate-100">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
@@ -503,7 +503,7 @@ export const AttendanceChartsView: React.FC<AttendanceChartsProps> = ({
             <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
             <span>CÔNG THỨC HIỂN THỊ TỶ LỆ CHUYÊN CẦN CHUẨN:</span>
           </div>
-          <div className="font-mono text-xs font-black text-slate-900 bg-white/90 px-3 py-1.5 rounded-xl border border-emerald-300/80 inline-block shadow-2xs">
+          <div className="wrap-ok font-mono text-xs font-black text-slate-900 bg-white/90 px-3 py-1.5 rounded-xl border border-emerald-300/80 inline-block shadow-2xs">
             TỶ LỆ (%) = (SỐ HỌC SINH CÓ MẶT / TỔNG SỐ HỌC SINH) × 100%
           </div>
         </div>
@@ -529,10 +529,10 @@ export const AttendanceChartsView: React.FC<AttendanceChartsProps> = ({
       {/* ========================================================================= */}
       {chartType === 'bar' && (
         <div className="space-y-6 animate-in fade-in duration-150">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
             {/* Cột kép so sánh qua 4 kỳ */}
             <div className="p-5 bg-slate-50/70 rounded-2xl border border-slate-200 space-y-4">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
                 <span className="text-xs font-black text-slate-800 uppercase tracking-wide block">
                   Biểu Đồ Cột So Sánh 4 Kỳ (Chuyên Cần & Bán Trú):
                 </span>

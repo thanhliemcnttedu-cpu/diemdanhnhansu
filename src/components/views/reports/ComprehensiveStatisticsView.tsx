@@ -930,7 +930,7 @@ export const ComprehensiveStatisticsView: React.FC = () => {
   const isExporting = isExportingPdf || isExportingPng;
 
   return (
-    <div className="space-y-6">
+    <div data-report="" className="space-y-6">
       {/* The 30-day JSON backup warning was removed: data is saved online in real time. The manual backup button below stays. */}
 
       {/* 2. SAFE MONTH TRANSITION POLICY BANNER & PERMANENT BACKUP BUTTON */}
@@ -982,7 +982,7 @@ export const ComprehensiveStatisticsView: React.FC = () => {
       )}
 
       {/* 3. TOP DEMOGRAPHIC KPI STRIP (Lớp, Học sinh, Nam/Nữ, Chuyên cần, Bán trú) */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-3.5">
         {/* Tổng số lớp */}
         <div className="bg-white rounded-3xl border border-slate-200/90 p-4 shadow-xs hover-zoom-card space-y-1.5">
           <div className="flex items-center justify-between">
@@ -994,7 +994,7 @@ export const ComprehensiveStatisticsView: React.FC = () => {
           <div className="text-2xl font-black font-mono text-slate-900">
             {totalClasses} <span className="text-xs font-bold text-slate-500">lớp</span>
           </div>
-          <div className="text-[12px] text-slate-500 font-bold uppercase truncate">
+          <div className="text-[12px] text-slate-500 font-bold uppercase wrap-ok leading-tight">
             {gradeBreakdown.map(g => `${g.gradeName}: ${g.classCount}`).join(' • ')}
           </div>
         </div>
@@ -1010,7 +1010,7 @@ export const ComprehensiveStatisticsView: React.FC = () => {
           <div className="text-2xl font-black font-mono text-indigo-950">
             {totalStudents} <span className="text-xs font-bold text-slate-500">học sinh</span>
           </div>
-          <div className="text-[12px] text-indigo-700 font-bold uppercase truncate">
+          <div className="text-[12px] text-indigo-700 font-bold uppercase wrap-ok leading-tight">
             TB: {totalClasses > 0 ? Math.round(totalStudents / totalClasses) : 0} em / lớp
           </div>
         </div>
@@ -1023,7 +1023,7 @@ export const ComprehensiveStatisticsView: React.FC = () => {
               <span>🚻</span>
             </div>
           </div>
-          <div className="flex items-center justify-between text-xs font-black">
+          <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-0.5 text-xs font-black">
             <span className="text-blue-700">Nam: {totalBoys} ({boyPct}%)</span>
             <span className="text-pink-600">Nữ: {totalGirls} ({girlPct}%)</span>
           </div>
@@ -1044,7 +1044,7 @@ export const ComprehensiveStatisticsView: React.FC = () => {
           <div className="text-2xl font-black font-mono text-emerald-800">
             {activeTimeframeStats.attRate}%
           </div>
-          <div className="text-[12px] text-emerald-700 font-bold truncate">
+          <div className="text-[12px] text-emerald-700 font-bold wrap-ok leading-tight">
             {activeTimeframeStats.present} có mặt • {activeTimeframeStats.totalAbsent} vắng
           </div>
         </div>
@@ -1060,7 +1060,7 @@ export const ComprehensiveStatisticsView: React.FC = () => {
           <div className="text-2xl font-black font-mono text-indigo-900">
             {bPct(activeTimeframeStats)}
           </div>
-          <div className="text-[12px] text-indigo-700 font-bold truncate">
+          <div className="text-[12px] text-indigo-700 font-bold wrap-ok leading-tight">
             {activeTimeframeStats.eating} suất / {activeTimeframeStats.present} HS đi học
           </div>
         </div>
@@ -1208,7 +1208,7 @@ export const ComprehensiveStatisticsView: React.FC = () => {
         </div>
 
         {/* Right: Export Reports (PDF A4, EXCEL, PNG with DATA + CHARTS) */}
-        <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-1.5 sm:gap-2 w-full lg:w-auto min-w-0">
+        <div className="grid grid-cols-1 min-[440px]:grid-cols-2 sm:flex sm:flex-wrap items-center gap-1.5 sm:gap-2 w-full lg:w-auto min-w-0">
           {/* 🤖 AI BỐ CỤC THÔNG MINH: TỰ ĐỘNG KHỔ NGANG A4 */}
           <div 
             className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-gradient-to-r from-indigo-50 via-purple-50 to-pink-50 border border-indigo-200/90 shadow-2xs text-indigo-950 col-span-2 sm:col-span-1"
@@ -1261,7 +1261,7 @@ export const ComprehensiveStatisticsView: React.FC = () => {
         className="mx-auto bg-white p-4 sm:p-6 md:p-8 rounded-3xl border border-slate-200/90 shadow-sm space-y-4 sm:space-y-5 max-w-7xl"
       >
         {/* Document Header (For Prints, PDF & PNG) */}
-        <div className="flex flex-col sm:flex-row justify-between items-start border-b border-slate-200 pb-3.5 gap-3">
+        <div className="flex flex-col sm:flex-row sm:flex-wrap justify-between items-start border-b border-slate-200 pb-3.5 gap-3">
           <div>
             <div className="font-bold uppercase text-[12px] text-slate-600">
               {officialSchoolName}
@@ -1284,8 +1284,8 @@ export const ComprehensiveStatisticsView: React.FC = () => {
         </div>
 
         {/* 4 Quick KPI Summary Cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5">
-          <div className="bg-slate-50/80 p-2.5 rounded-xl border border-slate-200 flex items-center justify-between">
+        <div className="grid grid-cols-2 xl:grid-cols-4 gap-2.5">
+          <div className="bg-slate-50/80 p-2.5 rounded-xl border border-slate-200 flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
             <div>
               <div className="text-[12px] font-black text-slate-500 uppercase">SĨ SỐ {selectedClassId === 'all' ? 'TOÀN TRƯỜNG' : 'LỚP'}</div>
               <div className="text-base font-black text-indigo-950 font-mono">{totalStudents} <span className="text-[12px] font-bold text-slate-500 uppercase">HS</span></div>
@@ -1293,7 +1293,7 @@ export const ComprehensiveStatisticsView: React.FC = () => {
             <div className="text-[12px] text-indigo-600 font-bold uppercase">{selectedClassId === 'all' ? `${classes.length} Lớp GVCN` : '1 Lớp'}</div>
           </div>
 
-          <div className="bg-emerald-50/70 p-2.5 rounded-xl border border-emerald-200 flex items-center justify-between">
+          <div className="bg-emerald-50/70 p-2.5 rounded-xl border border-emerald-200 flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
             <div>
               <div className="text-[12px] font-black text-emerald-800 uppercase">CHUYÊN CẦN ({todayStr})</div>
               <div className="text-base font-black text-emerald-700 font-mono">{todayStats.hasData ? `${todayStats.attRate}%` : '—'}</div>
@@ -1301,7 +1301,7 @@ export const ComprehensiveStatisticsView: React.FC = () => {
             <div className="text-[12px] text-emerald-700 font-bold font-mono">{todayStats.hasData ? `${todayStats.present}/${todayStats.present + todayStats.totalAbsent} HS đã điểm danh` : 'Chưa có dữ liệu'}</div>
           </div>
 
-          <div className="bg-indigo-50/70 p-2.5 rounded-xl border border-indigo-200 flex items-center justify-between">
+          <div className="bg-indigo-50/70 p-2.5 rounded-xl border border-indigo-200 flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
             <div>
               <div className="text-[12px] font-black text-indigo-800 uppercase">ĂN BÁN TRÚ HÔM NAY</div>
               <div className="text-base font-black text-indigo-700 font-mono">{todayStats.hasData ? `${bPct(todayStats)}` : '—'}</div>
@@ -1309,7 +1309,7 @@ export const ComprehensiveStatisticsView: React.FC = () => {
             <div className="text-[12px] text-indigo-600 font-bold font-mono">{todayStats.hasData ? `${todayStats.eating} suất` : 'Chưa có dữ liệu'}</div>
           </div>
 
-          <div className="bg-amber-50/70 p-2.5 rounded-xl border border-amber-200 flex items-center justify-between">
+          <div className="bg-amber-50/70 p-2.5 rounded-xl border border-amber-200 flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
             <div>
               <div className="text-[12px] font-black text-amber-800 uppercase">TỔNG XU THI ĐUA</div>
               <div className="text-base font-black text-amber-700 font-mono">{totalCoins} <span className="text-[12px] font-bold text-slate-500 uppercase">xu</span></div>
@@ -1322,10 +1322,10 @@ export const ComprehensiveStatisticsView: React.FC = () => {
         <div>
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 mb-2">
             <h3 className="text-xs font-black uppercase text-slate-800 tracking-wide flex items-center gap-1.5">
-              <span>I. BẢNG CHI TIẾT CHUYÊN CẦN & BÁN TRÚ (HÔM NAY • HÔM QUA • THEO TUẦN • THEO THÁNG • THEO HỌC KÌ)</span>
+              <span>I. BẢNG CHI TIẾT CHUYÊN CẦN & BÁN TRÚ</span>
             </h3>
-            <span className="text-[12px] text-slate-500 font-bold uppercase">
-              Có mặt • Có phép • Không phép • Nghỉ ốm • Lý do khác • Suất ăn bán trú
+            <span className="wrap-ok text-[12px] text-slate-500 font-bold uppercase">
+              Hôm nay • Hôm qua • Tuần • Tháng • Học kì: có mặt, có phép, không phép, nghỉ ốm, lý do khác, suất ăn bán trú
             </span>
           </div>
 
@@ -1603,10 +1603,10 @@ export const ComprehensiveStatisticsView: React.FC = () => {
                                 backgroundColor: item.color 
                               }}
                             />
-                            <span className="text-[12px] font-bold text-slate-700 mt-2 truncate w-full text-center" title={item.label}>
+                            <span className="text-[12px] font-bold text-slate-700 mt-2 wrap-ok break-words leading-tight w-full text-center" title={item.label}>
                               {item.label}
                             </span>
-                            <span className="text-[12px] text-slate-400 font-semibold truncate">
+                            <span className="text-[12px] text-slate-400 font-semibold wrap-ok leading-tight">
                               {item.sub}
                             </span>
                           </div>
@@ -1661,7 +1661,7 @@ export const ComprehensiveStatisticsView: React.FC = () => {
                           <div key={idx} className="flex items-center gap-2 p-2 bg-white rounded-xl border border-slate-200 shadow-2xs">
                             <span className="w-3.5 h-3.5 rounded-md shrink-0" style={{ backgroundColor: item.color }} />
                             <div className="min-w-0 flex-1">
-                              <div className="font-bold text-slate-800 text-[12px] truncate">{item.label}</div>
+                              <div className="font-bold text-slate-800 text-[12px] wrap-ok leading-tight">{item.label}</div>
                               <div className="text-[12px] text-slate-500 font-semibold">{item.value} ({pct}%) • {item.sub}</div>
                             </div>
                           </div>
@@ -1729,7 +1729,7 @@ export const ComprehensiveStatisticsView: React.FC = () => {
 
                     <div className="flex justify-between items-center text-[12px] text-slate-500 font-bold px-1 pt-1">
                       {activeChartData.map((item, i) => (
-                        <span key={i} className="truncate max-w-[80px] text-center" title={item.label}>
+                        <span key={i} className="wrap-ok break-words leading-tight max-w-[80px] text-center" title={item.label}>
                           {item.label}
                         </span>
                       ))}
@@ -1741,7 +1741,7 @@ export const ComprehensiveStatisticsView: React.FC = () => {
           </div>
 
           {/* AI Pedagogical Summary Insight */}
-          <div className="bg-gradient-to-r from-indigo-50 to-purple-50 p-3 sm:p-4 rounded-2xl border border-indigo-200/90 flex items-start gap-3 text-xs text-indigo-950 font-medium">
+          <div className="wrap-ok bg-gradient-to-r from-indigo-50 to-purple-50 p-3 sm:p-4 rounded-2xl border border-indigo-200/90 flex items-start gap-3 text-xs text-indigo-950 font-medium">
             <Sparkles className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
             <div>
               <span className="font-black text-indigo-900 uppercase text-[12px] block mb-0.5">
@@ -1780,7 +1780,7 @@ export const ComprehensiveStatisticsView: React.FC = () => {
           <div 
             ref={classPage1Ref}
             id="report-page-class-1"
-            className="mx-auto bg-white p-4 sm:p-6 md:p-8 rounded-3xl border border-slate-200/90 shadow-sm space-y-4 max-w-7xl mt-6"
+            className="wrap-ok mx-auto bg-white p-4 sm:p-6 md:p-8 rounded-3xl border border-slate-200/90 shadow-sm space-y-4 max-w-7xl mt-6"
           >
             {/* Header Trang Lớp 1 */}
             <div className="flex flex-col sm:flex-row justify-between items-start border-b border-slate-200 pb-3 gap-2">
@@ -1832,7 +1832,7 @@ export const ComprehensiveStatisticsView: React.FC = () => {
                     {classPage1Rows.map(c => (
                       <tr key={c.classId} className="hover:bg-slate-50">
                         <td className="p-1.5 border-r border-slate-300 font-mono">{c.stt}</td>
-                        <td className="p-1.5 border-r border-slate-300 text-slate-600">{c.grade}</td>
+                        <td className="p-1.5 border-r border-slate-300 text-slate-600 whitespace-nowrap">{c.grade}</td>
                         <td className="p-1.5 border-r border-slate-300 text-left font-black text-slate-900">{c.className}</td>
                         <td className="p-1.5 border-r border-slate-300 text-left text-slate-700 font-bold">{c.teacherName}</td>
                         <td className="p-1.5 border-r border-slate-300 font-mono font-bold text-slate-900">{c.totalStudents}</td>
@@ -1888,7 +1888,7 @@ export const ComprehensiveStatisticsView: React.FC = () => {
             <div 
               ref={classPage2Ref}
               id="report-page-class-2"
-              className="mx-auto bg-white p-4 sm:p-6 md:p-8 rounded-3xl border border-slate-200/90 shadow-sm space-y-4 max-w-7xl mt-6"
+              className="wrap-ok mx-auto bg-white p-4 sm:p-6 md:p-8 rounded-3xl border border-slate-200/90 shadow-sm space-y-4 max-w-7xl mt-6"
             >
               <div className="flex flex-col sm:flex-row justify-between items-start border-b border-slate-200 pb-3 gap-2">
                 <div>
@@ -1939,7 +1939,7 @@ export const ComprehensiveStatisticsView: React.FC = () => {
                       {classPage2Rows.map(c => (
                         <tr key={c.classId} className="hover:bg-slate-50">
                           <td className="p-1.5 border-r border-slate-300 font-mono">{c.stt}</td>
-                          <td className="p-1.5 border-r border-slate-300 text-slate-600">{c.grade}</td>
+                          <td className="p-1.5 border-r border-slate-300 text-slate-600 whitespace-nowrap">{c.grade}</td>
                           <td className="p-1.5 border-r border-slate-300 text-left font-black text-slate-900">{c.className}</td>
                           <td className="p-1.5 border-r border-slate-300 text-left text-slate-700 font-bold">{c.teacherName}</td>
                           <td className="p-1.5 border-r border-slate-300 font-mono font-bold text-slate-900">{c.totalStudents}</td>
@@ -1996,7 +1996,7 @@ export const ComprehensiveStatisticsView: React.FC = () => {
             <div 
               ref={classPage3Ref}
               id="report-page-class-3"
-              className="mx-auto bg-white p-4 sm:p-6 md:p-8 rounded-3xl border border-slate-200/90 shadow-sm space-y-4 max-w-7xl mt-6"
+              className="wrap-ok mx-auto bg-white p-4 sm:p-6 md:p-8 rounded-3xl border border-slate-200/90 shadow-sm space-y-4 max-w-7xl mt-6"
             >
               <div className="flex flex-col sm:flex-row justify-between items-start border-b border-slate-200 pb-3 gap-2">
                 <div>
@@ -2047,7 +2047,7 @@ export const ComprehensiveStatisticsView: React.FC = () => {
                       {classPage3Rows.map(c => (
                         <tr key={c.classId} className="hover:bg-slate-50">
                           <td className="p-1.5 border-r border-slate-300 font-mono">{c.stt}</td>
-                          <td className="p-1.5 border-r border-slate-300 text-slate-600">{c.grade}</td>
+                          <td className="p-1.5 border-r border-slate-300 text-slate-600 whitespace-nowrap">{c.grade}</td>
                           <td className="p-1.5 border-r border-slate-300 text-left font-black text-slate-900">{c.className}</td>
                           <td className="p-1.5 border-r border-slate-300 text-left text-slate-700 font-bold">{c.teacherName}</td>
                           <td className="p-1.5 border-r border-slate-300 font-mono font-bold text-slate-900">{c.totalStudents}</td>
@@ -2151,7 +2151,7 @@ export const ComprehensiveStatisticsView: React.FC = () => {
       <div 
         ref={studentPage1Ref}
         id="report-page-student-1"
-        className="mx-auto bg-white p-4 sm:p-6 md:p-8 rounded-3xl border border-slate-200/90 shadow-sm space-y-4 max-w-7xl mt-6"
+        className="wrap-ok mx-auto bg-white p-4 sm:p-6 md:p-8 rounded-3xl border border-slate-200/90 shadow-sm space-y-4 max-w-7xl mt-6"
       >
         {/* Header Trang Tiến bộ 1 */}
         <div className="flex flex-col sm:flex-row justify-between items-start border-b border-slate-200 pb-3 gap-2">

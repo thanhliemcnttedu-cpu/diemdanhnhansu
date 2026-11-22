@@ -375,7 +375,7 @@ export const SubjectTeacherReportsView: React.FC<{ onNavigate?: (view: any) => v
                                 alt="" 
                                 className="w-6 h-6 rounded-full bg-slate-100" 
                               />
-                              <span className="font-extrabold text-slate-800 truncate max-w-[130px]">
+                              <span className="font-extrabold text-slate-800 wrap-ok break-words leading-tight max-w-[130px]">
                                 {cls.topStudent.name}
                               </span>
                               <span className="text-[12px] font-black text-amber-700 bg-amber-50 px-1.5 py-0.2 rounded">
@@ -601,7 +601,7 @@ export const SubjectTeacherReportsView: React.FC<{ onNavigate?: (view: any) => v
                       className="w-12 h-12 rounded-2xl bg-white shadow-2xs object-cover ring-2 ring-white" 
                     />
                     <div className="min-w-0">
-                      <div className="text-xs font-black text-slate-900 uppercase truncate">{st.name}</div>
+                      <div className="text-xs font-black text-slate-900 uppercase wrap-ok leading-tight">{st.name}</div>
                       <div className="text-[12px] text-slate-500 font-bold uppercase mt-0.5">
                         {matchingClass?.grade} • {st.group || 'Tổ 1'}
                       </div>

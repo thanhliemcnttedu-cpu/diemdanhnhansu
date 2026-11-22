@@ -105,6 +105,16 @@ const VIEW_TITLES: Record<NavigationMenuId, { title: string; shortTitle: string;
     shortTitle: 'LIÊN KẾT',
     subtitle: 'KHO TÀI LIỆU, TRANG WEB HỌC TẬP VÀ HỌC LIỆU SỐ DÙNG CHUNG'
   },
+  period: {
+    title: 'TỔNG KẾT THÁNG, HỌC KỲ, NĂM HỌC',
+    shortTitle: 'TỔNG KẾT KỲ',
+    subtitle: 'CHỌN THÁNG, HỌC KỲ HOẶC KHOẢNG NGÀY BẤT KỲ ĐỂ XEM CHUYÊN CẦN, THI ĐUA VÀ KHEN THƯỞNG'
+  },
+  weekly: {
+    title: 'TỔNG KẾT',
+    shortTitle: 'TỔNG KẾT',
+    subtitle: 'CHUYÊN CẦN, THI ĐUA, KHEN THƯỞNG THEO TUẦN, THÁNG, HỌC KỲ HOẶC KHOẢNG NGÀY TỰ CHỌN'
+  },
   qr: {
     title: 'TẠO MÃ QR TỪ LINK',
     shortTitle: 'MÃ QR',

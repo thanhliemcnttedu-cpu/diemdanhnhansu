@@ -251,7 +251,7 @@ export const DriveAttendanceStatsPanel: React.FC<{ schoolTotalStudents?: number 
   }
 
   return (
-    <div className="bg-white rounded-2xl p-3.5 sm:p-4 border border-sky-100 shadow-sm space-y-3">
+    <div data-report="" className="bg-white rounded-2xl p-3.5 sm:p-4 border border-sky-100 shadow-sm space-y-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-xl bg-sky-100 text-sky-700 flex items-center justify-center">
@@ -288,7 +288,7 @@ export const DriveAttendanceStatsPanel: React.FC<{ schoolTotalStudents?: number 
           Chưa có lớp nào gửi số liệu chuyên cần, bán trú trong tháng này. Số liệu tự hiện khi giáo viên chủ nhiệm điểm danh và bấm <strong>Xác nhận</strong>.
         </p>
       ) : (
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5">
+      <div className="grid grid-cols-2 xl:grid-cols-4 gap-2.5">
         {periods.map(p => (
           <div key={p.key} className="rounded-xl border border-slate-100 bg-slate-50/60 p-3">
             <div className="flex items-center justify-between">
@@ -301,12 +301,14 @@ export const DriveAttendanceStatsPanel: React.FC<{ schoolTotalStudents?: number 
               <CheckSquare className="w-3.5 h-3.5 text-emerald-600" />
               <span className="text-[12px] font-bold text-slate-500">Chuyên cần</span>
             </div>
-            <div className="flex items-baseline gap-1.5">
+            <div className="flex flex-wrap items-baseline gap-x-1.5 gap-y-0">
               <span className={`text-xl font-black font-mono ${p.attendanceRate === null ? 'text-slate-500' : p.attendanceRate >= 95 ? 'text-emerald-700' : 'text-amber-700'}`}>
                 {p.attendanceRate === null ? '—' : `${p.attendanceRate}%`}
               </span>
               <span className="text-[12px] font-bold text-slate-500">
-                {p.students > 0 ? `${p.present}/${p.students}${p.days > 1 ? ` lượt • ${p.days} ngày` : ''}` : 'chưa có số liệu'}
+                {p.students > 0
+                  ? <span className="whitespace-nowrap">{p.present}/{p.students}{p.days > 1 ? ` lượt • ${p.days} ngày` : ''}</span>
+                  : <span className="whitespace-nowrap">chưa có số liệu</span>}
               </span>
             </div>
             <div className="mt-1.5 flex items-center gap-1.5">
@@ -324,8 +326,8 @@ export const DriveAttendanceStatsPanel: React.FC<{ schoolTotalStudents?: number 
               </span>
             </div>
             {p.boardingRegistered > 0 && p.boardingSchoolRate !== null && (
-              <p className="mt-1 text-sm font-bold text-violet-700 leading-snug" data-no-autofit="">
-                <span className="text-lg font-black font-mono">{p.boardingSchoolRate}%</span> trên sĩ số các lớp đã báo ăn ({p.boardingActual}/{p.boardingStudents})
+              <p className="mt-1 text-sm font-bold text-violet-700 leading-tight whitespace-nowrap" data-no-autofit="">
+                <span className="text-lg font-black font-mono">{p.boardingSchoolRate}%</span> trên sĩ số lớp đã báo ăn<span className="block text-xs font-semibold tabular-nums">{p.boardingActual} suất / {p.boardingStudents} sĩ số</span>
               </p>
             )}
           </div>

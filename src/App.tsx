@@ -49,6 +49,8 @@ const SeatingChartView = lazy(() => import('./components/views/SeatingChartView'
 const AttendanceView = lazy(() => import('./components/views/AttendanceView').then(m => ({ default: m.AttendanceView })));
 const StaffCheckInPage = lazy(() => import('./components/views/staff/StaffCheckInPage').then(m => ({ default: m.StaffCheckInPage })));
 const StaffAttendanceView = lazy(() => import('./components/views/staff/StaffAttendanceView').then(m => ({ default: m.StaffAttendanceView })));
+const SummaryHubView = lazy(() => import('./components/views/SummaryHubView').then(m => ({ default: m.SummaryHubView })));
+const WeeklySummaryView = lazy(() => import('./components/views/WeeklySummaryView').then(m => ({ default: m.WeeklySummaryView })));
 const QrCodeView = lazy(() => import('./components/views/QrCodeView').then(m => ({ default: m.QrCodeView })));
 const ScheduleLinksView = lazy(() => import('./components/views/ScheduleLinksView').then(m => ({ default: m.ScheduleLinksView })));
 const ReportsDataView = lazy(() => import('./components/views/ReportsDataView').then(m => ({ default: m.ReportsDataView })));
@@ -182,7 +184,7 @@ function ClassroomApp() {
       const macroAdminForbidden: NavigationMenuId[] = [
         'attendance', 'seating', 'schedule', 'infographic',
         'rewards', 'certificate', 'picker', 'wheel', 'reel',
-        'noise', 'timer', 'settings'
+        'noise', 'timer', 'settings', 'weekly', 'period'
       ];
       if (macroAdminForbidden.includes(currentView)) {
         setCurrentView('dashboard');
@@ -310,6 +312,9 @@ function ClassroomApp() {
         return <TimerView />;
       case 'links':
         return <ScheduleLinksView defaultTab="links" onNavigate={handleNavigate} />;
+      case 'period':
+      case 'weekly':
+        return <SummaryHubView onNavigate={handleNavigate} />;
       case 'qr':
         return <QrCodeView />;
       case 'guide':

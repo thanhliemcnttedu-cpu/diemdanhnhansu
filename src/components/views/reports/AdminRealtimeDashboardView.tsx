@@ -17,6 +17,7 @@ import { playPointClink } from '../../../utils/audio';
 import { DriveAttendanceStatsPanel } from './DriveAttendanceStatsPanel';
 import { SchoolMealReportPanel } from './SchoolMealReportPanel';
 import { LeaderReportsPanel } from './LeaderReportsPanel';
+import { AttendanceBackfillToggle } from './AttendanceBackfillToggle';
 
 export type ReportTimeframe = 'day' | 'week' | 'month';
 
@@ -652,6 +653,43 @@ export const AdminRealtimeDashboardView: React.FC = () => {
     });
   }, [filteredClasses, students, attendanceRecords, boardingRecords, dateRange, classSortBy, attendedClassDays]);
 
+  // Per grade (Khối): present / excused+sick+other / unexcused over the classes that reported in the period
+  const gradeData = useMemo(() => {
+    const { startDate, endDate } = dateRange;
+    const byGrade = new Map<string, { classes: number; reported: Set<string>; present: number; excused: number; unexcused: number }>();
+    const gradeOfClass = new Map<string, string>();
+    filteredClasses.forEach(c => {
+      const g = (c.grade || '').trim() || 'Khác';
+      gradeOfClass.set(c.id, g);
+      const e = byGrade.get(g) || { classes: 0, reported: new Set<string>(), present: 0, excused: 0, unexcused: 0 };
+      e.classes++; byGrade.set(g, e);
+    });
+    attendanceRecords.forEach(r => {
+      const g = gradeOfClass.get(r.classId);
+      if (!g || r.date < startDate || r.date > endDate || !r.records || Object.keys(r.records).length === 0) return;
+      const e = byGrade.get(g)!;
+      e.reported.add(r.classId);
+      Object.values(r.records).forEach(st => { if (st === 'present' || st === 'late') e.present++; else if (st === 'unexcused') e.unexcused++; else e.excused++; });
+    });
+    return [...byGrade.entries()].filter(([, e]) => e.reported.size > 0)
+      .sort((a, b) => a[0].localeCompare(b[0], 'vi', { numeric: true }))
+      .map(([grade, e]) => {
+        const total = e.present + e.excused + e.unexcused;
+        return { grade, classes: e.classes, reportedClasses: e.reported.size, present: e.present, excused: e.excused, unexcused: e.unexcused, total, rate: total > 0 ? Math.round((e.present / total) * 1000) / 10 : 0 };
+      });
+  }, [filteredClasses, attendanceRecords, dateRange]);
+
+  // Ranking of classes that reported in the period (a class that did not report is not ranked last)
+  const rankInfo = useMemo(() => {
+    const list = perClassStatistics
+      .filter(c => c.hasAttendanceData && c.present + c.absent > 0)
+      .map(c => ({ id: c.id, name: c.name, teacherName: c.teacherName, present: c.present, absent: c.absent, rate: Math.round((c.present / (c.present + c.absent)) * 1000) / 10 }))
+      .sort((a, b) => b.rate - a.rate || String(a.name).localeCompare(String(b.name), 'vi', { numeric: true }));
+    const k = Math.min(5, Math.floor(list.length / 2));
+    const spread = list.length > 1 ? Math.round((list[0].rate - list[list.length - 1].rate) * 10) / 10 : 0;
+    return { n: list.length, spread, top: list.slice(0, k), bottom: list.slice().reverse().slice(0, k) };
+  }, [perClassStatistics]);
+
   // =========================================================================
   // 🌟 HÀM ĐIỀU KHIỂN BỘ LỌC KÈM TỰ ĐỘNG SẮP XẾP THEO THỨ TỰ ABC
   // =========================================================================
@@ -1094,7 +1132,8 @@ export const AdminRealtimeDashboardView: React.FC = () => {
   };
 
   return (
-    <div className="space-y-3 animate-in fade-in duration-200">
+    <div data-report="" className="space-y-3 animate-in fade-in duration-200">
+      {(currentUser?.role === 'admin' || currentUser?.username?.toLowerCase() === 'adminquantri') && <AttendanceBackfillToggle />}
       {/* 1. THANH CÔNG CỤ GỌN (2 dòng): khung thời gian + ngày • thao tác | bộ lọc phân hiệu – điểm trường – khối • phạm vi.
           Thay cho banner lớn + khung thời gian + bộ lọc 4 cột trước đây để số liệu hiện ngay khi mở trang. */}
       <div className="bg-white rounded-2xl border border-slate-200 shadow-xs p-2.5 space-y-2">
@@ -1256,8 +1295,82 @@ export const AdminRealtimeDashboardView: React.FC = () => {
         </div>
       </div>
 
+      {/* 2o. DẢI SỐ LIỆU CHÍNH: một con số lớn + so kỳ trước + xu hướng nhỏ + vòng đồng hồ có mẫu số (tông sáng) */}
+      {(() => {
+        const pts = trendInfo.points;
+        const W = 320, H = 96, L = 6, R = 10, T = 12, B = 8;
+        const vals = pts.map(p => p.att);
+        const lo = vals.length ? Math.max(0, Math.floor(Math.min(...vals) / 5) * 5 - 3) : 0;
+        const hiRaw = vals.length ? Math.min(100, Math.ceil(Math.max(...vals) / 5) * 5 + 1) : 100;
+        const hi = hiRaw <= lo ? lo + 10 : hiRaw;
+        const idx = (d: string) => 13 - Math.round((new Date(trendInfo.anchorDate).getTime() - new Date(d).getTime()) / 86400000);
+        const x = (d: string) => L + (idx(d) / 13) * (W - L - R);
+        const y = (v: number) => T + (1 - (v - lo) / (hi - lo)) * (H - T - B);
+        const line = pts.map((p, i) => `${i ? 'L' : 'M'}${x(p.date).toFixed(1)} ${y(p.att).toFixed(1)}`).join(' ');
+        const lastP = pts[pts.length - 1];
+        const area = pts.length > 1 ? `${line} L${x(lastP.date).toFixed(1)} ${H - B} L${x(pts[0].date).toFixed(1)} ${H - B} Z` : '';
+        const has = periodAttendance.hasData;
+        const prov = sampleIncomplete;
+        const ringColor = !has ? '#CBD5E1' : prov ? '#94A3B8' : '#059669';
+        const C = 2 * Math.PI * 44;
+        const periodName = timeframe === 'day' ? (selectedDate === todayStr ? 'hôm nay' : formatDateVN(selectedDate)) : timeframe === 'week' ? 'tuần này' : 'tháng này';
+        return (
+          <div className="rounded-3xl border border-sky-200 bg-gradient-to-br from-white via-sky-50/60 to-emerald-50/50 p-4 sm:p-6 shadow-sm grid gap-5 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1.3fr)_auto] items-center" aria-label="Số liệu chính">
+            <div className="min-w-0">
+              <p className="text-xs font-black text-slate-700 uppercase tracking-wide whitespace-nowrap">Chuyên cần {periodName}</p>
+              <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 mt-1">
+                <span className="text-4xl sm:text-5xl font-black font-mono text-emerald-950 leading-none">{has ? `${periodAttendance.rate}%` : '—'}</span>
+                {prov && <span className="px-2 py-0.5 rounded-full bg-amber-200 text-amber-950 text-xs font-black uppercase">Tạm tính</span>}
+                {!has && <span className="px-2 py-0.5 rounded-full bg-slate-200 text-slate-800 text-xs font-black uppercase">Chưa có dữ liệu</span>}
+              </div>
+              <div className="mt-1.5">{deltaLine(periodAttendance.rate, trendInfo.prev?.att, has && !prov)}</div>
+              <div className="mt-4 grid grid-cols-3 gap-3">
+                <div><p className="text-2xl font-black font-mono text-emerald-900 leading-none">{has ? periodAttendance.present : '—'}</p><p className="text-xs font-bold text-slate-700 mt-1 whitespace-nowrap">{timeframe === 'day' ? 'Có mặt' : 'Lượt có mặt'}</p></div>
+                <div><p className="text-2xl font-black font-mono text-rose-800 leading-none">{has ? periodAttendance.absentTotal : '—'}</p><p className="text-xs font-bold text-slate-700 mt-1 whitespace-nowrap">{timeframe === 'day' ? 'Vắng' : 'Lượt vắng'}</p></div>
+                <div><p className="text-2xl font-black font-mono text-amber-800 leading-none">{periodBoarding.totalLogged > 0 ? periodBoarding.eating : '—'}</p><p className="text-xs font-bold text-slate-700 mt-1 whitespace-nowrap">{timeframe === 'day' ? 'Suất ăn' : 'Suất ăn'}</p></div>
+              </div>
+              <p className={`mt-3 text-xs font-bold ${prov || !has ? 'text-amber-800' : 'text-emerald-800'}`}>
+                {timeframe === 'day' ? `Đã báo ${periodAttendance.classesReported}/${filteredClasses.length} lớp` : `Đã báo ${periodAttendance.classDaysReported}/${periodAttendance.classDaysExpected} lượt lớp`}
+              </p>
+            </div>
+
+            <div className="min-w-0">
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-xs font-black text-slate-700 uppercase tracking-wide whitespace-nowrap">Xu hướng chuyên cần 14 ngày</p>
+                {lastP && <span className="text-xs font-bold text-slate-800 tabular-nums">{formatDateVN(lastP.date).slice(0, 5)}: <strong className="text-emerald-900">{lastP.att}%</strong></span>}
+              </div>
+              {pts.length < 2 ? (
+                <p className="text-sm font-semibold text-slate-600 py-8 text-center">Chưa đủ dữ liệu để vẽ (cần ít nhất 2 ngày có lớp báo).</p>
+              ) : (
+                <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto mt-1" role="img" aria-label={`Chuyên cần 14 ngày, mới nhất ${lastP.att}%`}>
+                  <defs><linearGradient id="hero-area" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#10B981" stopOpacity="0.28" /><stop offset="100%" stopColor="#10B981" stopOpacity="0.02" /></linearGradient></defs>
+                  <path d={area} fill="url(#hero-area)" />
+                  <path d={line} fill="none" stroke="#059669" strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />
+                  {pts.map(p => <circle key={p.date} cx={x(p.date)} cy={y(p.att)} r={p === lastP ? 4.5 : 2.5} fill={p === lastP ? '#fff' : '#059669'} stroke="#059669" strokeWidth={p === lastP ? 2.5 : 0}><title>{`${formatDateVN(p.date)}: ${p.att}% (${p.reported}/${trendInfo.classCount} lớp đã báo)`}</title></circle>)}
+                </svg>
+              )}
+            </div>
+
+            <div className="flex flex-col items-center justify-center mx-auto lg:mx-0">
+              <div className="relative w-32 h-32">
+                <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90" aria-hidden="true">
+                  <circle cx="50" cy="50" r="44" fill="transparent" stroke="#E2E8F0" strokeWidth="9" />
+                  <circle cx="50" cy="50" r="44" fill="transparent" stroke={ringColor} strokeWidth="9" strokeLinecap="round" strokeDasharray={C} strokeDashoffset={C - (C * Math.min(100, has ? periodAttendance.rate : 0)) / 100} className="transition-all duration-700" />
+                </svg>
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                  <span className="text-2xl font-black font-mono text-slate-900">{has ? `${periodAttendance.rate}%` : '—'}</span>
+                  <span className="text-[11px] font-bold text-slate-700">đi học</span>
+                </div>
+              </div>
+              <p className="mt-2 text-xs font-bold text-slate-800 text-center tabular-nums">{has ? `${periodAttendance.present} / ${periodAttendance.enrolmentSlots}` : 'chưa có số liệu'}</p>
+              <p className="text-[11px] text-slate-700 text-center leading-tight">{timeframe === 'day' ? 'học sinh có mặt / sĩ số lớp đã báo' : 'lượt có mặt / lượt sĩ số các lớp đã báo'}</p>
+            </div>
+          </div>
+        );
+      })()}
+
       {/* 3. Thẻ Chỉ Số Tổng Hợp (Executive KPI Cards) */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 xl:grid-cols-4 gap-3">
         {/* Card 1: Tổng Sĩ Số */}
         <div className="bg-white rounded-2xl p-3.5 sm:p-4 border border-indigo-100 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between">
@@ -1307,7 +1420,7 @@ export const AdminRealtimeDashboardView: React.FC = () => {
                   : `(${periodAttendance.present} lượt / ${periodAttendance.daysCount} ngày)`}
               </span>
             </div>
-            <div className="flex items-center gap-1.5 mt-1 text-[12px] font-bold text-slate-600">
+            <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 mt-1 text-[12px] font-bold text-slate-600 [&>span]:whitespace-nowrap">
               {timeframe === 'day' ? (
                 <>
                   <span className="text-emerald-700">✓ Có mặt: {periodAttendance.present}</span>
@@ -1365,7 +1478,7 @@ export const AdminRealtimeDashboardView: React.FC = () => {
                 {periodBoarding.totalLogged > 0 ? `suất ăn (${periodBoarding.rate}%)` : 'suất ăn (chưa có dữ liệu bán trú)'}
               </span>
             </div>
-            <div className="flex items-center gap-1.5 mt-1 text-[12px] font-bold text-slate-600">
+            <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 mt-1 text-[12px] font-bold text-slate-600 [&>span]:whitespace-nowrap">
               {timeframe === 'day' ? (
                 <>
                   <span className="text-amber-700">Ăn trưa: {periodBoarding.eating}</span>
@@ -1383,8 +1496,8 @@ export const AdminRealtimeDashboardView: React.FC = () => {
             {deltaLine(periodBoarding.rate, trendInfo.prev?.board, periodAttendance.hasData && !sampleIncomplete && periodBoarding.eating > 0)}
             {periodBoarding.eating > 0 && (
               <div className="mt-1 text-sm font-bold leading-snug space-y-0.5" data-no-autofit="">
-                <p className="text-blue-700"><span className="text-base font-black font-mono">{periodBoarding.rate}%</span> trên học sinh đi học ({periodBoarding.eating}/{periodBoarding.presentInPeriod})</p>
-                <p className="text-violet-700"><span className="text-base font-black font-mono">{periodBoarding.schoolRate}%</span> trên sĩ số các lớp đã báo ({periodBoarding.eating}/{periodBoarding.enrolmentSlots})</p>
+                <p className="text-blue-700 whitespace-nowrap leading-tight"><span className="text-base font-black font-mono">{periodBoarding.rate}%</span> trên HS đi học<span className="block text-xs font-semibold tabular-nums">{periodBoarding.eating} suất / {periodBoarding.presentInPeriod} HS đi học</span></p>
+                <p className="text-violet-700 whitespace-nowrap leading-tight"><span className="text-base font-black font-mono">{periodBoarding.schoolRate}%</span> trên sĩ số lớp đã báo<span className="block text-xs font-semibold tabular-nums">{periodBoarding.eating} suất / {periodBoarding.enrolmentSlots} sĩ số</span></p>
               </div>
             )}
           </div>
@@ -1403,7 +1516,7 @@ export const AdminRealtimeDashboardView: React.FC = () => {
             </div>
           </div>
           <div className="mt-2">
-            <div className="text-2xl sm:text-3xl font-black text-purple-950 font-mono">
+            <div className="text-2xl sm:text-3xl font-black text-purple-950 font-mono whitespace-nowrap">
               {totalCoins} <span className="text-sm font-bold text-amber-700"><CoinIcon /></span>
             </div>
             <div className="flex items-center gap-1 mt-1 text-[12px] font-bold text-purple-700">
@@ -1428,9 +1541,16 @@ export const AdminRealtimeDashboardView: React.FC = () => {
               <span>CƠ CẤU CHUYÊN CẦN ({dateRange.shortLabel})</span>
             </h4>
             <span className="text-[12px] font-bold bg-emerald-50 text-emerald-800 px-2 py-0.5 rounded-full border border-emerald-200">
-              Tỷ lệ: {periodAttendance.hasData ? `${periodAttendance.rate}%` : 'chưa có dữ liệu'}{sampleIncomplete ? ` • ${sampleLabel} • tạm tính` : ''}
+              <span className="whitespace-nowrap">Tỷ lệ: {periodAttendance.hasData ? `${periodAttendance.rate}%` : 'chưa có dữ liệu'}</span>
             </span>
           </div>
+          {periodAttendance.hasData && (
+            <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs font-bold text-slate-800 tabular-nums">
+              <span className="whitespace-nowrap">{periodAttendance.present}/{periodAttendance.enrolmentSlots} {timeframe === 'day' ? 'học sinh có mặt' : 'lượt có mặt'}</span>
+              <span className="whitespace-nowrap">{sampleLabel}</span>
+              {sampleIncomplete && <span className="whitespace-nowrap px-1.5 rounded bg-amber-200 text-amber-950">tạm tính</span>}
+            </div>
+          )}
 
           <div className="flex flex-col sm:flex-row items-center justify-around gap-4 pt-1">
             {/* SVG Circular Progress */}
@@ -1459,7 +1579,7 @@ export const AdminRealtimeDashboardView: React.FC = () => {
               </svg>
               <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
                 <span className="text-2xl font-black text-slate-800 font-mono">
-                  {periodAttendance.rate}%
+                  {periodAttendance.hasData ? `${periodAttendance.rate}%` : '—'}
                 </span>
                 <span className="text-[12px] font-bold text-slate-500 uppercase">Có mặt</span>
               </div>
@@ -1506,9 +1626,18 @@ export const AdminRealtimeDashboardView: React.FC = () => {
               <span>CƠ CẤU BÁN TRÚ ({dateRange.shortLabel})</span>
             </h4>
             <span className="text-[12px] font-bold bg-amber-50 text-amber-800 px-2 py-0.5 rounded-full border border-amber-200">
-              {periodBoarding.totalLogged > 0 ? `${periodBoarding.eating} suất ăn • ${periodBoarding.rate}% học sinh đi học (${periodBoarding.eating}/${periodBoarding.presentInPeriod})${sampleIncomplete ? ` • ${sampleLabel} • tạm tính` : ''}` : 'chưa có dữ liệu'}
+              {periodBoarding.totalLogged > 0
+                ? <span className="whitespace-nowrap">{periodBoarding.eating} suất ăn • {periodBoarding.rate}%</span>
+                : <span className="whitespace-nowrap">chưa có dữ liệu</span>}
             </span>
           </div>
+          {periodBoarding.totalLogged > 0 && (
+            <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs font-bold text-slate-800 tabular-nums">
+              <span className="whitespace-nowrap">{periodBoarding.eating}/{periodBoarding.presentInPeriod} học sinh đi học</span>
+              {sampleIncomplete && <span className="whitespace-nowrap">{sampleLabel}</span>}
+              {sampleIncomplete && <span className="whitespace-nowrap px-1.5 rounded bg-amber-200 text-amber-950">tạm tính</span>}
+            </div>
+          )}
 
           <div className="flex flex-col sm:flex-row items-center justify-around gap-4 pt-1">
             {/* SVG Circular Progress */}
@@ -1639,6 +1768,76 @@ export const AdminRealtimeDashboardView: React.FC = () => {
         );
       })()}
 
+      {/* 2p. So sánh theo khối (cột chồng) + xếp hạng lớp: chỉ tính lớp đã báo trong kỳ */}
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+        <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-sm space-y-3">
+          <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-slate-100">
+            <h4 className="text-xs sm:text-sm font-black text-indigo-950 uppercase">SO SÁNH CHUYÊN CẦN THEO KHỐI ({dateRange.shortLabel})</h4>
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] font-bold text-slate-800">
+              <span className="inline-flex items-center gap-1.5"><span className="w-3 h-3 rounded-sm bg-emerald-600" />Có mặt</span>
+              <span className="inline-flex items-center gap-1.5"><span className="w-3 h-3 rounded-sm bg-amber-500" />Vắng có phép / ốm</span>
+              <span className="inline-flex items-center gap-1.5"><span className="w-3 h-3 rounded-sm bg-rose-600" />Vắng không phép</span>
+            </div>
+          </div>
+          {gradeData.length === 0 ? (
+            <p className="text-sm font-semibold text-slate-600 py-6 text-center">Chưa có lớp nào báo điểm danh trong kỳ này.</p>
+          ) : (
+            <ul className="space-y-3">
+              {gradeData.map(g => (
+                <li key={g.grade}>
+                  <div className="flex flex-wrap items-baseline justify-between gap-x-3 text-sm">
+                    <span className="font-black text-slate-900">{g.grade} <span className="font-semibold text-slate-700">• {g.reportedClasses}/{g.classes} lớp đã báo</span></span>
+                    <span className="font-black font-mono text-emerald-900">{g.rate}%</span>
+                  </div>
+                  <div className="mt-1 flex h-4 rounded-full overflow-hidden bg-slate-100" role="img" aria-label={`${g.grade}: có mặt ${g.present}, vắng có phép ${g.excused}, vắng không phép ${g.unexcused}`}>
+                    <div className="bg-emerald-600" style={{ width: `${g.total ? (g.present / g.total) * 100 : 0}%` }} title={`Có mặt ${g.present}`} />
+                    <div className="bg-amber-500" style={{ width: `${g.total ? (g.excused / g.total) * 100 : 0}%` }} title={`Vắng có phép / ốm ${g.excused}`} />
+                    <div className="bg-rose-600" style={{ width: `${g.total ? (g.unexcused / g.total) * 100 : 0}%` }} title={`Vắng không phép ${g.unexcused}`} />
+                  </div>
+                  <p className="mt-0.5 text-xs text-slate-800 tabular-nums">Có mặt {g.present} • vắng có phép / ốm {g.excused} • không phép {g.unexcused}</p>
+                </li>
+              ))}
+            </ul>
+          )}
+          <p className="text-xs text-slate-700">Tỷ lệ mỗi khối = có mặt ÷ số học sinh được điểm danh của các lớp đã báo trong kỳ. Khối không có lớp báo thì không hiện.</p>
+        </div>
+
+        <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-sm space-y-3">
+          <div className="pb-2 border-b border-slate-100">
+            <h4 className="text-xs sm:text-sm font-black text-indigo-950 uppercase">XẾP HẠNG LỚP THEO CHUYÊN CẦN ({dateRange.shortLabel})</h4>
+          </div>
+          {rankInfo.n < 2 ? (
+            <p className="text-sm font-semibold text-slate-600 py-6 text-center">Cần ít nhất 2 lớp đã báo điểm danh để xếp hạng (hiện có {rankInfo.n}).</p>
+          ) : (
+            <>
+            {rankInfo.spread < 1 && <p className="text-sm font-bold text-slate-800 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2">Các lớp chênh nhau dưới 1 điểm phần trăm ({rankInfo.spread}), chưa có khác biệt đáng kể giữa đầu và cuối bảng.</p>}
+            <div className="grid sm:grid-cols-2 gap-4">
+              {[{ title: 'Cao nhất', rows: rankInfo.top, bar: 'bg-emerald-600', tone: 'text-emerald-900' }, { title: 'Cần quan tâm', rows: rankInfo.bottom, bar: 'bg-rose-600', tone: 'text-rose-900' }].map(col => (
+                <div key={col.title}>
+                  <p className={`text-xs font-black uppercase mb-2 ${col.tone}`}>{col.title}</p>
+                  <ol className="space-y-2.5">
+                    {col.rows.map((c, i) => (
+                      <li key={c.id}>
+                        <div className="flex items-center gap-2 text-sm">
+                          <span className="w-6 h-6 rounded-full bg-slate-100 text-slate-800 text-xs font-black flex items-center justify-center shrink-0 tabular-nums">{i + 1}</span>
+                          <span className="font-black text-slate-900 shrink-0">{c.name}</span>
+                          <span className="text-xs text-slate-700 wrap-ok break-words leading-tight min-w-0">{c.teacherName || ''}</span>
+                          <span className={`ml-auto font-black font-mono tabular-nums ${col.tone}`}>{c.rate}%</span>
+                        </div>
+                        <div className="mt-1 ml-8 h-2 rounded-full bg-slate-100 overflow-hidden"><div className={`h-full ${col.bar}`} style={{ width: `${Math.max(2, c.rate)}%` }} /></div>
+                        <p className="ml-8 text-xs text-slate-700 tabular-nums">{c.absent} lượt vắng / {c.present + c.absent} lượt điểm danh</p>
+                      </li>
+                    ))}
+                  </ol>
+                </div>
+              ))}
+            </div>
+            </>
+          )}
+          <p className="text-xs text-slate-700">Chỉ xếp các lớp đã báo trong kỳ; lớp chưa báo không bị xếp cuối. Chênh lệch nhỏ giữa các lớp có thể do mẫu ít ngày.</p>
+        </div>
+      </div>
+
       {/* 2b. Thống kê toàn trường từ Google Drive dùng chung (hôm nay / hôm qua / tuần / tháng) */}
       <DriveAttendanceStatsPanel schoolTotalStudents={schoolTotalStudents} />
 
@@ -1653,9 +1852,10 @@ export const AdminRealtimeDashboardView: React.FC = () => {
         {/* Header chính của bảng */}
         <div className="p-3.5 sm:p-4 bg-gradient-to-r from-slate-50 via-indigo-50/40 to-blue-50/40 border-b border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-3">
           <div>
-            <h3 className="text-xs sm:text-sm font-black text-indigo-950 uppercase tracking-tight flex items-center gap-2">
+            <h3 className="text-xs sm:text-sm font-black text-indigo-950 uppercase tracking-tight flex flex-wrap items-center gap-x-2 gap-y-0.5">
               <Award className="w-4 h-4 text-amber-500" />
-              <span>BẢNG XẾP HẠNG & THEO DÕI THỜI GIAN THỰC TỪNG LỚP ({filteredClasses.length} LỚP • {dateRange.label.toUpperCase()})</span>
+              <span>BẢNG XẾP HẠNG & THEO DÕI THỜI GIAN THỰC TỪNG LỚP</span>
+              <span>({filteredClasses.length} LỚP • {dateRange.label.toUpperCase()})</span>
             </h3>
             <p className="text-[12px] text-slate-500">
               Dữ liệu được cập nhật tự động khi bất kỳ GVCN nào điểm danh, báo ăn hoặc cộng điểm

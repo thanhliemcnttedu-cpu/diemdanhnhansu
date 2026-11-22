@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { requireLicense } from '../../utils/licenseGate';
 import { useClassroom } from '../../context/ClassroomContext';
+import { makeAutoSignature } from '../../utils/autoSignature';
 import { 
   Sparkles, Download, Printer, Settings, Check, 
   Grid3X3, Calendar, Users, Award, Heart, Phone, 
@@ -15,6 +16,7 @@ import {
 import confetti from 'canvas-confetti';
 import { toPng } from 'html-to-image';
 import { exportElementToPdf, exportMultipleElementsToPdf } from '../../utils/printHelper';
+import { A4Page } from './infographic/A4Page';
 import { DAYS_OF_WEEK } from './ScheduleLinksView';
 
 export type InfographicSeatingStyle = 
@@ -134,6 +136,27 @@ export const InfographicView: React.FC = () => {
   // Custom edited editable texts
   const [customSlogan, setCustomSlogan] = useState<string>(targetClass?.slogan || 'Lớp học hạnh phúc • Chăm ngoan, sáng tạo, tự tin tỏa sáng');
   const [customTeacherName, setCustomTeacherName] = useState<string>(targetClass?.teacherName || teacherProfile.name);
+
+  // Homeroom teacher's signature for the footer: the real signature uploaded in "Tạo thư khen" if there is one,
+  // otherwise a hand-written style signature drawn automatically from the teacher's name.
+  const [teacherSignature, setTeacherSignature] = useState<string | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    let real: string | null = null;
+    try { real = localStorage.getItem('lhhp_cert_teacher_signature'); } catch { /* ignore */ }
+    if (real) { setTeacherSignature(real); return; }
+    const name = (customTeacherName || '').replace(/^Cô\s+/i, '').trim();
+    if (!name) { setTeacherSignature(null); return; }
+    (async () => {
+      let customWord = '';
+      try { customWord = localStorage.getItem('lhhp_cert_auto_sig_text') || ''; } catch { /* ignore */ }
+      let style: number | undefined;
+      try { const v = localStorage.getItem('lhhp_cert_auto_sig_style'); style = v ? Number(v) : undefined; } catch { /* ignore */ }
+      const sig = await makeAutoSignature(name, customWord.trim() || undefined, style);
+      if (!cancelled) setTeacherSignature(sig ? sig.url : null);
+    })();
+    return () => { cancelled = true; };
+  }, [customTeacherName]);
   const [customTeacherPhone, setCustomTeacherPhone] = useState<string>(() => {
     try { return localStorage.getItem(`lhhp_infographic_teacher_phone_${activeClassId || ''}`) || teacherProfile.phone || ''; } catch (_) { return teacherProfile.phone || ''; }
   });
@@ -299,14 +322,14 @@ export const InfographicView: React.FC = () => {
         { id: 'timetable', type: 'timetable', title: '4. Thời Khóa Biểu Của Lớp', page: 1, order: 4, visible: true, scale: 1, width: '100%' },
         { id: 'class_goals', type: 'class_goals', title: '5. Mục Tiêu & Nề Nếp Lớp Học', page: 1, order: 5, visible: true, scale: 1, width: '100%' },
         { id: 'seating', type: 'seating', title: '6. Sơ Đồ Chỗ Ngồi Lớp Học', page: 2, order: 1, visible: true, scale: 1, width: '100%' },
-        { id: 'signatures', type: 'signatures', title: '7. Chữ Ký Xác Nhận 3 Bên', page: 2, order: 2, visible: true, scale: 1, width: '100%' },
+        { id: 'signatures', type: 'signatures', title: '7. Chữ Ký Giáo Viên Chủ Nhiệm', page: 2, order: 2, visible: true, scale: 1, width: '100%' },
         { id: 'students', type: 'students', title: '8. Danh Sách 100% Học Sinh', page: 3, order: 1, visible: true, scale: 1, width: '100%' },
         { id: 'signatures_p3', type: 'signatures', title: '9. Chữ Ký Xác Nhận Phê Duyệt', page: 3, order: 2, visible: true, scale: 1, width: '100%' },
       ];
     } else if (pages === 2) {
       // 2 Trang A4 Chuẩn (Dàn nội dung vừa khít kích thước A4, không để giấy thừa):
       // Trang 1: Thông tin lớp, Slogan, GVCN & Ban PH, Thời khóa biểu toàn diện, Mục tiêu phấn đấu lớp học hạnh phúc
-      // Trang 2: Sơ đồ chỗ ngồi nguyên bản (dàn khít A4, bàn ghế avatar rõ ràng) & Chữ ký xác nhận 3 bên
+      // Trang 2: Sơ đồ chỗ ngồi nguyên bản (dàn khít A4, bàn ghế avatar rõ ràng) & Chữ ký giáo viên chủ nhiệm
       return [
         { id: 'header', type: 'header', title: '1. Đồ họa Tiêu đề & Sĩ số', page: 1, order: 1, visible: true, scale: 1, width: '100%' },
         { id: 'slogan', type: 'slogan', title: '2. Khẩu hiệu / Slogan lớp', page: 1, order: 2, visible: true, scale: 1, width: '100%' },
@@ -314,7 +337,7 @@ export const InfographicView: React.FC = () => {
         { id: 'timetable', type: 'timetable', title: '4. Thời Khóa Biểu Của Lớp', page: 1, order: 4, visible: true, scale: 1, width: '100%' },
         { id: 'class_goals', type: 'class_goals', title: '5. Mục Tiêu & Nề Nếp Lớp Học', page: 1, order: 5, visible: true, scale: 1, width: '100%' },
         { id: 'seating', type: 'seating', title: '6. Sơ Đồ Chỗ Ngồi Lớp Học', page: 2, order: 1, visible: true, scale: 1, width: '100%' },
-        { id: 'signatures', type: 'signatures', title: '7. Chữ Ký Xác Nhận 3 Bên', page: 2, order: 2, visible: true, scale: 1, width: '100%' },
+        { id: 'signatures', type: 'signatures', title: '7. Chữ Ký Giáo Viên Chủ Nhiệm', page: 2, order: 2, visible: true, scale: 1, width: '100%' },
         { id: 'students', type: 'students', title: '8. Danh Sách 100% Học Sinh', page: 2, order: 3, visible: false, scale: 1, width: '100%' },
       ];
     } else {
@@ -325,7 +348,7 @@ export const InfographicView: React.FC = () => {
         { id: 'teacher_parents', type: 'teacher_parents', title: '3. GVCN & Ban Phụ Huynh', page: 1, order: 3, visible: true, scale: 0.95, width: '100%' },
         { id: 'seating', type: 'seating', title: '4. Sơ Đồ Chỗ Ngồi Lớp Học', page: 1, order: 4, visible: true, scale: 0.9, width: '100%' },
         { id: 'timetable', type: 'timetable', title: '5. Thời Khóa Biểu Của Lớp', page: 1, order: 5, visible: true, scale: 0.9, width: '100%' },
-        { id: 'signatures', type: 'signatures', title: '6. Chữ Ký Xác Nhận 3 Bên', page: 1, order: 6, visible: true, scale: 0.9, width: '100%' },
+        { id: 'signatures', type: 'signatures', title: '6. Chữ Ký Giáo Viên Chủ Nhiệm', page: 1, order: 6, visible: true, scale: 0.9, width: '100%' },
       ];
     }
   };
@@ -632,7 +655,7 @@ export const InfographicView: React.FC = () => {
   // Landscape: max-w-[1140px] min-h-[794px] flex flex-col justify-between
   const isLandscape = config.orientation === 'landscape';
   const effectiveStudentCols = studentListColumns === 'auto'
-    ? (isLandscape ? 2 : 1)
+    ? (classStudents.length > (isLandscape ? 12 : 22) ? 2 : 1)
     : (studentListColumns === '2col' ? 2 : 1);
 
   const pageContainerClass = isLandscape
@@ -1107,9 +1130,11 @@ export const InfographicView: React.FC = () => {
             ref={seatingDiagramRef}
             className={`p-1.5 sm:p-4 rounded-2xl ${seatingStyleConfig.wrap} shadow-sm space-y-1.5 sm:space-y-3 relative group select-none flex-1 flex flex-col justify-between w-full h-full`}
             style={{
+              // 1-page sheet: the whole seating chart is drawn smaller (layout-affecting zoom) so it fits beside the other blocks
+              zoom: config.pageCount === 1 ? (config.orientation === 'landscape' ? 0.5 : 0.62) : undefined,
               minHeight: seatingTransform.isAutoHeight 
-                ? (config.orientation === 'landscape' ? '580px' : '780px') 
-                : `${seatingTransform.minHeight}px`
+                ? (config.pageCount === 1 ? (config.orientation === 'landscape' ? '240px' : '330px') : (config.orientation === 'landscape' ? '580px' : '780px'))
+                : `${config.pageCount === 1 ? Math.min(seatingTransform.minHeight, config.orientation === 'landscape' ? 300 : 400) : seatingTransform.minHeight}px`
             }}
           >
             {/* THANH KÉO DI CHUYỂN VỊ TRÍ SƠ ĐỒ TRÊN TRANG (MOVE HANDLE) */}
@@ -1230,8 +1255,8 @@ export const InfographicView: React.FC = () => {
                                         (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1544717305-2782549b5136?w=100&auto=format&fit=crop&q=80';
                                       }}
                                     />
-                                    <span className="text-[7.5px] sm:text-[9.5px] font-black text-slate-900 line-clamp-2 leading-[1.1] text-center px-0.5 break-words w-full" title={sL.name}>
-                                      {sL.name}
+                                    <span className="block w-full text-center leading-[1.15]" title={sL.name}>
+                                      {(() => { const w = sL.name.trim().split(/\s+/); const given = w.length > 1 ? w[w.length - 1] : w[0]; let restW = w.length > 1 ? w.slice(0, -1) : []; if (restW.join(' ').length > 10) restW = restW.map((x, i) => (i < restW.length - 1 ? `${x.charAt(0).toLocaleUpperCase('vi-VN')}.` : x)); const rest = restW.join(' '); return (<>{rest && <span className="block text-[8px] font-semibold text-slate-700 text-center">{rest}</span>}<span className="block text-[9.5px] font-black text-slate-900 text-center">{given}</span></>); })()}
                                     </span>
                                   </>
                                 ) : (
@@ -1256,8 +1281,8 @@ export const InfographicView: React.FC = () => {
                                         (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1544717305-2782549b5136?w=100&auto=format&fit=crop&q=80';
                                       }}
                                     />
-                                    <span className="text-[7.5px] sm:text-[9.5px] font-black text-slate-900 line-clamp-2 leading-[1.1] text-center px-0.5 break-words w-full" title={sR.name}>
-                                      {sR.name}
+                                    <span className="block w-full text-center leading-[1.15]" title={sR.name}>
+                                      {(() => { const w = sR.name.trim().split(/\s+/); const given = w.length > 1 ? w[w.length - 1] : w[0]; let restW = w.length > 1 ? w.slice(0, -1) : []; if (restW.join(' ').length > 10) restW = restW.map((x, i) => (i < restW.length - 1 ? `${x.charAt(0).toLocaleUpperCase('vi-VN')}.` : x)); const rest = restW.join(' '); return (<>{rest && <span className="block text-[8px] font-semibold text-slate-700 text-center">{rest}</span>}<span className="block text-[9.5px] font-black text-slate-900 text-center">{given}</span></>); })()}
                                     </span>
                                   </>
                                 ) : (
@@ -1397,17 +1422,17 @@ export const InfographicView: React.FC = () => {
         return (
           <div className="grid grid-cols-1 md:grid-cols-12 gap-3.5">
             {/* THÔNG TIN GIÁO VIÊN */}
-            <div className="md:col-span-5 p-3.5 rounded-2xl bg-indigo-50/70 border border-indigo-200/80 space-y-2.5">
+            <div className="md:col-span-5 p-3.5 rounded-2xl bg-indigo-50/70 border border-indigo-200/80 flex flex-col gap-2.5">
               <div className="flex items-center gap-1.5 text-xs font-black text-indigo-950 uppercase">
                 <User className="w-3.5 h-3.5 text-indigo-600" />
                 <span>Giáo Viên Chủ Nhiệm</span>
               </div>
 
-              <div className="flex items-center gap-3 bg-white p-2.5 rounded-xl border border-indigo-100 shadow-2xs">
+              <div className="flex-1 flex items-center gap-3 bg-white p-3 rounded-xl border border-indigo-100 shadow-2xs">
                 <img
                   src={teacherProfile.avatar}
                   alt="Avatar Giáo viên"
-                  className="w-14 h-14 rounded-xl object-cover border-2 border-indigo-300 shadow-xs"
+                  className="w-[76px] h-[76px] shrink-0 rounded-2xl object-cover border-2 border-indigo-300 shadow-xs"
                 />
                 <div className="min-w-0 flex-1">
                   {isEditMode ? (
@@ -1429,7 +1454,7 @@ export const InfographicView: React.FC = () => {
                     </div>
                   ) : (
                     <>
-                      <div className="text-sm font-black text-slate-900 truncate">
+                      <div className="text-sm font-black text-slate-900 leading-tight break-words">
                         {customTeacherName ? (customTeacherName.startsWith('Cô ') ? customTeacherName : `Cô ${customTeacherName}`) : `Cô ${teacherProfile.name}`}
                       </div>
                       <div className="text-xs text-indigo-700 font-bold">
@@ -1472,7 +1497,7 @@ export const InfographicView: React.FC = () => {
                     />
                   ) : (
                     parentCommittee.head.name
-                      ? <div className="font-bold text-slate-900 truncate">{parentCommittee.head.name}</div>
+                      ? <div className="font-bold text-slate-900 leading-tight break-words">{parentCommittee.head.name}</div>
                       : <div className="mt-2 border-b border-dotted border-slate-400 h-3" aria-label="Chỗ ghi tên" />
                   )}
                   {parentCommittee.head.phone && <div className="text-slate-600 font-mono text-xs">☎ {parentCommittee.head.phone}</div>}
@@ -1490,7 +1515,7 @@ export const InfographicView: React.FC = () => {
                     />
                   ) : (
                     parentCommittee.deputy.name
-                      ? <div className="font-bold text-slate-900 truncate">{parentCommittee.deputy.name}</div>
+                      ? <div className="font-bold text-slate-900 leading-tight break-words">{parentCommittee.deputy.name}</div>
                       : <div className="mt-2 border-b border-dotted border-slate-400 h-3" aria-label="Chỗ ghi tên" />
                   )}
                   {parentCommittee.deputy.phone && <div className="text-slate-600 font-mono text-xs">☎ {parentCommittee.deputy.phone}</div>}
@@ -1508,7 +1533,7 @@ export const InfographicView: React.FC = () => {
                     />
                   ) : (
                     parentCommittee.member1.name
-                      ? <div className="font-bold text-slate-900 truncate">{parentCommittee.member1.name}</div>
+                      ? <div className="font-bold text-slate-900 leading-tight break-words">{parentCommittee.member1.name}</div>
                       : <div className="mt-2 border-b border-dotted border-slate-400 h-3" aria-label="Chỗ ghi tên" />
                   )}
                   {parentCommittee.member1.phone && <div className="text-slate-600 font-mono text-xs">☎ {parentCommittee.member1.phone}</div>}
@@ -1526,7 +1551,7 @@ export const InfographicView: React.FC = () => {
                     />
                   ) : (
                     parentCommittee.member2.name
-                      ? <div className="font-bold text-slate-900 truncate">{parentCommittee.member2.name}</div>
+                      ? <div className="font-bold text-slate-900 leading-tight break-words">{parentCommittee.member2.name}</div>
                       : <div className="mt-2 border-b border-dotted border-slate-400 h-3" aria-label="Chỗ ghi tên" />
                   )}
                   {parentCommittee.member2.phone && <div className="text-slate-600 font-mono text-xs">☎ {parentCommittee.member2.phone}</div>}
@@ -1565,7 +1590,7 @@ export const InfographicView: React.FC = () => {
           else if (subject.includes('Chào cờ') || subject.includes('Sinh hoạt')) colorClass = 'bg-red-100/90 text-red-900 border border-red-200/80 font-black';
 
           return (
-            <span className={`inline-block px-1.5 py-0.5 rounded text-xs leading-tight ${colorClass}`}>
+            <span className={`inline-block max-w-full px-1.5 py-0.5 rounded leading-tight break-words ${subject.length > 14 ? 'text-[10px] tracking-tight [text-wrap:balance]' : 'text-xs whitespace-nowrap'} ${colorClass}`}>
               {subject}
             </span>
           );
@@ -1593,13 +1618,18 @@ export const InfographicView: React.FC = () => {
               </div>
             ) : (
             <div className="overflow-x-auto rounded-xl border border-slate-200">
-              <table className="w-full text-xs text-center border-collapse">
+              <table className="w-full table-fixed text-xs text-center border-collapse">
+                <colgroup>
+                  <col style={{ width: '7%' }} />
+                  <col style={{ width: '13%' }} />
+                  {daysToShow.map(d => <col key={d.day} style={{ width: '16%' }} />)}
+                </colgroup>
                 <thead>
                   <tr className={ttClasses.header}>
-                    <th className="py-1 px-1 border-r border-white/20 w-12">Buổi</th>
-                    <th className="py-1 px-1 border-r border-white/20 w-16">Tiết & Giờ</th>
+                    <th className="py-1 px-1 border-r border-white/20 whitespace-nowrap">Buổi</th>
+                    <th className="py-1 px-1 border-r border-white/20 whitespace-nowrap">Tiết & Giờ</th>
                     {daysToShow.map(d => (
-                      <th key={d.day} className="py-1 px-1 border-r border-white/20">
+                      <th key={d.day} className="py-1 px-1 border-r border-white/20 whitespace-nowrap">
                         {d.label}
                       </th>
                     ))}
@@ -1616,7 +1646,7 @@ export const InfographicView: React.FC = () => {
                       )}
                       <td className="py-1 px-1 font-bold text-slate-600 border-r border-slate-200 bg-slate-50">
                         <div className="font-bold text-xs">{period}</div>
-                        <div className="text-[8px] text-slate-400 font-mono hidden sm:block">{periodTimesMorning[period - 1]}</div>
+                        <div className="text-[9px] text-slate-500 font-mono whitespace-nowrap">{(periodTimesMorning[period - 1] || '').replace(/\s*-\s*/, '–')}</div>
                       </td>
                       {daysToShow.map(d => {
                         const slot = timetable.find(t => 
@@ -1626,7 +1656,7 @@ export const InfographicView: React.FC = () => {
                           (!t.classId || t.classId === targetClass?.id)
                         );
                         return (
-                          <td key={d.day} className={`py-1 px-1 border-r border-slate-100 font-semibold ${ttClasses.cellBg}`}>
+                          <td key={d.day} className={`py-1 px-1 border-r border-slate-100 font-semibold align-middle ${ttClasses.cellBg}`}>
                             {getSubjectBadge(slot?.subject)}
                           </td>
                         );
@@ -1644,7 +1674,7 @@ export const InfographicView: React.FC = () => {
                       )}
                       <td className="py-1 px-1 font-bold text-slate-600 border-r border-slate-200 bg-slate-50">
                         <div className="font-bold text-xs">{period}</div>
-                        <div className="text-[8px] text-slate-400 font-mono hidden sm:block">{periodTimesAfternoon[period - 1]}</div>
+                        <div className="text-[9px] text-slate-500 font-mono whitespace-nowrap">{(periodTimesAfternoon[period - 1] || '').replace(/\s*-\s*/, '–')}</div>
                       </td>
                       {daysToShow.map(d => {
                         const slot = timetable.find(t => 
@@ -1654,7 +1684,7 @@ export const InfographicView: React.FC = () => {
                           (!t.classId || t.classId === targetClass?.id)
                         );
                         return (
-                          <td key={d.day} className={`py-1 px-1 border-r border-slate-100 font-semibold ${ttClasses.cellBg}`}>
+                          <td key={d.day} className={`py-1 px-1 border-r border-slate-100 font-semibold align-middle ${ttClasses.cellBg}`}>
                             {getSubjectBadge(slot?.subject)}
                           </td>
                         );
@@ -1681,9 +1711,9 @@ export const InfographicView: React.FC = () => {
       case 'class_goals':
         return (
           <div className="p-3 sm:p-3.5 rounded-2xl bg-gradient-to-r from-amber-50/90 via-white to-blue-50/90 border border-amber-200/80 shadow-2xs space-y-2">
-            <div className="flex items-center justify-between text-xs font-black uppercase">
-              <div className="flex items-center gap-1.5 text-indigo-950">
-                <Award className="w-3.5 h-3.5 text-amber-500" />
+            <div className="flex items-center justify-between gap-2 text-xs font-black uppercase">
+              <div className="flex items-center gap-1.5 text-indigo-950 min-w-0">
+                <Award className="w-3.5 h-3.5 text-amber-500 shrink-0" />
                 {isEditMode ? (
                   <input
                     type="text"
@@ -1695,12 +1725,12 @@ export const InfographicView: React.FC = () => {
                   <span>{classGoals.heading}</span>
                 )}
               </div>
-              <span className="text-xs font-bold text-amber-800 bg-amber-100/80 px-2 py-0.5 rounded-full border border-amber-200">
+              <span className="text-xs font-bold text-amber-800 bg-amber-100/80 px-2 py-0.5 rounded-full border border-amber-200 whitespace-nowrap shrink-0">
                 4 Tiêu Chí Vàng
               </span>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 text-xs">
+            <div className="grid grid-cols-2 gap-2 text-xs">
               {classGoals.items.map((item, idx) => (
                 <div key={idx} className="bg-white/95 p-2.5 rounded-xl border border-slate-200/80 shadow-2xs space-y-1">
                   <div className="flex items-center gap-1.5">
@@ -1773,145 +1803,99 @@ export const InfographicView: React.FC = () => {
               </div>
             </div>
 
-            {/* Bảng Chi Tiết 100% Học Sinh */}
-            <div className="rounded-2xl border border-slate-200 overflow-hidden shadow-2xs">
-              <table className="w-full text-xs text-left border-collapse">
-                <thead>
-                  <tr className="bg-slate-100 text-slate-900 border-b border-slate-200 text-xs uppercase font-black">
-                    <th className="py-2 px-1.5 text-center w-8 border-r border-slate-200">STT</th>
-                    <th className="py-2 px-1 text-center w-10 border-r border-slate-200">Ảnh</th>
-                    <th className="py-2 px-2 text-center w-16 border-r border-slate-200">Mã HS</th>
-                    <th className="py-2 px-2.5 border-r border-slate-200">Họ và Tên</th>
-                    <th className="py-2 px-2 text-center w-20 border-r border-slate-200">Ngày sinh</th>
-                    <th className="py-2 px-1.5 text-center w-14 border-r border-slate-200">Giới tính</th>
-                    <th className="py-2 px-1.5 text-center w-14 border-r border-slate-200">Tổ</th>
-                    <th className="py-2 px-2 border-r border-slate-200">Chức vụ / Nhiệm vụ</th>
-                    <th className="py-2 px-2 text-center w-20">Xếp loại</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {classStudents.map((st, index) => {
-                    let role = 'Thành viên';
-                    if (st.stt === 1) role = 'Lớp trưởng';
-                    else if (st.stt === 2) role = 'Lớp phó học tập';
-                    else if (st.stt === 3) role = 'Lớp phó phong trào';
-                    else if (st.stt === 4) role = 'Tổ trưởng Tổ 1';
-                    else if (st.stt === 5) role = 'Tổ trưởng Tổ 2';
-                    else if (st.stt === 6) role = 'Tổ trưởng Tổ 3';
-                    else if (st.stt === 7) role = 'Tổ trưởng Tổ 4';
-
-                    const groupName = st.group || `Tổ ${((st.stt - 1) % 4) + 1}`;
-                    const ranking = st.points >= 25 ? 'Xuất sắc' : st.points >= 15 ? 'Tốt' : st.points >= 8 ? 'Khá' : 'Chăm ngoan';
-
-                    return (
-                      <tr 
-                        key={st.id} 
-                        className={`border-b border-slate-100 hover:bg-slate-50 transition-colors ${
-                          index % 2 === 1 ? 'bg-slate-50/50' : 'bg-white'
-                        }`}
-                      >
-                        <td className="py-1.5 px-1.5 text-center font-bold text-slate-500 border-r border-slate-100">
-                          {st.stt}
-                        </td>
-                        <td className="py-1 px-1 text-center border-r border-slate-100">
-                          <img
-                            src={st.avatar}
-                            alt={st.name}
-                            className="w-6 h-6 rounded-full object-cover border border-slate-200 mx-auto shadow-2xs"
-                            onError={(e) => {
-                              (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1544717305-2782549b5136?w=100&auto=format&fit=crop&q=80';
-                            }}
-                          />
-                        </td>
-                        <td className="py-1.5 px-2 text-center font-mono font-bold text-slate-600 text-xs border-r border-slate-100">
-                          HS{String(st.stt).padStart(2, '0')}
-                        </td>
-                        <td className="py-1.5 px-2.5 font-bold text-slate-900 border-r border-slate-100">
-                          {st.name}
-                        </td>
-                        <td className="py-1.5 px-2 text-center text-slate-600 font-mono text-xs border-r border-slate-100">
-                          {st.birthDate || '—'}
-                        </td>
-                        <td className="py-1.5 px-1.5 text-center border-r border-slate-100">
-                          <span className={`inline-block px-1.5 py-0.5 rounded text-xs font-black ${
-                            st.gender === 'Nam' ? 'bg-blue-100 text-blue-800' : 'bg-pink-100 text-pink-800'
-                          }`}>
-                            {st.gender}
-                          </span>
-                        </td>
-                        <td className="py-1.5 px-1.5 text-center text-slate-700 font-medium border-r border-slate-100 text-xs">
-                          {groupName}
-                        </td>
-                        <td className="py-1.5 px-2 text-slate-700 border-r border-slate-100 text-xs">
-                          <span className={`font-semibold ${
-                            role !== 'Thành viên' ? 'text-indigo-700 font-bold' : 'text-slate-600'
-                          }`}>
-                            {role}
-                          </span>
-                        </td>
-                        <td className="py-1.5 px-2 text-center text-xs font-bold">
-                          <span className={`px-1.5 py-0.5 rounded ${
-                            ranking === 'Xuất sắc'
-                              ? 'bg-emerald-100 text-emerald-800'
-                              : ranking === 'Tốt'
-                              ? 'bg-blue-100 text-blue-800'
-                              : 'bg-slate-100 text-slate-700'
-                          }`}>
-                            {ranking}
-                          </span>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+            {/* Bảng Chi Tiết 100% Học Sinh: 1 cột (ít học sinh) hoặc 2 cột (đông học sinh) để vừa khít trang A4 */}
+            {(() => {
+              const cols = effectiveStudentCols;
+              const per = cols === 2 ? Math.ceil(classStudents.length / 2) : classStudents.length;
+              const chunks = cols === 2 ? [classStudents.slice(0, per), classStudents.slice(per)] : [classStudents];
+              const dense = classStudents.length > (cols === 2 ? 24 : 18);
+              const py = dense ? 'py-0.5' : 'py-1.5';
+              const roleOf = (st: typeof classStudents[number]) => ((st.roles && st.roles.length ? st.roles.join(' • ') : st.role) || '').trim();
+              return (
+                <div className={cols === 2 ? 'grid grid-cols-2 gap-2 items-start' : ''}>
+                  {chunks.map((chunk, ci) => (
+                    <div key={ci} className="rounded-2xl border border-slate-200 overflow-hidden shadow-2xs">
+                      <table className={`w-full text-left border-collapse ${cols === 2 ? 'table-fixed text-[11px] [&_th]:!w-auto [&_th]:!px-1 [&_td]:!px-1' : 'text-xs'}`}>
+                        {cols === 2 && (
+                          <colgroup>
+                            <col style={{ width: '6%' }} /><col style={{ width: '8%' }} /><col style={{ width: '34%' }} />
+                            <col style={{ width: '18%' }} /><col style={{ width: '11%' }} /><col style={{ width: '23%' }} />
+                          </colgroup>
+                        )}
+                        <thead>
+                          <tr className={`bg-slate-100 text-slate-900 border-b border-slate-200 uppercase font-black ${cols === 2 ? 'text-[10px]' : 'text-xs'}`}>
+                            <th className="py-2 px-1.5 text-center w-8 border-r border-slate-200 whitespace-nowrap">STT</th>
+                            <th className="py-2 px-1 text-center w-10 border-r border-slate-200 whitespace-nowrap">Ảnh</th>
+                            {cols === 1 && <th className="py-2 px-2 text-center w-16 border-r border-slate-200 whitespace-nowrap">Mã HS</th>}
+                            <th className="py-2 px-2.5 border-r border-slate-200 whitespace-nowrap">Họ và Tên</th>
+                            <th className="py-2 px-2 text-center w-20 border-r border-slate-200 whitespace-nowrap">Ngày sinh</th>
+                            <th className="py-2 px-1.5 text-center w-14 border-r border-slate-200 whitespace-nowrap">{cols === 2 ? 'Giới' : 'Giới tính'}</th>
+                            {cols === 1 && <th className="py-2 px-1.5 text-center w-14 border-r border-slate-200 whitespace-nowrap">Tổ</th>}
+                            {cols === 1 && <th className="py-2 px-2 border-r border-slate-200 whitespace-nowrap">Chức vụ / Nhiệm vụ</th>}
+                            <th className="py-2 px-2 text-center w-20 whitespace-nowrap">Xếp loại</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {chunk.map((st, index) => {
+                            const role = roleOf(st);
+                            const groupName = st.group || `Tổ ${((st.stt - 1) % 4) + 1}`;
+                            const ranking = st.points >= 25 ? 'Xuất sắc' : st.points >= 15 ? 'Tốt' : st.points >= 8 ? 'Khá' : 'Chăm ngoan';
+                            return (
+                              <tr key={st.id} className={`border-b border-slate-100 ${index % 2 === 1 ? 'bg-slate-50/50' : 'bg-white'}`}>
+                                <td className={`${py} px-1.5 text-center font-bold text-slate-500 border-r border-slate-100 whitespace-nowrap`}>{st.stt}</td>
+                                <td className="py-0.5 px-1 text-center border-r border-slate-100">
+                                  <img
+                                    src={st.avatar}
+                                    alt={st.name}
+                                    className={`${dense ? 'w-5 h-5' : 'w-6 h-6'} rounded-full object-cover border border-slate-200 mx-auto shadow-2xs`}
+                                    onError={(e) => { (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1544717305-2782549b5136?w=100&auto=format&fit=crop&q=80'; }}
+                                  />
+                                </td>
+                                {cols === 1 && <td className={`${py} px-2 text-center font-mono font-bold text-slate-600 text-xs border-r border-slate-100 whitespace-nowrap`}>HS{String(st.stt).padStart(2, '0')}</td>}
+                                <td className={`${py} px-2.5 font-bold text-slate-900 border-r border-slate-100 leading-tight`}>
+                                  <span className="block">{st.name}</span>
+                                  {cols === 2 && <div className="text-[10px] font-semibold text-indigo-700 leading-tight">{[groupName, role].filter(Boolean).join(' • ')}</div>}
+                                </td>
+                                <td className={`${py} px-2 text-center text-slate-600 font-mono border-r border-slate-100 whitespace-nowrap ${cols === 2 ? 'text-[10px]' : 'text-xs'}`}>{st.birthDate || '—'}</td>
+                                <td className="py-0.5 px-1.5 text-center border-r border-slate-100 whitespace-nowrap">
+                                  <span className={`inline-block ${cols === 2 ? 'px-1' : 'px-1.5'} py-0.5 rounded font-black ${cols === 2 ? 'text-[10px]' : 'text-xs'} ${st.gender === 'Nam' ? 'bg-blue-100 text-blue-800' : 'bg-pink-100 text-pink-800'}`}>{st.gender}</span>
+                                </td>
+                                {cols === 1 && <td className={`${py} px-1.5 text-center text-slate-700 font-medium border-r border-slate-100 text-xs whitespace-nowrap`}>{groupName}</td>}
+                                {cols === 1 && (
+                                  <td className={`${py} px-2 text-slate-700 border-r border-slate-100 text-xs`}>
+                                    <span className={`font-semibold ${role ? 'text-indigo-700 font-bold' : 'text-slate-600'}`}>{role || 'Thành viên'}</span>
+                                  </td>
+                                )}
+                                <td className={`py-0.5 px-2 text-center font-bold whitespace-nowrap ${cols === 2 ? 'text-[10px]' : 'text-xs'}`}>
+                                  <span className={`${cols === 2 ? 'px-1' : 'px-1.5'} py-0.5 rounded ${ranking === 'Xuất sắc' ? 'bg-emerald-100 text-emerald-800' : ranking === 'Tốt' ? 'bg-blue-100 text-blue-800' : 'bg-slate-100 text-slate-700'}`}>{ranking}</span>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  ))}
+                </div>
+              );
+            })()}
           </div>
         );
 
       case 'signatures':
         return (
           <div className="pt-4 border-t border-slate-200 space-y-3">
-            <div className="grid grid-cols-3 gap-4 text-center text-xs">
-              {/* Ban Phụ Huynh */}
-              <div className="space-y-1">
-                <div className="font-bold text-slate-600 uppercase text-xs">
-                  ĐẠI DIỆN BAN PHỤ HUYNH
-                </div>
-                <div className="text-xs text-slate-400 italic">
-                  (Ký và ghi rõ họ tên)
-                </div>
-                <div className="h-12"></div>
-                <div className="font-black text-slate-900 text-xs">
-                  {parentCommittee.head.name}
-                </div>
-              </div>
-
-              {/* Ban Giám Hiệu */}
-              <div className="space-y-1">
-                <div className="font-bold text-slate-600 uppercase text-xs">
-                  BAN GIÁM HIỆU NHÀ TRƯỜNG
-                </div>
-                <div className="text-xs text-slate-400 italic">
-                  (Ký duyệt và đóng dấu)
-                </div>
-                <div className="h-12"></div>
-                <div className="font-black text-slate-900 text-xs">
-                  Hiệu trưởng
-                </div>
-              </div>
-
-              {/* Giáo viên chủ nhiệm */}
-              <div className="space-y-1">
+            {/* Only the homeroom teacher signs (no parents' board / school board column) */}
+            <div className="flex justify-end">
+              <div className="w-64 text-center text-xs space-y-1">
                 <div className="font-bold text-slate-600 uppercase text-xs">
                   GIÁO VIÊN CHỦ NHIỆM
                 </div>
-                <div className="text-xs text-slate-400 italic">
-                  (Ký và ghi rõ họ tên)
+                <div className="h-16 flex items-center justify-center">
+                  {teacherSignature && <img src={teacherSignature} alt="Chữ ký giáo viên chủ nhiệm" className="max-h-full max-w-full object-contain" />}
                 </div>
-                <div className="h-12"></div>
                 <div className="font-black text-slate-900 text-xs">
-                  Cô {customTeacherName}
+                  {(customTeacherName || '').startsWith('Cô ') ? customTeacherName : `Cô ${customTeacherName}`}
                 </div>
               </div>
             </div>
@@ -1987,13 +1971,11 @@ export const InfographicView: React.FC = () => {
       .sort((a, b) => a.order - b.order);
 
     return (
-      <div 
-        ref={ref}
+      <A4Page
+        orientation={config.orientation}
+        innerRef={ref}
         id={`printable-infographic-page-${pageNum}`}
-        className={`bg-white text-slate-800 shadow-2xl rounded-2xl border border-slate-300 ${pageContainerClass} relative overflow-hidden`}
-        style={{
-          fontFamily: "'Be Vietnam Pro', system-ui, -apple-system, sans-serif"
-        }}
+        fitKey={`${pageDensity}|${config.pageCount}|${studentListColumns}|${isEditMode}`}
       >
         {pageLayers.length === 0 ? (
           <div className="py-20 text-center text-slate-400 space-y-2">
@@ -2010,13 +1992,12 @@ export const InfographicView: React.FC = () => {
             )}
           </div>
         ) : (
-          <div className={`flex-1 flex flex-col justify-between w-full h-full ${
-            pageDensity === 'compact' ? 'gap-1.5' : pageDensity === 'spacious' ? 'gap-4' : 'gap-2.5 sm:gap-3'
-          }`}>
-            {pageLayers.map(layer => {
+          (() => {
+            const gapClass = pageDensity === 'compact' ? 'gap-1.5' : pageDensity === 'spacious' ? 'gap-4' : 'gap-2.5 sm:gap-3';
+            const renderBox = (layer: InfographicLayer) => {
               const widthClass = layer.width === '50%' ? 'w-1/2' : layer.width === '75%' ? 'w-3/4' : 'w-full';
               return (
-                <div 
+                <div
                   key={layer.id}
                   className={`transition-all duration-200 ${widthClass} mx-auto ${
                     layer.type === 'signatures' ? 'mt-auto' : ''
@@ -2034,8 +2015,34 @@ export const InfographicView: React.FC = () => {
                   {renderLayerContent(layer)}
                 </div>
               );
-            })}
-          </div>
+            };
+
+            // Landscape sheet: put the timetable beside the class info (two columns) instead of stacking everything,
+            // so the 794px height is not exceeded and nothing has to be shrunk to a tiny size.
+            const LEFT_TYPES: LayerType[] = ['teacher_parents', 'class_goals', 'seating'];
+            const hasTimetable = pageLayers.some(l => l.type === 'timetable');
+            const leftLayers = pageLayers.filter(l => LEFT_TYPES.includes(l.type) && !(l.type === 'seating' && pageLayers.length <= 2));
+            if (config.orientation === 'landscape' && hasTimetable && leftLayers.length > 0) {
+              const top = pageLayers.filter(l => l.type === 'header' || l.type === 'slogan');
+              const right = pageLayers.filter(l => l.type === 'timetable');
+              const rest = pageLayers.filter(l => !top.includes(l) && !right.includes(l) && !leftLayers.includes(l));
+              return (
+                <div className={`flex-1 flex flex-col justify-between w-full h-full ${gapClass}`}>
+                  {top.map(renderBox)}
+                  <div className={`grid grid-cols-[minmax(0,5fr)_minmax(0,7fr)] items-start ${gapClass}`}>
+                    <div className={`ig-narrow flex flex-col ${gapClass}`}>{leftLayers.map(renderBox)}</div>
+                    <div className={`flex flex-col ${gapClass}`}>{right.map(renderBox)}</div>
+                  </div>
+                  {rest.map(renderBox)}
+                </div>
+              );
+            }
+            return (
+              <div className={`flex-1 flex flex-col justify-between w-full h-full ${gapClass}`}>
+                {pageLayers.map(renderBox)}
+              </div>
+            );
+          })()
         )}
 
         {/* Footer ghi chú của trang */}
@@ -2047,7 +2054,7 @@ export const InfographicView: React.FC = () => {
             Trang {pageNum} / {config.pageCount} • Khổ {config.orientation === 'landscape' ? 'Ngang' : 'Dọc'} A4
           </div>
         </div>
-      </div>
+      </A4Page>
     );
   };
 

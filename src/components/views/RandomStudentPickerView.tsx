@@ -11,12 +11,32 @@ import { DuckRaceGame } from './picker/DuckRaceGame';
 import { GameHomeView } from './picker/GameHomeView';
 import { HeadTiltGame } from './picker/headtilt/HeadTiltGame';
 import { LuckyLensGame } from './picker/LuckyLensGame';
+import { BombGame } from './picker/BombGame';
+import { DiceChallengeGame } from './picker/DiceChallengeGame';
+import { TeamDuelGame } from './picker/TeamDuelGame';
+import { ClawMachineGame } from './picker/ClawMachineGame';
+import { PuzzleFlipGame } from './picker/puzzle/PuzzleFlipGame';
 import { QuizStorageButton } from '../modals/QuizStorageModal';
 import { QuestionBankModal } from '../modals/QuestionBankModal';
 import { saveQuizBank } from '../../utils/quizParser';
 import { Library } from 'lucide-react';
 
-export type PickerGameMode = 'dashboard' | 'wheel' | 'reel' | 'rocket' | 'mystery_box' | 'duck_race' | 'head_tilt' | 'lucky_lens';
+export type PickerGameMode = 'dashboard' | 'wheel' | 'reel' | 'rocket' | 'mystery_box' | 'duck_race' | 'head_tilt' | 'lucky_lens' | 'bomb' | 'dice' | 'team_duel' | 'claw' | 'puzzle';
+
+const GAME_TABS: Array<{ id: PickerGameMode; icon: string; label: string; active: string; badge?: string; badgeCls?: string }> = [
+  { id: 'wheel', icon: '🎡', label: 'VÒNG QUAY', active: 'bg-gradient-to-br from-indigo-600 to-violet-600' },
+  { id: 'reel', icon: '🎬', label: 'CUỘN PHIM', active: 'bg-gradient-to-br from-fuchsia-600 to-purple-700' },
+  { id: 'rocket', icon: '🚀', label: 'TÀU VŨ TRỤ', active: 'bg-gradient-to-br from-sky-600 to-indigo-700' },
+  { id: 'mystery_box', icon: '🎁', label: 'HỘP QUÀ', active: 'bg-gradient-to-br from-rose-600 to-orange-600' },
+  { id: 'duck_race', icon: '🦆', label: 'ĐUA VỊT', active: 'bg-gradient-to-br from-amber-600 to-orange-600' },
+  { id: 'head_tilt', icon: '👧', label: 'QUIZ NGHIÊNG ĐẦU', active: 'bg-gradient-to-br from-purple-600 to-pink-600', badge: 'AI', badgeCls: 'bg-purple-600 text-white' },
+  { id: 'lucky_lens', icon: '📸', label: 'ỐNG KÍNH', active: 'bg-gradient-to-br from-cyan-700 to-blue-700', badge: 'HOT', badgeCls: 'bg-rose-600 text-white' },
+  { id: 'bomb', icon: '💣', label: 'BOM HẸN GIỜ', active: 'bg-gradient-to-br from-orange-600 to-rose-600', badge: 'MỚI', badgeCls: 'bg-emerald-600 text-white' },
+  { id: 'dice', icon: '🎲', label: 'XÚC XẮC', active: 'bg-gradient-to-br from-violet-600 to-indigo-700', badge: 'MỚI', badgeCls: 'bg-emerald-600 text-white' },
+  { id: 'puzzle', icon: '🧩', label: 'LẬT MẢNH GHÉP', active: 'bg-gradient-to-br from-emerald-600 to-sky-600', badge: 'MỚI', badgeCls: 'bg-emerald-600 text-white' },
+  { id: 'claw', icon: '🧸', label: 'MÁY GẮP THÚ', active: 'bg-gradient-to-br from-pink-600 to-orange-600', badge: 'MỚI', badgeCls: 'bg-emerald-600 text-white' },
+  { id: 'team_duel', icon: '⚔️', label: 'ĐẤU TỔ', active: 'bg-gradient-to-br from-rose-600 to-amber-600', badge: 'MỚI', badgeCls: 'bg-emerald-600 text-white' },
+];
 
 interface RandomStudentPickerViewProps {
   initialGame?: PickerGameMode;
@@ -43,146 +63,70 @@ export const RandomStudentPickerView: React.FC<RandomStudentPickerViewProps> = (
 
   return (
     <div className="p-3 md:p-6 max-w-7xl mx-auto space-y-6">
-      {/* Main Top Header & Mode Navigation */}
-      <div className="bg-white rounded-3xl p-4 md:p-5 border border-slate-200/90 shadow-xs flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2.5">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-amber-700 to-rose-600 text-white flex items-center justify-center font-black shadow-md shadow-amber-500/20">
-              <Sparkles className="w-5 h-5 text-white" />
+      {/* Header: title + class info on top, then an even grid of game tiles (2 rows of 5 on desktop) */}
+      <div className="bg-white rounded-3xl border border-slate-200/90 shadow-xs overflow-hidden">
+        <div className="p-4 md:p-5 flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-12 h-12 shrink-0 rounded-2xl bg-gradient-to-tr from-amber-600 to-rose-600 text-white flex items-center justify-center shadow-md shadow-amber-500/20">
+              <Sparkles className="w-6 h-6 text-white" />
             </div>
-            <div>
-              <h1 className="text-xl font-black text-slate-900 tracking-tight uppercase">
-                GỌI TÊN HỌC SINH
-              </h1>
-              <p className="text-xs text-slate-500 font-semibold uppercase">
-                LỚP <span className="text-indigo-600 font-black">{activeClass?.name || '4A1'}</span> • SĨ SỐ: {currentClassStudents.length} HỌC SINH • 7 TRÒ CHƠI GỌI TÊN & QUIZ HÀO HỨNG!
+            <div className="min-w-0">
+              <h1 className="text-xl md:text-2xl font-black text-slate-900 tracking-tight uppercase leading-tight">GỌI TÊN HỌC SINH</h1>
+              <p className="mt-1 flex flex-wrap items-center gap-1.5 text-xs font-bold uppercase">
+                <span className="whitespace-nowrap px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-800">LỚP {activeClass?.name || '4A1'}</span>
+                <span className="whitespace-nowrap px-2.5 py-1 rounded-full bg-sky-50 text-sky-800">SĨ SỐ <span className="tabular-nums">{currentClassStudents.length}</span> HỌC SINH</span>
+                <span className="whitespace-nowrap px-2.5 py-1 rounded-full bg-amber-50 text-amber-900">12 TRÒ CHƠI</span>
               </p>
             </div>
           </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setActiveGame('dashboard')}
+              className={`min-h-10 px-3.5 rounded-xl text-xs font-black inline-flex items-center gap-1.5 uppercase whitespace-nowrap cursor-pointer border ${activeGame === 'dashboard' ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-800 border-slate-300 hover:bg-slate-50'}`}
+            >
+              <Home className="w-4 h-4 shrink-0" />
+              <span>TẤT CẢ GAME</span>
+            </button>
+            {/* Quản lý kho câu hỏi: soạn, nhập, chơi thử, xóa câu hỏi dùng cho các trò chơi */}
+            <button
+              type="button"
+              onClick={() => setIsBankOpen(true)}
+              className="min-h-10 px-3.5 rounded-xl text-xs font-black inline-flex items-center gap-1.5 uppercase cursor-pointer whitespace-nowrap border bg-white border-emerald-300 text-emerald-800 hover:bg-emerald-50"
+              title="Quản lý kho câu hỏi: soạn câu mới, nhập từ tệp, chơi thử, sửa / xóa"
+            >
+              <Library className="w-4 h-4 shrink-0" />
+              <span>Kho câu hỏi</span>
+              <span className="px-1.5 rounded-md bg-emerald-600 text-white text-[12px] font-black tabular-nums">{quizBank.length}</span>
+            </button>
+            {/* Nơi lưu câu hỏi của tôi: cấu hình thư mục máy tính / Drive cá nhân cho bộ câu hỏi trò chơi */}
+            <QuizStorageButton variant="tab" />
+          </div>
         </div>
 
-        {/* Tab Navigation Buttons */}
-        <div className="flex flex-wrap items-center gap-1.5 bg-slate-100 p-1.5 rounded-2xl w-full lg:w-auto">
-          {/* Tab 0: Game Dashboard Home */}
-          <button
-            onClick={() => setActiveGame('dashboard')}
-            className={`px-3 py-2 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 transition-all hover-zoom-btn uppercase cursor-pointer ${
-              activeGame === 'dashboard'
-                ? 'bg-white text-slate-800 shadow-sm'
-                : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            <Home className="w-3.5 h-3.5" />
-            <span>TẤT CẢ GAME</span>
-          </button>
-
-          {/* Tab 1: Vòng quay */}
-          <button
-            onClick={() => setActiveGame('wheel')}
-            className={`px-3 py-2 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 transition-all hover-zoom-btn uppercase cursor-pointer ${
-              activeGame === 'wheel'
-                ? 'bg-white text-indigo-700 shadow-sm shadow-indigo-500/10'
-                : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            <span>🎡</span>
-            <span>VÒNG QUAY</span>
-          </button>
-
-          {/* Tab 2: Cuộn phim */}
-          <button
-            onClick={() => setActiveGame('reel')}
-            className={`px-3 py-2 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 transition-all hover-zoom-btn uppercase cursor-pointer ${
-              activeGame === 'reel'
-                ? 'bg-white text-indigo-700 shadow-sm shadow-indigo-500/10'
-                : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            <span>🎬</span>
-            <span>CUỘN PHIM</span>
-          </button>
-
-          {/* Tab 3: Tàu vũ trụ */}
-          <button
-            onClick={() => setActiveGame('rocket')}
-            className={`px-3 py-2 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 transition-all hover-zoom-btn uppercase cursor-pointer ${
-              activeGame === 'rocket'
-                ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30'
-                : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            <span>🚀</span>
-            <span>TÀU VŨ TRỤ</span>
-          </button>
-
-          {/* Tab 4: Hộp quà */}
-          <button
-            onClick={() => setActiveGame('mystery_box')}
-            className={`px-3 py-2 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 transition-all hover-zoom-btn uppercase cursor-pointer ${
-              activeGame === 'mystery_box'
-                ? 'bg-rose-600 text-white shadow-md shadow-rose-500/30'
-                : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            <span>🎁</span>
-            <span>HỘP QUÀ</span>
-          </button>
-
-          {/* Tab 5: Đua vịt */}
-          <button
-            onClick={() => setActiveGame('duck_race')}
-            className={`px-3 py-2 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 transition-all hover-zoom-btn uppercase cursor-pointer ${
-              activeGame === 'duck_race'
-                ? 'bg-amber-400 text-amber-950 shadow-md shadow-amber-400/30'
-                : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            <span>🦆</span>
-            <span>ĐUA VỊT</span>
-          </button>
-
-          {/* Tab 6: Quiz Nghiêng Đầu (MỚI) */}
-          <button
-            onClick={() => setActiveGame('head_tilt')}
-            className={`px-3 py-2 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 transition-all hover-zoom-btn uppercase cursor-pointer ${
-              activeGame === 'head_tilt'
-                ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md shadow-purple-600/30'
-                : 'text-purple-700 hover:text-purple-900 bg-purple-50'
-            }`}
-          >
-            <span>👧</span>
-            <span>QUIZ NGHIÊNG ĐẦU</span>
-            <span className="px-1.5 py-0.2 bg-amber-400 text-purple-950 rounded-md text-[12px] font-black">AI</span>
-          </button>
-
-          {/* Tab 7: Ống Kính May Mắn (HOT) */}
-          <button
-            onClick={() => setActiveGame('lucky_lens')}
-            className={`px-3 py-2 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 transition-all hover-zoom-btn uppercase cursor-pointer ${
-              activeGame === 'lucky_lens'
-                ? 'bg-gradient-to-r from-cyan-700 to-blue-600 text-white shadow-md shadow-cyan-600/30'
-                : 'text-cyan-700 hover:text-cyan-900 bg-cyan-50'
-            }`}
-          >
-            <span>📸</span>
-            <span>ỐNG KÍNH</span>
-            <span className="px-1.5 py-0.2 bg-cyan-400 text-slate-950 rounded-md text-[12px] font-black">HOT</span>
-          </button>
-
-          {/* Nơi lưu câu hỏi của tôi: cấu hình thư mục máy tính / Drive cá nhân cho bộ câu hỏi trò chơi */}
-          {/* Quản lý kho câu hỏi: soạn, nhập, chơi thử, xóa câu hỏi dùng cho các trò chơi */}
-          <button
-            type="button"
-            onClick={() => setIsBankOpen(true)}
-            className="px-3 py-2 rounded-xl text-xs font-black inline-flex items-center justify-center gap-1.5 uppercase cursor-pointer whitespace-nowrap border bg-white border-emerald-300 text-emerald-800 hover:bg-emerald-50"
-            title="Quản lý kho câu hỏi: soạn câu mới, nhập từ tệp, chơi thử, sửa / xóa"
-          >
-            <Library className="w-4 h-4 shrink-0" />
-            <span>Kho câu hỏi</span>
-            <span className="px-1.5 rounded-md bg-emerald-600 text-white text-[12px] font-black tabular-nums">{quizBank.length}</span>
-          </button>
-          <QuizStorageButton variant="tab" />
-        </div>
+        <nav className="border-t border-slate-100 bg-slate-50/70 p-3 md:p-4" aria-label="Chọn trò chơi gọi tên">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2 md:gap-3">
+            {GAME_TABS.map(g => {
+              const on = activeGame === g.id;
+              return (
+                <button
+                  key={g.id}
+                  type="button"
+                  onClick={() => setActiveGame(g.id)}
+                  aria-pressed={on}
+                  className={`relative min-h-[72px] px-2 py-2.5 rounded-2xl border flex flex-col items-center justify-center gap-1 text-center uppercase cursor-pointer transition-all ${on ? `${g.active} border-transparent text-white shadow-lg` : 'bg-white border-slate-200 text-slate-800 hover:border-sky-300 hover:shadow-sm'}`}
+                >
+                  <span className="text-2xl leading-none" aria-hidden>{g.icon}</span>
+                  <span className="text-xs font-black leading-tight whitespace-nowrap">{g.label}</span>
+                  {g.badge && (
+                    <span className={`absolute -top-1.5 right-2 px-1.5 rounded-full text-[12px] leading-5 font-black ${g.badgeCls}`}>{g.badge}</span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </nav>
       </div>
 
       {/* ===================================================================== */}
@@ -312,6 +256,19 @@ export const RandomStudentPickerView: React.FC<RandomStudentPickerViewProps> = (
             <span>Quay lại Game Dashboard</span>
           </button>
           <LuckyLensGame />
+        </div>
+      )}
+
+      {(activeGame === 'bomb' || activeGame === 'dice' || activeGame === 'team_duel' || activeGame === 'claw' || activeGame === 'puzzle') && (
+        <div className="space-y-4">
+          <button type="button" onClick={() => setActiveGame('dashboard')} className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-indigo-600 transition-colors cursor-pointer">
+            <ArrowLeft className="w-4 h-4" /><span>Quay lại Game Dashboard</span>
+          </button>
+          {activeGame === 'bomb' && <BombGame />}
+          {activeGame === 'dice' && <DiceChallengeGame />}
+          {activeGame === 'team_duel' && <TeamDuelGame />}
+          {activeGame === 'claw' && <ClawMachineGame />}
+          {activeGame === 'puzzle' && <PuzzleFlipGame />}
         </div>
       )}
 

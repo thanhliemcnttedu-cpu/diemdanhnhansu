@@ -629,3 +629,64 @@ img {
 [role="tablist"] > button, [role="tablist"] > a { white-space: nowrap; flex-shrink: 0; }
 .no-scrollbar { scrollbar-width: none; }
 .no-scrollbar::-webkit-scrollbar { display: none; }
+
+/* ===== Thanh bên: giao diện "Xanh đậm" (tùy chọn, mặc định là Sáng) =====
+   Đặt NGOÀI @layer nên thắng các lớp tiện ích Tailwind trong thanh bên. Nền #0b4f82: chữ trắng ≈ 8.6:1,
+   chữ phụ #dbeafe ≈ 7:1, #bfdbfe ≈ 5.8:1; mục đang chọn #1670c0 + chữ trắng ≈ 5.1:1. */
+.sb-dark { background: #0b4f82 !important; border-color: rgba(255,255,255,.14) !important; backdrop-filter: none !important; box-shadow: 4px 0 24px -12px rgba(8,47,73,.55) !important; color: #e0f2fe; }
+.sb-dark .text-slate-950, .sb-dark .text-slate-900, .sb-dark .text-slate-800 { color: #ffffff; }
+.sb-dark .text-slate-700, .sb-dark .text-slate-600 { color: #dbeafe; }
+.sb-dark .text-slate-500, .sb-dark .text-slate-400 { color: #bfdbfe; }
+.sb-dark .hover\:text-slate-700:hover, .sb-dark .hover\:text-slate-900:hover, .sb-dark .hover\:text-slate-950:hover { color: #ffffff; }
+.sb-dark [class*="border-slate-200"], .sb-dark [class*="border-white"] { border-color: rgba(255,255,255,.16) !important; }
+.sb-dark .hover\:bg-slate-100:hover, .sb-dark .hover\:bg-slate-100\/80:hover { background-color: rgba(255,255,255,.10); }
+.sb-dark .bg-slate-100\/90 { background-color: rgba(255,255,255,.12); }
+.sb-dark .hover\:bg-white\/60:hover { background-color: rgba(255,255,255,.14); }
+.sb-dark .bg-slate-100 { background-color: rgba(255,255,255,.14); }
+/* group icons keep their meaning, in lighter tones */
+.sb-dark .text-sky-600 { color: #7dd3fc; }
+.sb-dark .text-violet-600 { color: #c4b5fd; }
+.sb-dark .text-emerald-700 { color: #6ee7b7; }
+.sb-dark .text-orange-600, .sb-dark .text-amber-600, .sb-dark .text-amber-700 { color: #fdba74; }
+.sb-dark .text-rose-600 { color: #fda4af; }
+.sb-dark .text-sky-700 { color: #ffffff; }
+.sb-dark .text-blue-700 { color: #e0f2fe; }
+/* the selected item: solid bright blue pill with white text, like a primary button */
+.sb-dark .bg-sky-50, .sb-dark .bg-sky-100 { background-color: #1670c0; }
+.sb-dark .text-sky-900, .sb-dark .text-sky-800 { color: #ffffff; }
+.sb-dark .ring-sky-100, .sb-dark .ring-sky-200 { --tw-ring-color: rgba(255,255,255,.28); }
+.sb-dark .bg-sky-600 { background-color: #ffffff; }
+
+/* ===== Màn báo cáo: tiêu đề cột, ô bảng, nút và nhãn KHÔNG xuống dòng ([data-report]) =====
+   Bảng rộng cuộn ngang trong khung của nó; số liệu luôn đi liền đơn vị (từng cụm bọc whitespace-nowrap). */
+/* every size: table headers / cells, buttons, labels and numbers (font-mono) stay on one line */
+[data-report] :where(th, td, button, label, option, summary), [data-report] .font-mono { white-space: nowrap; }
+/* from 640px up: every label, caption and heading as well (phones keep natural wrapping for long headings) */
+@media (min-width: 640px) {
+  [data-report] :where(div, span, strong, b, em, li, a, h1, h2, h3, h4, h5, h6) { white-space: nowrap; }
+}
+/* real sentences of explanation: put .wrap-ok on them (paragraphs <p> keep the normal behaviour) */
+[data-report] p:not(.whitespace-nowrap) { white-space: normal; }
+[data-report] .wrap-ok, [data-report] .wrap-ok * { white-space: normal; }
+/* inside a .wrap-ok block, anything marked whitespace-nowrap (short labels, grade cells, period captions) stays on one line */
+[data-report] .wrap-ok .whitespace-nowrap, [data-report] .wrap-ok .whitespace-nowrap * { white-space: nowrap; }
+
+/* Infographic: a narrow column (landscape sheet, left of the timetable) stacks the class-info blocks instead of squeezing
+   them side by side (the responsive breakpoints follow the screen, not the column). */
+.ig-narrow .grid.md\:grid-cols-12 { grid-template-columns: minmax(0, 1fr) !important; }
+.ig-narrow .grid.md\:grid-cols-12 > * { grid-column: 1 / -1 !important; }
+.ig-narrow .grid.lg\:grid-cols-4 { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+
+/* Infographic A4 sheet: no animated transitions, so text-fit measurements never read a half-animated size */
+[data-a4], [data-a4] * { transition: none !important; animation-duration: 0s !important; }
+
+/* Infographic A4 sheet: independent of the screen. Tailwind sizes everything in rem and this app scales the root font on
+   laptops and 2K/3K monitors, so inside the sheet the scale is pinned to the standard 16px root: the preview, the PNG and
+   the PDF look exactly the same on every computer. */
+[data-a4] {
+  font-size: 16px;
+  --spacing: 4px;
+  --text-xs: 12px; --text-sm: 14px; --text-base: 16px; --text-lg: 18px; --text-xl: 20px;
+  --text-2xl: 24px; --text-3xl: 30px; --text-4xl: 36px; --text-5xl: 48px; --text-6xl: 60px;
+  --radius-xs: 2px; --radius-sm: 4px; --radius-md: 6px; --radius-lg: 8px; --radius-xl: 12px; --radius-2xl: 16px; --radius-3xl: 24px; --radius-4xl: 32px;
+}

@@ -18,6 +18,7 @@ import { loadQuizBank, saveQuizBank } from '../../../utils/quizParser';
 
 import { handleAvatarImgError } from '../../../utils/avatarConfig';
 import { CalledStudentModal } from './CalledStudentModal';
+import { useFairCall } from './useFairCall';
 import { QuestionChallengeModal } from './QuestionChallengeModal';
 import { QuestionAudioButton } from './QuestionAudioButton';
 import { useQuizSelection, QuizSelectionChip } from './QuizSetPicker';
@@ -70,7 +71,9 @@ export const MysteryGiftBoxGame: React.FC = () => {
 
   // Exclude option
   const [autoExclude, setAutoExclude] = useState(true);
-  const [excludedIds, setExcludedIds] = useState<string[]>([]);
+  // Shared fair-call log: students called in the current round (any game) are skipped while auto-exclude is on
+  const fair = useFairCall();
+  const excludedIds = autoExclude ? fair.calledIds : [];
 
   const pool = currentClassStudents.filter(s => !excludedIds.includes(s.id));
   const activeList = pool.length > 0 ? pool : currentClassStudents;
@@ -124,9 +127,7 @@ export const MysteryGiftBoxGame: React.FC = () => {
           playFanfareSound();
           confetti({ particleCount: 95, spread: 85, origin: { y: 0.55 } });
 
-          if (autoExclude) {
-            setExcludedIds(prev => [...prev, targetWinner.id]);
-          }
+          fair.markCalled(targetWinner.id, 'mystery_box');
         }, 300);
       }
     };

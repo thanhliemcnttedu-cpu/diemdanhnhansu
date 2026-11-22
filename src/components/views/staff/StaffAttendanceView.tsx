@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { useClassroomOptional } from '../../../context/ClassroomContext';
 import { StaffDutiesPanel } from './StaffDutiesPanel';
+import { StaffMonthGridPanel } from './StaffMonthGridPanel';
 import {
   staffAttendanceService, STAFF_STATUS_META, aggregate, toDateKey, addDays, fromDateKey, shortDateLabel, longDateLabel, weekdayLabel, dateRangeKeys,
   parseStaffSheet, STAFF_TEMPLATE_HEADERS, isLockedFor, StaffDayLock, composeTripNote, randomPin, weekdayShort, attemptOf, attemptsOf, systemNoteOf, timeHMS, StaffMember, StaffRecord, StaffStatus, StaffUpsert, ParsedStaffRow,
@@ -20,7 +21,7 @@ import { readTeacherAuth } from '../../../utils/teacherAuth';
 import { List as ListIcon } from 'lucide-react';
 import { StaffSplitView } from './StaffSplitView';
 
-type Tab = 'summary' | 'roster' | 'teach' | 'link' | 'duty';
+type Tab = 'summary' | 'grid' | 'roster' | 'teach' | 'link' | 'duty';
 type Period = 'today' | 'yesterday' | 'week' | 'month' | 'custom';
 type DaysMap = Record<string, Record<string, StaffRecord>>;
 
@@ -405,7 +406,7 @@ export const StaffAttendanceView: React.FC<{
   }
 
   return (
-    <div className="p-4 sm:p-6 space-y-4 max-w-7xl mx-auto">
+    <div data-report="" className="p-4 sm:p-6 space-y-4 max-w-7xl mx-auto">
       {/* Header */}
       <div className="bg-white rounded-3xl border border-slate-200 shadow-xs p-4 sm:p-5 flex flex-col 2xl:flex-row 2xl:items-center justify-between gap-3">
         {/* Thanh thẻ xuống dòng riêng tới 2xl: cùng hàng tiêu đề chỉ khi đủ rộng (tránh tràn khi có 4 thẻ) */}
@@ -419,8 +420,8 @@ export const StaffAttendanceView: React.FC<{
           </div>
         </div>
         <div className="flex gap-1 sm:gap-1.5 bg-slate-100 p-1 rounded-2xl overflow-x-auto no-scrollbar max-w-full self-stretch sm:self-start 2xl:self-auto 2xl:shrink-0" role="tablist">
-          {([['summary', 'Tổng hợp', 'Tổng hợp', <TrendingUp key="i" className="w-4 h-4" />], ['roster', 'Danh sách nhân sự', 'Nhân sự', <Users key="i" className="w-4 h-4" />], ['teach', 'Kê khai tiết dạy', 'Tiết dạy', <BookOpenCheck key="i" className="w-4 h-4" />], ['link', 'Link điểm danh', 'Link', <Link2 key="i" className="w-4 h-4" />], ['duty', 'Phân công nhiệm vụ', 'Phân công', <ClipboardCheck key="i" className="w-4 h-4" />]] as const)
-            .filter(([id]) => (duty ? ((id === 'summary' && (duty.attendance || duty.proxy)) || (id === 'teach' && duty.teach)) : (!viewOnly || id === 'summary' || id === 'teach')))
+          {([['summary', 'Tổng hợp', 'Tổng hợp', <TrendingUp key="i" className="w-4 h-4" />], ['grid', 'Bảng tháng', 'Tháng', <ListIcon key="i" className="w-4 h-4" />], ['roster', 'Danh sách nhân sự', 'Nhân sự', <Users key="i" className="w-4 h-4" />], ['teach', 'Kê khai tiết dạy', 'Tiết dạy', <BookOpenCheck key="i" className="w-4 h-4" />], ['link', 'Link điểm danh', 'Link', <Link2 key="i" className="w-4 h-4" />], ['duty', 'Phân công nhiệm vụ', 'Phân công', <ClipboardCheck key="i" className="w-4 h-4" />]] as const)
+            .filter(([id]) => (duty ? (((id === 'summary' || id === 'grid') && (duty.attendance || duty.proxy)) || (id === 'teach' && duty.teach)) : (!viewOnly || id === 'summary' || id === 'grid' || id === 'teach')))
             .map(([id, label, shortLabel, icon]) => (
             <button key={id} type="button" role="tab" aria-selected={tab === id} onClick={() => setTab(id)}
               className={`min-w-0 sm:flex-none justify-center px-1 sm:px-3.5 py-2 rounded-xl text-sm font-black inline-flex items-center gap-1.5 whitespace-nowrap sm:shrink-0 ${tab === id ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600 hover:text-slate-900'}`}>
@@ -591,6 +592,7 @@ export const StaffAttendanceView: React.FC<{
         </>
       )}
 
+      {tab === 'grid' && auth && (!duty || duty.attendance || duty.proxy) && <StaffMonthGridPanel auth={auth} today={today} schoolName={schoolName} canPaint={!viewOnly || Boolean(duty?.proxy) || myProxy} />}
       {tab === 'roster' && !viewOnly && <RosterPanel canManage={canManage} auth={auth} schoolName={schoolName} />}
       {tab === 'teach' && auth && (!duty || duty.teach) && <TeachingReportPanel auth={auth} schoolName={schoolName} today={today} readOnly={viewOnly} />}
       {tab === 'duty' && !viewOnly && <StaffDutiesPanel auth={auth} schoolName={schoolName} />}
@@ -1679,7 +1681,7 @@ const LinkPanel: React.FC<{ schoolName: string; isBghOnly: boolean }> = ({ schoo
   const [copied, setCopied] = useState(false);
   const shareText = link ? `📋 ĐIỂM DANH GIÁO VIÊN – NHÂN VIÊN${schoolName ? ' ' + schoolName.toUpperCase() : ''}\nMỗi ngày làm việc, thầy cô mở link dưới đây, nhập số CCCD + mật khẩu điểm danh do nhà trường cấp:\n${link}\n(Chỉ điểm danh được cho ngày hôm nay.)` : '';
   return (
-    <div className="space-y-3">
+    <div className="wrap-ok space-y-3">
       <div className="rounded-3xl bg-white border border-slate-200 p-4 space-y-1.5">
         <label className="block text-sm font-black text-slate-800" htmlFor="school-web-url">Địa chỉ trang web của trường</label>
         <form className="flex flex-wrap items-center gap-2" onSubmit={(e) => { e.preventDefault(); saveUrl(); }}>

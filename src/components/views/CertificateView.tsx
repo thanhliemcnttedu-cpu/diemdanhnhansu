@@ -14,10 +14,11 @@ import { useClassroom } from '../../context/ClassroomContext';
 import { APP_AUTHOR_INFO } from '../../data/initialData';
 import { removeWhiteBackground } from '../../utils/imageProcessor';
 import {
-  analyzeTemplate, buildCertificateLayout, ensureCertificateFonts, fitElementsToContent, preferredComposition,
+  analyzeTemplate, buildCertificateLayout, ensureCertificateFonts, fitElementsToContent, preferredComposition, isLayoutGood,
   CERT_TYPOGRAPHY, type TemplateAnalysis, type CertComposition, type CertContent,
 } from '../../utils/certificateLayout';
 import { renderCertificateCanvas } from '../../utils/certificateRenderer';
+import { makeAutoSignature, givenNameOf, AUTO_SIGNATURE_STYLES, type AutoSignature } from '../../utils/autoSignature';
 import { loadDecorativeFonts } from '../../utils/decorativeFonts';
 
 // Canvas Native Resolution 1920 x 1080 Full HD
@@ -46,6 +47,7 @@ export interface CertificateElement {
   color?: string;
   fontWeight?: string | number;
   fontStyle?: string;
+  textDecoration?: 'underline' | 'none';
   textAlign?: 'left' | 'center' | 'right';
   letterSpacing?: string;
   lineHeight?: number | string;
@@ -115,6 +117,9 @@ const CERT_FONTS: CertFontOption[] = [
   { id: 'pattaya', name: 'Mềm mại Bay bổng (Pattaya)', font: '"Pattaya", cursive', category: 'cursive' },
   { id: 'charm', name: 'Thanh lịch Duyên dáng (Charm)', font: '"Charm", cursive', category: 'cursive' },
   { id: 'pacifico', name: 'Trẻ trung Phóng khoáng (Pacifico)', font: '"Pacifico", cursive', category: 'cursive' },
+  { id: 'allura', name: 'Chữ ký Mềm mại (Allura)', font: '"Allura", cursive', category: 'cursive' },
+  { id: 'alex_brush', name: 'Chữ ký Bút lông (Alex Brush)', font: '"Alex Brush", cursive', category: 'cursive' },
+  { id: 'pinyon', name: 'Chữ ký Cổ điển (Pinyon Script)', font: '"Pinyon Script", cursive', category: 'cursive' },
 
   // Nhóm Sang trọng & Cổ điển (Serif - Dành cho Tiêu đề THƯ KHEN & Lời dẫn)
   { id: 'playfair', name: 'Sang trọng Hoàng gia (Playfair Display)', font: '"Playfair Display", serif', category: 'serif' },
@@ -183,7 +188,7 @@ const ARTISTIC_PALETTES: ArtisticPalette[] = [
 ];
 
 export const CertificateView: React.FC = () => {
-  const { classes, activeClassId, setActiveClassId, students, teacherProfile, currentUser } = useClassroom();
+  const { classes, activeClassId, setActiveClassId, students, teacherProfile, currentUser, transactions } = useClassroom();
 
   const currentClassStudents = useMemo(() => {
     return students.filter(s => s.classId === activeClassId);
@@ -206,6 +211,10 @@ export const CertificateView: React.FC = () => {
   const [academicYear, setAcademicYear] = useState('2026–2027');
   const [reason, setReason] = useState('Đã có nhiều tiến bộ vượt bậc trong học tập và rèn luyện');
   const [issueDate, setIssueDate] = useState(() => new Date().toISOString().split('T')[0]);
+  // "Lời khen tự động": each student's praise is written from the xu they earned in the period (falls back to the general text)
+  const [personalReason, setPersonalReason] = useState<boolean>(() => {
+    try { return localStorage.getItem('lhhp_cert_personal_reason') !== 'false'; } catch { return true; }
+  });
 
   // Mặc định trung tính (tên trường / giáo viên lấy từ hồ sơ tài khoản đang đăng nhập)
   const defaultSchool = 'TRƯỜNG HỌC';
@@ -280,6 +289,14 @@ export const CertificateView: React.FC = () => {
 
   const [isProcessingSignature, setIsProcessingSignature] = useState(false);
   const [isProcessingLogo, setIsProcessingLogo] = useState(false);
+
+  // Chữ ký tự tạo từ tên giáo viên (dùng khi chưa tải chữ ký thật lên)
+  const [autoSigStyle, setAutoSigStyle] = useState<number | null>(() => {
+    const v = localStorage.getItem('lhhp_cert_auto_sig_style');
+    return v !== null && v !== '' ? Number(v) : null;
+  });
+  const [autoSigText, setAutoSigText] = useState<string>(() => localStorage.getItem('lhhp_cert_auto_sig_text') || '');
+  const [autoSignature, setAutoSignature] = useState<AutoSignature | null>(null);
   const signatureFileInputRef = useRef<HTMLInputElement>(null);
   const logoFileInputRef = useRef<HTMLInputElement>(null);
 
@@ -378,10 +395,7 @@ export const CertificateView: React.FC = () => {
 
           const aspect = (img.naturalWidth && img.naturalHeight) ? (img.naturalHeight / img.naturalWidth) : 0.5;
 
-          // NON-DESTRUCTIVE: Chỉ gắn thêm con dấu chữ ký vào bản vẽ hiện tại, KHÔNG reset layout
-          if (autoInsertSignature) {
-            appendSignatureToCanvas(cleanSignature, aspect);
-          }
+          void aspect; // placement is decided by the layout engine (effect on signatureSrc)
           confetti({ particleCount: 50, spread: 50, origin: { y: 0.7 } });
         } catch (err) {
           console.error('Lỗi tách nền chữ ký:', err);
@@ -415,8 +429,7 @@ export const CertificateView: React.FC = () => {
 
           const aspect = (img.naturalWidth && img.naturalHeight) ? (img.naturalHeight / img.naturalWidth) : 1;
 
-          // NON-DESTRUCTIVE: Thêm ngay vào canvas hiện tại, không reset layout
-          appendLogoToCanvas(cleanLogo, aspect);
+          void aspect; // placement is decided by the layout engine (effect on schoolLogoImage)
           confetti({ particleCount: 50, spread: 50, origin: { y: 0.6 } });
         } catch (err) {
           console.error('Lỗi tách nền logo:', err);
@@ -574,6 +587,21 @@ export const CertificateView: React.FC = () => {
     return () => { cancelled = true; };
   }, [activeTemplate.url]);
 
+  // Draw the auto signature from the teacher's name (debounced while typing)
+  const autoSigWord = autoSigText.trim() || givenNameOf(teacherName);
+  useEffect(() => {
+    if (!teacherName || teacherName === defaultTeacherName) { setAutoSignature(null); return; }
+    let cancelled = false;
+    const t = setTimeout(async () => {
+      const sig = await makeAutoSignature(teacherName, autoSigWord, autoSigStyle ?? undefined);
+      if (!cancelled) setAutoSignature(sig);
+    }, 350);
+    return () => { cancelled = true; clearTimeout(t); };
+  }, [teacherName, autoSigWord, autoSigStyle]);
+
+  // Real uploaded signature wins; otherwise the auto one
+  const signatureSrc = teacherSignatureImage || autoSignature?.url || null;
+
   useEffect(() => {
     const measure = (src: string | null, set: (v: number) => void, fallback: number) => {
       if (!src) return;
@@ -581,9 +609,9 @@ export const CertificateView: React.FC = () => {
       img.onload = () => set(img.naturalWidth ? img.naturalHeight / img.naturalWidth : fallback);
       img.src = src;
     };
-    measure(teacherSignatureImage, setSignatureAspect, 0.45);
+    measure(signatureSrc, setSignatureAspect, 0.45);
     measure(schoolLogoImage, setLogoAspect, 1);
-  }, [teacherSignatureImage, schoolLogoImage]);
+  }, [signatureSrc, schoolLogoImage]);
 
   const VARIANT_TO_COMPOSITION: Record<1 | 2 | 3, CertComposition> = { 1: 'center', 2: 'left', 3: 'right' };
   const COMPOSITION_TO_VARIANT: Record<CertComposition, 1 | 2 | 3> = { center: 1, left: 2, right: 3 };
@@ -591,16 +619,36 @@ export const CertificateView: React.FC = () => {
   const classLabel = activeClass?.name ? `Lớp ${activeClass.name}` : 'Lớp';
 
   /** Nội dung thay đổi theo từng học sinh (dùng khi đổi học sinh xem trước & xuất hàng loạt) */
+  const periodDays = certType === 'Tuần' ? 7 : certType === 'Học Kì' ? 150 : certType === 'Năm Học' ? 365 : 31;
+  const periodWord = certType === 'Tuần' ? 'trong tuần qua' : certType === 'Tháng' ? 'trong tháng qua' : certType === 'Học Kì' ? 'trong học kì' : certType === 'Năm Học' ? 'trong năm học' : 'thời gian qua';
+
+  /** Praise for one student: written from the positive xu they earned in the period, else the general praise */
+  const reasonFor = useCallback((student: any): string => {
+    if (!personalReason || !student) return reason;
+    const since = Date.now() - periodDays * 86400000;
+    const mine = (transactions || []).filter(t => t.studentId === student.id && (t.amount || 0) > 0 && new Date(t.timestamp).getTime() >= since);
+    if (mine.length === 0) return reason;
+    const counts = new Map<string, number>();
+    // skip system / quick-award reasons ("Thưởng nhanh +5 xu…"): only real praise reads well on a certificate
+    const SYSTEM_REASON = /(^|\s)[+-]?\d+\s*xu|thưởng nhanh|đổi quà|trừ xu|điều chỉnh|khởi tạo|nhập|cộng nhanh/i;
+    mine.forEach(t => { const k = (t.reason || '').trim(); if (k && !SYSTEM_REASON.test(k)) counts.set(k, (counts.get(k) || 0) + 1); });
+    const top = [...counts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 2)
+      .map(([k]) => k.charAt(0).toLocaleLowerCase('vi-VN') + k.slice(1).replace(/[.\s]+$/, ''));
+    const xu = mine.reduce((a, t) => a + (t.amount || 0), 0);
+    const lead = `Có nhiều cố gắng ${periodWord}`;
+    return top.length ? `${lead}: ${top.join(' và ')}. Đạt ${xu} xu thi đua.` : `${lead}. Đạt ${xu} xu thi đua.`;
+  }, [personalReason, reason, transactions, periodDays, periodWord]);
+
   const contentMapFor = useCallback((student: any): Record<string, string> => ({
     student_name: student?.name || 'Nguyễn Văn An',
     student_avatar: student?.originalAvatar || student?.avatar || '',
     student_class: `Học sinh ${classLabel}`,
-    reason_body: `“${reason}”`,
+    reason_body: `“${reasonFor(student)}”`,
     school_header: schoolName.toUpperCase(),
     title_sub: certificateTitle,
     date_text: formattedDate,
     teacher_signature: teacherName,
-  }), [classLabel, reason, schoolName, certificateTitle, formattedDate, teacherName]);
+  }), [classLabel, reasonFor, schoolName, certificateTitle, formattedDate, teacherName]);
 
   const generateRandomizedLayout = useCallback((
     student = previewStudent,
@@ -609,7 +657,6 @@ export const CertificateView: React.FC = () => {
   ): { layout: CertificateElement[]; variant: 1 | 2 | 3 } => {
     const analysis = templateAnalysis;
     if (!analysis) return { layout: elements, variant: currentLayoutVariant };
-    const variant = forceVariant || COMPOSITION_TO_VARIANT[preferredComposition(analysis)];
     const content: CertContent = {
       schoolName,
       title: 'Thư khen',
@@ -618,19 +665,27 @@ export const CertificateView: React.FC = () => {
       studentName: student?.name || 'Nguyễn Văn An',
       avatar: student?.originalAvatar || student?.avatar || '',
       className: `Học sinh ${classLabel}`,
-      reason: `“${reason}”`,
+      reason: `“${reasonFor(student)}”`,
       date: formattedDate,
       teacherTitle: 'Giáo viên chủ nhiệm',
       teacherName,
-      signature: teacherSignatureImage && autoInsertSignature ? teacherSignatureImage : null,
+      signature: signatureSrc && autoInsertSignature ? signatureSrc : null,
       signatureAspect,
       logo: schoolLogoImage,
       logoAspect,
     };
-    const layout = buildCertificateLayout(analysis, content, VARIANT_TO_COMPOSITION[variant], CERT_TYPOGRAPHY[typo % CERT_TYPOGRAPHY.length]);
-    return { layout: layout as CertificateElement[], variant };
+    const typography = CERT_TYPOGRAPHY[typo % CERT_TYPOGRAPHY.length];
+    const build = (v: 1 | 2 | 3) => buildCertificateLayout(analysis, content, VARIANT_TO_COMPOSITION[v], typography);
+    if (forceVariant) return { layout: build(forceVariant) as CertificateElement[], variant: forceVariant };
+    // Automatic: the recommended composition for this background; if it does not come out clean, the first one that does
+    const first = COMPOSITION_TO_VARIANT[preferredComposition(analysis)];
+    for (const v of [first, ...([1, 2, 3] as const).filter(x => x !== first)]) {
+      const layout = build(v);
+      if (isLayoutGood(layout)) return { layout: layout as CertificateElement[], variant: v };
+    }
+    return { layout: build(first) as CertificateElement[], variant: first };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [templateAnalysis, previewStudent, typoIndex, schoolName, certificateTitle, classLabel, reason, formattedDate, teacherName, teacherSignatureImage, autoInsertSignature, signatureAspect, schoolLogoImage, logoAspect]);
+  }, [templateAnalysis, previewStudent, typoIndex, schoolName, certificateTitle, classLabel, reasonFor, formattedDate, teacherName, signatureSrc, autoInsertSignature, signatureAspect, schoolLogoImage, logoAspect]);
 
   // Dựng lại bố cục khi đổi ảnh nền (phân tích xong). Đổi học sinh / sửa nội dung KHÔNG làm mất vị trí đã chỉnh.
   const generateRef = useRef(generateRandomizedLayout);
@@ -642,6 +697,23 @@ export const CertificateView: React.FC = () => {
     setCurrentLayoutVariant(variant);
     setActiveElementId(null);
   }, [templateAnalysis]);
+
+  // Signature / logo changed (auto signature drawn, real one uploaded or removed, logo added): rebuild so the footer block
+  // really has room for it, keeping the chosen style when it still comes out clean.
+  const regenerateKeepStyle = () => {
+    let res = generateRef.current(previewStudent, currentLayoutVariant, typoIndex);
+    if (!isLayoutGood(res.layout as any)) res = generateRef.current(previewStudent, undefined, typoIndex);
+    setElements(res.layout);
+    setCurrentLayoutVariant(res.variant);
+    setActiveElementId(null);
+  };
+  const regenSkip = useRef(true);
+  useEffect(() => {
+    if (!templateAnalysis) return;
+    if (regenSkip.current) { regenSkip.current = false; return; }
+    regenerateKeepStyle();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [signatureSrc, autoInsertSignature, schoolLogoImage, signatureAspect, logoAspect]);
 
   // Update dynamic content in elements while preserving user-adjusted coordinates (chữ dài tự thu nhỏ)
   const updateStudentInElements = useCallback((student: any, existingElements: CertificateElement[]): CertificateElement[] => {
@@ -656,14 +728,28 @@ export const CertificateView: React.FC = () => {
   // ==========================================
   // NÚT "TẠO THƯ KHEN": đổi sang bố cục + bộ phông khác, vẫn tự né hoạ tiết của ảnh nền
   // ==========================================
+  // NÚT "TẠO THƯ KHEN": dựng ngay bố cục đẹp nhất cho ảnh nền đang chọn (bố cục đề xuất + bộ phông chuẩn + lời khen tự động),
+  // dùng được ngay không cần chỉnh. Muốn đổi phong cách thì bấm "ĐỔI KIỂU".
   const handleAutoLayout = () => {
+    setTypoIndex(0);
+    const { layout, variant } = generateRandomizedLayout(previewStudent, undefined, 0);
+    setElements(layout);
+    setCurrentLayoutVariant(variant);
+    setActiveElementId(null);
+    confetti({ particleCount: 75, spread: 65, origin: { y: 0.6 } });
+  };
+
+  const handleShuffleStyle = () => {
     const variants: Array<1 | 2 | 3> = [1, 2, 3];
-    const choices = variants.filter(v => v !== currentLayoutVariant);
-    const nextVariant = choices[Math.floor(Math.random() * choices.length)];
     let nextTypo = Math.floor(Math.random() * CERT_TYPOGRAPHY.length);
     if (nextTypo === typoIndex) nextTypo = (nextTypo + 1) % CERT_TYPOGRAPHY.length;
     setTypoIndex(nextTypo);
-    const { layout, variant } = generateRandomizedLayout(previewStudent, nextVariant, nextTypo);
+    // Only styles that come out clean on this background (no crushed text, nothing over the signature)
+    const candidates = variants.filter(v => v !== currentLayoutVariant)
+      .map(v => ({ v, res: generateRandomizedLayout(previewStudent, v, nextTypo) }))
+      .filter(c => isLayoutGood(c.res.layout as any));
+    const pick = candidates.length ? candidates[Math.floor(Math.random() * candidates.length)].v : currentLayoutVariant;
+    const { layout, variant } = generateRandomizedLayout(previewStudent, pick, nextTypo);
     setElements(layout);
     setCurrentLayoutVariant(variant);
     setActiveElementId(null);
@@ -972,7 +1058,7 @@ export const CertificateView: React.FC = () => {
         </div>
 
         {/* 4 ACTION BUTTONS + TOGGLE EDIT MODE */}
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           {/* Class selector */}
           <div className="flex items-center gap-1.5 bg-slate-50 px-2.5 py-1.5 rounded-xl border border-slate-200 mr-1">
             <GraduationCap className="w-4 h-4 text-indigo-600" />
@@ -1011,23 +1097,23 @@ export const CertificateView: React.FC = () => {
             type="button"
             onClick={handleAutoLayout}
             disabled={isExporting}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-black text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 shadow-2xs transition-all hover-zoom-btn disabled:opacity-50 disabled:pointer-events-none uppercase"
-            title="Phần mềm đọc ảnh nền rồi tự bố trí lại: đổi bố cục (căn giữa / ảnh trái / ảnh phải) và bộ phông chữ"
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-black text-white bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 shadow-md shadow-indigo-600/25 transition-all hover-zoom-btn disabled:opacity-50 disabled:pointer-events-none uppercase whitespace-nowrap"
+            title="Tự động bố trí chữ và ảnh học sinh đẹp nhất theo ảnh nền đang chọn, dùng được ngay"
           >
-            <Shuffle className="w-4 h-4 text-indigo-600" />
+            <Sparkles className="w-4 h-4" />
             <span>TẠO THƯ KHEN</span>
           </button>
 
           {/* BUTTON 2: TẠO LẠI (Reset Layout) */}
           <button
             type="button"
-            onClick={handleResetLayout}
+            onClick={handleShuffleStyle}
             disabled={isExporting}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 border border-slate-200 transition-all hover-zoom-btn disabled:opacity-50 disabled:pointer-events-none uppercase"
-            title="Về bố cục đề xuất cho ảnh nền đang chọn"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-black text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 shadow-2xs transition-all hover-zoom-btn disabled:opacity-50 disabled:pointer-events-none uppercase whitespace-nowrap"
+            title="Đổi sang kiểu khác: ảnh bên trái, ảnh bên phải hoặc căn giữa, cùng bộ phông chữ khác"
           >
-            <RotateCcw className="w-3.5 h-3.5" />
-            <span>TẠO LẠI</span>
+            <Shuffle className="w-4 h-4 text-indigo-600" />
+            <span>ĐỔI KIỂU</span>
           </button>
 
           {/* BUTTON 3: TẢI THƯ KHEN (Single Download) */}
@@ -1288,9 +1374,18 @@ export const CertificateView: React.FC = () => {
 
               {/* Reason Form */}
               <div className="space-y-1.5">
+                <label className="flex items-start gap-2 p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 cursor-pointer">
+                  <input type="checkbox" checked={personalReason} className="mt-0.5 w-4 h-4 accent-emerald-600 shrink-0"
+                    onChange={e => { setPersonalReason(e.target.checked); try { localStorage.setItem('lhhp_cert_personal_reason', String(e.target.checked)); } catch { /* ignore */ } }} />
+                  <span className="text-xs font-bold text-emerald-900 leading-snug">
+                    Tự viết lời khen theo thành tích từng bạn
+                    <span className="block font-medium text-emerald-800">Lấy từ xu thi đua {periodWord}. Bạn nào chưa có xu thì dùng lời khen chung bên dưới.</span>
+                    {personalReason && previewStudent && <span className="block mt-1 font-semibold text-slate-800 italic">Ví dụ: “{reasonFor(previewStudent)}”</span>}
+                  </span>
+                </label>
                 <div className="flex items-center justify-between">
                   <label className="text-xs font-black uppercase tracking-wider text-slate-700 block">
-                    Nội Dung / Lý Do Khen Ngợi
+                    Lời khen chung
                   </label>
                   <span className="text-xs text-indigo-600 font-bold">Gợi ý nhanh</span>
                 </div>
@@ -1483,7 +1578,7 @@ export const CertificateView: React.FC = () => {
                     ) : (
                       <>
                         <Upload className="w-4 h-4 text-indigo-600 group-hover:-translate-y-0.5 transition-transform" />
-                        <span>{teacherSignatureImage ? 'Thay đổi ảnh chữ ký khác' : 'Tải lên Chữ ký tay'}</span>
+                        <span>{teacherSignatureImage ? 'Thay đổi ảnh chữ ký khác' : 'Tải chữ ký thật của thầy cô lên'}</span>
                       </>
                     )}
                   </button>
@@ -1502,6 +1597,43 @@ export const CertificateView: React.FC = () => {
                     />
                     <span>Tự động chèn chữ ký khi Tạo thư khen</span>
                   </label>
+
+                  {/* Auto signature made from the teacher's name (used until a real signature is uploaded) */}
+                  {!teacherSignatureImage && (
+                    <div className="p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 space-y-2">
+                      <p className="text-xs font-bold text-emerald-900 leading-snug">
+                        Đang dùng chữ ký tự tạo từ tên “{teacherName}”. Muốn dùng chữ ký thật thì tải lên ở nút bên trên.
+                      </p>
+                      <div className="h-16 w-full rounded-lg border border-emerald-200 bg-white flex items-center justify-center p-1.5 overflow-hidden">
+                        {autoSignature
+                          ? <img src={autoSignature.url} alt="Chữ ký tự tạo" className="max-h-full max-w-full object-contain" />
+                          : <span className="text-xs text-slate-500">Nhập tên giáo viên để tự tạo chữ ký</span>}
+                      </div>
+                      <label className="flex items-center gap-2 text-xs font-bold text-slate-700">
+                        <span className="whitespace-nowrap">Chữ ký:</span>
+                        <input
+                          type="text"
+                          value={autoSigText}
+                          placeholder={givenNameOf(teacherName) || 'Tên'}
+                          onChange={e => { setAutoSigText(e.target.value); try { localStorage.setItem('lhhp_cert_auto_sig_text', e.target.value); } catch { /* ignore */ } }}
+                          className="flex-1 min-w-0 px-2.5 py-1.5 text-xs font-bold rounded-lg border border-slate-300 bg-white outline-none focus:border-emerald-600"
+                          aria-label="Chữ viết trong chữ ký tự tạo"
+                        />
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const next = ((autoSigStyle ?? -1) + 1) % AUTO_SIGNATURE_STYLES;
+                          setAutoSigStyle(next);
+                          try { localStorage.setItem('lhhp_cert_auto_sig_style', String(next)); } catch { /* ignore */ }
+                        }}
+                        className="no-hover-fx min-h-9 w-full px-3 rounded-lg bg-white border border-emerald-300 text-emerald-800 text-xs font-black uppercase cursor-pointer flex items-center justify-center gap-1.5"
+                      >
+                        <PenTool className="w-3.5 h-3.5" />
+                        <span>Đổi kiểu chữ ký ({AUTO_SIGNATURE_STYLES} kiểu)</span>
+                      </button>
+                    </div>
+                  )}
 
                   {/* Signature Preview & Action */}
                   {teacherSignatureImage ? (
@@ -1538,7 +1670,7 @@ export const CertificateView: React.FC = () => {
 
                       <button
                         type="button"
-                        onClick={() => appendSignatureToCanvas()}
+                        onClick={() => regenerateKeepStyle()}
                         disabled={isExporting}
                         className="w-full py-1.5 px-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:pointer-events-none text-white text-xs font-bold transition-colors flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer"
                       >
@@ -1754,6 +1886,28 @@ export const CertificateView: React.FC = () => {
                             ))}
                           </optgroup>
                         </select>
+                      </div>
+
+                      {/* Bold / Italic / Underline + alignment */}
+                      <div className="flex items-center gap-1 border-l border-slate-200 pl-3 shrink-0" role="group" aria-label="Kiểu chữ và căn lề">
+                        {(() => {
+                          const isBold = Number(activeElement.fontWeight || 400) >= 700 || activeElement.fontWeight === 'bold';
+                          const isItalic = activeElement.fontStyle === 'italic';
+                          const isUnder = activeElement.textDecoration === 'underline';
+                          const al = activeElement.textAlign || 'center';
+                          const btn = (on: boolean) => `w-8 h-8 rounded-lg border text-sm flex items-center justify-center cursor-pointer no-hover-fx ${on ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-slate-800 border-slate-300 hover:bg-slate-50'}`;
+                          return (
+                            <>
+                              <button type="button" aria-pressed={isBold} title="Chữ đậm" className={`${btn(isBold)} font-black`} onClick={() => updateActiveElement({ fontWeight: isBold ? 400 : 800 })}>B</button>
+                              <button type="button" aria-pressed={isItalic} title="Chữ nghiêng" className={`${btn(isItalic)} italic font-bold`} onClick={() => updateActiveElement({ fontStyle: isItalic ? 'normal' : 'italic' })}>I</button>
+                              <button type="button" aria-pressed={isUnder} title="Chữ gạch chân" className={`${btn(isUnder)} underline font-bold`} onClick={() => updateActiveElement({ textDecoration: isUnder ? 'none' : 'underline' })}>U</button>
+                              <span className="w-px h-6 bg-slate-300 mx-1" aria-hidden />
+                              {([['left', 'Căn trái', '⇤'], ['center', 'Căn giữa', '↔'], ['right', 'Căn phải', '⇥']] as const).map(([v, t, ic]) => (
+                                <button key={v} type="button" aria-pressed={al === v} title={t} className={btn(al === v)} onClick={() => updateActiveElement({ textAlign: v })}>{ic}</button>
+                              ))}
+                            </>
+                          );
+                        })()}
                       </div>
 
                       {/* Font Size Input & Slider */}
@@ -2074,6 +2228,7 @@ export const CertificateView: React.FC = () => {
                           color: el.color,
                           fontWeight: el.fontWeight || 'normal',
                           fontStyle: el.fontStyle || 'normal',
+                          textDecoration: el.textDecoration || 'none',
                           textAlign: el.textAlign || 'center',
                           letterSpacing: el.letterSpacing || 'normal',
                           lineHeight: el.lineHeight || 1.3,

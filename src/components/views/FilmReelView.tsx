@@ -21,6 +21,7 @@ import { loadQuizBank, saveQuizBank } from '../../utils/quizParser';
 
 import { handleAvatarImgError } from '../../utils/avatarConfig';
 import { CalledStudentModal } from './picker/CalledStudentModal';
+import { useFairCall } from './picker/useFairCall';
 import { QuestionAudioButton } from './picker/QuestionAudioButton';
 import { shuffleAvoid, shuffleMatching } from '../../utils/shuffle';
 import { QuestionChallengeModal } from './picker/QuestionChallengeModal';
@@ -48,7 +49,10 @@ export const FilmReelView: React.FC = () => {
 
   // Settings & History
   const [autoExclude, setAutoExclude] = useState(true);
-  const [excludedStudentIds, setExcludedStudentIds] = useState<string[]>([]);
+  // Shared fair-call log; 'restored' = students the teacher put back into the reel by hand this session
+  const fair = useFairCall();
+  const [restoredIds, setRestoredIds] = useState<string[]>([]);
+  const excludedStudentIds = autoExclude ? fair.calledIds.filter(id => !restoredIds.includes(id)) : [];
   const [history, setHistory] = useState<Array<{ name: string; avatar: string; time: string; points: number }>>([]);
 
   // Animated sliding strip state (Transits from Right to Left)
@@ -200,9 +204,8 @@ export const FilmReelView: React.FC = () => {
         ]);
 
         // Auto exclude if checked
-        if (autoExclude) {
-          setExcludedStudentIds(prev => [...prev, selectedWinner.id]);
-        }
+        fair.markCalled(selectedWinner.id, 'reel');
+        setRestoredIds(prev => prev.filter(x => x !== selectedWinner.id));
 
         // Ở Chế độ 3 (Trả lời câu hỏi): Không tự động mở câu hỏi ngay, chờ giáo viên bấm "Bốc câu hỏi ngẫu nhiên"
         setIsQuestionModalOpen(false);
@@ -237,11 +240,12 @@ export const FilmReelView: React.FC = () => {
 
 
   const handleRestoreStudent = (id: string) => {
-    setExcludedStudentIds(prev => prev.filter(x => x !== id));
+    setRestoredIds(prev => [...prev, id]);
   };
 
   const handleRestoreAll = () => {
-    setExcludedStudentIds([]);
+    setRestoredIds([]);
+    fair.resetRound();
   };
 
   const excludedStudents = currentClassStudents.filter(s => excludedStudentIds.includes(s.id));

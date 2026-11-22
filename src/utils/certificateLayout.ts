@@ -26,6 +26,7 @@ export interface CertLayoutElement {
   color?: string;
   fontWeight?: string | number;
   fontStyle?: string;
+  textDecoration?: 'underline' | 'none';
   textAlign?: 'left' | 'center' | 'right';
   letterSpacing?: string;
   lineHeight?: number | string;
@@ -116,6 +117,7 @@ export const CERT_TYPOGRAPHY: CertTypography[] = [
 ];
 
 const CANVAS_H = 1080;
+const K_MAX = 1.45;
 const GRID_W = 128;
 const TEXT_PAD_X = 10; // padding ngang của khối chữ trên canvas
 const TEXT_PAD_Y = 6;
@@ -318,6 +320,25 @@ export function fitFontSize(text: string, el: CertLayoutElement, boxWidth: numbe
   return Math.max(minSize, Math.floor(maxSize * avail / w));
 }
 
+export interface Rect { x: number; y: number; w: number; h: number }
+
+/** Where the element REALLY paints (text is centred inside a wider box: measure the ink, not the box) */
+export function actualRect(e: CertLayoutElement): Rect {
+  if (e.type === 'image') return { x: e.x, y: e.y, w: e.width || 0, h: e.height || 0 };
+  const fs = e.fontSize || 32;
+  const boxW = e.width || 0;
+  const tw = measureTextWidth(e.content || '', e, fs);
+  const wrap = e.whiteSpace === 'normal';
+  const lines = wrap ? Math.min(3, Math.max(1, Math.ceil(tw / Math.max(50, boxW - TEXT_PAD_X * 2 - 6)))) : 1;
+  const w = wrap ? (lines > 1 ? boxW : Math.min(boxW, tw + TEXT_PAD_X * 2)) : Math.min(boxW || tw, tw + TEXT_PAD_X * 2);
+  const align = e.textAlign || 'center';
+  const x = align === 'left' ? e.x : align === 'right' ? e.x + boxW - w : e.x + boxW / 2 - w / 2;
+  const lh = Number(e.lineHeight) || 1.25;
+  return { x, y: e.y, w, h: lines * fs * lh + TEXT_PAD_Y * 2 };
+}
+export const rectsHit = (a: Rect, b: Rect) => a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
+const FOOTER_IDS = ['teacher_title', 'signature', 'teacher_signature', 'date_text'];
+
 /** Nạp sẵn các phông dùng trên thư khen để đo chữ chính xác */
 export async function ensureCertificateFonts() {
   if (typeof document === 'undefined' || !(document as any).fonts?.load) return;
@@ -400,26 +421,55 @@ export function buildCertificateLayout(
   const u = H / 100;
   const split = composition !== 'center';
 
+  // ----- Columns
+  let avatarCol: { x: number; w: number } | null = null;
+  let textCol = { x: S.x, w: S.w };
+  if (split) {
+    // Cụm (ảnh + cột chữ) có kích thước vừa phải và được đặt giữa vùng trống
+    const aw = Math.min(S.w * 0.36, S.h * 0.78, 56 * u);
+    const gutter = 4 * u;
+    const tw = Math.min(S.w - aw - gutter, Math.max(W * 0.42, 70 * u));
+    const gx = S.x + (S.w - (aw + gutter + tw)) / 2;
+    avatarCol = composition === 'left' ? { x: gx, w: aw } : { x: gx + tw + gutter, w: aw };
+    textCol = composition === 'left' ? { x: gx + aw + gutter, w: tw } : { x: gx, w: tw };
+  }
+  // Estimated half-width of what is really painted in the text column (name / praise are the widest rows);
+  // footers are kept outside this band, not outside an arbitrary fraction of the column.
+  const inkNameW = measureTextWidth(c.studentName, { fontFamily: typo.name.family, fontWeight: typo.name.weight }, 12.5 * u * typo.name.scale * 1.2);
+  const inkReasonW = Math.min(textCol.w, measureTextWidth(c.reason, { fontFamily: typo.body, fontStyle: 'italic', fontWeight: 500, letterSpacing: '0.01em' }, 3.2 * u * 1.1) / 2 + 2 * TEXT_PAD_X);
+  const inkHalf = Math.min(textCol.w / 2, Math.max(inkNameW, inkReasonW, 34 * u) / 2);
+  const colMid = textCol.x + textCol.w / 2;
+
   // ----- Footer blocks (ngày tháng + giáo viên): tìm chỗ trống thấp nhất mỗi bên
-  const sigH = c.signature ? 11 * u : 0;
+  const sigH = c.signature ? 8 * u : 0;   // the signature overlaps the typed name a little (like a real signature): shorter block
   const teacherBlockW = Math.min(34 * u * 1.35, W * 0.3);
-  const teacherBlockH = lineH(2.3 * u) + sigH + lineH(4.6 * u, 1.15);
+  const teacherBlockH = lineH(2.3 * u) + sigH * 0.78 + lineH(4.6 * u, 1.15);
   const dateBlockW = Math.min(30 * u * 1.3, W * 0.28);
   const dateBlockH = lineH(2.4 * u);
   type FootSpot = { x: number; y: number; score: number };
   const findFooter = (bw: number, bh: number, side: "left" | "right"): FootSpot | null => {
     const targetX = side === 'left' ? S.x + S.w * 0.2 : S.x + S.w * 0.8;
     const step = H / a.gh;
-    let best = null as FootSpot | null;
-    for (let y = H - mY - bh; y >= S.y + S.h * 0.35; y -= step) {
-      for (let x = side === 'left' ? mX : W / 2; x + bw <= (side === 'left' ? W / 2 + bw * 0.25 : W - mX); x += step) {
-        if (!space.boxFree(x - pad * 0.5, y - pad * 0.5, bw + pad, bh + pad)) continue;
-        const score = y * 1.0 - Math.abs(x + bw / 2 - targetX) * 0.35;
-        if (!best || score > best.score) best = { x, y, score };
+    // beside = outside the text column (so the signature block never squeezes the text stack)
+    const colL = colMid - inkHalf - pad, colR = colMid + inkHalf + pad;
+    const search = (beside: boolean, minY: number): FootSpot | null => {
+      let best = null as FootSpot | null;
+      for (let y = H - mY - bh; y >= Math.max(minY, S.y + S.h * 0.35); y -= step) {
+        const x0 = side === 'left' ? mX : (beside ? colR : W / 2);
+        const xEnd = side === 'left' ? (beside ? colL : W / 2 + bw * 0.25) : W - mX;
+        for (let x = x0; x + bw <= xEnd; x += step) {
+          if (!space.boxFree(x - pad * 0.5, y - pad * 0.5, bw + pad, bh + pad)) continue;
+          const score = y * 1.0 - Math.abs(x + bw / 2 - targetX) * 0.35;
+          if (!best || score > best.score) best = { x, y, score };
+        }
+        if (best && y < best.y - H * 0.12) break;
       }
-      if (best && y < best.y - H * 0.12) break;
-    }
-    return best;
+      return best;
+    };
+    const anywhere = search(false, 0);
+    // a spot beside the column is only taken when it sits in the bottom band too (not up next to the student's name)
+    const beside = search(true, anywhere ? anywhere.y - H * 0.1 : 0);
+    return beside || anywhere;
   };
   const tFoot = findFooter(teacherBlockW, teacherBlockH, 'right');
   const dFoot = findFooter(dateBlockW, Math.max(dateBlockH, teacherBlockH * 0.5), 'left');
@@ -429,27 +479,15 @@ export function buildCertificateLayout(
   const teacherX = tFoot ? tFoot.x : S.x + S.w - teacherBlockW;
   const teacherY = tFoot ? tFoot.y : S.y + S.h - teacherBlockH;
 
-  // ----- Columns
-  let avatarCol: { x: number; w: number } | null = null;
-  let textCol = { x: S.x, w: S.w };
-  if (split) {
-    // Cụm (ảnh + cột chữ) có kích thước vừa phải và được đặt giữa vùng trống
-    const aw = Math.min(S.w * 0.34, S.h * 0.72, 48 * u);
-    const gutter = 4 * u;
-    const tw = Math.min(S.w - aw - gutter, Math.max(W * 0.42, 70 * u));
-    const gx = S.x + (S.w - (aw + gutter + tw)) / 2;
-    avatarCol = composition === 'left' ? { x: gx, w: aw } : { x: gx + tw + gutter, w: aw };
-    textCol = composition === 'left' ? { x: gx + aw + gutter, w: tw } : { x: gx, w: tw };
-  }
   const cx = textCol.x + textCol.w / 2;
   // Khối chữ giữa có chạm chân trang không? (giao theo chiều ngang)
-  const overlapsX = (bx: number, bw: number) => bx < textCol.x + textCol.w * 0.82 && bx + bw > textCol.x + textCol.w * 0.18;
+  const overlapsX = (bx: number, bw: number) => bx < colMid + inkHalf && bx + bw > colMid - inkHalf;
   if (tFoot && overlapsX(teacherX, teacherBlockW)) stackBottom = Math.min(stackBottom, teacherY - 1.5 * u);
   if (dFoot && overlapsX(dFoot.x, dateBlockW)) stackBottom = Math.min(stackBottom, dFoot.y - 1.5 * u);
   if (!tFoot) stackBottom = Math.min(stackBottom, footerTop - 1.5 * u);
 
   // ----- Rows (cỡ chữ theo đơn vị u = 1% chiều cao)
-  const rows: Row[] = [];
+  let rows: Row[] = [];
   if (c.logo && !split) rows.push({ id: 'school_logo', kind: 'logo', size: 9 * u });
   rows.push({ id: 'school_header', kind: 'text', text: c.schoolName.toUpperCase(), size: 2.5 * u, fit: true,
     style: { fontFamily: typo.sans, fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase', color: P.muted } });
@@ -476,10 +514,13 @@ export function buildCertificateLayout(
   // Chiều cao từng dòng (lý do: tối đa 2 dòng)
   const reasonLines = (size: number, width: number) => {
     const w = measureTextWidth(c.reason, { fontFamily: typo.body, fontStyle: 'italic', fontWeight: 500, letterSpacing: '0.01em' }, size);
-    return Math.min(2, Math.max(1, Math.ceil(w / Math.max(50, width - TEXT_PAD_X * 2))));
+    return Math.min(3, Math.max(1, Math.ceil(w / Math.max(50, width - TEXT_PAD_X * 2))));
   };
+  // The praise and the name keep a readable floor when the free area is tight (everything else shrinks first)
+  let floorScale = 1; // relaxed (x0.9) when even the floors cannot fit, so the title/header never collapse to a few pixels
+  const rowK = (r: Row, k: number) => (r.id === 'reason_body' ? Math.max(k, 0.82 * floorScale) : r.id === 'student_name' ? Math.max(k, 0.8 * floorScale) : k);
   const rowHeight = (r: Row, k: number, width: number) => {
-    const s = r.size * k;
+    const s = r.size * rowK(r, k);
     if (r.kind === 'gap') return s;
     if (r.kind === 'avatar') return r.size * Math.sqrt(k);
     if (r.kind === 'logo') return s;
@@ -489,11 +530,28 @@ export function buildCertificateLayout(
   };
   const availH = stackBottom - S.y;
   const colWidth = Math.min(textCol.w, W * 0.78);
-  let k = 1;
-  for (let i = 0; i < 30; i++) {
-    const total = rows.reduce((sum, r) => sum + rowHeight(r, k, colWidth), 0);
-    if (total <= availH) break;
-    k *= 0.96;
+  // Fill the free area: start LARGER than the base sizes (up to K_MAX) and shrink until everything fits, so a roomy
+  // background gets big, readable text instead of a small block floating in the middle.
+  let k = K_MAX;
+  const solve = () => {
+    floorScale = 1;
+    for (let outer = 0; outer < 14; outer++) {
+      k = K_MAX;
+      for (let i = 0; i < 80; i++) {
+        const total = rows.reduce((sum, r) => sum + rowHeight(r, k, colWidth), 0);
+        if (total <= availH || k <= Math.max(0.3, 0.55 * floorScale)) break;
+        k *= 0.97;
+      }
+      const fitTotal = rows.reduce((sum, r) => sum + rowHeight(r, k, colWidth), 0);
+      if (fitTotal <= availH) break;
+      floorScale *= 0.9;
+    }
+  };
+  solve();
+  // Tight background: drop the purely decorative rows (divider) so the real content keeps a readable size
+  if (k < 0.66 || floorScale < 1) {
+    rows = rows.filter(r => r.id !== 'ornament_divider' && r.id !== 'gap2');
+    solve();
   }
   const total = rows.reduce((sum, r) => sum + rowHeight(r, k, colWidth), 0);
   const extra = Math.max(0, availH - total);
@@ -523,7 +581,7 @@ export function buildCertificateLayout(
       out.push({ id: 'school_logo', type: 'image', content: c.logo || '', x: cx - lw / 2, y, width: lw, height: r.size * k, isCircleImage: false, borderWidth: 0, boxShadow: 'none' });
       y += h + 0.6 * u; continue;
     }
-    const size = r.size * k;
+    const size = r.size * rowK(r, k);
     const { width, x } = textBox(r, y, h);
     const el: CertLayoutElement = {
       id: r.id, type: 'text', content: r.text || '', x, y, width,
@@ -540,7 +598,7 @@ export function buildCertificateLayout(
   if (split && avatarCol) {
     const top = out.find(e => e.id === 'title_master')?.y ?? S.y;
     const bottom = y;
-    let d = Math.min(avatarCol.w * 0.92, (stackBottom - S.y) * 0.72, 46 * u);
+    let d = Math.min(avatarCol.w * 0.92, (stackBottom - S.y) * 0.78, 54 * u);
     let ay = Math.max(S.y, (top + bottom) / 2 - d / 2);
     const ax = avatarCol.x + (avatarCol.w - d) / 2;
     // tránh chạm hoạ tiết: thu nhỏ dần nếu ô không trống
@@ -567,7 +625,7 @@ export function buildCertificateLayout(
   if (c.signature) {
     const sh = sigH, sw = Math.min(tW * 0.8, sh / (c.signatureAspect || 0.45));
     out.push({ id: 'signature', type: 'image', content: c.signature, x: teacherX + (tW - sw) / 2, y: ty, width: sw, height: sh, isCircleImage: false, borderWidth: 0, boxShadow: 'none' });
-    ty += sh;
+    ty += sh * 0.78;
   }
   const nameEl: CertLayoutElement = {
     id: 'teacher_signature', type: 'text', content: c.teacherName, x: teacherX, y: ty, width: tW,
@@ -594,6 +652,38 @@ export function buildCertificateLayout(
   dateEl.maxFontSize = Math.round(2.6 * u);
   out.push(dateEl);
 
+  // ----- Repair: footer blocks must not touch what is really painted above them. If they do, move them to the best
+  // free spot that clears the content (and the other footer block); keeps their order: teacher right, date left.
+  const mainRects = () => out.filter(e => !FOOTER_IDS.includes(e.id)).map(actualRect);
+  const groupsToCheck: Array<{ ids: string[]; side: 'left' | 'right' }> = [
+    { ids: ['teacher_title', 'signature', 'teacher_signature'], side: 'right' },
+    { ids: ['date_text'], side: 'left' },
+  ];
+  for (const gp of groupsToCheck) {
+    const members = out.filter(e => gp.ids.includes(e.id));
+    if (!members.length) continue;
+    const rects = members.map(actualRect);
+    const x0 = Math.min(...rects.map(r => r.x)), y0 = Math.min(...rects.map(r => r.y));
+    const bw = Math.max(...rects.map(r => r.x + r.w)) - x0, bh = Math.max(...rects.map(r => r.y + r.h)) - y0;
+    const others = out.filter(e => FOOTER_IDS.includes(e.id) && !gp.ids.includes(e.id)).map(actualRect);
+    const obstacles = () => [...mainRects(), ...others];
+    const clash = (r: Rect) => obstacles().some(o => rectsHit(r, o));
+    if (!clash({ x: x0, y: y0, w: bw, h: bh })) continue;
+    const step = H / a.gh;
+    const targetX = gp.side === 'left' ? S.x + S.w * 0.2 : S.x + S.w * 0.8;
+    let best: { x: number; y: number; score: number } | null = null;
+    for (let y = H - mY - bh; y >= S.y + S.h * 0.25; y -= step) {
+      for (let x = mX; x + bw <= W - mX; x += step) {
+        const r = { x: x - pad * 0.5, y: y - pad * 0.5, w: bw + pad, h: bh + pad };
+        if (!space.boxFree(r.x, r.y, r.w, r.h) || clash(r)) continue;
+        const sideOk = gp.side === 'left' ? x + bw / 2 <= W * 0.62 : x + bw / 2 >= W * 0.38;
+        const score = y * 1.0 - Math.abs(x + bw / 2 - targetX) * 0.35 - (sideOk ? 0 : 400);
+        if (!best || score > best.score) best = { x, y, score };
+      }
+    }
+    if (best) { const dx = best.x - x0, dy = best.y - y0; members.forEach(m => { m.x += dx; m.y += dy; }); }
+  }
+
   return out.map(e => ({ ...e, x: Math.round(e.x), y: Math.round(e.y), width: e.width ? Math.round(e.width) : e.width, height: e.height ? Math.round(e.height) : e.height }));
 }
 
@@ -604,6 +694,21 @@ function avatarEl(src: string, x: number, y: number, d: number, P: CertPalette):
     borderWidth: bw, borderColor: '#ffffff',
     boxShadow: `0 0 0 ${Math.max(3, Math.round(d * 0.012))}px ${P.ornament}, 0 18px 40px -14px rgba(15, 23, 42, 0.45)`,
   };
+}
+
+/**
+ * Is this layout ready to print? Title / name / praise are not crushed, and nothing runs into the signature block.
+ * Used to pick a composition that really works for the background (and to skip bad ones when shuffling styles).
+ */
+export function isLayoutGood(els: CertLayoutElement[]): boolean {
+  const g = (id: string) => els.find(e => e.id === id);
+  const t = g('title_master'), n = g('student_name'), r = g('reason_body'), f = g('teacher_title');
+  if (!t || !n || !r || !f) return true;
+  if (!((t.fontSize || 0) >= 36 && (n.fontSize || 0) >= 56 && (r.fontSize || 0) >= 16)) return false;
+  // real overlap between what is painted in the main content and in the footer blocks (signature block, date)
+  const footer = els.filter(e => FOOTER_IDS.includes(e.id)).map(actualRect);
+  const main = els.filter(e => !FOOTER_IDS.includes(e.id)).map(actualRect);
+  return !main.some(m => footer.some(fr => rectsHit(m, fr)));
 }
 
 /** Composition mặc định theo hình dạng vùng trống */
@@ -618,7 +723,15 @@ export function fitElementsToContent<T extends CertLayoutElement>(els: T[], cont
   return els.map(el => {
     if (!(el.id in contentById)) return el;
     const content = contentById[el.id];
-    if (el.type !== 'text' || !el.width || el.whiteSpace === 'normal') return { ...el, content };
+    if (el.type === 'text' && el.width && el.whiteSpace === 'normal') {
+      // Wrapped text (the praise): a longer personal reason shrinks (down to 70%) so it stays within 2 lines
+      const max = el.maxFontSize || el.fontSize || 32;
+      let size = max;
+      const avail = Math.max(50, el.width - TEXT_PAD_X * 2 - 6);
+      for (let i = 0; i < 12 && size > max * 0.7 && measureTextWidth(content, el, size) / avail > 2; i++) size = Math.floor(size * 0.94);
+      return { ...el, content, fontSize: size };
+    }
+    if (el.type !== 'text' || !el.width) return { ...el, content };
     const max = el.maxFontSize || el.fontSize || 32;
     return { ...el, content, fontSize: fitFontSize(content, el, el.width, max) };
   });

@@ -18,6 +18,7 @@ import confetti from 'canvas-confetti';
 
 import { handleAvatarImgError } from '../../../utils/avatarConfig';
 import { CalledStudentModal } from './CalledStudentModal';
+import { useFairCall } from './useFairCall';
 // Duck color palettes with cute 3D glossy gradients
 const DUCK_THEMES = [
   { id: 'yellow', name: 'Vàng Hoàng Kim', bodyGrad: ['#fef08a', '#facc15', '#ca8a04'], beak: '#ea580c', cap: '#3b82f6', glow: 'rgba(250, 204, 21, 0.7)' },
@@ -37,6 +38,8 @@ interface DuckState {
   isBoosting: boolean;
   boostMessage?: string;
   rank: number;
+  isSlowed?: boolean;   // hit by a wave
+  rankDelta?: number;   // places gained (+) or lost (-) in the last ~1.3s
 }
 
 // Falling flower petal interface for celebration
@@ -52,8 +55,19 @@ interface FlowerPetal {
   char: string;
 }
 
+const DUCK_CSS = `
+.duck-waves{background-image:repeating-radial-gradient(circle at 0 100%,transparent 0 14px,rgba(255,255,255,.22) 15px 17px),repeating-radial-gradient(circle at 30px 0,transparent 0 12px,rgba(255,255,255,.14) 13px 15px);background-size:64px 32px,48px 24px;animation:duckWaves 5s linear infinite;opacity:.55}
+@keyframes duckWaves{from{background-position:0 0,0 0}to{background-position:64px 0,-48px 0}}
+.duck-buoys{background:repeating-linear-gradient(90deg,#ef4444 0 14px,#ffffff 14px 28px);border-radius:999px}
+.duck-checker{background-color:#ffffff;background-image:conic-gradient(#111827 25%,#ffffff 0 50%,#111827 0 75%,#ffffff 0);background-size:14px 14px}
+@keyframes duckPop{0%{transform:scale(.3);opacity:0}35%{transform:scale(1.25);opacity:1}100%{transform:scale(1)}}
+.duck-pop{animation:duckPop .55s ease-out both}
+@media (prefers-reduced-motion:reduce){.duck-waves,.duck-pop{animation:none}}
+`;
+
 export const DuckRaceGame: React.FC = () => {
   const { currentClassStudents, awardPoints, classes, activeClassId } = useClassroom();
+  const fair = useFairCall();
   const activeClass = classes.find(c => c.id === activeClassId) || classes[0];
 
   // Options: 5s, 8s, 10s
@@ -72,6 +86,17 @@ export const DuckRaceGame: React.FC = () => {
   const [hasAwardedDuck, setHasAwardedDuck] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [commentary, setCommentary] = useState<string>('Sẵn sàng cho trận tranh tài hồ bơi gay cấn!');
+  const [leadChanges, setLeadChanges] = useState(0);
+  const [slowMo, setSlowMo] = useState(false);
+  const [flash, setFlash] = useState(false);
+  // Drama engine memory (refs: updated every frame without re-rendering)
+  const prevP = useRef<{ [id: string]: number }>({});
+  const prevRank = useRef<{ [id: string]: number }>({});
+  const rankChange = useRef<{ [id: string]: { delta: number; until: number } }>({});
+  const lastLeader = useRef<string>('');
+  const announced = useRef<Set<string>>(new Set());
+  const news = useRef<{ text: string; until: number }>({ text: '', until: 0 });
+  const closeCalled = useRef(false);
 
   // Filtered duck participants
   const duckStudents = useMemo(() => {
@@ -106,10 +131,13 @@ export const DuckRaceGame: React.FC = () => {
     setDuckStates(states);
   };
 
+  // Reset only when the racers really change (ids), not when the context hands over a new array with the same students
+  // (that happened after marking the winner as called, and wiped the winner pop-up right after the finish)
+  const racersKey = duckStudents.map(x => x.id).join('|');
   useEffect(() => {
     initDuckStates();
     resetRace();
-  }, [duckStudents]);
+  }, [racersKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // =========================================================================
   // WEB AUDIO SYNTHESIZER: DUCK QUACK, WHISTLE, SPLASH, CHEER
@@ -489,107 +517,91 @@ export const DuckRaceGame: React.FC = () => {
 
     const totalMs = raceDuration * 1000;
 
-    // Seed randomized drama curves for each duck
-    const duckTraits: { [id: string]: {
-      sprintPhase: 'early' | 'mid' | 'late' | 'steady';
-      basePace: number;
-      boosts: number[];
-    } } = {};
+    // =====================================================================
+    // DRAMA ENGINE: every duck gets its own "form" curve (two sine waves), a few Nitro / Wave events and a planned
+    // finishing gap. Positions swap all the time, nobody swims backwards, and the last metres are a photo finish.
+    // =====================================================================
+    // Fair call: pick the champion among racers not yet called in this round (everyone again once all were called)
+    const notCalled = duckStudents.filter(s => !fair.calledIds.includes(s.id));
+    const winnerPool = notCalled.length > 0 ? notCalled : duckStudents;
+    const winnerStudent = winnerPool[Math.floor(Math.random() * winnerPool.length)];
 
-    duckStudents.forEach(s => {
-      const phases: Array<'early' | 'mid' | 'late' | 'steady'> = ['early', 'mid', 'late', 'steady'];
-      duckTraits[s.id] = {
-        sprintPhase: phases[Math.floor(Math.random() * phases.length)],
-        basePace: 0.94 + Math.random() * 0.12,
-        boosts: [0.18 + Math.random() * 0.25, 0.5 + Math.random() * 0.3]
+    const smooth = (x: number) => { const c = Math.max(0, Math.min(1, x)); return c * c * (3 - 2 * c); };
+    const finalPos: { [id: string]: number } = { [winnerStudent.id]: 100 };
+    duckStudents.filter(x => x.id !== winnerStudent.id).sort(() => Math.random() - 0.5).forEach((x, k) => {
+      const gap = k === 0 ? 0.9 + Math.random() * 0.5 : k === 1 ? 2 + Math.random() * 0.6 : Math.min(16, 3 + k * 0.5 + Math.random() * 0.6);
+      finalPos[x.id] = 100 - gap;
+    });
+
+    type Ev = { t0: number; w: number; a: number; kind: 'nitro' | 'wave' };
+    const traits: { [id: string]: { waves: Array<{ a: number; f: number; ph: number }>; events: Ev[] } } = {};
+    duckStudents.forEach(x => {
+      const evs: Ev[] = [];
+      const n = 1 + (Math.random() < 0.6 ? 1 : 0);
+      for (let k = 0; k < n; k++) {
+        const kind = Math.random() < 0.55 ? 'nitro' : 'wave';
+        evs.push({ t0: 0.12 + Math.random() * 0.6, w: 0.07 + Math.random() * 0.05, a: kind === 'nitro' ? 4 + Math.random() * 3 : -(3 + Math.random() * 3), kind });
+      }
+      // the champion gets a story: a slump in the middle, then the comeback
+      if (x.id === winnerStudent.id && Math.random() < 0.6) evs.push({ t0: 0.36 + Math.random() * 0.15, w: 0.08, a: -5, kind: 'wave' });
+      traits[x.id] = {
+        waves: [{ a: 2.8 + Math.random() * 1.4, f: 1.1 + Math.random() * 0.9, ph: Math.random() * 6.28 }, { a: 1.4 + Math.random() * 1.0, f: 2.2 + Math.random() * 1.0, ph: Math.random() * 6.28 }],
+        events: evs,
       };
     });
 
-    // Random pre-selected dramatic winner from participants (fair random picker)
-    const winnerStudent = duckStudents[Math.floor(Math.random() * duckStudents.length)];
+    prevP.current = {}; prevRank.current = {}; rankChange.current = {}; lastLeader.current = '';
+    announced.current = new Set(); news.current = { text: '', until: 0 }; closeCalled.current = false;
+    setLeadChanges(0); setSlowMo(false); setFlash(false);
+    let leadCount = 0;
 
-    const commentaryQuotes = [
+    const baseQuotes = [
       '🚀 Còi khai cuộc vang rền! Các chú vịt đồng loạt lao xuống nước rẽ sóng cuồn cuộn!',
       '🔥 Bám đuổi quyết liệt! Vị trí dẫn đầu đang đổi ngôi liên tục từng mét nước!',
-      '⚡ Đột phá ngoạn mục! Chú vịt bất ngờ kích hoạt Siêu tốc Nitro vượt lên!',
       '🌊 Sóng lớn dâng cao! Cuộc đua đang bước vào giai đoạn nghẹt thở!',
-      '🏁 Giai đoạn nước rút cuối cùng! So kè từng milimet trước vạch đích!'
+      '🏁 Giai đoạn nước rút cuối cùng! So kè từng milimet trước vạch đích!',
     ];
+    const nameOf = (id: string) => duckStudents.find(x => x.id === id)?.name || '';
 
     const step = (now: number) => {
       const elapsed = now - raceStartTimeRef.current;
       const progressRatio = Math.min(elapsed / totalMs, 1);
       setElapsedTime(elapsed / 1000);
+      // "Slow-motion" camera: the last 8% of the track takes the last 15% of the time
+      const t = progressRatio < 0.85 ? progressRatio * (0.92 / 0.85) : 0.92 + ((progressRatio - 0.85) / 0.15) * 0.08;
+      if (progressRatio >= 0.85) setSlowMo(true);
+      const env = Math.pow(Math.sin(Math.PI * t), 0.6);
+      const fade = 1 - smooth((t - 0.72) / 0.22);   // events fade out so the planned final order holds
 
-      // Commentary updates based on race phase
-      if (progressRatio < 0.25) {
-        setCommentary(commentaryQuotes[0]);
-      } else if (progressRatio < 0.5) {
-        setCommentary(commentaryQuotes[1]);
-      } else if (progressRatio < 0.75) {
-        setCommentary(commentaryQuotes[2]);
-      } else if (progressRatio < 0.92) {
-        setCommentary(commentaryQuotes[3]);
-      } else {
-        setCommentary(commentaryQuotes[4]);
-      }
-
-      // Calculate progress for each duck
       const updatedStates: { [id: string]: DuckState } = {};
-
       duckStudents.forEach(st => {
-        const traits = duckTraits[st.id];
-        const isTheWinner = st.id === winnerStudent.id;
-
-        // Base linear progress
-        let p = progressRatio * 100;
-
-        // Wave bobbing effect
-        const sineBob = Math.sin(progressRatio * Math.PI * 5 + st.stt) * 4;
-        p += sineBob;
-
-        // Personality boost phases
-        if (traits.sprintPhase === 'early' && progressRatio < 0.4) {
-          p += Math.sin(progressRatio / 0.4 * Math.PI) * 7;
-        } else if (traits.sprintPhase === 'mid' && progressRatio >= 0.3 && progressRatio <= 0.7) {
-          p += Math.sin((progressRatio - 0.3) / 0.4 * Math.PI) * 8;
-        } else if (traits.sprintPhase === 'late' && progressRatio > 0.6) {
-          p += Math.sin((progressRatio - 0.6) / 0.4 * Math.PI) * 7;
-        }
-
-        // Mini-boost moments
-        let isBoosting = false;
-        traits.boosts.forEach(bTime => {
-          if (Math.abs(progressRatio - bTime) < 0.05) {
-            p += 4.5;
-            isBoosting = true;
+        const tr = traits[st.id];
+        const F = finalPos[st.id];
+        let p = t * F;
+        let dev = 0;
+        tr.waves.forEach(w => { dev += w.a * Math.sin(2 * Math.PI * w.f * t + w.ph); });
+        p += dev * env;
+        let isBoosting = false, isSlowed = false;
+        tr.events.forEach((e, k) => {
+          p += e.a * smooth((t - e.t0) / e.w) * fade;
+          if (t >= e.t0 && t < e.t0 + e.w * 1.6) { if (e.kind === 'nitro') isBoosting = true; else isSlowed = true; }
+          const key = `${st.id}-${k}`;
+          if (t >= e.t0 && !announced.current.has(key) && t < 0.9) {
+            announced.current.add(key);
+            news.current = { text: e.kind === 'nitro' ? `⚡ ${st.name} bật Nitro, lao vút lên!` : `🌊 ${st.name} bị sóng đánh lùi!`, until: now + 1800 };
+            if (e.kind === 'nitro') playDuckQuack();
           }
         });
-
-        // The chosen winner accelerates strongly in the final 18% to guarantee clean finish
-        if (isTheWinner) {
-          if (progressRatio > 0.82) {
-            const sprintFactor = (progressRatio - 0.82) / 0.18;
-            p += sprintFactor * 12;
-            isBoosting = true;
-          }
-        } else {
-          // Others get capped just behind the winner in final stretch
-          if (progressRatio > 0.9) {
-            p = Math.min(p, 96 + Math.random() * 2);
-          }
-        }
-
-        p = Math.max(0, Math.min(p, 100));
-
-        if (progressRatio >= 1) {
-          p = isTheWinner ? 100 : Math.min(97, p);
-        }
+        p = Math.min(Math.max(0, p), 100, F + 6 * Math.pow(1 - t, 2));   // may lead early, but converges on the planned finish
+        if (t >= 0.999) p = F;
+        p = Math.max(p, prevP.current[st.id] || 0);                      // never swims backwards (a stall looks like a stumble)
+        prevP.current[st.id] = p;
 
         updatedStates[st.id] = {
           progress: p,
           speedMultiplier: isBoosting ? 1.8 : 1,
           isBoosting,
+          isSlowed,
           boostMessage: isBoosting ? '⚡ NITRO!' : undefined,
           rank: 1
         };
@@ -606,6 +618,31 @@ export const DuckRaceGame: React.FC = () => {
         }
       });
 
+      // Overtakes: show ▲/▼ for ~1.3s, announce a new leader, call the photo finish
+      sortedByProgress.forEach((st, idx) => {
+        const rk = idx + 1;
+        const before = prevRank.current[st.id];
+        if (before && before !== rk && t > 0.05) rankChange.current[st.id] = { delta: before - rk, until: now + 1300 };
+        prevRank.current[st.id] = rk;
+        const rc = rankChange.current[st.id];
+        if (rc && rc.until > now) updatedStates[st.id].rankDelta = rc.delta;
+      });
+      const leaderId = sortedByProgress[0]?.id || '';
+      if (lastLeader.current && leaderId && leaderId !== lastLeader.current && t > 0.08 && t < 0.97) {
+        leadCount++; setLeadChanges(leadCount);
+        news.current = { text: `🔥 ${nameOf(leaderId)} vượt lên dẫn đầu!`, until: now + 1700 };
+        playTickSound(1250);
+      }
+      lastLeader.current = leaderId;
+      if (!closeCalled.current && t > 0.9 && sortedByProgress.length > 1) {
+        const gap = (updatedStates[sortedByProgress[0].id]?.progress || 0) - (updatedStates[sortedByProgress[1].id]?.progress || 0);
+        if (gap < 2.2) {
+          closeCalled.current = true;
+          news.current = { text: `📸 Sát nút! ${sortedByProgress[0].name} và ${sortedByProgress[1].name} cạnh tranh từng centimet!`, until: now + 2600 };
+        }
+      }
+      setCommentary(news.current.until > now ? news.current.text : t < 0.25 ? baseQuotes[0] : t < 0.6 ? baseQuotes[1] : t < 0.9 ? baseQuotes[2] : baseQuotes[3]);
+
       setDuckStates(updatedStates);
 
       // Finish condition
@@ -613,12 +650,14 @@ export const DuckRaceGame: React.FC = () => {
         finishCrossedRef.current = true;
         setIsRacing(false);
         setRaceWinner(winnerStudent);
+        fair.markCalled(winnerStudent.id, 'duck_race');
         setPodium(sortedByProgress.slice(0, 3));
         setCommentary(`🎉 QUÁN QUÂN: Chú vịt của ${winnerStudent.name} đã cán đích ngoạn mục!`);
 
         // Stop race music before playing fanfare
         stopRaceMusic();
 
+        setFlash(true); setTimeout(() => setFlash(false), 350); setSlowMo(false);
         // Trigger Screen Vibration / Shake
         setIsScreenShaking(true);
         setTimeout(() => setIsScreenShaking(false), 900);
@@ -768,7 +807,7 @@ export const DuckRaceGame: React.FC = () => {
         </div>
 
         {/* Right: Sound toggle & Action Buttons */}
-        <div className="flex items-center gap-2 sm:gap-3 ml-auto">
+        <div className="flex flex-wrap items-center justify-end gap-2 sm:gap-3 ml-auto max-w-full">
           {/* Sound Toggle */}
           <button
             onClick={() => setSoundEnabled(!soundEnabled)}
@@ -836,7 +875,7 @@ export const DuckRaceGame: React.FC = () => {
         </div>
 
         {/* Live Top 3 Mini-Leaderboard */}
-        <div className="flex items-center gap-2 relative z-10 bg-black/25 backdrop-blur-md px-3 py-1.5 rounded-2xl border border-white/20 self-stretch md:self-auto justify-around">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 relative z-10 bg-black/25 backdrop-blur-md px-3 py-1.5 rounded-2xl border border-white/20 self-stretch md:self-auto justify-around max-w-full">
           <span className="text-[12px] font-black text-amber-300 uppercase tracking-wider shrink-0 flex items-center gap-1">
             <Trophy className="w-3 h-3 text-amber-400" />
             <span>Top dẫn đầu:</span>
@@ -857,14 +896,17 @@ export const DuckRaceGame: React.FC = () => {
       {/* 3. 3D AQUA ARENA & RACING LANES */}
       <div className="relative rounded-3xl overflow-hidden border-4 border-sky-500 shadow-2xl bg-gradient-to-b from-sky-400 via-cyan-400 to-blue-600 p-4 sm:p-6">
         {/* Animated Water Surface Texture & Light Caustics */}
+        <style>{DUCK_CSS}</style>
+        <div className="absolute inset-0 pointer-events-none duck-waves" />
         <div className="absolute inset-0 pointer-events-none opacity-25 bg-[radial-gradient(#ffffff_2px,transparent_2px)] [background-size:24px_24px] animate-pulse" />
+        <div className={`absolute inset-0 z-50 pointer-events-none bg-white transition-opacity duration-300 ${flash ? 'opacity-80' : 'opacity-0'}`} />
         <div className="absolute inset-0 pointer-events-none bg-gradient-to-b from-white/20 via-transparent to-black/20" />
 
         {/* Countdown Overlay (3.. 2.. 1.. GO!) */}
         {countdown !== null && (
-          <div className="absolute inset-0 z-40 bg-black/50 backdrop-blur-xs flex flex-col items-center justify-center animate-in fade-in zoom-in-95 duration-200">
+          <div className="absolute inset-0 z-40 bg-sky-900/20 backdrop-blur-xs flex flex-col items-center justify-center animate-in fade-in duration-200">
             <div className="text-center">
-              <div className="w-28 h-28 sm:w-36 sm:h-36 rounded-full bg-gradient-to-tr from-amber-700 to-orange-700 border-4 border-white shadow-2xl flex items-center justify-center text-5xl sm:text-6xl font-black text-white animate-bounce">
+              <div key={countdown} className="duck-pop w-28 h-28 sm:w-40 sm:h-40 rounded-full bg-gradient-to-tr from-amber-500 to-orange-600 border-4 border-white shadow-2xl ring-8 ring-amber-200/70 flex items-center justify-center text-5xl sm:text-7xl font-black text-white">
                 {countdown === 0 ? '🏁 GO!' : countdown}
               </div>
               <p className="mt-4 text-xl sm:text-2xl font-black text-white uppercase tracking-wider drop-shadow-md">
@@ -887,6 +929,8 @@ export const DuckRaceGame: React.FC = () => {
             <span className="font-mono text-sm tracking-widest font-black">
               {elapsedTime.toFixed(2)}s / {raceDuration.toFixed(2)}s
             </span>
+            {isRacing && <span className="pl-2 ml-1 border-l border-amber-400/40 text-[12px] whitespace-nowrap">Đổi ngôi: <b className="tabular-nums">{leadChanges}</b></span>}
+            {slowMo && isRacing && <span className="pl-2 ml-1 border-l border-amber-400/40 text-[12px] whitespace-nowrap animate-pulse">🎥 CHẬM • ẢNH ĐÍCH</span>}
           </div>
 
           <div className="flex items-center gap-2 bg-red-600/90 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-white/40 shadow-xs text-white">
@@ -919,8 +963,8 @@ export const DuckRaceGame: React.FC = () => {
                 }}
               >
                 {/* 3D Olympic Floating Lane Buoys (Phao bơi phân làn) */}
-                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-red-600 via-white to-blue-600 opacity-60" />
-                <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-red-600 via-white to-blue-600 opacity-60" />
+                <div className="absolute top-0 left-0 right-0 h-1.5 duck-buoys opacity-80" />
+                <div className="absolute bottom-0 left-0 right-0 h-1.5 duck-buoys opacity-80" />
 
                 {/* Lane Number Badge */}
                 <div className="w-8 shrink-0 flex flex-col items-center justify-center font-black font-mono z-10">
@@ -933,10 +977,10 @@ export const DuckRaceGame: React.FC = () => {
                 </div>
 
                 {/* Finish Line Checkered Strip with Red Ribbon */}
-                <div className="absolute right-0 top-0 bottom-0 w-12 border-l-2 border-dashed border-red-500 bg-gradient-to-r from-red-500/80 to-red-600/90 flex items-center justify-center font-black text-white text-xs pointer-events-none z-10">
+                <div className="absolute right-0 top-0 bottom-0 w-12 border-l-4 border-white duck-checker flex items-center justify-center font-black text-white text-xs pointer-events-none z-10">
                   <div className="flex flex-col items-center">
-                    <span className="text-sm">🏁</span>
-                    <span className="text-[12px] font-black text-white uppercase tracking-tighter">ĐÍCH</span>
+                    <span className="text-sm drop-shadow">🏁</span>
+                    <span className="text-[12px] font-black text-slate-900 bg-white/90 rounded px-1 uppercase tracking-tighter">ĐÍCH</span>
                   </div>
                 </div>
 
@@ -946,18 +990,32 @@ export const DuckRaceGame: React.FC = () => {
                   style={{
                     left: `calc(38px + ${prog * 0.76}%)`,
                     transform: isRacing
-                      ? `translateY(${Math.sin(prog * 0.5 + idx) * 2.5}px) rotate(${Math.sin(prog * 0.3) * 3.5}deg)`
+                      ? `translateY(${Math.sin(prog * 0.9 + idx * 1.7) * 3}px) rotate(${(isBoosting ? -9 : state.isSlowed ? 5 : 0) + Math.sin(prog * 0.7 + idx) * 3}deg)`
                       : 'none',
                     transition: isRacing ? 'transform 0.1s ease-out' : 'left 0.3s ease-out'
                   }}
                 >
                   {/* Water Wake & Splash Bubbles behind the duck */}
                   {isRacing && prog > 2 && (
-                    <div className="absolute -left-7 top-1/2 -translate-y-1/2 flex items-center opacity-85 pointer-events-none">
-                      <div className="w-3.5 h-2 rounded-full bg-white animate-ping opacity-80" />
-                      <div className="w-6 h-2.5 rounded-full bg-white/80 blur-[1px]" />
-                      <div className="w-10 h-3.5 rounded-full bg-sky-200/60 -ml-3" />
+                    <div className="absolute -left-16 top-1/2 -translate-y-1/2 pointer-events-none" aria-hidden>
+                      <svg width="64" height="34" viewBox="0 0 64 34" className="opacity-90">
+                        <path d="M64 17 L8 2 Q0 4 6 10 L40 17 L6 24 Q0 30 8 32 Z" fill="rgba(255,255,255,0.75)" />
+                        <circle cx="14" cy="6" r="2.4" fill="#fff" className="animate-ping" />
+                        <circle cx="10" cy="28" r="2" fill="#fff" className="animate-ping" style={{ animationDelay: '0.2s' }} />
+                      </svg>
+                      {isBoosting && [0, 1, 2].map(k => <span key={k} className="absolute h-0.5 w-9 rounded bg-white/90" style={{ left: -14 - k * 5, top: 9 + k * 8 }} />)}
                     </div>
+                  )}
+                  {/* Leader aura */}
+                  {isRacing && state.rank === 1 && prog > 8 && <div className="absolute -inset-2 rounded-full bg-amber-300/40 blur-md animate-pulse pointer-events-none" aria-hidden />}
+                  {/* Overtake chip */}
+                  {isRacing && !!state.rankDelta && (
+                    <div className={`absolute -top-3.5 right-1 px-1.5 rounded-full text-[12px] font-black shadow-md z-30 whitespace-nowrap ${state.rankDelta > 0 ? 'bg-emerald-500 text-white' : 'bg-rose-500 text-white'}`}>
+                      {state.rankDelta > 0 ? `▲${state.rankDelta}` : `▼${-state.rankDelta}`}
+                    </div>
+                  )}
+                  {isRacing && state.isSlowed && !isBoosting && (
+                    <div className="absolute -top-3.5 left-2 px-2 rounded-full bg-sky-100 text-sky-900 border border-sky-300 font-black text-[12px] shadow whitespace-nowrap z-30">🌊 Sóng!</div>
                   )}
 
                   {/* Nitro Boost Flash */}
@@ -1064,6 +1122,23 @@ export const DuckRaceGame: React.FC = () => {
           })}
         </div>
       </div>
+
+      {/* Champion card stays under the lanes after the pop-up is closed: who crossed the line first */}
+      {raceWinner && !isRacing && !showGrandVictoryModal && (
+        <div className="rounded-3xl border-2 border-amber-300 bg-gradient-to-r from-amber-50 via-white to-amber-50 p-4 sm:p-5 flex flex-wrap items-center justify-center gap-4 shadow-md animate-in fade-in zoom-in-95 duration-300">
+          <img src={raceWinner.avatar} onError={(e) => handleAvatarImgError(e, raceWinner.gender, raceWinner.name)} alt={raceWinner.name}
+            className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl object-cover object-center border-4 border-white ring-4 ring-amber-300 shadow-lg" referrerPolicy="no-referrer" />
+          <div className="text-center sm:text-left">
+            <p className="text-xs font-black uppercase tracking-wider text-amber-800 flex items-center justify-center sm:justify-start gap-1.5"><Trophy className="w-4 h-4" />Về đích đầu tiên</p>
+            <p className="text-2xl sm:text-3xl font-black text-slate-900 leading-tight">{raceWinner.name}</p>
+            <p className="text-sm font-bold text-slate-700">STT #{raceWinner.stt} • {raceWinner.group || 'Tổ 1'} • Chúc mừng em!</p>
+          </div>
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            <button type="button" onClick={() => setShowGrandVictoryModal(true)} className="no-hover-fx min-h-11 px-4 rounded-xl bg-amber-600 text-white text-sm font-black whitespace-nowrap cursor-pointer">Xem lại & trao xu</button>
+            <button type="button" onClick={handleStartCountdown} className="no-hover-fx min-h-11 px-4 rounded-xl bg-white border border-slate-300 text-slate-800 text-sm font-black whitespace-nowrap cursor-pointer">Đua vòng mới</button>
+          </div>
+        </div>
+      )}
 
       {/* ========================================================================= */}
       {/* 4. MÀN HÌNH POP-UP RUNG LỚN: VINH DANH QUÁN QUÂN & TUNG HOA RƠI LẢ TẢ   */}

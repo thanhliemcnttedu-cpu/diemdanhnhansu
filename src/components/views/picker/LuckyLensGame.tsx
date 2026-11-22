@@ -16,6 +16,7 @@ import {
 } from '../../../utils/audio';
 import { handleAvatarImgError } from '../../../utils/avatarConfig';
 import { CalledStudentModal } from './CalledStudentModal';
+import { useFairCall } from './useFairCall';
 
 interface DynamicPhoto {
   id: string;
@@ -58,7 +59,8 @@ export const LuckyLensGame: React.FC<LuckyLensGameProps> = ({
   // Filter & Exclude states
   const [selectedGroupFilter, setSelectedGroupFilter] = useState<string>('all');
   const [autoExclude, setAutoExclude] = useState(true);
-  const [excludedIds, setExcludedIds] = useState<string[]>([]);
+  const fair = useFairCall();
+  const excludedIds = autoExclude ? fair.calledIds : [];
   const [historyList, setHistoryList] = useState<Array<{ student: Student; time: string; points: number }>>([]);
 
   // Game Mode: 'random' | 'coins'
@@ -418,9 +420,7 @@ export const LuckyLensGame: React.FC<LuckyLensGameProps> = ({
         ]);
 
         // Auto exclude if enabled
-        if (autoExclude) {
-          setExcludedIds(prev => Array.from(new Set([...prev, winningStudent.id])));
-        }
+        fair.markCalled(winningStudent.id, 'lucky_lens');
       }, 260);
     }, totalDurationMs);
   }, [
@@ -468,7 +468,7 @@ export const LuckyLensGame: React.FC<LuckyLensGameProps> = ({
 
   // Reset Excluded Students
   const handleResetExclusions = () => {
-    setExcludedIds([]);
+    fair.resetRound();
     setWinner(null);
   };
 
