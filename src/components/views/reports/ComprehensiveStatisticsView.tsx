@@ -16,9 +16,48 @@ import confetti from 'canvas-confetti';
 import { exportElementToPdf, exportElementToImagePng, exportMultipleElementsToPdf, exportMultipleElementsToImagesPng } from '../../../utils/printHelper';
 import { buildFormattedSheet, ExcelColumnDef } from '../../../utils/excelHelper';
 import { getOfficialDisplayName, getOfficialRoleTitle } from '../../../utils/accountIdentity';
+import { makeAutoSignature } from '../../../utils/autoSignature';
 
 const LAST_BACKUP_KEY = 'lop_hoc_hanh_phuc_last_backup_timestamp';
 const DISMISSED_BACKUP_KEY = 'lop_hoc_hanh_phuc_dismissed_backup_date';
+
+/**
+ * Khối chữ ký cuối trang báo cáo.
+ * - Giáo viên (GVCN): CHỈ một ô "Giáo viên chủ nhiệm" kèm chữ ký (chữ ký thật đã tải ở "Tạo thư khen", không có thì chữ ký tự tạo từ tên), không còn ô Ban giám hiệu.
+ * - BGH / Quản trị: giữ hai ô như cũ (người lập + Ban giám hiệu duyệt).
+ */
+const ReportSignatureBlock: React.FC<{ kind: 'bao-cao' | 'bieu'; name: string; teacher: boolean; signature: string | null }> = ({ kind, name, teacher, signature }) => {
+  if (teacher) {
+    return (
+      <div className="flex justify-end pt-6 border-t border-slate-200 text-xs">
+        <div className="w-64 text-center">
+          <div className="font-black uppercase text-slate-800">GIÁO VIÊN CHỦ NHIỆM</div>
+          <div className="text-[12px] text-slate-500 italic">(Ký và ghi rõ họ tên)</div>
+          <div className="h-16 flex items-center justify-center">
+            {signature && <img src={signature} alt="Chữ ký giáo viên chủ nhiệm" className="max-h-full max-w-full object-contain" />}
+          </div>
+          <div className="font-black text-slate-900">{name}</div>
+        </div>
+      </div>
+    );
+  }
+  return (
+    <div className="grid grid-cols-2 pt-6 text-center text-xs border-t border-slate-200">
+      <div>
+        <div className="font-black uppercase text-slate-800">{kind === 'bao-cao' ? 'NGƯỜI LẬP BÁO CÁO' : 'NGƯỜI LẬP BIỂU'}</div>
+        <div className="text-[12px] text-slate-500 italic">(Ký và ghi rõ họ tên)</div>
+        <div className="h-12" />
+        <div className="font-black text-slate-900">{name}</div>
+      </div>
+      <div>
+        <div className="font-black uppercase text-slate-800">{kind === 'bao-cao' ? 'HIỆU TRƯỞNG / BAN GIÁM HIỆU' : 'BAN GIÁM HIỆU DUYỆT'}</div>
+        <div className="text-[12px] text-slate-500 italic">(Ký tên và đóng dấu)</div>
+        <div className="h-12" />
+        <div className="font-black text-slate-900">Ban Giám Hiệu</div>
+      </div>
+    </div>
+  );
+};
 
 export const ComprehensiveStatisticsView: React.FC = () => {
   const {
@@ -49,6 +88,27 @@ export const ComprehensiveStatisticsView: React.FC = () => {
   const officialReporterName = getOfficialDisplayName(currentUser, allUsers) || teacherProfile.name;
   const officialSchoolName = currentUser?.schoolName || teacherProfile.schoolName || 'TRƯỜNG HỌC';
   const officialRoleTitle = getOfficialRoleTitle(currentUser);
+  // Tài khoản giáo viên (không phải BGH / Quản trị): báo cáo chỉ có chữ ký giáo viên chủ nhiệm
+  const isTeacherReport = !(isAdmin || isBgh || isSchoolAdmin);
+  const [teacherSignature, setTeacherSignature] = useState<string | null>(null);
+  useEffect(() => {
+    if (!isTeacherReport) { setTeacherSignature(null); return; }
+    let cancelled = false;
+    let real: string | null = null;
+    try { real = localStorage.getItem('lhhp_cert_teacher_signature'); } catch { /* ignore */ }
+    if (real) { setTeacherSignature(real); return; }
+    const name = String(officialReporterName || '').replace(/^Cô\s+/i, '').trim();
+    if (!name) { setTeacherSignature(null); return; }
+    (async () => {
+      let customWord = '';
+      try { customWord = localStorage.getItem('lhhp_cert_auto_sig_text') || ''; } catch { /* ignore */ }
+      let style: number | undefined;
+      try { const v = localStorage.getItem('lhhp_cert_auto_sig_style'); style = v ? Number(v) : undefined; } catch { /* ignore */ }
+      const sig = await makeAutoSignature(name, customWord.trim() || undefined, style);
+      if (!cancelled) setTeacherSignature(sig ? sig.url : null);
+    })();
+    return () => { cancelled = true; };
+  }, [isTeacherReport, officialReporterName]);
 
   // 1. Timeframe selection: 'day' | 'week' | 'month' | 'semester'
   const [timeframe, setTimeframe] = useState<'day' | 'week' | 'month' | 'semester'>('day');
@@ -1757,20 +1817,7 @@ export const ComprehensiveStatisticsView: React.FC = () => {
         </div>
 
         {/* Chữ ký xác nhận Trang 1 */}
-        <div className="grid grid-cols-2 pt-6 text-center text-xs border-t border-slate-200">
-          <div>
-            <div className="font-black uppercase text-slate-800">NGƯỜI LẬP BÁO CÁO</div>
-            <div className="text-[12px] text-slate-500 italic">(Ký và ghi rõ họ tên)</div>
-            <div className="h-14" />
-            <div className="font-black text-slate-900">{officialReporterName}</div>
-          </div>
-          <div>
-            <div className="font-black uppercase text-slate-800">HIỆU TRƯỞNG / BAN GIÁM HIỆU</div>
-            <div className="text-[12px] text-slate-500 italic">(Ký tên và đóng dấu)</div>
-            <div className="h-14" />
-            <div className="font-black text-slate-900">Ban Giám Hiệu</div>
-          </div>
-        </div>
+        <ReportSignatureBlock kind="bao-cao" name={officialReporterName} teacher={isTeacherReport} signature={teacherSignature} />
       </div>
 
       {/* 6. BẢNG TỔNG HỢP SĨ SỐ, NAM/NỮ, CHUYÊN CẦN & BÁN TRÚ CÁC LỚP HỌC (NGẮT 1, 2 HOẶC 3 TRANG A4 KHỔ NGANG) */}
@@ -1866,20 +1913,7 @@ export const ComprehensiveStatisticsView: React.FC = () => {
             </div>
 
             {!hasClassPage2 && (
-              <div className="grid grid-cols-2 pt-6 text-center text-xs border-t border-slate-200">
-                <div>
-                  <div className="font-black uppercase text-slate-800">NGƯỜI LẬP BIỂU</div>
-                  <div className="text-[12px] text-slate-500 italic">(Ký và ghi rõ họ tên)</div>
-                  <div className="h-12" />
-                  <div className="font-black text-slate-900">{officialReporterName}</div>
-                </div>
-                <div>
-                  <div className="font-black uppercase text-slate-800">BAN GIÁM HIỆU DUYỆT</div>
-                  <div className="text-[12px] text-slate-500 italic">(Ký tên và đóng dấu)</div>
-                  <div className="h-12" />
-                  <div className="font-black text-slate-900">Ban Giám Hiệu</div>
-                </div>
-              </div>
+              <ReportSignatureBlock kind="bieu" name={officialReporterName} teacher={isTeacherReport} signature={teacherSignature} />
             )}
           </div>
 
@@ -1973,20 +2007,7 @@ export const ComprehensiveStatisticsView: React.FC = () => {
               </div>
 
               {!hasClassPage3 && (
-                <div className="grid grid-cols-2 pt-6 text-center text-xs border-t border-slate-200">
-                  <div>
-                    <div className="font-black uppercase text-slate-800">NGƯỜI LẬP BIỂU</div>
-                    <div className="text-[12px] text-slate-500 italic">(Ký và ghi rõ họ tên)</div>
-                    <div className="h-12" />
-                    <div className="font-black text-slate-900">{officialReporterName}</div>
-                  </div>
-                  <div>
-                    <div className="font-black uppercase text-slate-800">BAN GIÁM HIỆU DUYỆT</div>
-                    <div className="text-[12px] text-slate-500 italic">(Ký tên và đóng dấu)</div>
-                    <div className="h-12" />
-                    <div className="font-black text-slate-900">Ban Giám Hiệu</div>
-                  </div>
-                </div>
+                <ReportSignatureBlock kind="bieu" name={officialReporterName} teacher={isTeacherReport} signature={teacherSignature} />
               )}
             </div>
           )}
@@ -2078,20 +2099,7 @@ export const ComprehensiveStatisticsView: React.FC = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 pt-6 text-center text-xs border-t border-slate-200">
-                <div>
-                  <div className="font-black uppercase text-slate-800">NGƯỜI LẬP BIỂU</div>
-                  <div className="text-[12px] text-slate-500 italic">(Ký và ghi rõ họ tên)</div>
-                  <div className="h-12" />
-                  <div className="font-black text-slate-900">{officialReporterName}</div>
-                </div>
-                <div>
-                  <div className="font-black uppercase text-slate-800">BAN GIÁM HIỆU DUYỆT</div>
-                  <div className="text-[12px] text-slate-500 italic">(Ký tên và đóng dấu)</div>
-                  <div className="h-12" />
-                  <div className="font-black text-slate-900">Ban Giám Hiệu</div>
-                </div>
-              </div>
+              <ReportSignatureBlock kind="bieu" name={officialReporterName} teacher={isTeacherReport} signature={teacherSignature} />
             </div>
           )}
         </>
@@ -2226,20 +2234,7 @@ export const ComprehensiveStatisticsView: React.FC = () => {
         </div>
 
         {/* Chữ ký Trang Tiến bộ 1 */}
-        <div className="grid grid-cols-2 pt-6 text-center text-xs border-t border-slate-200">
-          <div>
-            <div className="font-black uppercase text-slate-800">NGƯỜI LẬP BIỂU</div>
-            <div className="text-[12px] text-slate-500 italic">(Ký và ghi rõ họ tên)</div>
-            <div className="h-12" />
-            <div className="font-black text-slate-900">{officialReporterName}</div>
-          </div>
-          <div>
-            <div className="font-black uppercase text-slate-800">BAN GIÁM HIỆU DUYỆT</div>
-            <div className="text-[12px] text-slate-500 italic">(Ký tên và đóng dấu)</div>
-            <div className="h-12" />
-            <div className="font-black text-slate-900">Ban Giám Hiệu</div>
-          </div>
-        </div>
+        <ReportSignatureBlock kind="bieu" name={officialReporterName} teacher={isTeacherReport} signature={teacherSignature} />
       </div>
 
       {/* 9. BẢNG THEO DÕI & SO SÁNH TIẾN BỘ HỌC SINH - PHẦN 2 (NẾU CÓ > 35 HỌC SINH) (A4 KHỔ NGANG) */}
@@ -2322,20 +2317,7 @@ export const ComprehensiveStatisticsView: React.FC = () => {
           </div>
 
           {/* Chữ ký Trang 4 */}
-          <div className="grid grid-cols-2 pt-6 text-center text-xs border-t border-slate-200">
-            <div>
-              <div className="font-black uppercase text-slate-800">NGƯỜI LẬP BIỂU</div>
-              <div className="text-[12px] text-slate-500 italic">(Ký và ghi rõ họ tên)</div>
-              <div className="h-12" />
-              <div className="font-black text-slate-900">{officialReporterName}</div>
-            </div>
-            <div>
-              <div className="font-black uppercase text-slate-800">BAN GIÁM HIỆU DUYỆT</div>
-              <div className="text-[12px] text-slate-500 italic">(Ký tên và đóng dấu)</div>
-              <div className="h-12" />
-              <div className="font-black text-slate-900">Ban Giám Hiệu</div>
-            </div>
-          </div>
+          <ReportSignatureBlock kind="bieu" name={officialReporterName} teacher={isTeacherReport} signature={teacherSignature} />
         </div>
       )}
 

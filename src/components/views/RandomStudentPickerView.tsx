@@ -105,6 +105,8 @@ export const RandomStudentPickerView: React.FC<RandomStudentPickerViewProps> = (
           </div>
         </div>
 
+        {/* Trang "Tất cả game" đã liệt kê đủ các trò dưới dạng thẻ lớn nên ẩn thanh chọn nhanh ở đó; đang chơi một trò thì vẫn hiện để chuyển trò */}
+        {activeGame !== 'dashboard' && (
         <nav className="border-t border-slate-100 bg-slate-50/70 p-3 md:p-4" aria-label="Chọn trò chơi gọi tên">
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2 md:gap-3">
             {GAME_TABS.map(g => {
@@ -127,6 +129,7 @@ export const RandomStudentPickerView: React.FC<RandomStudentPickerViewProps> = (
             })}
           </div>
         </nav>
+        )}
       </div>
 
       {/* ===================================================================== */}

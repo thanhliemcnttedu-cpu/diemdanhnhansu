@@ -1297,25 +1297,13 @@ export const AdminRealtimeDashboardView: React.FC = () => {
 
       {/* 2o. DẢI SỐ LIỆU CHÍNH: một con số lớn + so kỳ trước + xu hướng nhỏ + vòng đồng hồ có mẫu số (tông sáng) */}
       {(() => {
-        const pts = trendInfo.points;
-        const W = 320, H = 96, L = 6, R = 10, T = 12, B = 8;
-        const vals = pts.map(p => p.att);
-        const lo = vals.length ? Math.max(0, Math.floor(Math.min(...vals) / 5) * 5 - 3) : 0;
-        const hiRaw = vals.length ? Math.min(100, Math.ceil(Math.max(...vals) / 5) * 5 + 1) : 100;
-        const hi = hiRaw <= lo ? lo + 10 : hiRaw;
-        const idx = (d: string) => 13 - Math.round((new Date(trendInfo.anchorDate).getTime() - new Date(d).getTime()) / 86400000);
-        const x = (d: string) => L + (idx(d) / 13) * (W - L - R);
-        const y = (v: number) => T + (1 - (v - lo) / (hi - lo)) * (H - T - B);
-        const line = pts.map((p, i) => `${i ? 'L' : 'M'}${x(p.date).toFixed(1)} ${y(p.att).toFixed(1)}`).join(' ');
-        const lastP = pts[pts.length - 1];
-        const area = pts.length > 1 ? `${line} L${x(lastP.date).toFixed(1)} ${H - B} L${x(pts[0].date).toFixed(1)} ${H - B} Z` : '';
         const has = periodAttendance.hasData;
         const prov = sampleIncomplete;
         const ringColor = !has ? '#CBD5E1' : prov ? '#94A3B8' : '#059669';
         const C = 2 * Math.PI * 44;
         const periodName = timeframe === 'day' ? (selectedDate === todayStr ? 'hôm nay' : formatDateVN(selectedDate)) : timeframe === 'week' ? 'tuần này' : 'tháng này';
         return (
-          <div className="rounded-3xl border border-sky-200 bg-gradient-to-br from-white via-sky-50/60 to-emerald-50/50 p-4 sm:p-6 shadow-sm grid gap-5 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1.3fr)_auto] items-center" aria-label="Số liệu chính">
+          <div className="rounded-3xl border border-sky-200 bg-gradient-to-br from-white via-sky-50/60 to-emerald-50/50 p-4 sm:p-6 shadow-sm grid gap-5 lg:grid-cols-[minmax(0,1fr)_auto] items-center" aria-label="Số liệu chính">
             <div className="min-w-0">
               <p className="text-xs font-black text-slate-700 uppercase tracking-wide whitespace-nowrap">Chuyên cần {periodName}</p>
               <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 mt-1">
@@ -1332,23 +1320,6 @@ export const AdminRealtimeDashboardView: React.FC = () => {
               <p className={`mt-3 text-xs font-bold ${prov || !has ? 'text-amber-800' : 'text-emerald-800'}`}>
                 {timeframe === 'day' ? `Đã báo ${periodAttendance.classesReported}/${filteredClasses.length} lớp` : `Đã báo ${periodAttendance.classDaysReported}/${periodAttendance.classDaysExpected} lượt lớp`}
               </p>
-            </div>
-
-            <div className="min-w-0">
-              <div className="flex items-center justify-between gap-2">
-                <p className="text-xs font-black text-slate-700 uppercase tracking-wide whitespace-nowrap">Xu hướng chuyên cần 14 ngày</p>
-                {lastP && <span className="text-xs font-bold text-slate-800 tabular-nums">{formatDateVN(lastP.date).slice(0, 5)}: <strong className="text-emerald-900">{lastP.att}%</strong></span>}
-              </div>
-              {pts.length < 2 ? (
-                <p className="text-sm font-semibold text-slate-600 py-8 text-center">Chưa đủ dữ liệu để vẽ (cần ít nhất 2 ngày có lớp báo).</p>
-              ) : (
-                <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto mt-1" role="img" aria-label={`Chuyên cần 14 ngày, mới nhất ${lastP.att}%`}>
-                  <defs><linearGradient id="hero-area" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#10B981" stopOpacity="0.28" /><stop offset="100%" stopColor="#10B981" stopOpacity="0.02" /></linearGradient></defs>
-                  <path d={area} fill="url(#hero-area)" />
-                  <path d={line} fill="none" stroke="#059669" strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />
-                  {pts.map(p => <circle key={p.date} cx={x(p.date)} cy={y(p.att)} r={p === lastP ? 4.5 : 2.5} fill={p === lastP ? '#fff' : '#059669'} stroke="#059669" strokeWidth={p === lastP ? 2.5 : 0}><title>{`${formatDateVN(p.date)}: ${p.att}% (${p.reported}/${trendInfo.classCount} lớp đã báo)`}</title></circle>)}
-                </svg>
-              )}
             </div>
 
             <div className="flex flex-col items-center justify-center mx-auto lg:mx-0">

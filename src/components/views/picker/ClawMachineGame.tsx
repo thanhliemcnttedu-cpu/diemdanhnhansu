@@ -100,6 +100,7 @@ export const ClawMachineGame: React.FC = () => {
   const [msg, setMsg] = useState('Sẵn sàng! Bấm nút để gắp ngẫu nhiên');
   const [winner, setWinner] = useState<Student | null>(null);
   const [open, setOpen] = useState(false);
+  const [history, setHistory] = useState<Array<{ s: Student; t: string }>>([]);   // các bạn vừa được gọi trong phiên này
   const [card, setCard] = useState<Student | null>(null);   // thẻ ảnh bạn trúng hiện lên từ cửa nhận quà
   const [awarded, setAwarded] = useState(false);
 
@@ -290,6 +291,7 @@ export const ClawMachineGame: React.FC = () => {
           });
           setWinner(target); setPhase('landed'); setMsg(`Gắp trúng: ${target.name}`);
           setCard(target);
+          setHistory(h => [{ s: target, t: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) }, ...h].slice(0, 8));
           fair.markCalled(target.id, 'claw');
           playFanfareSound(); confetti({ particleCount: 80, spread: 75, origin: { x: 0.2, y: 0.7 } });
           timers.current.push(window.setTimeout(() => { setCard(null); setOpen(true); }, 1800));
@@ -310,15 +312,46 @@ export const ClawMachineGame: React.FC = () => {
   const remaining = currentClassStudents.length - fair.calledIds.length;
 
   return (
-    <div className="bg-white rounded-3xl border border-slate-200 shadow-xs p-5 sm:p-7 space-y-5 text-center">
+    <div className="rounded-3xl border border-sky-100 shadow-xs p-3 sm:p-4 space-y-3 text-center" style={{ background: 'linear-gradient(180deg,#F0F9FF 0%,#FFF7ED 100%)' }}>
       <style>{CSS}</style>
       <div>
         <h2 className="text-xl font-black uppercase tracking-tight text-slate-900">MÁY GẮP THÚ GỌI TÊN</h2>
         <p className="text-sm text-slate-700 wrap-ok">Mỗi chú thú là một bạn. Các chú thú xáo trộn, càng gắp trượt hai lần, lần thứ ba gắp được chú nào thì bạn đó được gọi tên.</p>
       </div>
 
+      <div className="grid gap-3 min-[1280px]:grid-cols-[180px_minmax(0,1fr)_180px] min-[1600px]:grid-cols-[250px_minmax(0,1fr)_250px] items-start text-left">
+      {/* Cột trái: cách chơi + tiến độ cả lớp (dưới 1280px: nằm dưới máy gắp) */}
+      <aside className="order-2 min-[1280px]:order-1 grid gap-3 grid-cols-1 max-[1279px]:min-[640px]:grid-cols-2 content-start">
+        <section className="rounded-2xl bg-white/90 border border-sky-200 p-3.5 shadow-2xs">
+          <h3 className="text-sm font-black text-slate-900 uppercase mb-2.5">Cách chơi</h3>
+          <ol className="space-y-2.5">
+            {[['1', 'Bấm "Hạ tay gắp thú ngay".'], ['2', 'Các chú thú xáo trộn, càng chạy đi tìm.'], ['3', 'Gắp trượt hai lần, lần thứ ba gắp được bạn nào thì bạn đó được gọi tên.']].map(([n, t]) => (
+              <li key={n} className="flex items-start gap-2.5">
+                <span className="w-6 h-6 rounded-full bg-pink-600 text-white text-xs font-black flex items-center justify-center shrink-0">{n}</span>
+                <span className="text-sm font-semibold text-slate-800 wrap-ok">{t}</span>
+              </li>
+            ))}
+          </ol>
+        </section>
+        <section className="rounded-2xl bg-white/90 border border-amber-200 p-3.5 shadow-2xs">
+          <h3 className="text-sm font-black text-slate-900 uppercase mb-1.5">Lớp học</h3>
+          <div className="flex flex-wrap items-baseline gap-x-1.5">
+            <span className="text-3xl font-black tabular-nums text-pink-700">{remaining}</span>
+            <span className="text-sm font-bold text-slate-700 tabular-nums">/ {currentClassStudents.length} bạn chưa được gọi</span>
+          </div>
+          <div className="mt-2 h-2.5 rounded-full bg-slate-200 overflow-hidden" aria-hidden>
+            <div className="h-full bg-gradient-to-r from-pink-500 to-orange-500" style={{ width: `${currentClassStudents.length ? ((currentClassStudents.length - remaining) / currentClassStudents.length) * 100 : 0}%` }} />
+          </div>
+          <p className="mt-2 text-xs font-semibold text-slate-700 wrap-ok">Bạn đã được gọi không bị gọi lại cho đến khi cả lớp đủ một vòng.</p>
+          {fair.calledIds.length > 0 && !playing && (
+            <button type="button" onClick={fair.resetRound} className="mt-2 min-h-9 px-3 rounded-xl border border-amber-300 bg-amber-50 text-xs font-black text-amber-900 cursor-pointer hover:bg-amber-100 whitespace-nowrap">Bắt đầu vòng mới</button>
+          )}
+        </section>
+      </aside>
+
+      <div className="order-1 min-[1280px]:order-2 min-w-0">
       {/* Vỏ máy */}
-      <div className="mx-auto w-full max-w-2xl rounded-[32px] p-2.5 shadow-lg" style={{ background: 'linear-gradient(135deg,#FBBF24,#FB7185 50%,#A78BFA)' }}>
+      <div className="mx-auto w-full max-w-[820px] rounded-[32px] p-2.5 shadow-lg" style={{ background: 'linear-gradient(135deg,#FBBF24,#FB7185 50%,#A78BFA)' }}>
         <div className="rounded-t-[22px] px-4 py-2 flex items-center justify-center gap-2 text-white font-black uppercase tracking-wide text-sm sm:text-base"
           style={{ background: 'linear-gradient(90deg,#E11D48,#EA580C)' }}>
           <span aria-hidden>🧸</span><span>Máy gắp thú may mắn</span><span aria-hidden>🧸</span>
@@ -411,15 +444,38 @@ export const ClawMachineGame: React.FC = () => {
         </div>
       </div>
 
-      <p className="text-xs font-bold text-slate-700 flex flex-wrap items-center justify-center gap-x-2 gap-y-1">
-        <span className="tabular-nums">Còn {remaining}/{currentClassStudents.length} bạn chưa được gọi</span>
-        {currentClassStudents.length > CAP && <><span aria-hidden>·</span><span>Trong máy có {Math.min(CAP, toys.length)} chú thú, lấy ngẫu nhiên từ các bạn chưa gọi</span></>}
-        <span aria-hidden>·</span>
-        <span>Bạn đã gọi không bị gọi lại cho đến khi cả lớp đủ một vòng</span>
-        {fair.calledIds.length > 0 && !playing && (
-          <button type="button" onClick={fair.resetRound} className="underline text-amber-900 font-black cursor-pointer">Bắt đầu vòng mới</button>
-        )}
-      </p>
+      </div>
+
+      {/* Cột phải: các bạn vừa được gọi + số thú trong máy */}
+      <aside className="order-3 grid gap-3 grid-cols-1 max-[1279px]:min-[640px]:grid-cols-2 content-start">
+        <section className="rounded-2xl bg-white/90 border border-pink-200 p-3.5 shadow-2xs">
+          <h3 className="text-sm font-black text-slate-900 uppercase mb-2.5">Vừa được gọi</h3>
+          {history.length === 0 ? (
+            <p className="text-sm font-semibold text-slate-600 wrap-ok">Chưa gọi bạn nào. Bấm nút hạ tay gắp thú để bắt đầu.</p>
+          ) : (
+            <ul className="space-y-2">
+              {history.map((h, i) => (
+                <li key={`${h.s.id}-${i}`} className={`flex items-center gap-2.5 rounded-xl p-1.5 ${i === 0 ? 'bg-amber-50 border border-amber-200' : ''}`}>
+                  <img src={h.s.avatar} alt="" referrerPolicy="no-referrer" onError={(e) => handleAvatarImgError(e, h.s.gender, h.s.name)}
+                    className="w-9 h-9 rounded-full object-cover object-top bg-white border border-slate-200 shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <div className="text-sm font-black text-slate-900 leading-tight break-words">{h.s.name}</div>
+                    <div className="text-xs font-semibold text-slate-600 tabular-nums">{h.t}</div>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+        <section className="rounded-2xl bg-white/90 border border-violet-200 p-3.5 shadow-2xs">
+          <h3 className="text-sm font-black text-slate-900 uppercase mb-1.5">Trong máy</h3>
+          <p className="text-sm font-bold text-slate-800 tabular-nums">{Math.min(CAP, toys.length)} chú thú đang chờ được gắp</p>
+          <p className="mt-1 text-xs font-semibold text-slate-700 wrap-ok">
+            {currentClassStudents.length > CAP ? 'Lớp đông nên máy lấy ngẫu nhiên từ các bạn chưa được gọi; gắp xong sẽ có bạn khác vào thay.' : 'Mỗi chú thú là một bạn chưa được gọi trong vòng này.'}
+          </p>
+        </section>
+      </aside>
+      </div>
 
       <CalledStudentModal
         student={winner} open={open} title="MÁY GẮP THÚ GỌI TÊN" badge="MÁY GẮP"

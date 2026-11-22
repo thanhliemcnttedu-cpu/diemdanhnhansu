@@ -375,7 +375,8 @@ const PlayScreen: React.FC<{ set: PuzzleSet; onExit: () => void }> = ({ set, onE
               {question.options.map((o, i) => {
                 if (!o.trim()) return null;
                 const isSel = sel === i;
-                const showRight = result && i === question.correct;
+                // Sai ở chế độ "trả lời lại": KHÔNG lộ đáp án đúng (sẽ nhắc bài cho lần trả lời sau); chỉ lộ khi đúng hoặc khi mảnh đã bị khóa
+                const showRight = (result === 'right' || (result === 'wrong' && set.mode === 'lock')) && i === question.correct;
                 const showWrong = result === 'wrong' && isSel;
                 return (
                   <button key={i} type="button" onClick={() => answer(i)} disabled={Boolean(result) || needStudent}
@@ -396,7 +397,7 @@ const PlayScreen: React.FC<{ set: PuzzleSet; onExit: () => void }> = ({ set, onE
                   : set.mode === 'lock'
                     ? 'Chưa đúng. Mảnh ghép này đã bị khóa, hãy chọn mảnh khác.'
                     : 'Chưa đúng. Hãy trả lời lại hoặc mời bạn khác.'}
-                {question.explanation ? <div className="mt-1 font-semibold">Giải thích: {question.explanation}</div> : null}
+                {question.explanation && (result === 'right' || set.mode === 'lock') ? <div className="mt-1 font-semibold">Giải thích: {question.explanation}</div> : null}
               </div>
             )}
 

@@ -266,21 +266,7 @@ export const GameHomeView: React.FC<GameHomeViewProps> = ({
   return (
     <div className="w-full max-w-7xl mx-auto space-y-8 animate-in fade-in duration-300 pb-12">
       
-      {/* =========================================================================
-       * HERO HEADER (Page 1 trong PDF)
-       * ========================================================================= */}
-      <div className="text-center pt-2 pb-1">
-        <h1 className="text-2xl sm:text-4xl md:text-5xl font-black text-red-600 uppercase tracking-tight mb-2 drop-shadow-xs">
-          GAME GỌI TÊN HỌC SINH
-        </h1>
-        <p className="flex flex-wrap items-center justify-center gap-x-2.5 gap-y-1 text-xs sm:text-sm font-bold uppercase tracking-wider text-slate-600">
-          <span className="whitespace-nowrap">LỚP <strong className="text-indigo-700 font-black">{classNameName}</strong></span>
-          <span aria-hidden className="text-slate-400">•</span>
-          <span className="whitespace-nowrap">SĨ SỐ <strong className="text-slate-900 font-black tabular-nums">{studentCount}</strong> HỌC SINH</span>
-          <span aria-hidden className="text-slate-400">•</span>
-          <span className="whitespace-nowrap">12 TRÒ CHƠI GỌI TÊN &amp; QUIZ</span>
-        </p>
-      </div>
+      {/* Tiêu đề, lớp, sĩ số và số trò đã có ở khung đầu trang Gọi tên học sinh nên không lặp lại ở đây */}
 
       {/* =========================================================================
        * 6 GAME CARDS GRID (Page 1 trong PDF)

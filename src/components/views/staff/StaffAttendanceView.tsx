@@ -242,6 +242,8 @@ export const StaffAttendanceView: React.FC<{
   const stats = useMemo(() => aggregate(staff, days, range.from, range.to, today), [staff, days, range, today]);
   // Saturday / Sunday with nobody checked in is not a working day → aggregate() returns no row for today.
   // The whole summary used to render nothing in that case (blank screen); use an all-zero row instead.
+  // Thứ Bảy / Chủ nhật: ngày nghỉ, dùng cho dòng thông báo ở đầu trang
+  const isWeekendToday = useMemo(() => { const dow = fromDateKey(today).getDay(); return dow === 0 || dow === 6; }, [today]);
   const isRestDayToday = useMemo(() => {
     const dow = fromDateKey(today).getDay();
     return (dow === 0 || dow === 6) && Object.keys(days[today] || {}).length === 0;
@@ -408,18 +410,26 @@ export const StaffAttendanceView: React.FC<{
   return (
     <div data-report="" className="p-4 sm:p-6 space-y-4 max-w-7xl mx-auto">
       {/* Header */}
-      <div className="bg-white rounded-3xl border border-slate-200 shadow-xs p-4 sm:p-5 flex flex-col 2xl:flex-row 2xl:items-center justify-between gap-3">
-        {/* Thanh thẻ xuống dòng riêng tới 2xl: cùng hàng tiêu đề chỉ khi đủ rộng (tránh tràn khi có 4 thẻ) */}
+      <div className="bg-white rounded-3xl border border-slate-200 shadow-xs p-4 sm:p-5 flex flex-col gap-3">
+        {/* Tiêu đề một hàng riêng, thanh thẻ ở hàng dưới: tiêu đề không bị thanh thẻ ép chật rồi rơi chữ */}
         <div className="flex items-center gap-3 min-w-0">
           <div className="w-11 h-11 shrink-0 rounded-2xl bg-emerald-700 text-white flex items-center justify-center"><UserCheck className="w-6 h-6" /></div>
           <div className="min-w-0">
-            <h1 className="text-lg sm:text-xl font-black text-slate-900 whitespace-nowrap truncate">
+            <h1 className="text-lg sm:text-xl font-black text-slate-900 whitespace-nowrap">
               <span className="sm:hidden">Chấm công nhân sự</span><span className="hidden sm:inline">Chấm công giáo viên – nhân viên</span>
             </h1>
-            <p className="text-sm text-slate-600 truncate" title={`${longDateLabel(today)}${schoolName ? ` • ${schoolName}` : ''}`}>{longDateLabel(today)}{schoolName ? ` • ${schoolName}` : ''}</p>
+            <p className="text-sm text-slate-600 flex flex-wrap items-center gap-x-2 gap-y-1">
+              <span className="font-bold text-slate-800 whitespace-nowrap">{longDateLabel(today)}</span>
+              {isWeekendToday && (
+                <span className="px-2.5 py-0.5 rounded-full bg-sky-100 text-sky-900 text-xs font-black whitespace-nowrap" role="status">
+                  {weekdayLabel(today)} là ngày nghỉ: không điểm danh, không thống kê
+                </span>
+              )}
+              {schoolName && <span className="whitespace-nowrap">• {schoolName}</span>}
+            </p>
           </div>
         </div>
-        <div className="flex gap-1 sm:gap-1.5 bg-slate-100 p-1 rounded-2xl overflow-x-auto no-scrollbar max-w-full self-stretch sm:self-start 2xl:self-auto 2xl:shrink-0" role="tablist">
+        <div className="flex gap-1 sm:gap-1.5 bg-slate-100 p-1 rounded-2xl overflow-x-auto no-scrollbar max-w-full self-stretch sm:self-start" role="tablist">
           {([['summary', 'Tổng hợp', 'Tổng hợp', <TrendingUp key="i" className="w-4 h-4" />], ['grid', 'Bảng tháng', 'Tháng', <ListIcon key="i" className="w-4 h-4" />], ['roster', 'Danh sách nhân sự', 'Nhân sự', <Users key="i" className="w-4 h-4" />], ['teach', 'Kê khai tiết dạy', 'Tiết dạy', <BookOpenCheck key="i" className="w-4 h-4" />], ['link', 'Link điểm danh', 'Link', <Link2 key="i" className="w-4 h-4" />], ['duty', 'Phân công nhiệm vụ', 'Phân công', <ClipboardCheck key="i" className="w-4 h-4" />]] as const)
             .filter(([id]) => (duty ? (((id === 'summary' || id === 'grid') && (duty.attendance || duty.proxy)) || (id === 'teach' && duty.teach)) : (!viewOnly || id === 'summary' || id === 'grid' || id === 'teach')))
             .map(([id, label, shortLabel, icon]) => (
