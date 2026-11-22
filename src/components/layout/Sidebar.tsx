@@ -259,8 +259,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { key: 'manage', label: 'Quản lý & báo cáo', icon: BarChart3, tone: 'text-emerald-700', ids: ['reports', 'weekly', 'staff_attendance', 'my_checkin', 'data', 'links', 'qr', 'guide', 'ai'] },
   ];
   // Sidebar colour: "Xanh đậm" (default: deep blue, white text) or "Sáng". Only an explicit "light" choice is remembered on this device.
-  const [sbDark, setSbDark] = useState<boolean>(() => { try { return localStorage.getItem('lhhp_sidebar_theme') !== 'light'; } catch (_) { return true; } });
-  const toggleSbTheme = () => setSbDark(v => { const n = !v; try { localStorage.setItem('lhhp_sidebar_theme', n ? 'dark' : 'light'); } catch (_) { /* blocked storage: lasts until reload */ } return n; });
+  const [sbDark, setSbDark] = useState<boolean>(() => { try { return localStorage.getItem('lhhp_sidebar_theme_v2') !== 'light'; } catch (_) { return true; } });
+  const toggleSbTheme = () => setSbDark(v => { const n = !v; try { localStorage.setItem('lhhp_sidebar_theme_v2', n ? 'dark' : 'light'); } catch (_) { /* blocked storage: lasts until reload */ } return n; });
   const [closedGroups, setClosedGroups] = useState<string[]>(() => {
     try { return JSON.parse(localStorage.getItem('lhhp_nav_closed_groups') || '[]'); } catch (_) { return []; }
   });
