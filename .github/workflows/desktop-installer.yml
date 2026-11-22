@@ -100,6 +100,28 @@ jobs:
             release-lite/SHA256.txt
           retention-days: 30
 
+      # Goi cap nhat giao dien da ky (ui-manifest.json + ui-<ver>.zip) duoc tao o may nha phat trien va dang o kho thu.
+      # Cac kho khac lay ve de dua kem vao CUNG ban phat hanh vua tao, de kenh cap nhat nong khong bi dut (404).
+      - name: Lay goi cap nhat giao dien da ky
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION="${{ steps.ver.outputs.version }}"
+          SRC="thanhliemcnttedu-cpu/diemdanhnhansu"
+          mkdir -p ui-extra
+          if [ "$GITHUB_REPOSITORY" != "$SRC" ]; then
+            gh release download "desktop-v$VERSION" -R "$SRC" -p "ui-manifest.json" -p "ui-$VERSION.zip" -D ui-extra --clobber || echo "Khong lay duoc goi cap nhat giao dien tu $SRC"
+          fi
+          if [ -f ui-extra/ui-manifest.json ]; then
+            MV=$(node -p "require('./ui-extra/ui-manifest.json').version")
+            if [ "$MV" != "$VERSION" ] || [ ! -f "ui-extra/ui-$VERSION.zip" ]; then
+              echo "Goi cap nhat giao dien khong khop phien ban $VERSION (manifest $MV): bo qua"
+              rm -rf ui-extra/*
+            fi
+          fi
+          ls -la ui-extra || true
+
       - name: Dua len Releases
         shell: bash
         env:
@@ -116,12 +138,14 @@ jobs:
 
           SHA-256: \`${{ steps.hash.outputs.sha }}\`
           EOF
+          EXTRA=()
+          for f in ui-extra/*; do [ -f "$f" ] && EXTRA+=("$f"); done
           if gh release view "$TAG" >/dev/null 2>&1; then
-            gh release upload "$TAG" "${{ steps.hash.outputs.file }}" release-lite/SHA256.txt --clobber
+            gh release upload "$TAG" "${{ steps.hash.outputs.file }}" release-lite/SHA256.txt "${EXTRA[@]}" --clobber
             # the installer was rebuilt: keep the SHA-256 in the release notes in step with the file
             gh release edit "$TAG" --notes-file notes.md
           else
-            gh release create "$TAG" "${{ steps.hash.outputs.file }}" release-lite/SHA256.txt \
+            gh release create "$TAG" "${{ steps.hash.outputs.file }}" release-lite/SHA256.txt "${EXTRA[@]}" \
               --title "Lớp Học Hạnh Phúc $VERSION – bộ cài đặt Windows" \
               --notes-file notes.md --latest --target "$GITHUB_SHA"
           fi
